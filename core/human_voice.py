@@ -46,6 +46,21 @@ OPENAI_VOICES = [
 _eleven_voice_cache = None
 
 
+# A curated, respectful set of voices offered as a comfort CHOICE if the live
+# account list can't be fetched. Male and female, varied accents. These are
+# widely-available ElevenLabs voice IDs.
+CURATED_ELEVEN_VOICES = [
+    {"id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah - warm female (American)", "gender": "female"},
+    {"id": "21m00Tcm4TlvDq8ikWAM", "label": "Rachel - calm female (American)", "gender": "female"},
+    {"id": "AZnzlk1XvdvUeBnXmlld", "label": "Domi - gentle female", "gender": "female"},
+    {"id": "ThT5KcBeYPX3keUQqHPh", "label": "Dorothy - soft female (British)", "gender": "female"},
+    {"id": "TxGEqnHWrfWFTfGW9XjX", "label": "Josh - steady male (American)", "gender": "male"},
+    {"id": "VR6AewLTigWG4xSOukaG", "label": "Arnold - deep male", "gender": "male"},
+    {"id": "pNInz6obpgDQGcFmaJgB", "label": "Adam - calm male", "gender": "male"},
+    {"id": "ODq5zmih8GrVes37Dizd", "label": "Patrick - warm male (British)", "gender": "male"},
+]
+
+
 def list_voices() -> Dict[str, Any]:
     """Return the voices the user can choose from, grouped for a comfortable
     pick. For ElevenLabs we fetch the account's LIVE voice list (so it always
@@ -54,10 +69,13 @@ def list_voices() -> Dict[str, Any]:
     provider = voice_provider()
     if provider == "elevenlabs":
         try:
-            return {"provider": "elevenlabs", "voices": _fetch_eleven_voices()}
+            live = _fetch_eleven_voices()
+            if live:
+                return {"provider": "elevenlabs", "voices": live}
         except Exception as e:
             print(f"[Voice] could not list ElevenLabs voices: {e}")
-            return {"provider": "elevenlabs", "voices": []}
+        # Fallback: always give the person real choices to pick from
+        return {"provider": "elevenlabs", "voices": CURATED_ELEVEN_VOICES}
     if provider == "openai":
         return {"provider": "openai", "voices": OPENAI_VOICES}
     return {"provider": None, "voices": []}

@@ -5,6 +5,7 @@ import json
 import os
 import secrets
 import sqlite3
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -488,12 +489,13 @@ PUBLIC_PAGE = """
       background:linear-gradient(180deg, #f5faf7 0%, #fdf8f6 50%, #f7f0f9 100%); }
     #calm-bg { position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:0; pointer-events:none; }
     .story-screen > * { position:relative; z-index:1; }
-    .story-video-bar { position:sticky; top:0; z-index:10 !important; }
+    .story-video-bar { position:sticky; top:0; z-index:30 !important; }
     .scene-picker { position:fixed; bottom:14px; right:14px; z-index:20; display:flex; gap:6px;
       background:rgba(255,255,255,0.7); backdrop-filter:blur(6px); border-radius:999px; padding:6px 10px; }
     .scene-btn { background:none; border:0; font-size:18px; cursor:pointer; opacity:0.6; padding:2px 4px; }
     .scene-btn.active { opacity:1; transform:scale(1.15); }
     .story-video-bar { padding:20px 0 10px; width:100%; text-align:center;
+      position:sticky; top:0; z-index:30; background:linear-gradient(to bottom, rgba(255,255,255,0.96), rgba(255,255,255,0.75)); backdrop-filter:blur(6px); }
       background:linear-gradient(180deg, rgba(245,250,247,0.92), rgba(245,250,247,0.75)); }
     .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
@@ -598,6 +600,12 @@ PUBLIC_PAGE = """
           <canvas id="calm-touch" style="width:100%;height:240px;display:block;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;cursor:pointer;transition:height 0.5s ease;"></canvas>
         </div>
         <div id="conversation-thread" style="margin-top:22px;"></div>
+        <div id="help-bar" style="margin:16px auto 8px;max-width:560px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+          <a href="tel:988" class="help-btn" style="background:#e8534e;color:#fff;border:0;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:700;text-decoration:none;">&#128222; Call 988 now</a>
+          <button type="button" class="help-btn" onclick="openHelp('telehealth')" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;">Talk to a provider</button>
+          <button type="button" class="help-btn" onclick="openHelp('attorney')" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;">Legal help</button>
+        </div>
+        <div id="urgent-help" style="display:none;margin:6px auto;max-width:560px;text-align:center;padding:12px;background:rgba(232,83,78,0.1);border:1px solid rgba(232,83,78,0.4);border-radius:14px;color:#b3322e;font-weight:600;"></div>
         <div id="live-transcript" style="display:none;margin-top:14px;padding:14px 16px;background:rgba(111,179,212,0.12);border:1px solid rgba(111,179,212,0.4);border-radius:14px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span id="listen-dot" style="width:11px;height:11px;border-radius:50%;background:#e05a5a;display:inline-block;animation:listenpulse 1.1s ease-in-out infinite;"></span>
@@ -1142,6 +1150,7 @@ let latestEmotionProfile = null;
 let voiceRecognizer = null;
 let voiceListening = false;
 let voiceFinalTranscript = '';
+let voiceSendTimer = null;
 function escHtml(s){ const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
 function startZenisys(mode='greeting') {
   // Silent — music shifts happen through the ambient audio player, not notifications
@@ -1196,10 +1205,31 @@ function startVoiceCapture() {
       const box = document.getElementById('conv-answer') || $('message');
       if (box) box.value = shown;
       captureVoiceFeatures();
+      // AUTO-SEND when the person pauses: each finished sentence sends on its
+      // own after a brief beat, so it's a flowing hands-free conversation.
+      if (finalText) {
+        if (voiceSendTimer) clearTimeout(voiceSendTimer);
+        voiceSendTimer = setTimeout(() => {
+          const text = (voiceFinalTranscript || '').trim();
+          if (text && voiceListening) {
+            voiceFinalTranscript = '';
+            if (box) box.value = text;
+            if (typeof sendCheckin === 'function') sendCheckin();
+            else if (typeof continueConversation === 'function') continueConversation();
+          }
+        }, 1400); // ~1.4s pause = end of thought
+      }
     };
     voiceRecognizer.onerror = event => {
-      const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Mic issue: ' + (event.error || 'unknown') + ' \u2014 you can type instead';
-      $('emotion-status').textContent = 'Mic issue: ' + (event.error || 'unknown') + '. You can type instead.';
+      const err = event.error || 'unknown';
+      // Network/no-speech hiccups: don't give up — retry quietly if still wanted.
+      if ((err === 'network' || err === 'no-speech' || err === 'aborted') && voiceListening) {
+        const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Reconnecting the mic\u2026';
+        setTimeout(() => { if (voiceListening) { try { voiceRecognizer.start(); } catch(e){} } }, 600);
+        return;
+      }
+      const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Mic issue: ' + err + ' \u2014 you can type instead';
+      $('emotion-status').textContent = 'Mic issue: ' + err + '. You can type instead.';
     };
     voiceRecognizer.onend = () => {
       // If the user still WANTS to listen, the browser dropping the session
@@ -1423,8 +1453,29 @@ async function analyzeVisualEmotion() {
   $('emotion-status').textContent = `Emotion profile: ${data.primary_emotion || 'needs more context'}, distress ${data.distress_score || '?'}/10, confidence ${data.confidence || '?'}.`;
   if ((data.zenisys_mode_hint || '') && zenisysCtx) adaptZenisys(data.zenisys_mode_hint);
 }
-async function sendCheckin() {
-  startZenisys('greeting');
+function openHelp(kind){
+  // Routes to the person's chosen help. Telehealth/attorney both ring the
+  // admin (Toshay) and open a connection; for now we navigate to the page.
+  if(kind === 'telehealth'){ window.open('/telehealth/intake','_blank'); }
+  else if(kind === 'attorney'){ window.open('/telehealth/intake','_blank'); }
+}
+function revealUrgentHelp(data){
+  // When distress is detected, surface clear, immediate options.
+  const box = document.getElementById('urgent-help');
+  if(!box) return;
+  const risk = (data && data.risk) || 'low';
+  if(risk === 'critical' || risk === 'high'){
+    box.style.display = 'block';
+    box.innerHTML = 'Help is worth reaching for right now. '
+      + '<a href="tel:988" style="color:#b3322e;text-decoration:underline;">Call or text 988</a>, '
+      + 'or <a href="tel:911" style="color:#b3322e;text-decoration:underline;">911</a> if there is immediate danger. '
+      + 'I am staying right here with you.';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+async function sendCheckin() {  startZenisys('greeting');
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   const res = await fetch('/api/checkin', {
     method:'POST',
@@ -1447,6 +1498,7 @@ async function sendCheckin() {
   });
   const data = await res.json();
   adaptZenisys(data.sound_mode || 'greeting');
+  revealUrgentHelp(data);
   innerLightLearningState = data.learning_state || null;
   innerLightSessionReference = data.message_fingerprint || '';
   innerLightContext = data;
@@ -2638,21 +2690,6 @@ def api_checkin():
         "emotion_profile": emotion_profile,
     }
     learning_state = innerlight_learning.start_state(learning_seed)
-    encrypted = encrypt_payload(
-        f"session:{fp}",
-        {
-            "message": message,
-            "analysis": analysis,
-            "culture": culture,
-            "region": region,
-            "local_context": local_context,
-            "response": response,
-            "innerlight": innerlight_result,
-            "learning_state": learning_state,
-            "created_at": utc_now(),
-        },
-    )
-    encrypted_case = encrypt_payload(f"case:{case_reference}", case_file)
     severity = max(int(analysis.get("severity", 0)), emotion_distress)
     risk = crisis.risk if crisis.risk in {"critical", "high", "moderate"} else ("critical" if emotion_distress >= 9 else "high" if severity >= 8 else "moderate" if severity >= 5 else "low")
 
@@ -2677,24 +2714,8 @@ def api_checkin():
         risk = "high"
     elif cr["level"] == "concern" and risk == "low":
         risk = "moderate"
-    with connect_db() as conn:
-        cursor = conn.execute(
-            """
-            INSERT INTO encrypted_sessions
-            (created_at, message_fingerprint, category, severity, risk, culture, encrypted_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (utc_now(), fp, analysis.get("category", "unclear"), severity, risk, culture, json.dumps(encrypted)),
-        )
-        conn.execute(
-            """
-            INSERT INTO case_files
-            (created_at, case_reference, share_authorized, encrypted_json)
-            VALUES (?, ?, ?, ?)
-            """,
-            (utc_now(), case_reference, 1 if case_file.get("share_authorized_by_user") else 0, json.dumps(encrypted_case)),
-        )
-    # --- Conversation engine: personalized first response ---
+
+    # --- Conversation engine: personalized first response (FAST — no network) ---
     face_emo = ""
     if isinstance(data, dict):
         face_emo = str(data.get("face_emotion", "")).strip()
@@ -2716,9 +2737,41 @@ def api_checkin():
     handoff = classify_handoff(crisis_text, risk=handoff_risk, legal_issue=legal_code, quantum_emotion=quantum_read)
     get_resolution_tracker().start(fp)
 
+    # --- DEFER heavy persistence to the background so the person gets their
+    # reply INSTANTLY. Encryption + DB writes happen after we respond. ---
+    def _persist_in_background():
+        try:
+            encrypted = encrypt_payload(
+                f"session:{fp}",
+                {
+                    "message": message, "analysis": analysis, "culture": culture,
+                    "region": region, "local_context": local_context,
+                    "response": response, "innerlight": innerlight_result,
+                    "learning_state": learning_state, "created_at": utc_now(),
+                },
+            )
+            encrypted_case = encrypt_payload(f"case:{case_reference}", case_file)
+            with connect_db() as conn:
+                conn.execute(
+                    """INSERT INTO encrypted_sessions
+                    (created_at, message_fingerprint, category, severity, risk, culture, encrypted_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (utc_now(), fp, analysis.get("category", "unclear"), severity, risk, culture, json.dumps(encrypted)),
+                )
+                conn.execute(
+                    """INSERT INTO case_files
+                    (created_at, case_reference, share_authorized, encrypted_json)
+                    VALUES (?, ?, ?, ?)""",
+                    (utc_now(), case_reference, 1 if case_file.get("share_authorized_by_user") else 0, json.dumps(encrypted_case)),
+                )
+        except Exception as e:
+            print(f"[persist] background save failed: {e}")
+
+    threading.Thread(target=_persist_in_background, daemon=True).start()
+
     return jsonify({
         "status": "secured",
-        "session_id": cursor.lastrowid,
+        "session_id": fp,
         "heading": "Immediate support needed" if risk == "critical" else "Support response",
         "message_fingerprint": fp,
         "risk": risk,
