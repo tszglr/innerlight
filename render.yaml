@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: innerlight
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: AHP_KEEP_DATA
+        value: "0"
+      # Set your ElevenLabs key in the Render dashboard (Environment tab),
+      # NOT here, so it stays private:
+      #   ELEVENLABS_API_KEY = your key
