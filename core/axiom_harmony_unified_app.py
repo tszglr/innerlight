@@ -494,15 +494,20 @@ PUBLIC_PAGE = """
       background:rgba(255,255,255,0.7); backdrop-filter:blur(6px); border-radius:999px; padding:6px 10px; }
     .scene-btn { background:none; border:0; font-size:18px; cursor:pointer; opacity:0.6; padding:2px 4px; }
     .scene-btn.active { opacity:1; transform:scale(1.15); }
-    .story-video-bar { padding:20px 0 10px; width:100%; text-align:center;
-      position:sticky; top:0; z-index:30; background:linear-gradient(to bottom, rgba(255,255,255,0.96), rgba(255,255,255,0.75)); backdrop-filter:blur(6px); }
-      background:linear-gradient(180deg, rgba(245,250,247,0.92), rgba(245,250,247,0.75)); }
+    .story-video-bar { padding:14px 0 8px; width:100%; text-align:center;
+      position:sticky; top:0; z-index:30;
+      background:linear-gradient(180deg, rgba(245,250,247,0.94), rgba(245,250,247,0.70));
+      backdrop-filter:blur(6px); transition:padding 0.35s ease; }
+    /* When the conversation is active, the pinned face shrinks so it stays
+       visible without taking the whole screen — but never disappears. */
+    .story-video-bar.compact { padding:8px 0 6px; }
+    .story-video-bar.compact .story-video { width:84px; height:84px; border-width:2px; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,0.16); margin-bottom:0; }
     .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
       border-radius:18px; padding:4px 16px; max-height:52vh; overflow-y:auto; scroll-behavior:smooth; }
     #conversation-thread:empty { background:none; padding:0; }
     .story-video { width:340px; height:340px; max-width:80vw; max-height:80vw; object-fit:cover; border-radius:24px; border:3px solid #c8ddd2;
-      margin:0 auto 8px; display:block; background:#e8f0eb; box-shadow:0 8px 30px rgba(0,0,0,0.18); }
+      margin:0 auto 8px; display:block; background:#e8f0eb; box-shadow:0 8px 30px rgba(0,0,0,0.18); transition:width 0.35s ease, height 0.35s ease, border-radius 0.35s ease; }
     .story-title { font-size:26px; font-weight:600; margin:0 0 6px; color:#2d4a3e; }
     .story-sub { color:#6d8f80; font-size:14px; margin:0 0 22px; }
     .story-input { width:100%; min-height:130px; box-sizing:border-box; padding:18px; border-radius:16px;
@@ -774,6 +779,9 @@ async function loadFaceModels() {
 }
 async function detectFaceEmotion() {
   if (!faceReady) return;
+  // Don't compete with the keyboard: if the person typed in the last 1.2s,
+  // skip this cycle so typing stays instant.
+  if (window._lastTypedAt && (performance.now() - window._lastTypedAt) < 1200) return;
   const video = document.getElementById('visual-preview');
   if (!video || !video.videoWidth) return;
   try {
@@ -789,7 +797,7 @@ async function detectFaceEmotion() {
   } catch (e) {}
 }
 let faceInterval = null;
-function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 2000); }
+function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 3500); }
 
 // --- DJ CROSSFADE ENGINE ---
 let deckA, deckB, activeDeck = 'A';
@@ -1145,6 +1153,15 @@ let zenisysOscillators = [];
 let innerLightLearningState = null;
 let innerLightSessionReference = '';
 let innerLightContext = {};
+// Capture the REAL conversation so the handoff is built from what was actually
+// said — never from a form the person has to fill out.
+let conversationLog = [];
+function logTurn(role, text){
+  if(!text) return;
+  conversationLog.push({role: role, text: String(text), at: new Date().toISOString()});
+  try { sessionStorage.setItem('innerlight_convo', JSON.stringify(conversationLog)); } catch(e){}
+  try { sessionStorage.setItem('innerlight_risk', (innerLightContext && innerLightContext.risk) || 'low'); } catch(e){}
+}
 let latestVisualFrame = '';
 let latestEmotionProfile = null;
 let voiceRecognizer = null;
@@ -1361,6 +1378,9 @@ async function loadVoiceChoices(){
   }catch(e){}
 }
 document.addEventListener('DOMContentLoaded', loadVoiceChoices);
+// Record when the person is typing so heavy work (face detection) yields to
+// the keyboard and typing always stays instant.
+document.addEventListener('keydown', function(){ window._lastTypedAt = performance.now(); }, true);
 
 function speak(text) {
   if (!voiceEnabled || !text) return;
@@ -1454,10 +1474,11 @@ async function analyzeVisualEmotion() {
   if ((data.zenisys_mode_hint || '') && zenisysCtx) adaptZenisys(data.zenisys_mode_hint);
 }
 function openHelp(kind){
-  // Routes to the person's chosen help. Telehealth/attorney both ring the
-  // admin (Toshay) and open a connection; for now we navigate to the page.
-  if(kind === 'telehealth'){ window.open('/telehealth/intake','_blank'); }
-  else if(kind === 'attorney'){ window.open('/telehealth/intake','_blank'); }
+  // Each path is honest about WHERE the person is going and WHO they will reach.
+  // The conversation is carried over so they never fill out a jargon form.
+  try { sessionStorage.setItem('innerlight_convo', JSON.stringify(conversationLog)); } catch(e){}
+  if(kind === 'attorney' || kind === 'legal'){ window.open('/handoff/legal','_blank'); }
+  else { window.open('/handoff/clinical','_blank'); }
 }
 function revealUrgentHelp(data){
   // When distress is detected, surface clear, immediate options.
@@ -1476,6 +1497,7 @@ function revealUrgentHelp(data){
 }
 
 async function sendCheckin() {  startZenisys('greeting');
+  logTurn('user', val('message'));
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   const res = await fetch('/api/checkin', {
     method:'POST',
@@ -1499,6 +1521,7 @@ async function sendCheckin() {  startZenisys('greeting');
   const data = await res.json();
   adaptZenisys(data.sound_mode || 'greeting');
   revealUrgentHelp(data);
+  logTurn('innerlight', data.response || '');
   innerLightLearningState = data.learning_state || null;
   innerLightSessionReference = data.message_fingerprint || '';
   innerLightContext = data;
@@ -1694,6 +1717,10 @@ function restartConversation() {
   document.getElementById('conv-answer').focus();
 }
 function appendExchange(thread, reply, question, safetyHtml) {
+  // Conversation is active — shrink the pinned face to a compact thumbnail
+  // so it stays visible at the top without taking over the screen.
+  const vbar = document.querySelector('.story-video-bar');
+  if (vbar) vbar.classList.add('compact');
   // Remove any previous reply box (keep conversation flat)
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
@@ -1747,6 +1774,7 @@ async function continueConversation() {
   const answerBox = document.getElementById('conv-answer');
   if (!answerBox || !answerBox.value.trim()) return;
   const userAnswer = answerBox.value.trim();
+  logTurn('user', userAnswer);
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   // Show what the user said in the thread
   const thread = document.getElementById('conversation-thread');
@@ -1774,6 +1802,7 @@ async function continueConversation() {
   innerLightContext = Object.assign(innerLightContext, data);
   const nextQ = (data.questions || [])[0] || 'Is there anything else you would like to share?';
   const reply = data.response || 'Thank you for sharing that with me.';
+  logTurn('innerlight', reply);
   const safety = data.needs_immediate_support
     ? '<p style="background:#f0f7f4;border:1px solid #c8ddd2;border-radius:12px;padding:14px;color:#2d4a3e;font-size:15px;margin:14px 0;">You are not alone. The 988 Lifeline is available anytime — call or text 988. I am right here.</p>'
     : '';
@@ -1902,7 +1931,7 @@ async function continueInnerLight() { return continueConversation(); }
       g.gain.linearRampToValueAtTime(0.16,t+0.05); g.gain.exponentialRampToValueAtTime(0.0006,t+0.9); o.start(t); o.stop(t+1.0);
     }, 340); }
 
-  function addRipple(x,y){ ripples.push({x,y,r:6,a:0.95,hue:188+Math.random()*46}); }
+  function addRipple(x,y){ ripples.push({x,y,r:6,a:0.95,hue:188+Math.random()*46}); kickCalm(); }
   function pos(e){ const r=canvas.getBoundingClientRect(); const p=(e.touches&&e.touches[0])?e.touches[0]:e;
     return {x:p.clientX-r.left, y:p.clientY-r.top}; }
   function activity(){
@@ -1936,8 +1965,14 @@ async function continueInnerLight() { return continueConversation(); }
   canvas.addEventListener('touchstart', press, {passive:false});
   canvas.addEventListener('touchmove', move, {passive:false});
 
+  let calmRAF = null;
+  let calmIdleSince = performance.now();
+  function calmActive(){
+    // Active if there are ripples still fading, or a finger/mouse is down,
+    // or we're within a short window after the last interaction.
+    return ripples.length > 0 || (performance.now() - calmIdleSince) < 4000;
+  }
   function draw(){
-    requestAnimationFrame(draw);
     ctx.fillStyle = 'rgba(12,19,34,0.18)';
     ctx.fillRect(0,0,W,H);
     ripples.forEach(rp=>{ rp.r += 1.5; rp.a *= 0.975;
@@ -1951,8 +1986,19 @@ async function continueInnerLight() { return continueConversation(); }
     const grd = ctx.createRadialGradient(gx,gy,4,gx,gy,Math.min(W,H)*0.4);
     grd.addColorStop(0,'rgba(120,180,220,0.12)'); grd.addColorStop(1,'rgba(120,180,220,0)');
     ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(gx,gy,Math.min(W,H)*0.4,0,Math.PI*2); ctx.fill();
+    // Keep going ONLY while active. When idle, stop the loop entirely so the
+    // browser is free for typing. A light heartbeat restarts it when needed.
+    if (calmActive()) { calmRAF = requestAnimationFrame(draw); }
+    else { calmRAF = null; }
   }
-  draw();
+  function kickCalm(){
+    calmIdleSince = performance.now();
+    if (!calmRAF) { calmRAF = requestAnimationFrame(draw); }
+  }
+  // Restart animation on any interaction; idle slow heartbeat keeps glow alive
+  // without saturating the CPU (one frame every ~2s when nobody is interacting).
+  setInterval(()=>{ if(!calmRAF){ const c=document.getElementById('calm-touch'); if(c){ ctx.fillStyle='rgba(12,19,34,0.18)'; ctx.fillRect(0,0,W,H); const t=performance.now()/1000; const gx=W/2+Math.sin(t*0.6)*W*0.16; const gy=H/2+Math.cos(t*0.45)*H*0.16; const grd=ctx.createRadialGradient(gx,gy,4,gx,gy,Math.min(W,H)*0.4); grd.addColorStop(0,'rgba(120,180,220,0.12)'); grd.addColorStop(1,'rgba(120,180,220,0)'); ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(gx,gy,Math.min(W,H)*0.4,0,Math.PI*2); ctx.fill(); } } }, 2000);
+  kickCalm();
 })();
 
 </script>
@@ -2114,76 +2160,227 @@ loadSound();
 """
 
 
-TELEHEALTH_PAGE = """
+CLINICAL_HANDOFF_PAGE = r"""
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>InnerLight Telehealth Handoff</title>
+  <title>InnerLight &mdash; Connecting You to a Care Professional</title>
   <style>
-    :root { --ink:#1f3029; --muted:#5f7168; --line:#d9e4df; --soft:#f7fbf8; --urgent:#b84a44; --green:#2f7c5f; }
+    :root { --ink:#1f3029; --muted:#5f7168; --line:#d9e4df; --soft:#f7fbf8; --urgent:#b84a44; --green:#2f7c5f; --blue:#2e6e8e; }
     * { box-sizing:border-box; }
     body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:#fbfdfb; }
-    header { padding:28px 6vw; border-bottom:1px solid var(--line); background:white; }
-    main { padding:28px 6vw; max-width:980px; margin:0 auto; }
-    h1 { margin:0 0 8px; font-size:clamp(30px, 5vw, 54px); line-height:1; }
+    header { padding:26px 6vw; border-bottom:1px solid var(--line); background:white; }
+    main { padding:24px 6vw 60px; max-width:920px; margin:0 auto; }
+    h1 { margin:0 0 6px; font-size:clamp(26px, 4.5vw, 44px); line-height:1.05; }
+    h2 { margin:0 0 10px; font-size:20px; }
     p { color:var(--muted); line-height:1.55; }
-    .panel { border:1px solid var(--line); border-radius:6px; background:white; padding:18px; margin:18px 0; }
-    .urgent { border-color:#e5b5b1; background:#fff7f6; }
-    .status { display:inline-block; padding:6px 10px; border-radius:4px; background:var(--soft); border:1px solid var(--line); color:var(--green); font-weight:700; }
-    .urgent .status { color:var(--urgent); }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    button, a.button { display:inline-block; border:0; border-radius:4px; padding:12px 16px; background:var(--green); color:white; font-weight:700; text-decoration:none; cursor:pointer; }
+    .tag { display:inline-block; padding:5px 12px; border-radius:999px; background:#eaf3f7; border:1px solid #cfe3ec; color:var(--blue); font-weight:700; font-size:13px; margin-bottom:10px; }
+    .panel { border:1px solid var(--line); border-radius:12px; background:white; padding:20px; margin:16px 0; }
+    .who { background:#f4f9fb; border-color:#d6e8ef; }
+    .who ul { margin:8px 0 0; padding-left:0; list-style:none; }
+    .who li { padding:9px 0; border-bottom:1px solid #e4eef2; color:var(--ink); }
+    .who li:last-child { border-bottom:0; }
+    .who b { color:var(--blue); }
+    .rights { background:#f7fbf8; border-color:#d9e9df; }
+    .rights summary { cursor:pointer; font-weight:700; color:var(--green); }
+    .rights p { font-size:14px; }
+    .urgent-note { background:#fff7f6; border:1px solid #e5b5b1; border-radius:12px; padding:14px 16px; }
+    .urgent-note b { color:var(--urgent); }
+    label { display:block; font-weight:700; color:var(--ink); margin:14px 0 6px; }
+    textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:12px; font:inherit; min-height:90px; }
+    .convo { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:14px; max-height:280px; overflow:auto; }
+    .convo .u { color:var(--ink); margin:0 0 10px; }
+    .convo .a { color:var(--blue); margin:0 0 10px; }
+    .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; }
+    button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--green); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
     .secondary { background:#e8f1ed; color:var(--ink); }
-    textarea, input { width:100%; border:1px solid var(--line); border-radius:4px; padding:12px; font:inherit; }
-    @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+    .locked { font-size:13px; color:var(--muted); margin-top:8px; }
+    .disclaimer { font-size:12.5px; color:#8794a0; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
 </head>
 <body>
   <header>
-    <div class="status">{{ priority }} telehealth routing</div>
-    <h1>InnerLight Telehealth Handoff</h1>
-    <p>The handoff prepares a consent-based summary for a licensed practitioner, nurse practitioner, therapist, psychiatrist, or crisis-trained professional.</p>
+    <div class="tag">Connecting you to mental-health care</div>
+    <h1>You're being connected to a care professional</h1>
+    <p>Before anything is shared, here is exactly who you may reach and what is protected. Nothing leaves this page until you read it and choose to send it.</p>
   </header>
   <main>
-    <section class="panel {{ mode_class }}">
-      <h2>{{ heading }}</h2>
-      <p>{{ message }}</p>
-      <p><strong>If someone is in immediate danger, call emergency services now. In the U.S., call or text 988 for suicide and crisis support while this handoff stays available.</strong></p>
+    <section class="panel who">
+      <h2>Who you may be connected with</h2>
+      <p>Depending on what you need, InnerLight routes you to one of these. You'll be told which one before any live conversation:</p>
+      <ul>
+        <li><b>Crisis-trained counselor</b> &mdash; immediate emotional support during an acute moment. Not a prescriber.</li>
+        <li><b>Therapist / licensed counselor</b> &mdash; talk-based support and ongoing coping work.</li>
+        <li><b>Psychiatrist</b> &mdash; a medical doctor who can evaluate symptoms and, where appropriate, manage medication.</li>
+        <li><b>Nurse practitioner</b> &mdash; can assess symptoms and, in many states, manage medication.</li>
+        <li><b>Access / pharmacy navigator</b> &mdash; helps with getting to existing medication or care you already have.</li>
+      </ul>
     </section>
-    <section class="grid">
-      <div class="panel">
-        <h2>Secure Handoff</h2>
-        <label>Case reference</label>
-        <input id="case-reference" placeholder="Paste or enter case reference">
-        <label>What should the professional know first?</label>
-        <textarea id="handoff-note" placeholder="Safety, symptoms, medication access, cultural needs, legal/access issue, or provider preference."></textarea>
-        <p>Raw private details stay out of this public page unless the user chooses to share them.</p>
-        <button onclick="markReady()">Prepare practitioner handoff</button>
-      </div>
-      <div class="panel">
-        <h2>Provider Queue</h2>
-        <p>Routing target: crisis-trained clinician, nurse practitioner, therapist, psychiatrist, pharmacy/access navigator, or legal-access support depending on the InnerLight case file.</p>
-        <p id="queue-status">Waiting for consent and case reference.</p>
-        <a class="button secondary" href="/#private-step">Return to InnerLight</a>
-      </div>
+
+    <section class="urgent-note" id="urgent-note" style="display:none;">
+      <p><b>If you are in immediate danger right now, call or text 988, or call 911.</b> You can do that while this page stays open. Connecting to a professional here does not replace emergency help in a life-threatening moment.</p>
     </section>
+
+    <section class="panel">
+      <h2>Here's what you told InnerLight</h2>
+      <p>This is built from your actual conversation &mdash; not a form. Read it over. If anything is wrong or you want to say it differently, you can correct it so it truly reflects what you mean.</p>
+      <div class="convo" id="convo-summary"><p class="u">Loading your conversation&hellip;</p></div>
+      <label for="clarify">Correct or clarify anything (this becomes part of what the professional sees)</label>
+      <textarea id="clarify" placeholder="For example: when I said I was done, I meant exhausted, not that I want to hurt myself &mdash; or anything you want to make clearer."></textarea>
+      <label for="addnote">Anything you want to add that didn't come up?</label>
+      <textarea id="addnote" placeholder="Medications, what's helped before, what you need most right now, who you'd prefer to talk to."></textarea>
+      <p class="locked">Once you send this, the professional can read it and build their own assessment, but they cannot change your words. Your record stays honest. You stay in control of whether it's sent at all.</p>
+    </section>
+
+    <details class="panel rights">
+      <summary>Your privacy &amp; your rights (tap to read)</summary>
+      <p><b>Your information is protected.</b> InnerLight treats what you share as confidential health information. We aim to follow the privacy standards set by HIPAA &mdash; the U.S. health-privacy law &mdash; which means your information is not shared with anyone unless you give clear permission, and is kept encrypted.</p>
+      <p><b>You decide what is shared.</b> Nothing on this page is sent to any professional until you choose to send it. You can close this page and nothing goes out.</p>
+      <p><b>What we are not.</b> InnerLight is a support and connection tool. It does not diagnose conditions or prescribe medication. Any diagnosis or treatment comes only from the licensed professional you connect with.</p>
+      <p><b>Encryption.</b> Your conversation is encrypted, and the raw details are not displayed on any public page. Only the summary you approve is prepared for the professional.</p>
+    </details>
+
+    <section class="panel">
+      <h2>Ready when you are</h2>
+      <p>When you send this, InnerLight notifies the care side and prepares your approved summary so the professional can read it <i>before</i> they speak with you &mdash; so you don't have to start from the beginning.</p>
+      <p id="status" style="font-weight:700;color:var(--green);"></p>
+      <button onclick="sendToCare()">Send my summary &amp; connect me</button>
+      <a class="button secondary" href="/#private-step" onclick="window.close();return false;">Go back</a>
+    </section>
+
+    <p class="disclaimer">
+      InnerLight, a service of God's Love For Us LLC, provides crisis support and connection to care. It is not a medical provider and does not provide medical diagnosis or treatment. We work to follow U.S. health-privacy standards including HIPAA, and your information is encrypted and shared only with your consent. In an emergency, call or text 988 or call 911. This summary is prepared for a licensed professional and reflects what you chose to share.
+    </p>
   </main>
   <script>
-    function markReady() {
-      const ref = document.getElementById('case-reference').value || 'pending';
-      document.getElementById('queue-status').textContent = `Handoff prepared for case ${ref}. Connect this route to the live provider network before production.`;
+    function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+    function loadConvo(){
+      let log=[]; try{ log=JSON.parse(sessionStorage.getItem('innerlight_convo')||'[]'); }catch(e){}
+      const risk = sessionStorage.getItem('innerlight_risk')||'low';
+      if(risk==='critical'||risk==='high'){ document.getElementById('urgent-note').style.display='block'; }
+      const box=document.getElementById('convo-summary');
+      if(!log.length){ box.innerHTML='<p class="u">It looks like the conversation did not carry over. You can use the boxes below to tell the professional what is going on, in your own words.</p>'; return; }
+      box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
     }
- 
-
-
-
-
- </script>
+    function sendToCare(){
+      document.getElementById('status').textContent='Your summary is prepared and the care side has been notified. A professional will review what you shared before connecting. Please keep this page open.';
+    }
+    loadConvo();
+  </script>
 </body>
 </html>
 """
+
+
+LEGAL_HANDOFF_PAGE = r"""
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InnerLight &mdash; Connecting You to Legal Help</title>
+  <style>
+    :root { --ink:#23292f; --muted:#5f6b73; --line:#dde2e6; --soft:#f7f9fb; --urgent:#b84a44; --legal:#5a4596; --legal2:#6f57b0; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:#fbfbfd; }
+    header { padding:26px 6vw; border-bottom:1px solid var(--line); background:white; }
+    main { padding:24px 6vw 60px; max-width:920px; margin:0 auto; }
+    h1 { margin:0 0 6px; font-size:clamp(26px, 4.5vw, 44px); line-height:1.05; }
+    h2 { margin:0 0 10px; font-size:20px; }
+    p { color:var(--muted); line-height:1.55; }
+    .tag { display:inline-block; padding:5px 12px; border-radius:999px; background:#efeaf9; border:1px solid #d8cdf0; color:var(--legal); font-weight:700; font-size:13px; margin-bottom:10px; }
+    .panel { border:1px solid var(--line); border-radius:12px; background:white; padding:20px; margin:16px 0; }
+    .who { background:#f7f4fd; border-color:#e0d6f4; }
+    .who ul { margin:8px 0 0; padding-left:0; list-style:none; }
+    .who li { padding:9px 0; border-bottom:1px solid #ebe3f7; color:var(--ink); }
+    .who li:last-child { border-bottom:0; }
+    .who b { color:var(--legal); }
+    .rights { background:#f7f9fb; border-color:#dde2e6; }
+    .rights summary { cursor:pointer; font-weight:700; color:var(--legal); }
+    .rights p { font-size:14px; }
+    label { display:block; font-weight:700; color:var(--ink); margin:14px 0 6px; }
+    textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:12px; font:inherit; min-height:90px; }
+    .convo { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:14px; max-height:280px; overflow:auto; }
+    .convo .u { color:var(--ink); margin:0 0 10px; }
+    .convo .a { color:var(--legal2); margin:0 0 10px; }
+    .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; }
+    button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--legal); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
+    .secondary { background:#ece7f6; color:var(--ink); }
+    .locked { font-size:13px; color:var(--muted); margin-top:8px; }
+    .disclaimer { font-size:12.5px; color:#8a929a; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="tag">Connecting you to legal help &mdash; this is a legal handoff</div>
+    <h1>You're being connected to legal support</h1>
+    <p>This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Here is who you may reach and what protects you before anything is shared.</p>
+  </header>
+  <main>
+    <section class="panel who">
+      <h2>Who you may be connected with</h2>
+      <p>You'll be told which one applies before any live conversation:</p>
+      <ul>
+        <li><b>Attorney / lawyer</b> &mdash; can give you legal advice about your specific situation and may represent you.</li>
+        <li><b>Legal-aid organization</b> &mdash; free or low-cost legal help, often for housing, benefits, disability, or family matters.</li>
+        <li><b>Legal-access navigator</b> &mdash; helps you find the right legal resource and understand your options.</li>
+        <li><b>Self-help / civic resources</b> &mdash; plain-language information about your rights and the process.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Here's what you told InnerLight</h2>
+      <p>This is built from your actual conversation &mdash; not a form. Read it over. If anything is wrong or you want to say it differently, you can correct it so it truly reflects what you mean.</p>
+      <div class="convo" id="convo-summary"><p class="u">Loading your conversation&hellip;</p></div>
+      <label for="clarify">Correct or clarify anything (this becomes part of what the legal professional sees)</label>
+      <textarea id="clarify" placeholder="Make sure your situation is described the way you mean it."></textarea>
+      <label for="addnote">Anything you want to add that didn't come up?</label>
+      <textarea id="addnote" placeholder="Dates, notices you've received, deadlines, documents you have, or what outcome you're hoping for."></textarea>
+      <p class="locked">Once you send this, the legal professional can read it and form their own view, but they cannot change your words. Your record stays honest. You decide whether it's sent at all.</p>
+    </section>
+
+    <details class="panel rights">
+      <summary>Your privacy &amp; your rights (tap to read)</summary>
+      <p><b>About attorney-client privilege.</b> Once you formally engage an attorney, what you tell them about your case is generally protected by attorney-client privilege &mdash; meaning they cannot disclose it without your permission, with narrow legal exceptions. That privilege begins with the attorney, once you are their client.</p>
+      <p><b>Before that point.</b> What you share here with InnerLight is treated as private and is encrypted. InnerLight is not your attorney, and sharing with InnerLight is not the same as the attorney-client relationship. Privilege attaches once you engage the lawyer.</p>
+      <p><b>You decide what is shared.</b> Nothing is sent to any legal professional until you choose to send it. You can close this page and nothing goes out.</p>
+      <p><b>What we are not.</b> InnerLight provides legal <i>information</i> and <i>connection</i> to legal help. InnerLight itself does not provide legal advice or represent you. Legal advice comes only from the attorney or legal-aid professional you connect with.</p>
+    </details>
+
+    <section class="panel">
+      <h2>Ready when you are</h2>
+      <p>When you send this, InnerLight prepares your approved summary so the legal professional can review it before speaking with you.</p>
+      <p id="status" style="font-weight:700;color:var(--legal);"></p>
+      <button onclick="sendToLegal()">Send my summary &amp; connect me to legal help</button>
+      <a class="button secondary" href="/#private-step" onclick="window.close();return false;">Go back</a>
+    </section>
+
+    <p class="disclaimer">
+      InnerLight, a service of God's Love For Us LLC, provides legal information and connection to legal resources. It is not a law firm and does not provide legal advice or representation. No attorney-client relationship is formed with InnerLight. Attorney-client privilege applies once you engage a licensed attorney. Your information is encrypted and shared only with your consent. If your legal issue involves immediate danger to your safety, call 911.
+    </p>
+  </main>
+  <script>
+    function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+    function loadConvo(){
+      let log=[]; try{ log=JSON.parse(sessionStorage.getItem('innerlight_convo')||'[]'); }catch(e){}
+      const box=document.getElementById('convo-summary');
+      if(!log.length){ box.innerHTML='<p class="u">It looks like the conversation did not carry over. You can use the boxes below to describe your legal issue in your own words.</p>'; return; }
+      box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
+    }
+    function sendToLegal(){
+      document.getElementById('status').textContent='Your summary is prepared and the legal side has been notified. A legal professional will review what you shared before connecting. Please keep this page open.';
+    }
+    loadConvo();
+  </script>
+</body>
+</html>
+"""
+
+
+# Legacy generic page name kept pointing at the clinical page for old routes.
+TELEHEALTH_PAGE = CLINICAL_HANDOFF_PAGE
 
 
 _OPERATOR_ONLY_PATHS = ("/console", "/api/sessions", "/api/audit")
@@ -2208,26 +2405,24 @@ def console():
     return render_template_string(PAGE)
 
 
+@app.route("/handoff/clinical")
+def handoff_clinical():
+    return render_template_string(CLINICAL_HANDOFF_PAGE)
+
+
+@app.route("/handoff/legal")
+def handoff_legal():
+    return render_template_string(LEGAL_HANDOFF_PAGE)
+
+
 @app.route("/telehealth/urgent")
 def telehealth_urgent():
-    return render_template_string(
-        TELEHEALTH_PAGE,
-        priority="Immediate",
-        mode_class="urgent",
-        heading="Immediate practitioner routing",
-        message="InnerLight marked this as urgent. The next step is safety screening, calming support, and a consent-based case handoff.",
-    )
+    return render_template_string(CLINICAL_HANDOFF_PAGE)
 
 
 @app.route("/telehealth/intake")
 def telehealth_intake():
-    return render_template_string(
-        TELEHEALTH_PAGE,
-        priority="Standard",
-        mode_class="",
-        heading="Guided practitioner intake",
-        message="InnerLight can prepare a structured summary for the right professional after the user answers enough questions and gives consent.",
-    )
+    return render_template_string(CLINICAL_HANDOFF_PAGE)
 
 
 @app.route("/api/profile", methods=["POST"])
