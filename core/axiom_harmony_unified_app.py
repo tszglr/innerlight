@@ -23,6 +23,9 @@ from legal_guidance_engine import detect_legal_issues, generate_legal_guidance
 from quantum_emotion_engine import get_quantum_engine
 from crisis_risk_reader import get_crisis_reader
 from handoff_report_engine import get_report_engine, scan_for_diagnostic_language
+from handoff_queue import (
+    submit_handoff, list_handoffs, get_handoff, set_status, diagnostics as handoff_diagnostics,
+)
 from human_voice import synthesize as voice_synthesize, voice_provider, list_voices as voice_list
 from zenisys_lab import ZENISYS_LAB_PAGE
 from resolution_framework import (
@@ -489,25 +492,28 @@ PUBLIC_PAGE = """
       background:linear-gradient(180deg, #f5faf7 0%, #fdf8f6 50%, #f7f0f9 100%); }
     #calm-bg { position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:0; pointer-events:none; }
     .story-screen > * { position:relative; z-index:1; }
-    .story-video-bar { position:sticky; top:0; z-index:30 !important; }
     .scene-picker { position:fixed; bottom:14px; right:14px; z-index:20; display:flex; gap:6px;
       background:rgba(255,255,255,0.7); backdrop-filter:blur(6px); border-radius:999px; padding:6px 10px; }
     .scene-btn { background:none; border:0; font-size:18px; cursor:pointer; opacity:0.6; padding:2px 4px; }
     .scene-btn.active { opacity:1; transform:scale(1.15); }
-    .story-video-bar { padding:14px 0 8px; width:100%; text-align:center;
-      position:sticky; top:0; z-index:30;
-      background:linear-gradient(180deg, rgba(245,250,247,0.94), rgba(245,250,247,0.70));
-      backdrop-filter:blur(6px); transition:padding 0.35s ease; }
-    /* When the conversation is active, the pinned face shrinks so it stays
-       visible without taking the whole screen — but never disappears. */
-    .story-video-bar.compact { padding:8px 0 6px; }
-    .story-video-bar.compact .story-video { width:84px; height:84px; border-width:2px; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,0.16); margin-bottom:0; }
+    /* FACE VIDEO — starts centered and calm. On scroll it gently floats to a
+       small rounded thumbnail on the side; scrolling back to top returns it
+       to the centered spot. Smooth, never growing, never taking over. */
+    .story-video-bar { padding:18px 0 10px; width:100%; text-align:center;
+      transition:all 0.4s ease; }
+    .story-video-bar.floating { position:fixed; top:84px; right:20px; left:auto;
+      width:auto; padding:0; z-index:40; text-align:right; }
     .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
       border-radius:18px; padding:4px 16px; max-height:52vh; overflow-y:auto; scroll-behavior:smooth; }
     #conversation-thread:empty { background:none; padding:0; }
-    .story-video { width:340px; height:340px; max-width:80vw; max-height:80vw; object-fit:cover; border-radius:24px; border:3px solid #c8ddd2;
-      margin:0 auto 8px; display:block; background:#e8f0eb; box-shadow:0 8px 30px rgba(0,0,0,0.18); transition:width 0.35s ease, height 0.35s ease, border-radius 0.35s ease; }
+    .story-video { width:300px; height:300px; max-width:78vw; max-height:78vw; object-fit:cover; border-radius:28px; border:3px solid #c8ddd2;
+      margin:0 auto 8px; display:block; background:#e8f0eb; box-shadow:0 8px 30px rgba(0,0,0,0.18);
+      transition:width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, box-shadow 0.4s ease, margin 0.4s ease; }
+    .story-video-bar.floating .story-video { width:110px; height:110px; border-radius:50%;
+      border-width:3px; margin:0; box-shadow:0 6px 22px rgba(0,0,0,0.28); }
+    @media (max-width:640px){ .story-video-bar.floating .story-video { width:78px; height:78px; }
+      .story-video-bar.floating { top:70px; right:12px; } }
     .story-title { font-size:26px; font-weight:600; margin:0 0 6px; color:#2d4a3e; }
     .story-sub { color:#6d8f80; font-size:14px; margin:0 0 22px; }
     .story-input { width:100%; min-height:130px; box-sizing:border-box; padding:18px; border-radius:16px;
@@ -1381,6 +1387,26 @@ document.addEventListener('DOMContentLoaded', loadVoiceChoices);
 // Record when the person is typing so heavy work (face detection) yields to
 // the keyboard and typing always stays instant.
 document.addEventListener('keydown', function(){ window._lastTypedAt = performance.now(); }, true);
+// FACE VIDEO floats to the side when you scroll down, and returns to its
+// centered spot when you scroll back to the top. Smooth and calm.
+(function(){
+  let ticking = false;
+  function onScroll(){
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function(){
+      const bar = document.querySelector('.story-video-bar');
+      if (bar) {
+        // Float once the page is scrolled past a gentle threshold; return to
+        // center when near the top.
+        if (window.scrollY > 140) bar.classList.add('floating');
+        else bar.classList.remove('floating');
+      }
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+})();
 
 function speak(text) {
   if (!voiceEnabled || !text) return;
@@ -1717,10 +1743,6 @@ function restartConversation() {
   document.getElementById('conv-answer').focus();
 }
 function appendExchange(thread, reply, question, safetyHtml) {
-  // Conversation is active — shrink the pinned face to a compact thumbnail
-  // so it stays visible at the top without taking over the screen.
-  const vbar = document.querySelector('.story-video-bar');
-  if (vbar) vbar.classList.add('compact');
   // Remove any previous reply box (keep conversation flat)
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
