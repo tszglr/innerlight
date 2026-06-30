@@ -623,6 +623,17 @@ PUBLIC_PAGE = """
             <span id="listen-label" style="font-size:13px;color:#5a7a96;font-weight:600;">Listening\u2026</span>
           </div>
           <div id="transcript-text" style="font-size:17px;line-height:1.5;color:#1a3a5c;min-height:24px;">&nbsp;</div>
+          <div style="margin-top:10px;">
+            <div style="font-size:11px;color:#6e8ba3;margin-bottom:4px;">Microphone level</div>
+            <div style="height:8px;background:rgba(90,130,160,0.18);border-radius:6px;overflow:hidden;">
+              <div id="mic-level-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#6fb3d4,#3aa56b);border-radius:6px;transition:width 0.06s linear;"></div>
+            </div>
+          </div>
+        </div>
+        <div id="mic-test-row" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+          <button type="button" onclick="testMic()" style="align-self:flex-start;background:#fff;color:#5a7d6d;border:1px solid #c8ddd2;border-radius:999px;padding:7px 14px;font-size:12px;cursor:pointer;">Test my microphone</button>
+          <span id="mic-test-status" style="font-size:12px;color:#6e8ba3;"></span>
+          <audio id="mic-test-playback" controls style="display:none;width:100%;max-width:320px;"></audio>
         </div>
         <div class="sound-status" id="sound-status"></div>
         <div class="emotion-status" id="emotion-status" style="display:none;"></div>
@@ -1174,6 +1185,12 @@ let voiceRecognizer = null;
 let voiceListening = false;
 let voiceFinalTranscript = '';
 let voiceSendTimer = null;
+let micStreamLive = null;
+let micAudioCtx = null;
+let micAnalyser = null;
+let micMeterRAF = null;
+let micRecorder = null;
+let micTestChunks = [];
 function escHtml(s){ const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
 function startZenisys(mode='greeting') {
   // Silent — music shifts happen through the ambient audio player, not notifications
@@ -1193,107 +1210,142 @@ function multimodalPayload() {
     voice_features: voiceFeatures || {}
   };
 }
-function startVoiceCapture() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    $('emotion-status').textContent = 'This browser does not expose speech recognition. You can type instead.';
-    return;
+async function ensureMicStream() {
+  if (micStreamLive) return micStreamLive;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { throw new Error('no-getusermedia'); }
+  micStreamLive = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+  });
+  const AC = window.AudioContext || window.webkitAudioContext;
+  micAudioCtx = micAudioCtx || new AC();
+  if (micAudioCtx.state === 'suspended') { try { await micAudioCtx.resume(); } catch(e){} }
+  const source = micAudioCtx.createMediaStreamSource(micStreamLive);
+  micAnalyser = micAudioCtx.createAnalyser();
+  micAnalyser.fftSize = 512;
+  source.connect(micAnalyser);
+  runMicMeter();
+  return micStreamLive;
+}
+function runMicMeter() {
+  const data = new Uint8Array(micAnalyser.frequencyBinCount);
+  const bar = document.getElementById('mic-level-fill');
+  function tick() {
+    if (!micAnalyser) return;
+    micAnalyser.getByteTimeDomainData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) { const v = (data[i]-128)/128; sum += v*v; }
+    const rms = Math.sqrt(sum / data.length);
+    const pct = Math.min(100, Math.round(rms * 240));
+    if (bar) bar.style.width = pct + '%';
+    micMeterRAF = requestAnimationFrame(tick);
   }
-  if (!voiceRecognizer) {
-    voiceRecognizer = new SpeechRecognition();
-    voiceRecognizer.continuous = true;
-    voiceRecognizer.interimResults = true;
-    voiceRecognizer.lang = 'en-US';
-    voiceRecognizer.onresult = event => {
-      let finalText = '';
-      let interimText = '';
-      for (let i = event.resultIndex; i < event.results.length; i += 1) {
-        const chunk = event.results[i][0].transcript;
-        if (event.results[i].isFinal) { finalText += chunk; }
-        else { interimText += chunk; }
-      }
-      if (finalText) { voiceFinalTranscript = (voiceFinalTranscript + ' ' + finalText).trim(); }
-      const shown = (voiceFinalTranscript + ' ' + interimText).trim();
-      // SHOW it live: final words solid, interim words faded
-      const panel = $('live-transcript');
-      const tEl = $('transcript-text');
-      if (panel && tEl) {
-        panel.style.display = 'block';
-        tEl.innerHTML = (voiceFinalTranscript ? '<span style=\"color:#1a3a5c;\">' + escHtml(voiceFinalTranscript) + '</span>' : '')
-          + (interimText ? ' <span style=\"color:#8aa3c4;\">' + escHtml(interimText) + '</span>' : '')
-          || '&nbsp;';
-      }
-      // keep hidden field + input box in sync (and SAVE the words)
-      $('voice_transcript').value = shown;
-      const box = document.getElementById('conv-answer') || $('message');
-      if (box) box.value = shown;
-      captureVoiceFeatures();
-      // AUTO-SEND when the person pauses: each finished sentence sends on its
-      // own after a brief beat, so it's a flowing hands-free conversation.
-      if (finalText) {
-        if (voiceSendTimer) clearTimeout(voiceSendTimer);
-        voiceSendTimer = setTimeout(() => {
-          const text = (voiceFinalTranscript || '').trim();
-          if (text && voiceListening) {
-            voiceFinalTranscript = '';
-            if (box) box.value = text;
-            if (typeof sendCheckin === 'function') sendCheckin();
-            else if (typeof continueConversation === 'function') continueConversation();
-          }
-        }, 1400); // ~1.4s pause = end of thought
-      }
+  if (micMeterRAF) cancelAnimationFrame(micMeterRAF);
+  tick();
+}
+function stopMicStream() {
+  if (micMeterRAF) { cancelAnimationFrame(micMeterRAF); micMeterRAF = null; }
+  const bar = document.getElementById('mic-level-fill'); if (bar) bar.style.width = '0%';
+  if (micStreamLive) { micStreamLive.getTracks().forEach(t => t.stop()); micStreamLive = null; }
+  micAnalyser = null;
+}
+async function testMic() {
+  const status = document.getElementById('mic-test-status');
+  try {
+    await ensureMicStream();
+    if (status) status.textContent = 'Recording 3 seconds \u2014 say anything\u2026';
+    micTestChunks = [];
+    micRecorder = new MediaRecorder(micStreamLive);
+    micRecorder.ondataavailable = e => { if (e.data.size) micTestChunks.push(e.data); };
+    micRecorder.onstop = () => {
+      const blob = new Blob(micTestChunks, { type: micRecorder.mimeType || 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const player = document.getElementById('mic-test-playback');
+      if (player) { player.src = url; player.style.display = 'block'; player.play().catch(()=>{}); }
+      if (status) status.textContent = 'That is what your mic picked up \u2014 if you can hear yourself, it works.';
     };
-    voiceRecognizer.onerror = event => {
-      const err = event.error || 'unknown';
-      // Network/no-speech hiccups: don't give up — retry quietly if still wanted.
-      if ((err === 'network' || err === 'no-speech' || err === 'aborted') && voiceListening) {
-        const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Reconnecting the mic\u2026';
-        setTimeout(() => { if (voiceListening) { try { voiceRecognizer.start(); } catch(e){} } }, 600);
-        return;
-      }
-      const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Mic issue: ' + err + ' \u2014 you can type instead';
-      $('emotion-status').textContent = 'Mic issue: ' + err + '. You can type instead.';
-    };
-    voiceRecognizer.onend = () => {
-      // If the user still WANTS to listen, the browser dropping the session
-      // should NOT stop us — restart so it stays live (fixes the split-second bug).
-      if (voiceListening) {
-        try { voiceRecognizer.start(); return; } catch (e) {}
-      }
-      const dot = $('listen-dot'); const lbl = $('listen-label');
-      if (dot) dot.style.background = '#3aa56b';
-      if (lbl) lbl.textContent = 'Saved \u2014 press Enter to send, or keep editing';
-      const micBtn = document.querySelector('.story-mic');
-      if (micBtn) micBtn.innerHTML = '&#127908; Speak';
-    };
+    micRecorder.start();
+    setTimeout(() => { try { micRecorder.stop(); } catch(e){} }, 3000);
+  } catch (e) {
+    if (status) status.textContent = 'Could not open the microphone. Please allow mic access in your browser, then try again.';
   }
-  // TOGGLE: if already listening, this click STOPS and submits.
+}
+async function startVoiceCapture() {
   if (voiceListening) {
     voiceListening = false;
-    try { voiceRecognizer.stop(); } catch (e) {}
+    if (voiceRecognizer) { try { voiceRecognizer.stop(); } catch (e) {} }
+    stopMicStream();
+    const micBtn = document.querySelector('.story-mic');
+    if (micBtn) micBtn.innerHTML = '&#127908; Speak';
+    const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Saved \u2014 press Enter to send, or keep editing';
     return;
   }
-  // Otherwise START listening and STAY listening until clicked again.
+  try {
+    await ensureMicStream();
+  } catch (e) {
+    const lbl = $('listen-label');
+    if (lbl) lbl.textContent = 'Could not open the microphone. Please allow mic access in your browser. You can also type.';
+    const panel = $('live-transcript'); if (panel) panel.style.display = 'block';
+    return;
+  }
   voiceListening = true;
   voiceFinalTranscript = '';
   const panel = $('live-transcript'); const dot = $('listen-dot'); const lbl = $('listen-label'); const tEl = $('transcript-text');
   if (panel) panel.style.display = 'block';
   if (dot) dot.style.background = '#e05a5a';
-  if (lbl) lbl.textContent = 'Listening\u2026 speak now (click mic again to stop)';
+  if (lbl) lbl.textContent = 'Listening\u2026 speak now (tap mic again to stop)';
   if (tEl) tEl.innerHTML = '&nbsp;';
   const micBtn = document.querySelector('.story-mic');
   if (micBtn) micBtn.innerHTML = '&#128308; Listening\u2026 (tap to stop)';
-  try {
-    voiceRecognizer.start();
-  } catch (e) {
-    // If start throws, it's usually already running or blocked by http
-    voiceListening = false;
-    if (lbl) lbl.textContent = 'Could not start mic. If the page is not https, the browser blocks it. You can type instead.';
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    if (!voiceRecognizer) {
+      voiceRecognizer = new SR();
+      voiceRecognizer.continuous = true;
+      voiceRecognizer.interimResults = true;
+      voiceRecognizer.lang = 'en-US';
+      voiceRecognizer.onresult = event => {
+        let finalText = '', interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const chunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += chunk; else interimText += chunk;
+        }
+        if (finalText) voiceFinalTranscript = (voiceFinalTranscript + ' ' + finalText).trim();
+        const shown = (voiceFinalTranscript + ' ' + interimText).trim();
+        const tp = $('transcript-text');
+        if (tp) tp.innerHTML = (voiceFinalTranscript ? '<span style="color:#1a3a5c;">'+escHtml(voiceFinalTranscript)+'</span>' : '')
+          + (interimText ? ' <span style="color:#8aa3c4;">'+escHtml(interimText)+'</span>' : '') || '&nbsp;';
+        if ($('voice_transcript')) $('voice_transcript').value = shown;
+        const box = document.getElementById('conv-answer') || $('message');
+        if (box) box.value = shown;
+        if (typeof captureVoiceFeatures === 'function') captureVoiceFeatures();
+        if (finalText) {
+          if (voiceSendTimer) clearTimeout(voiceSendTimer);
+          voiceSendTimer = setTimeout(() => {
+            const text = (voiceFinalTranscript || '').trim();
+            if (text && voiceListening) {
+              voiceFinalTranscript = '';
+              if (box) box.value = text;
+              if (typeof sendCheckin === 'function') sendCheckin();
+              else if (typeof continueConversation === 'function') continueConversation();
+            }
+          }, 1400);
+        }
+      };
+      voiceRecognizer.onerror = event => {
+        const err = event.error || 'unknown';
+        if ((err === 'network' || err === 'no-speech' || err === 'aborted') && voiceListening) {
+          setTimeout(() => { if (voiceListening) { try { voiceRecognizer.start(); } catch(e){} } }, 500);
+        }
+      };
+      voiceRecognizer.onend = () => {
+        if (voiceListening) { try { voiceRecognizer.start(); return; } catch (e) {} }
+      };
+    }
+    try { voiceRecognizer.start(); } catch (e) {}
+  } else {
+    if (lbl) lbl.textContent = 'Listening\u2026 (your words will not auto-type in this browser, but the mic is working \u2014 you can type too)';
   }
-  $('emotion-status').style.display = 'block';
-  $('emotion-status').textContent = 'Listening... speak now.';
 }
-
 // --- VOICE TONE ANALYSIS (feeds quantum emotion engine) ---
 let voiceFeatures = { pitch_variance: 0.5, energy: 0.5, rate: 0.5, tremor: 0.0 };
 let audioContext = null, analyser = null, micStream = null;
