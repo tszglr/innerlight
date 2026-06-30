@@ -1273,6 +1273,7 @@ async function startVoiceCapture() {
   if (voiceListening) {
     voiceListening = false;
     if (voiceRecognizer) { try { voiceRecognizer.stop(); } catch (e) {} }
+    stopDeepgramStream();
     stopMicStream();
     const micBtn = document.querySelector('.story-mic');
     if (micBtn) micBtn.innerHTML = '&#127908; Speak';
@@ -1296,6 +1297,22 @@ async function startVoiceCapture() {
   if (tEl) tEl.innerHTML = '&nbsp;';
   const micBtn = document.querySelector('.story-mic');
   if (micBtn) micBtn.innerHTML = '&#128308; Listening\u2026 (tap to stop)';
+
+  // PRIMARY transcription: Deepgram live streaming (the Zoom way) — reliable on
+  // every browser and phone. Falls back to the browser's built-in speech-to-text
+  // only if Deepgram isn't configured. The MIC itself already works regardless.
+  let usingDeepgram = false;
+  try {
+    const tk = await fetch('/api/transcribe/token').then(r => r.json());
+    if (tk && tk.ok && tk.key) {
+      usingDeepgram = true;
+      startDeepgramStream(tk.key);
+    }
+  } catch (e) { /* fall through to browser STT */ }
+
+  if (usingDeepgram) return;
+
+  // FALLBACK: browser built-in speech-to-text (optional layer).
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SR) {
     if (!voiceRecognizer) {
@@ -1346,6 +1363,72 @@ async function startVoiceCapture() {
     if (lbl) lbl.textContent = 'Listening\u2026 (your words will not auto-type in this browser, but the mic is working \u2014 you can type too)';
   }
 }
+
+// Stream live mic audio to Deepgram and show words on screen as they're spoken.
+let dgSocket = null;
+let dgRecorder = null;
+function startDeepgramStream(tempKey){
+  try {
+    // Open Deepgram's live streaming endpoint with the short-lived key.
+    dgSocket = new WebSocket(
+      'wss://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&interim_results=true&punctuate=true',
+      ['token', tempKey]
+    );
+    dgSocket.onopen = () => {
+      // Send mic audio in small chunks as it's captured.
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      dgRecorder = new MediaRecorder(micStreamLive, { mimeType: mime });
+      dgRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0 && dgSocket && dgSocket.readyState === 1) dgSocket.send(e.data);
+      };
+      dgRecorder.start(250); // send every 250ms for low-latency live text
+    };
+    dgSocket.onmessage = (msg) => {
+      let data; try { data = JSON.parse(msg.data); } catch(e){ return; }
+      const alt = data && data.channel && data.channel.alternatives && data.channel.alternatives[0];
+      if (!alt) return;
+      const text = alt.transcript || '';
+      if (!text) return;
+      const tp = document.getElementById('transcript-text');
+      const box = document.getElementById('conv-answer') || $('message');
+      if (data.is_final) {
+        voiceFinalTranscript = (voiceFinalTranscript + ' ' + text).trim();
+        if (tp) tp.innerHTML = '<span style="color:#1a3a5c;">' + escHtml(voiceFinalTranscript) + '</span>';
+        if ($('voice_transcript')) $('voice_transcript').value = voiceFinalTranscript;
+        if (box) box.value = voiceFinalTranscript;
+        // Auto-send each finished thought after a brief pause.
+        if (voiceSendTimer) clearTimeout(voiceSendTimer);
+        voiceSendTimer = setTimeout(() => {
+          const t = (voiceFinalTranscript || '').trim();
+          if (t && voiceListening) {
+            voiceFinalTranscript = '';
+            if (box) box.value = t;
+            if (typeof sendCheckin === 'function') sendCheckin();
+            else if (typeof continueConversation === 'function') continueConversation();
+          }
+        }, 1400);
+      } else {
+        // interim: show final solid + this faded
+        if (tp) tp.innerHTML = (voiceFinalTranscript ? '<span style="color:#1a3a5c;">'+escHtml(voiceFinalTranscript)+'</span> ' : '')
+          + '<span style="color:#8aa3c4;">' + escHtml(text) + '</span>';
+      }
+    };
+    dgSocket.onerror = () => {
+      const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Listening\u2026 (mic working; reconnecting transcription\u2026)';
+    };
+    dgSocket.onclose = () => {
+      try { if (dgRecorder && dgRecorder.state !== 'inactive') dgRecorder.stop(); } catch(e){}
+    };
+  } catch (e) {
+    // If Deepgram can't open, the mic still works and the meter still moves.
+  }
+}
+function stopDeepgramStream(){
+  try { if (dgRecorder && dgRecorder.state !== 'inactive') dgRecorder.stop(); } catch(e){}
+  try { if (dgSocket) { dgSocket.send(JSON.stringify({type:'CloseStream'})); dgSocket.close(); } } catch(e){}
+  dgRecorder = null; dgSocket = null;
+}
+
 // --- VOICE TONE ANALYSIS (feeds quantum emotion engine) ---
 let voiceFeatures = { pitch_variance: 0.5, energy: 0.5, rate: 0.5, tremor: 0.0 };
 let audioContext = null, analyser = null, micStream = null;
@@ -2599,6 +2682,51 @@ def resolution_bridge():
         "handoff_event_id": event_id,
         "bridge_complete": True,
     })
+
+@app.route("/api/transcribe/token")
+def api_transcribe_token():
+    """Provide the browser a SHORT-LIVED Deepgram key so it can stream live
+    microphone audio for transcription (the Zoom way). The real DEEPGRAM_API_KEY
+    stays on the server and is never sent to the page. The temporary key expires
+    quickly so it is safe to hand to the browser.
+    """
+    import urllib.request
+    import urllib.error
+    main_key = os.environ.get("DEEPGRAM_API_KEY", "").strip()
+    if not main_key:
+        return jsonify({"ok": False, "reason": "no_key",
+                        "message": "Transcription key not set. Add DEEPGRAM_API_KEY in the host settings."}), 200
+    # Ask Deepgram for the project id, then mint a short-lived scoped key.
+    try:
+        proj_req = urllib.request.Request(
+            "https://api.deepgram.com/v1/projects",
+            headers={"Authorization": f"Token {main_key}"},
+        )
+        with urllib.request.urlopen(proj_req, timeout=10) as r:
+            projects = json.loads(r.read().decode("utf-8")).get("projects", [])
+        if not projects:
+            return jsonify({"ok": False, "reason": "no_project",
+                            "message": "No Deepgram project found for this key."}), 200
+        project_id = projects[0]["project_id"]
+        body = json.dumps({
+            "comment": "innerlight short-lived browser key",
+            "scopes": ["usage:write"],
+            "time_to_live_in_seconds": 60,
+        }).encode("utf-8")
+        key_req = urllib.request.Request(
+            f"https://api.deepgram.com/v1/projects/{project_id}/keys",
+            data=body, method="POST",
+            headers={"Authorization": f"Token {main_key}", "Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(key_req, timeout=10) as r:
+            temp = json.loads(r.read().decode("utf-8"))
+        return jsonify({"ok": True, "key": temp.get("key"), "expires_in": 60})
+    except urllib.error.HTTPError as e:
+        return jsonify({"ok": False, "reason": "deepgram_http",
+                        "message": f"Deepgram responded {e.code}. Check the key."}), 200
+    except Exception as e:
+        return jsonify({"ok": False, "reason": "error", "message": str(e)[:120]}), 200
+
 
 @app.route("/api/voice/list")
 def api_voice_list():
