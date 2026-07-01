@@ -1304,9 +1304,9 @@ async function startVoiceCapture() {
   let usingDeepgram = false;
   try {
     const tk = await fetch('/api/transcribe/token').then(r => r.json());
-    if (tk && tk.ok && tk.key) {
+    if (tk && tk.ok && tk.token) {
       usingDeepgram = true;
-      startDeepgramStream(tk.key);
+      startDeepgramStream(tk.token);
     }
   } catch (e) { /* fall through to browser STT */ }
 
@@ -1367,12 +1367,13 @@ async function startVoiceCapture() {
 // Stream live mic audio to Deepgram and show words on screen as they're spoken.
 let dgSocket = null;
 let dgRecorder = null;
-function startDeepgramStream(tempKey){
+function startDeepgramStream(tempToken){
   try {
-    // Open Deepgram's live streaming endpoint with the short-lived key.
+    // Open Deepgram's live streaming endpoint with the short-lived JWT token.
+    // JWT tokens from /auth/grant use the 'bearer' subprotocol.
     dgSocket = new WebSocket(
       'wss://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&interim_results=true&punctuate=true',
-      ['token', tempKey]
+      ['bearer', tempToken]
     );
     dgSocket.onopen = () => {
       // Send mic audio in small chunks as it's captured.
@@ -2685,47 +2686,39 @@ def resolution_bridge():
 
 @app.route("/api/transcribe/token")
 def api_transcribe_token():
-    """Provide the browser a SHORT-LIVED Deepgram key so it can stream live
+    """Provide the browser a SHORT-LIVED Deepgram token so it can stream live
     microphone audio for transcription (the Zoom way). The real DEEPGRAM_API_KEY
-    stays on the server and is never sent to the page. The temporary key expires
-    quickly so it is safe to hand to the browser.
+    stays on the server and is never sent to the page. Uses Deepgram's modern
+    /auth/grant endpoint, which is purpose-built for short-lived client tokens.
     """
     import urllib.request
     import urllib.error
-    main_key = os.environ.get("DEEPGRAM_API_KEY", "").strip()
+    main_key = os.environ.get("DEEPGRAM_API_KEY", "").strip().strip('"').strip("'")
     if not main_key:
         return jsonify({"ok": False, "reason": "no_key",
                         "message": "Transcription key not set. Add DEEPGRAM_API_KEY in the host settings."}), 200
-    # Ask Deepgram for the project id, then mint a short-lived scoped key.
     try:
-        proj_req = urllib.request.Request(
-            "https://api.deepgram.com/v1/projects",
-            headers={"Authorization": f"Token {main_key}"},
-        )
-        with urllib.request.urlopen(proj_req, timeout=10) as r:
-            projects = json.loads(r.read().decode("utf-8")).get("projects", [])
-        if not projects:
-            return jsonify({"ok": False, "reason": "no_project",
-                            "message": "No Deepgram project found for this key."}), 200
-        project_id = projects[0]["project_id"]
-        body = json.dumps({
-            "comment": "innerlight short-lived browser key",
-            "scopes": ["usage:write"],
-            "time_to_live_in_seconds": 60,
-        }).encode("utf-8")
-        key_req = urllib.request.Request(
-            f"https://api.deepgram.com/v1/projects/{project_id}/keys",
+        body = json.dumps({"ttl_seconds": 60}).encode("utf-8")
+        req = urllib.request.Request(
+            "https://api.deepgram.com/v1/auth/grant",
             data=body, method="POST",
             headers={"Authorization": f"Token {main_key}", "Content-Type": "application/json"},
         )
-        with urllib.request.urlopen(key_req, timeout=10) as r:
-            temp = json.loads(r.read().decode("utf-8"))
-        return jsonify({"ok": True, "key": temp.get("key"), "expires_in": 60})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            grant = json.loads(r.read().decode("utf-8"))
+        token = grant.get("access_token") or grant.get("token") or grant.get("key")
+        if not token:
+            return jsonify({"ok": False, "reason": "no_token",
+                            "message": "Deepgram did not return a token."}), 200
+        return jsonify({"ok": True, "token": token, "expires_in": grant.get("expires_in", 60)})
     except urllib.error.HTTPError as e:
+        detail = ""
+        try: detail = e.read().decode("utf-8")[:160]
+        except Exception: pass
         return jsonify({"ok": False, "reason": "deepgram_http",
-                        "message": f"Deepgram responded {e.code}. Check the key."}), 200
+                        "message": f"Deepgram responded {e.code}. {detail}"}), 200
     except Exception as e:
-        return jsonify({"ok": False, "reason": "error", "message": str(e)[:120]}), 200
+        return jsonify({"ok": False, "reason": "error", "message": str(e)[:160]}), 200
 
 
 @app.route("/api/voice/list")
