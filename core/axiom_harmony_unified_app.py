@@ -19,6 +19,7 @@ from crisis_response_core import CrisisResponseCore
 from cultural_detector import CulturalDetector
 from zenisys_music_engine import get_zenisys_engine
 from conversation_engine import get_conversation_engine
+import comprehension_engine
 from legal_guidance_engine import detect_legal_issues, generate_legal_guidance
 from quantum_emotion_engine import get_quantum_engine
 from crisis_risk_reader import get_crisis_reader
@@ -1677,7 +1678,8 @@ async function sendCheckin() {  startZenisys('greeting');
       support_preference:val('support_preference') || 'Help me decide',
       sound_preference:val('sound_preference') || 'Warm ambient',
       telehealth_requested:chk('telehealth_requested'),
-      consent_case_file:chk('consent_case_file')
+      consent_case_file:chk('consent_case_file'),
+      conversation: conversationLog
     }, multimodalPayload()))
   });
   const data = await res.json();
@@ -1952,7 +1954,7 @@ async function continueConversation() {
       answer: userAnswer,
       learning_state: innerLightLearningState,
       session_reference: innerLightSessionReference,
-      context: Object.assign({}, innerLightContext, multimodalPayload())
+      context: Object.assign({}, innerLightContext, multimodalPayload(), {conversation: conversationLog})
     })
   });
   const data = await res.json();
@@ -3105,13 +3107,21 @@ def api_checkin():
     elif cr["level"] == "concern" and risk == "low":
         risk = "moderate"
 
-    # --- Conversation engine: personalized first response (FAST — no network) ---
+    # --- Comprehension: understand what the person MEANS (Claude), with the
+    # local engine as a reliable fallback if the model isn't set or is slow. ---
     face_emo = ""
     if isinstance(data, dict):
         face_emo = str(data.get("face_emotion", "")).strip()
-    initial_conv = get_conversation_engine().respond(
-        user_text=message, face_emotion=face_emo, risk=risk,
+    history = data.get("conversation") if isinstance(data, dict) else None
+    smart = comprehension_engine.respond(
+        user_text=message, history=history, risk=risk, face_emotion=face_emo,
     )
+    if smart:
+        initial_conv = {"response": smart["response"], "question": smart.get("question", "")}
+    else:
+        initial_conv = get_conversation_engine().respond(
+            user_text=message, face_emotion=face_emo, risk=risk,
+        )
     # Mirror the person's register (casual/formal) — same care, met where they are
     conv_response = get_cultural_engine().shape_response(
         initial_conv["response"], cultural["register"]
@@ -3298,16 +3308,23 @@ def api_innerlight_learn():
     elif crl["level"] == "concern" and learn_risk == "low":
         learn_risk = "moderate"
 
-    # --- Conversation engine: replace generic response with personalized one ---
+    # --- Comprehension: understand the follow-up (Claude), fall back locally ---
     face_emotion = ""
     if isinstance(context, dict):
         face_emotion = str(context.get("face_emotion", "")).strip()
-    conv = get_conversation_engine().respond(
-        user_text=answer,
-        face_emotion=face_emotion,
-        risk=learn_risk,
-        learning_state=learned.get("learning_state"),
+    history_l = context.get("conversation") if isinstance(context, dict) else None
+    smart_l = comprehension_engine.respond(
+        user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion,
     )
+    if smart_l:
+        conv = {"response": smart_l["response"], "question": smart_l.get("question", "")}
+    else:
+        conv = get_conversation_engine().respond(
+            user_text=answer,
+            face_emotion=face_emotion,
+            risk=learn_risk,
+            learning_state=learned.get("learning_state"),
+        )
     # Mirror register: same care, met where they are
     learned["response"] = get_cultural_engine().shape_response(conv["response"], cultural["register"])
     learned["questions"] = [get_cultural_engine().shape_response(conv["question"], cultural["register"])]
