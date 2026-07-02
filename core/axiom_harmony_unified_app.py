@@ -591,8 +591,7 @@ PUBLIC_PAGE = """
       </div>
       <div class="story-video-bar">
         <video id="visual-preview" class="story-video" autoplay muted playsinline></video>
-        <div class="emotion-badge" id="face-emotion-badge" style="display:none;"></div>
-      </div>
+              </div>
       <div class="story-wrap">
         <h2 class="story-title">Tell me your story.</h2>
         <p class="story-sub">Take your time. Say whatever feels true. I am listening.</p>
@@ -743,8 +742,10 @@ async function detectFaceEmotion() {
       let top = 'neutral', topVal = 0;
       for (const [k, v] of Object.entries(det.expressions)) { if (v > topVal) { top = k; topVal = v; } }
       currentFaceEmotion = top;
-      const badge = document.getElementById('face-emotion-badge');
-      if (badge) { badge.textContent = top + ' (' + Math.round(topVal * 100) + '%)'; badge.style.display = 'inline-block'; }
+      // The reading stays SILENT — it steers the sound in the background, but
+      // no label is ever shown to the person. A wrong label ("you look angry")
+      // can inflame someone in crisis. Readings will surface only in the
+      // founder's private admin log (coming with the admin dashboard).
     }
   } catch (e) {}
   finally { window._faceBusy = false; }
