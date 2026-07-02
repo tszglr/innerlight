@@ -912,8 +912,8 @@ function adaptiveTick() {
   // 3) Gently steer the entrainment pulse: a slightly slower, deeper pulse for
   //    an activated person (calming), easing toward a neutral rate as they settle.
   if (entrainOn) {
-    // more arousal -> slower pulse (~6 Hz, calming); calm -> ~8 Hz resting
-    const targetHz = 6 + (1 - Math.min(1, adaptiveArousal)) * 2.5;
+    // more arousal -> slower pulse (~3.5 Hz, calming); calm -> ~5 Hz resting
+    const targetHz = 3.5 + (1 - Math.min(1, adaptiveArousal)) * 1.5;
     setEntrainmentBeat(targetHz);
   }
 }
@@ -941,8 +941,8 @@ function stopAdaptiveLoop() {
 let entrainCtx = null, entrainOscL = null, entrainOscR = null, entrainGain = null;
 let entrainPanL = null, entrainPanR = null, entrainOn = false;
 const ENTRAIN_CARRIER = 120;   // low, warm carrier tone (Hz) — felt, not piercing
-let entrainBeatHz = 8;         // difference between ears = the pulse (Hz)
-const ENTRAIN_VOL = 0.045;     // very soft — under the music, not over it
+let entrainBeatHz = 4.5;       // slower, deeper pulse (lowered per Toshay)
+const ENTRAIN_VOL = 0.018;     // barely-there — felt more than heard (lowered per Toshay)
 
 function startEntrainment() {
   if (entrainOn) return;
@@ -972,7 +972,7 @@ function startEntrainment() {
     }
     entrainOscL.start(); entrainOscR.start();
     // gentle fade-in so it's never a sudden tone
-    entrainGain.gain.linearRampToValueAtTime(ENTRAIN_VOL, entrainCtx.currentTime + 4.0);
+    entrainGain.gain.linearRampToValueAtTime(ENTRAIN_VOL, entrainCtx.currentTime + 8.0);
     entrainOn = true;
   } catch (e) { /* if unavailable, the warm music still plays fine */ }
 }
@@ -1326,8 +1326,21 @@ async function startExperience() {
       if (ambientTracks.length) {
         const deck = getActiveDeck();
         deck.src = ambientTracks[0].url;
-        deck.volume = TARGET_VOL;
+        // GENTLE ARRIVAL: enter soft, then rise smoothly into full rich volume —
+        // never an abrupt hit of sound in the ear.
+        deck.volume = TARGET_VOL * 0.30;
         deck.play().catch(()=>{});
+        (function arrivalRise(){
+          const RISE_MS = 10000; // ten calm seconds from soft to full
+          const start = performance.now(), from = deck.volume, to = TARGET_VOL;
+          function step(t){
+            const p = Math.min(1, (t - start) / RISE_MS);
+            const ease = p*p*(3-2*p); // smooth, no lurch
+            deck.volume = from + (to - from) * ease;
+            if (p < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        })();
         const now = $('music-now'); if (now) now.textContent = '\u266a ' + (ambientTracks[0].name || 'soft music');
         // If this arrival started on the SYMPHONY lane (person very upset),
         // ease down into SPA after the proven ~3-minute attention window.
