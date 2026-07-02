@@ -495,7 +495,6 @@ PUBLIC_PAGE = """
     .story-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:0 20px 40px;
       position:relative; overflow:hidden;
       background:linear-gradient(180deg, #f5faf7 0%, #fdf8f6 50%, #f7f0f9 100%); }
-    #calm-bg { position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:0; pointer-events:none; }
     .story-screen > * { position:relative; z-index:1; }
     .scene-picker { position:fixed; bottom:14px; right:14px; z-index:20; display:flex; gap:6px;
       background:rgba(255,255,255,0.7); backdrop-filter:blur(6px); border-radius:999px; padding:6px 10px; }
@@ -579,16 +578,16 @@ PUBLIC_PAGE = """
     <!-- CALM STORY SCREEN -->
     <section id="story-screen" class="story-screen" style="display:none;">
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
-      <video id="calm-video" autoplay muted loop playsinline
-             style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;display:none;"></video>
-      <canvas id="calm-bg" style="display:none;"></canvas>
+      <img id="calm-photo-a" alt="" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;">
+      <img id="calm-photo-b" alt="" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;">
       <div class="scene-picker" id="scene-picker">
-        <button class="scene-btn active" data-scene="meadow" onclick="setScene('meadow')" title="Meadow">&#127807;</button>
-        <button class="scene-btn" data-scene="stars" onclick="setScene('stars')" title="Starry sky">&#10024;</button>
-        <button class="scene-btn" data-scene="clouds" onclick="setScene('clouds')" title="Clouds">&#9729;</button>
-        <button class="scene-btn" data-scene="ocean" onclick="setScene('ocean')" title="Ocean">&#127754;</button>
-        <button class="scene-btn" data-scene="rain" onclick="setScene('rain')" title="Gentle rain">&#127783;</button>
-        <button class="scene-btn" data-scene="city" onclick="setScene('city')" title="City from above">&#127961;</button>
+        <button class="scene-btn active" data-scene="garden" onclick="setScene('garden')" title="Garden">&#127807;</button>
+        <button class="scene-btn" data-scene="sunflower" onclick="setScene('sunflower')" title="Sunflower">&#127803;</button>
+        <button class="scene-btn" data-scene="sunset" onclick="setScene('sunset')" title="Sunset trees">&#127749;</button>
+        <button class="scene-btn" data-scene="horizon" onclick="setScene('horizon')" title="Golden horizon">&#127748;</button>
+        <button class="scene-btn" data-scene="moon" onclick="setScene('moon')" title="Night moon">&#127765;</button>
+        <button class="scene-btn" data-scene="daymoon" onclick="setScene('daymoon')" title="Day moon">&#127761;</button>
+        <button class="scene-btn" data-scene="moonleaf" onclick="setScene('moonleaf')" title="Moon through leaves">&#127769;</button>
       </div>
       <div class="story-video-bar">
         <video id="visual-preview" class="story-video" autoplay muted playsinline></video>
@@ -668,127 +667,49 @@ PUBLIC_PAGE = """
 // Real nature video plays as the background by default. The animated
 // canvas only appears if video can't load (slow connection, offline, or
 // no file present). Realism always outweighs animation.
-const SCENE_VIDEOS = {
-  // These point to the app's own /scenes/ folder (downloaded real footage).
-  // If a file is missing, the animated fallback for that scene runs instead.
-  meadow: '/scenes/meadow.mp4',
-  stars:  '/scenes/stars.mp4',
-  clouds: '/scenes/clouds.mp4',
-  ocean:  '/scenes/ocean.mp4',
-  rain:   '/scenes/rain.mp4',
-  city:   '/scenes/city.mp4'
+const SCENE_PHOTOS = {
+  // Real photographs, taken by the founder. No animation — realism grounds
+  // the person in the actual world.
+  garden:    '/scenes/photo_1_rosemary.jpg',
+  sunflower: '/scenes/photo_5_sunflower.jpg',
+  sunset:    '/scenes/photo_2_sunset_trees.jpg',
+  horizon:   '/scenes/photo_6_golden_horizon.jpg',
+  moon:      '/scenes/photo_3_moon_night.jpg',
+  daymoon:   '/scenes/photo_4_moon_day.jpg',
+  moonleaf:  '/scenes/photo_7_moon_leaves.jpg'
 };
-let currentScene = 'meadow';
+const SCENE_ORDER = ['garden','sunflower','sunset','horizon','moon','daymoon','moonleaf'];
+let sceneAutoTimer = null, sceneUserChose = false;
+let currentScene = 'garden';
 let canvasAnim = null;
 
-function setScene(scene) {
+function setScene(scene, byUser=true) {
   currentScene = scene;
+  if (byUser) sceneUserChose = true;   // the person chose — stop auto-rotation
   document.querySelectorAll('.scene-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.scene === scene);
   });
-  const video = document.getElementById('calm-video');
-  const canvas = document.getElementById('calm-bg');
-  const src = SCENE_VIDEOS[scene];
-  // TRY REAL VIDEO FIRST
-  if (src) {
-    video.onerror = () => useAnimatedFallback(scene);
-    video.oncanplay = () => {
-      // Real video loaded — hide the animated fallback
-      video.style.display = 'block';
-      canvas.style.display = 'none';
-      if (canvasAnim) { cancelAnimationFrame(canvasAnim); canvasAnim = null; }
-    };
-    video.src = src;
-    video.load();
-    // If video doesn't become playable quickly, fall back gracefully
-    setTimeout(() => {
-      if (video.readyState < 2) useAnimatedFallback(scene);
-    }, 2500);
-  } else {
-    useAnimatedFallback(scene);
-  }
+  const imgA = document.getElementById('calm-photo-a');
+  const imgB = document.getElementById('calm-photo-b');
+  const src = SCENE_PHOTOS[scene];
+  if (!imgA || !imgB || !src) return;
+  // Crossfade: load into the hidden layer, then trade opacities slowly.
+  const showing = imgA.style.opacity !== '0' ? imgA : imgB;
+  const hidden  = showing === imgA ? imgB : imgA;
+  hidden.onload = () => { hidden.style.opacity = '1'; showing.style.opacity = '0'; };
+  hidden.src = src;
 }
 
-function useAnimatedFallback(scene) {
-  // Animation ONLY when real video isn't available. Never the main event.
-  const video = document.getElementById('calm-video');
-  const canvas = document.getElementById('calm-bg');
-  video.style.display = 'none';
-  canvas.style.display = 'block';
-  startCanvasScene(scene);
+function startSceneRotation() {
+  // Slow, gentle rotation through the real photographs — until the person
+  // picks one themselves; their choice always wins.
+  if (sceneAutoTimer) clearInterval(sceneAutoTimer);
+  sceneAutoTimer = setInterval(() => {
+    if (sceneUserChose) { clearInterval(sceneAutoTimer); sceneAutoTimer = null; return; }
+    const i = SCENE_ORDER.indexOf(currentScene);
+    setScene(SCENE_ORDER[(i + 1) % SCENE_ORDER.length], false);
+  }, 90000); // a new scene every 90 calm seconds
 }
-
-function startCanvasScene(scene) {
-  const canvas = document.getElementById('calm-bg');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  if (canvasAnim) cancelAnimationFrame(canvasAnim);
-
-  // Gentle, realistic-feeling gradient scenes with soft motion.
-  // Deliberately subtle — calming, not cartoonish.
-  const palettes = {
-    meadow: ['#cfe8d4', '#e8f3dd', '#f3f0d8'],
-    stars:  ['#1a2238', '#2a3458', '#3d4a78'],
-    clouds: ['#dce8f5', '#eef4fa', '#f7fafd'],
-    ocean:  ['#bfe0e8', '#d8eef2', '#e8f5f7'],
-    rain:   ['#cdd6dd', '#dde4e9', '#eaeef1'],
-    city:   ['#0d1b2a', '#1b3a5b', '#2c5378']
-  };
-  const colors = palettes[scene] || palettes.meadow;
-  let t = 0;
-  const particles = [];
-  // Soft drifting particles (pollen, stars, raindrops) — minimal, gentle
-  const count = scene === 'stars' ? 60 : scene === 'rain' ? 50 : 25;
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: scene === 'stars' ? Math.random()*1.5+0.5 : Math.random()*3+1,
-      speed: scene === 'rain' ? Math.random()*4+3 : Math.random()*0.4+0.1,
-      drift: Math.random()*0.5-0.25
-    });
-  }
-  function draw() {
-    t += 0.003;
-    // Soft shifting gradient
-    const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    const shift = (Math.sin(t) + 1) / 2 * 0.1;
-    g.addColorStop(0, colors[0]);
-    g.addColorStop(0.5 + shift, colors[1]);
-    g.addColorStop(1, colors[2]);
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Gentle particles
-    ctx.fillStyle = scene === 'stars' ? 'rgba(255,255,255,0.8)'
-                  : scene === 'rain' ? 'rgba(255,255,255,0.4)'
-                  : 'rgba(255,255,255,0.5)';
-    particles.forEach(p => {
-      if (scene === 'stars') {
-        ctx.globalAlpha = 0.4 + Math.sin(t*3 + p.x) * 0.4;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-        ctx.globalAlpha = 1;
-      } else if (scene === 'rain') {
-        ctx.fillRect(p.x, p.y, 1, p.r*4);
-        p.y += p.speed; if (p.y > canvas.height) { p.y = -10; p.x = Math.random()*canvas.width; }
-      } else {
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-        p.y -= p.speed; p.x += p.drift;
-        if (p.y < -10) { p.y = canvas.height+10; p.x = Math.random()*canvas.width; }
-      }
-    });
-    canvasAnim = requestAnimationFrame(draw);
-  }
-  draw();
-}
-
-window.addEventListener('resize', () => {
-  const canvas = document.getElementById('calm-bg');
-  if (canvas && canvas.style.display !== 'none') {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-  }
-});
 
 // ========================================================
 // ZENISYS SOUND ENGINE v3 — DJ Crossfade + Generative Layer
@@ -1300,8 +1221,9 @@ async function startExperience() {
   const gate = $('welcome-gate'); if (gate) gate.style.display = 'none';
   const screen = $('story-screen'); if (screen) screen.style.display = 'flex';
   const msg = $('message'); if (msg) msg.focus();
-  // Start the calming background scene (realism leads, animation fallback)
-  setScene('meadow');
+  // Start on a real photograph (the founder's garden) and rotate slowly
+  setScene('garden', false);
+  startSceneRotation();
 
   // STEP 2: Start camera, face detection, and music IN THE BACKGROUND
   // These are nice-to-have — the conversation works even if they all fail
