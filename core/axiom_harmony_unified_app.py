@@ -484,6 +484,10 @@ PUBLIC_PAGE = """
     @keyframes breathe { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
     #welcome-gate h1 { font-size:30px; margin:6px 0 12px; font-weight:600; letter-spacing:.02em; color:#2d4a3e; }
     #welcome-gate p { color:#5a7d6d; font-size:15px; line-height:1.6; margin:0 0 22px; }
+    .gate-links { margin-top:22px; font-size:13px; color:#8fa8a0; display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
+    .gate-links a { color:#6d8f80; text-decoration:none; border-bottom:1px solid transparent; transition:border-color .2s; }
+    .gate-links a:hover { border-bottom-color:#7eb8a0; }
+    .gate-links span { color:#c8ddd2; }
     .gate-button { background:#5ba08a; color:#fff; border:0; border-radius:999px; padding:15px 38px;
       font-size:16px; font-weight:600; cursor:pointer; box-shadow:0 12px 30px rgba(91,160,138,.35); transition:transform .15s; }
     .gate-button:hover { transform:translateY(-2px); background:#4e9079; }
@@ -563,6 +567,12 @@ PUBLIC_PAGE = """
         <p>A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
         <button class="gate-button" onclick="startExperience()">Tap to begin</button>
         <p class="gate-sub">Soft music and your camera begin gently when you tap.</p>
+        <div class="gate-links">
+          <a href="/about">About</a><span>&middot;</span>
+          <a href="/how-it-works">How it works</a><span>&middot;</span>
+          <a href="/privacy">Your privacy</a><span>&middot;</span>
+          <a href="/contact">Contact</a>
+        </div>
       </div>
     </div>
 
@@ -595,6 +605,7 @@ PUBLIC_PAGE = """
         <div class="music-bar">
           <span id="music-now">&#9834; soft music playing</span>
           <button class="music-change" type="button" onclick="changeMusic()">Change music</button>
+          <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()">&#10041; Calm pulse: on</button>
           <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoice()">&#128263; Voice Off</button>
           <select id="voice-picker" onchange="selectVoice(this.value)" style="border-radius:999px;border:1px solid #c8ddd2;padding:5px 10px;font-size:13px;color:#3a5a72;background:#fff;max-width:200px;" title="Choose a voice that feels comforting"><option value="">Voice: default</option></select>
           <button class="music-change" type="button" id="voicefirst-toggle" onclick="toggleVoiceFirst()">&#127908; Voice-First: Off</button>
@@ -797,11 +808,13 @@ async function loadFaceModels() {
 }
 async function detectFaceEmotion() {
   if (!faceReady) return;
-  // Don't compete with the keyboard: if the person typed in the last 1.2s,
-  // skip this cycle so typing stays instant.
-  if (window._lastTypedAt && (performance.now() - window._lastTypedAt) < 1200) return;
+  if (window._faceBusy) return;  // don't let detections pile up on slower phones
+  // Don't compete with the keyboard: if the person typed very recently, skip
+  // this cycle so typing stays instant (short window so we still catch changes).
+  if (window._lastTypedAt && (performance.now() - window._lastTypedAt) < 700) return;
   const video = document.getElementById('visual-preview');
   if (!video || !video.videoWidth) return;
+  window._faceBusy = true;
   try {
     const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
     if (det && det.expressions) {
@@ -813,9 +826,185 @@ async function detectFaceEmotion() {
       if (badge) { badge.textContent = top + ' (' + Math.round(topVal * 100) + '%)'; badge.style.display = 'inline-block'; }
     }
   } catch (e) {}
+  finally { window._faceBusy = false; }
 }
 let faceInterval = null;
-function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 3500); }
+// Detect the face often — subtle emotion flickers across a face in fractions
+// of a second, so we look ~every 0.6s to catch the ticks. The SOUND still
+// responds gently (frequent detection + smoothed response = sensitive but not jittery).
+function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 600); }
+
+// ---------------------------------------------------------------------------
+// THE ADAPTIVE LOOP (free version) — the sound RESPONDS to the person in real
+// time, using the face + voice signals we already capture. No wearable, no API,
+// no cost. This is the first working version of the responsive-sound idea:
+// like the quiet authority in the car, it responds continuously and gently,
+// never in jarring jumps.
+//
+// It reads how activated the person seems (agitation vs. flat/down vs. calm),
+// smooths it over time so it never lurches, and nudges the music: a touch
+// softer and steadier for agitation (settle them), a touch warmer/present for
+// flatness (reach them), easing back toward gentle calm as they settle.
+// ---------------------------------------------------------------------------
+let adaptiveInterval = null;
+let adaptiveArousal = 0.5;   // 0 = very calm/flat, 1 = very activated. Smoothed.
+let adaptiveLaneNow = 'spa'; // which lane the adaptive loop currently favors
+let adaptiveLastSwitch = 0;
+
+function readArousalSignal() {
+  // Combine face + voice into a single 0..1 "activation" estimate.
+  // Face: anger/fear/disgust push UP; sad pushes DOWN-but-present; happy/neutral calm.
+  let faceUp = 0, faceDown = 0;
+  const s = faceEmotionScores || {};
+  faceUp = (s.angry||0)*1.0 + (s.fearful||0)*0.9 + (s.disgusted||0)*0.6 + (s.surprised||0)*0.4;
+  faceDown = (s.sad||0)*1.0;
+  // Voice: high energy + high pitch variance + tremor => more activated.
+  const v = voiceFeatures || {};
+  const voiceUp = ((v.energy||0.5)*0.5 + (v.pitch_variance||0.5)*0.3 + (v.tremor||0)*0.6);
+  // Blend into an instantaneous arousal estimate.
+  let inst = Math.min(1, Math.max(0, faceUp*0.6 + voiceUp*0.5));
+  // "Down/flat" is low arousal but still needs reaching — track it separately.
+  window._adaptiveDown = faceDown;
+  return inst;
+}
+
+function adaptiveTick() {
+  if (!ambientTracks.length) return;
+  const inst = readArousalSignal();
+  // Smooth heavily so the sound never lurches — gentle, like quiet authority.
+  adaptiveArousal = adaptiveArousal*0.85 + inst*0.15;
+  const down = (window._adaptiveDown || 0);
+
+  // 1) Continuously nudge VOLUME within a gentle band. More activated -> a touch
+  //    softer and steadier (don't add to their noise). Calm -> normal presence.
+  const deck = getActiveDeck();
+  if (deck && !crossfading) {
+    const band = 0.04; // small, never dramatic
+    let target = TARGET_VOL - (adaptiveArousal - 0.5) * band; // higher arousal => softer
+    target = Math.max(TARGET_VOL - band, Math.min(TARGET_VOL + band*0.5, target));
+    // ease toward target
+    deck.volume = deck.volume + (target - deck.volume) * 0.2;
+  }
+
+  // 2) When the read is clearly and persistently one way, gently shift the LANE
+  //    (deep-calm to bring an activated person DOWN; lifting to reach a flat/
+  //    down person UP). Rate-limited so it can't flip back and forth.
+  const now = Date.now();
+  if (now - adaptiveLastSwitch < 25000) return; // at most one shift per 25s
+  let want = null;
+  if (adaptiveArousal > 0.68 && adaptiveLaneNow !== 'deepcalm') want = 'deepcalm';
+  else if (down > 0.55 && adaptiveArousal < 0.45 && adaptiveLaneNow !== 'lifting') want = 'lifting';
+  else if (adaptiveArousal < 0.35 && down < 0.3 && adaptiveLaneNow !== 'spa') want = 'spa';
+  if (want) {
+    adaptiveLaneNow = want;
+    adaptiveLastSwitch = now;
+    const emo = want === 'deepcalm' ? 'angry' : (want === 'lifting' ? 'sad' : 'calm');
+    fetch('/api/zenisys/ambient?emotion=' + encodeURIComponent(emo))
+      .then(r => r.json())
+      .then(d => {
+        const tracks = d.tracks || [];
+        if (tracks.length) {
+          ambientTracks = tracks; ambientIndex = 0;
+          switchAmbient(tracks[0].url, tracks[0].name);
+        }
+      }).catch(()=>{});
+  }
+  // 3) Gently steer the entrainment pulse: a slightly slower, deeper pulse for
+  //    an activated person (calming), easing toward a neutral rate as they settle.
+  if (entrainOn) {
+    // more arousal -> slower pulse (~6 Hz, calming); calm -> ~8 Hz resting
+    const targetHz = 6 + (1 - Math.min(1, adaptiveArousal)) * 2.5;
+    setEntrainmentBeat(targetHz);
+  }
+}
+
+function startAdaptiveLoop() {
+  if (adaptiveInterval) return;
+  adaptiveInterval = setInterval(adaptiveTick, 2500); // gentle, every 2.5s
+}
+function stopAdaptiveLoop() {
+  if (adaptiveInterval) { clearInterval(adaptiveInterval); adaptiveInterval = null; }
+}
+
+// ---------------------------------------------------------------------------
+// THE ENTRAINMENT LAYER (free, generated) — a subtle, steady calming pulse
+// layered gently UNDER the warm music. Research links a slow pulse in the
+// ~6-10 Hz range (and low carrier tones) to easing anxiety. This is felt more
+// than heard: two soft low tones a few Hz apart create a gentle "beat" the
+// nervous system can settle toward (the science word: entrainment).
+//
+// It NEVER replaces the warm music — it sits beneath it, very quiet. It uses
+// its own tiny Web Audio graph so it's independent of the music decks. And it
+// gently follows the adaptive loop: a slightly slower, deeper pulse to calm an
+// activated person; eased off as they settle.
+// ---------------------------------------------------------------------------
+let entrainCtx = null, entrainOscL = null, entrainOscR = null, entrainGain = null;
+let entrainPanL = null, entrainPanR = null, entrainOn = false;
+const ENTRAIN_CARRIER = 120;   // low, warm carrier tone (Hz) — felt, not piercing
+let entrainBeatHz = 8;         // difference between ears = the pulse (Hz)
+const ENTRAIN_VOL = 0.045;     // very soft — under the music, not over it
+
+function startEntrainment() {
+  if (entrainOn) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    entrainCtx = entrainCtx || new AC();
+    if (entrainCtx.state === 'suspended') { entrainCtx.resume().catch(()=>{}); }
+    entrainGain = entrainCtx.createGain();
+    entrainGain.gain.value = 0;           // fade in gently
+    entrainGain.connect(entrainCtx.destination);
+    // Two oscillators, one per ear, a few Hz apart => a soft binaural pulse.
+    entrainOscL = entrainCtx.createOscillator();
+    entrainOscR = entrainCtx.createOscillator();
+    entrainOscL.type = 'sine'; entrainOscR.type = 'sine';
+    entrainOscL.frequency.value = ENTRAIN_CARRIER;
+    entrainOscR.frequency.value = ENTRAIN_CARRIER + entrainBeatHz;
+    // Pan each to one ear (headphones make the pulse clearest; still soothing on speakers).
+    entrainPanL = entrainCtx.createStereoPanner ? entrainCtx.createStereoPanner() : null;
+    entrainPanR = entrainCtx.createStereoPanner ? entrainCtx.createStereoPanner() : null;
+    if (entrainPanL && entrainPanR) {
+      entrainPanL.pan.value = -1; entrainPanR.pan.value = 1;
+      entrainOscL.connect(entrainPanL).connect(entrainGain);
+      entrainOscR.connect(entrainPanR).connect(entrainGain);
+    } else {
+      entrainOscL.connect(entrainGain);
+      entrainOscR.connect(entrainGain);
+    }
+    entrainOscL.start(); entrainOscR.start();
+    // gentle fade-in so it's never a sudden tone
+    entrainGain.gain.linearRampToValueAtTime(ENTRAIN_VOL, entrainCtx.currentTime + 4.0);
+    entrainOn = true;
+  } catch (e) { /* if unavailable, the warm music still plays fine */ }
+}
+
+function setEntrainmentBeat(hz) {
+  // Gently move the pulse rate (e.g., slower/deeper to calm an activated person).
+  entrainBeatHz = Math.max(4, Math.min(10, hz));
+  if (entrainOn && entrainOscR && entrainCtx) {
+    entrainOscR.frequency.linearRampToValueAtTime(ENTRAIN_CARRIER + entrainBeatHz, entrainCtx.currentTime + 3.0);
+  }
+}
+
+function stopEntrainment() {
+  if (!entrainOn) return;
+  try {
+    entrainGain.gain.linearRampToValueAtTime(0, entrainCtx.currentTime + 2.0);
+    setTimeout(() => { try { entrainOscL.stop(); entrainOscR.stop(); } catch(e){} entrainOn = false; }, 2200);
+  } catch (e) { entrainOn = false; }
+}
+
+function toggleEntrainment() {
+  const btn = document.getElementById('entrain-toggle');
+  if (entrainOn) {
+    window._entrainEnabled = false;
+    stopEntrainment();
+    if (btn) btn.innerHTML = '&#10041; Calm pulse: off';
+  } else {
+    window._entrainEnabled = true;
+    startEntrainment();
+    if (btn) btn.innerHTML = '&#10041; Calm pulse: on';
+  }
+}
 
 // --- DJ CROSSFADE ENGINE ---
 let deckA, deckB, activeDeck = 'A';
@@ -1121,6 +1310,10 @@ async function startExperience() {
     try { await startVisualCamera(); } catch (e) { console.log('[InnerLight] Camera unavailable:', e); }
     // Face emotion detection
     try { await loadFaceModels(); startFaceLoop(); } catch (e) { console.log('[InnerLight] Face models unavailable:', e); }
+    // Start the free adaptive loop — sound responds to face + voice in real time
+    startAdaptiveLoop();
+    // Start the subtle entrainment pulse gently under the music (can be toggled off)
+    if (window._entrainEnabled !== false) startEntrainment();
     // Background music — DJ crossfade + generative synth
     try {
       initDecks();
@@ -1135,11 +1328,17 @@ async function startExperience() {
         deck.volume = TARGET_VOL;
         deck.play().catch(()=>{});
         const now = $('music-now'); if (now) now.textContent = '\u266a ' + (ambientTracks[0].name || 'soft music');
+        // If this arrival started on the SYMPHONY lane (person very upset),
+        // ease down into SPA after the proven ~3-minute attention window.
+        if (data.lane === 'symphony_to_spa' && data.then && data.then.length) {
+          scheduleSpaTransition(data.then, (data.transition_after_seconds || 180) * 1000);
+        }
       } else {
         const now = $('music-now'); if (now) now.textContent = 'music loading...';
       }
-      // Start the generative synth pad layer (soft chords underneath)
-      startSynthPad('calm');
+      // NOTE: the thin synth-tone layer is intentionally OFF now that real
+      // calming instrumental audio is playing — real music leads, not tones.
+      // startSynthPad('calm');  // (disabled by design)
     } catch (e) { console.log('[InnerLight] Music unavailable:', e); }
   }, 100);
 }
@@ -1147,6 +1346,27 @@ function changeMusic() {
   if (!ambientTracks.length) return;
   crossfading = true;
   playNextTrackBlended();
+}
+
+// Proven car method: when someone arrives very upset, symphony plays first to
+// catch and hold their attention, then we GENTLY ease down into spa to calm
+// them. This schedules that transition after the attention window.
+let spaTransitionTimer = null;
+function scheduleSpaTransition(spaTracks, delayMs) {
+  if (spaTransitionTimer) clearTimeout(spaTransitionTimer);
+  spaTransitionTimer = setTimeout(() => {
+    if (!spaTracks || !spaTracks.length) return;
+    // Swap the playlist over to spa and crossfade into it softly.
+    ambientTracks = spaTracks;
+    ambientIndex = 0;
+    const inactive = getInactiveDeck();
+    if (!inactive) return;
+    inactive.src = spaTracks[0].url;
+    inactive.load();
+    crossfade(getActiveDeck(), inactive, CROSSFADE_MS);
+    activeDeck = activeDeck === 'A' ? 'B' : 'A';
+    const now = $('music-now'); if (now) now.textContent = '\u266a ' + (spaTracks[0].name || 'Spa');
+  }, delayMs);
 }
 function switchAmbient(url, name, vol) {
   // DJ-style: crossfade to the new track instead of hard-switching
@@ -1336,18 +1556,8 @@ async function startVoiceCapture() {
         const box = document.getElementById('conv-answer') || $('message');
         if (box) box.value = shown;
         if (typeof captureVoiceFeatures === 'function') captureVoiceFeatures();
-        if (finalText) {
-          if (voiceSendTimer) clearTimeout(voiceSendTimer);
-          voiceSendTimer = setTimeout(() => {
-            const text = (voiceFinalTranscript || '').trim();
-            if (text && voiceListening) {
-              voiceFinalTranscript = '';
-              if (box) box.value = text;
-              if (typeof sendCheckin === 'function') sendCheckin();
-              else if (typeof continueConversation === 'function') continueConversation();
-            }
-          }, 1400);
-        }
+        // Words BUILD in the box. Nothing sends on its own — the person sends
+        // when they are ready (Enter or send button), even with the mic on.
       };
       voiceRecognizer.onerror = event => {
         const err = event.error || 'unknown';
@@ -1397,22 +1607,15 @@ function startDeepgramStream(tempToken){
         voiceFinalTranscript = (voiceFinalTranscript + ' ' + text).trim();
         if (tp) tp.innerHTML = '<span style="color:#1a3a5c;">' + escHtml(voiceFinalTranscript) + '</span>';
         if ($('voice_transcript')) $('voice_transcript').value = voiceFinalTranscript;
+        // Words keep BUILDING in the box as one growing message. Nothing sends
+        // on its own — the person edits freely and sends only when THEY choose
+        // (Enter or the send button), even with the mic still on.
         if (box) box.value = voiceFinalTranscript;
-        // Auto-send each finished thought after a brief pause.
-        if (voiceSendTimer) clearTimeout(voiceSendTimer);
-        voiceSendTimer = setTimeout(() => {
-          const t = (voiceFinalTranscript || '').trim();
-          if (t && voiceListening) {
-            voiceFinalTranscript = '';
-            if (box) box.value = t;
-            if (typeof sendCheckin === 'function') sendCheckin();
-            else if (typeof continueConversation === 'function') continueConversation();
-          }
-        }, 1400);
       } else {
-        // interim: show final solid + this faded
+        // interim: show final solid + this faded (also mirror into the box live)
         if (tp) tp.innerHTML = (voiceFinalTranscript ? '<span style="color:#1a3a5c;">'+escHtml(voiceFinalTranscript)+'</span> ' : '')
           + '<span style="color:#8aa3c4;">' + escHtml(text) + '</span>';
+        if (box) box.value = (voiceFinalTranscript + ' ' + text).trim();
       }
     };
     dgSocket.onerror = () => {
@@ -1660,7 +1863,15 @@ function revealUrgentHelp(data){
 }
 
 async function sendCheckin() {  startZenisys('greeting');
-  logTurn('user', val('message'));
+  const msgVal = (val('message') || '').trim();
+  // Empty guard: if there's nothing to send, don't fake a response.
+  if (!msgVal) {
+    const em = $('emotion-status');
+    if (em) { em.style.display='block'; em.textContent = "I didn't catch anything yet — take your time, and share whenever you're ready."; }
+    return;
+  }
+  voiceFinalTranscript = '';
+  logTurn('user', msgVal);
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   const res = await fetch('/api/checkin', {
     method:'POST',
@@ -1742,7 +1953,17 @@ function appendLegalGuidance(thread, lg) {
 }
 function appendHandoff(thread, handoff, data) {
   if (!handoff || handoff.type === 'none') return;
+  // Don't push "talk to a specialist" prematurely. Let the person be understood
+  // first. Only show a handoff after enough real exchange — UNLESS it's an
+  // urgent safety situation, which should always surface immediately.
+  const userTurns = (typeof conversationLog !== 'undefined')
+    ? conversationLog.filter(t => t.role === 'user').length : 0;
+  const urgent = (data && (data.risk === 'critical' || data.risk === 'high')) || handoff.type === 'crisis';
+  if (!urgent && userTurns < 4) return;
+  // Don't show the same handoff twice in a row.
+  if (thread.querySelector('.handoff-card')) { const old = thread.querySelector('.handoff-card'); if (old) old.remove(); }
   const el = document.createElement('div');
+  el.className = 'handoff-card';
   const colors = {
     crisis: {bg:'#f0f7f4', border:'#5ba08a', accent:'#2d6a4e'},
     legal: {bg:'#f5f0fa', border:'#a78bfa', accent:'#6d28d9'},
@@ -1887,14 +2108,17 @@ function appendExchange(thread, reply, question, safetyHtml) {
   // Append the AI's response
   const exchange = document.createElement('div');
   exchange.style.cssText = 'text-align:left;padding:16px 0;border-bottom:1px solid #e8f0eb;';
+  const questionHtml = (question && question.trim())
+    ? `<p style="font-size:16px;line-height:1.7;color:#2d4a3e;margin:14px 0 0;font-weight:500;">${escapeHtml(question)}</p>`
+    : '';
   exchange.innerHTML = `
     <p style="font-size:16px;line-height:1.7;color:#2d4a3e;margin:0 0 8px;">${escapeHtml(reply)}</p>
     ${safetyHtml || ''}
-    <p style="font-size:16px;line-height:1.7;color:#2d4a3e;margin:14px 0 0;font-weight:500;">${escapeHtml(question)}</p>
+    ${questionHtml}
   `;
   thread.appendChild(exchange);
-  // SPEAK the response and question aloud (AI voice)
-  speak(reply + '. ' + question);
+  // SPEAK the response aloud (AI voice) — include question only if present
+  speak(question && question.trim() ? (reply + '. ' + question) : reply);
   // Add a fresh reply box at the bottom (always exactly one)
   const replyBox = document.createElement('div');
   replyBox.className = 'reply-box';
@@ -1916,17 +2140,23 @@ async function updateMusicForEmotion(data) {
   const textEmotion = (data.zenisys_music || {}).emotion || 'calm';
   const faceEmo = currentFaceEmotion || '';
   const emotionToUse = (faceEmo && faceEmo !== 'neutral' && faceEmo !== textEmotion) ? faceEmo : textEmotion;
-  // Update the generative synth pad to match the new emotion
-  updateSynthEmotion(emotionToUse);
-  // Crossfade to new ambient tracks for this emotion
+  const risk = (data.risk || '') ;
+  // Crossfade to the lane that MEETS this person: deep-calm to bring an
+  // agitated person down, lifting to bring a flat/depressed person up, then
+  // gently ease toward spa. The person picks the door by how they are.
   try {
-    const res = await fetch('/api/zenisys/ambient?emotion=' + encodeURIComponent(emotionToUse));
+    const res = await fetch('/api/zenisys/ambient?emotion=' + encodeURIComponent(emotionToUse)
+                            + '&risk=' + encodeURIComponent(risk));
     const d = await res.json();
     const tracks = d.tracks || [];
     if (tracks.length) {
       ambientTracks = tracks;
       ambientIndex = 0;
       switchAmbient(tracks[0].url, tracks[0].name);
+      // After the proven window, ease toward the calmer "then" lane.
+      if (d.then && d.then.length && (d.transition_after_seconds || 0) > 0) {
+        scheduleSpaTransition(d.then, d.transition_after_seconds * 1000);
+      }
     }
   } catch (e) {}
 }
@@ -1934,6 +2164,11 @@ async function continueConversation() {
   const answerBox = document.getElementById('conv-answer');
   if (!answerBox || !answerBox.value.trim()) return;
   const userAnswer = answerBox.value.trim();
+  // They chose to send. Clear the mic's running buffer so the NEXT thing they
+  // say starts fresh (mic can stay on). Their sent words are safe below.
+  voiceFinalTranscript = '';
+  answerBox.value = '';
+  const tpanel = document.getElementById('transcript-text'); if (tpanel) tpanel.innerHTML = '&nbsp;';
   logTurn('user', userAnswer);
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   // Show what the user said in the thread
@@ -1960,7 +2195,10 @@ async function continueConversation() {
   const data = await res.json();
   innerLightLearningState = data.learning_state || innerLightLearningState;
   innerLightContext = Object.assign(innerLightContext, data);
-  const nextQ = (data.questions || [])[0] || 'Is there anything else you would like to share?';
+  // When comprehension (Claude) is active, its ONE deeper question is already
+  // inside the reply — so we do NOT tack on a separate canned question.
+  const rawQ = (data.questions || [])[0] || '';
+  const nextQ = rawQ && rawQ.trim() ? rawQ : '';
   const reply = data.response || 'Thank you for sharing that with me.';
   logTurn('innerlight', reply);
   const safety = data.needs_immediate_support
@@ -2560,6 +2798,201 @@ def index():
     return render_template_string(PUBLIC_PAGE)
 
 
+# ---------------------------------------------------------------------------
+# INFORMATION PAGES — About, How It Works, Privacy, Contact.
+# For a mental-health product, people won't trust it without knowing who is
+# behind it and how their words are handled. These build that trust. Styled
+# "calm but alive" to match the rest of InnerLight.
+# ---------------------------------------------------------------------------
+def _info_page(title, inner):
+    return render_template_string("""<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }} &mdash; InnerLight</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, -apple-system, sans-serif; color:#2d4a3e;
+         background:linear-gradient(160deg,#f4faf7 0%,#eef6f2 55%,#f0f5fa 100%);
+         line-height:1.7; min-height:100vh; }
+  .breathe { animation:breathe 5s ease-in-out infinite; }
+  @keyframes breathe { 0%,100%{opacity:.85;transform:scale(1);} 50%{opacity:1;transform:scale(1.04);} }
+  .wrap { max-width:720px; margin:0 auto; padding:54px 26px 80px; }
+  .mark { font-size:40px; color:#7eb8a0; text-align:center; margin-bottom:6px; }
+  .brand { text-align:center; font-size:15px; letter-spacing:.16em; text-transform:uppercase;
+           color:#7fa595; margin-bottom:30px; }
+  h1 { font-size:29px; font-weight:600; color:#274539; margin-bottom:18px; letter-spacing:.01em; }
+  h2 { font-size:18px; font-weight:600; color:#3a6553; margin:30px 0 10px; }
+  p { font-size:16px; color:#40564d; margin-bottom:15px; }
+  .lead { font-size:18px; color:#35544a; margin-bottom:22px; }
+  .soft { background:rgba(255,255,255,.6); border:1px solid #d8e8e0; border-left:4px solid #7eb8a0;
+          border-radius:0 14px 14px 0; padding:18px 22px; margin:22px 0; }
+  a { color:#3a8f74; }
+  .back { display:inline-block; margin-top:38px; color:#6d8f80; text-decoration:none; font-size:15px;
+          border-bottom:1px solid transparent; }
+  .back:hover { border-bottom-color:#7eb8a0; }
+  .footer { margin-top:46px; padding-top:20px; border-top:1px solid #dcebe4; font-size:13px; color:#9bb3aa; text-align:center; }
+  .footer a { color:#7d9f91; text-decoration:none; margin:0 7px; }
+</style></head><body>
+  <div class="wrap">
+    <div class="mark breathe" aria-hidden="true">&#9711;</div>
+    <div class="brand">InnerLight</div>
+    {{ inner|safe }}
+    <a class="back" href="/">&larr; Back to InnerLight</a>
+    <div class="footer">
+      <a href="/about">About</a>&middot;
+      <a href="/how-it-works">How it works</a>&middot;
+      <a href="/privacy">Your privacy</a>&middot;
+      <a href="/contact">Contact</a>
+      <div style="margin-top:10px;">&copy; 2026 God's Love For Us LLC &middot; Created by Toshay S. Zeigler</div>
+    </div>
+  </div>
+</body></html>""", title=title, inner=inner)
+
+
+@app.route("/about")
+def page_about():
+    inner = """
+    <h1>Why InnerLight exists</h1>
+    <p class="lead">InnerLight began as a question about protection &mdash; and became a question about people.</p>
+
+    <p>It started as an encryption idea. The founder, Toshay S. Zeigler, set out to build a system that could protect
+    people's most private information in a world where personal data is constantly exposed. Privacy, dignity, and the
+    right to keep your own story your own were the first principles.</p>
+
+    <p>But the deeper he built, the clearer something became: the information most in need of protection isn't financial
+    or technical &mdash; it's human. It's what people carry in their hardest moments. The idea grew from protecting data
+    into protecting <em>people</em> &mdash; specifically, people in the fragile gap between the moment they reach out for
+    help and the moment real human help actually arrives.</p>
+
+    <div class="soft">
+      <p style="margin:0;">That gap &mdash; the 45 minutes to two hours when someone is in crisis and help is on the
+      way but not yet there &mdash; is where too many people are left alone. InnerLight was built to hold that space:
+      to stay with a person, help them feel heard, and gently bring them back to steadier ground until real help
+      reaches them.</p>
+    </div>
+
+    <h2>Who is behind it</h2>
+    <p>InnerLight is created by <strong>Toshay S. Zeigler</strong>, founder of <strong>God's Love For Us LLC</strong>.
+    Toshay's path runs through lived experience with the systems that either help or fail people &mdash; as a caregiver,
+    as a student of law and public policy, and as someone who has spent years thinking about how technology should serve
+    human dignity rather than replace it. He is continuing his education at San Jos&eacute; State University with the
+    long-term goal of law school, building on an Associate degree in Administrative Justice from Mission College.</p>
+
+    <p>He'll tell you plainly: those early college courses didn't all go smoothly &mdash; but they lit the spark for how
+    to start something real, and how the pieces of law, technology, and human care could fit together into one tool.</p>
+
+    <h2>Built by a person, with the help of AI</h2>
+    <p>InnerLight is built by Toshay directly, working alongside artificial intelligence as a collaborator and tool. The
+    vision, the direction, and every decision about what InnerLight should be are his. AI helps build it &mdash; but the
+    idea, and the responsibility, are human.</p>
+
+    <h2>What InnerLight believes</h2>
+    <p>Technology should <strong>strengthen</strong> human decision-making, not replace it. Mental-health tools should
+    <strong>complement</strong> human care, never pretend to be it. Your privacy is not a feature to trade away &mdash;
+    it is the foundation. And no one reaching out for help should have their first response be a waitlist.</p>
+
+    <div class="soft">
+      <p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a place to be
+      heard and steadied, and a bridge to the right human help &mdash; never a replacement for it.</p>
+    </div>
+    """
+    return _info_page("About", inner)
+
+
+@app.route("/how-it-works")
+def page_how():
+    inner = """
+    <h1>How InnerLight works</h1>
+    <p class="lead">Simple, private, and built for the moment you can't wait.</p>
+
+    <h2>1. A calm space opens</h2>
+    <p>When you arrive, a soft, calming environment is already there &mdash; gentle sound and a peaceful scene, present
+    from the first moment, not something you have to switch on. It's designed to help your body settle before anything
+    else happens.</p>
+
+    <h2>2. You tell your story, your way</h2>
+    <p>You can type or speak &mdash; whatever feels easier. InnerLight listens to what you actually mean, reflects it
+    back, and asks one gentle question at a time, drawn from what you said. Never a wall of forms. Never rushed. You
+    decide when you're finished and ready for a response &mdash; nothing answers over you.</p>
+
+    <h2>3. You are met where you are</h2>
+    <p>The calming sound can gently shift to match and soothe how you're feeling, helping bring intensity down. The goal
+    is to help you feel heard and steadier &mdash; to hold the space with you while you wait.</p>
+
+    <h2>4. A bridge to real help &mdash; only with your consent</h2>
+    <p>When it would help, InnerLight can connect you to real human support &mdash; a crisis line, a mobile crisis team,
+    a telehealth provider, and in urgent moments the right emergency help. If you choose to share a summary of what you
+    talked about, <strong>you</strong> review and control it first. Nothing is shared without your say-so.</p>
+
+    <div class="soft">
+      <p style="margin:0;">InnerLight is a companion for the wait and a bridge to care. It does not diagnose or treat,
+      and it is not a substitute for professional or emergency help. If you are in immediate danger, call or text 988,
+      or call 911.</p>
+    </div>
+    """
+    return _info_page("How it works", inner)
+
+
+@app.route("/privacy")
+def page_privacy():
+    inner = """
+    <h1>Your privacy</h1>
+    <p class="lead">Your story is yours. That is the whole point.</p>
+
+    <p>InnerLight was born from an idea about protecting people's private information. That principle still sits at its
+    center. What you share here is treated with care and encryption, and it is not put on display for anyone.</p>
+
+    <h2>What you share, you control</h2>
+    <p>If InnerLight ever helps connect you to a provider or crisis resource, and you choose to send a summary of your
+    conversation, <strong>you see and approve it first</strong>. You can edit it. It is never sent without your consent,
+    and the person receiving it cannot change your words.</p>
+
+    <h2>Nothing is shown to you that could unsettle you</h2>
+    <p>InnerLight is designed to be calming. It does not display clinical labels, diagnoses, or scores to you. It is a
+    place to be heard, not measured.</p>
+
+    <h2>Honest limits</h2>
+    <p>InnerLight is a supportive companion and a bridge to human help. It is not a clinical or diagnostic service, and
+    it does not replace professional care or licensed legal counsel. In an emergency, please reach real human help
+    right away &mdash; call or text 988, or call 911.</p>
+
+    <div class="soft">
+      <p style="margin:0;">If you have questions about privacy, you can reach God's Love For Us LLC through the
+      <a href="/contact">contact page</a>.</p>
+    </div>
+    """
+    return _info_page("Your privacy", inner)
+
+
+@app.route("/contact")
+def page_contact():
+    inner = """
+    <h1>Contact</h1>
+    <p class="lead">InnerLight is built by a person who wants to hear from you.</p>
+
+    <p>InnerLight is created and maintained by <strong>Toshay S. Zeigler</strong>, founder of
+    <strong>God's Love For Us LLC</strong>. Whether you're a person who used InnerLight, a provider or organization
+    interested in a pilot, or someone who simply wants to share a thought &mdash; your message is welcome.</p>
+
+    <div class="soft">
+      <p style="margin:0 0 6px;"><strong>God's Love For Us LLC</strong></p>
+      <p style="margin:0 0 6px;">Founder: Toshay S. Zeigler</p>
+      <p style="margin:0;">Email: <a href="mailto:[your email]">[your email]</a><br>
+      Phone: [your phone]</p>
+    </div>
+
+    <p style="font-size:14px;color:#7d9f91;">You can add your real email and phone here whenever you're ready &mdash;
+    right now these are placeholders so the page is live and ready.</p>
+
+    <div class="soft">
+      <p style="margin:0;"><strong>If this is an emergency</strong> and you or someone else may be in danger, please
+      don't wait for a reply here &mdash; call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline), or call
+      <strong>911</strong>.</p>
+    </div>
+    """
+    return _info_page("Contact", inner)
+
+
 @app.route("/console")
 def console():
     return render_template_string(PAGE)
@@ -2617,9 +3050,61 @@ def api_profile():
 
 @app.route("/api/zenisys/ambient")
 def zenisys_ambient():
-    emotion = request.args.get("emotion", "calm peaceful ambient relaxation")
-    result = get_zenisys_engine().detect_and_fetch(emotion)
-    return jsonify({"tracks": result.get("tracks", []), "status": result.get("status"), "emotion": result.get("emotion")})
+    """Return the calming instrumental tracks to play — real bundled audio,
+    reliable on every device. The person picks the door by how they arrive:
+
+      * SPA — gentle arrival state. Everyone starts here (already playing).
+      * DEEPCALM — warm, low, breathing groove to bring an AGITATED / angry
+        person DOWN into the quiet (Barry White warmth).
+      * LIFTING — buoyant, gently rising warm groove to bring a DEPRESSED /
+        flat person UP out of the dark (September warmth).
+      * SYMPHONY — fuller, to catch attention of someone very upset, then
+        transition down to spa.
+
+    This mirrors the proven car method: read the person, meet them where they
+    are, then guide the sound to move them toward calm.
+    """
+    emotion = (request.args.get("emotion", "") or "").lower()
+    risk = (request.args.get("risk", "") or "").lower()
+    audio_dir = Path(__file__).resolve().parent.parent / "audio"
+
+    def lane(prefix, label):
+        if not audio_dir.exists():
+            return []
+        files = sorted(p.name for p in audio_dir.glob(f"{prefix}_*.mp3"))
+        return [{"url": f"/audio/{n}", "name": label} for n in files]
+
+    spa = lane("spa", "Calm")
+    symphony = lane("symphony", "Symphony")
+    deepcalm = lane("deepcalm", "Deep calm")
+    lifting = lane("lifting", "Lifting")
+
+    agitated_markers = ("anger", "angry", "agitat", "panic", "fear", "rage", "upset",
+                        "anxious", "anxiety", "frustrat", "furious", "tense")
+    down_markers = ("sad", "depress", "hopeless", "empty", "numb", "flat", "down",
+                    "worthless", "tired", "exhausted", "alone", "lonely", "grief")
+
+    is_agitated = risk in ("high", "critical") or any(m in emotion for m in agitated_markers)
+    is_down = any(m in emotion for m in down_markers)
+
+    # Very upset -> symphony first (catch attention), then ease to spa.
+    if risk == "critical" and symphony:
+        return jsonify({"tracks": symphony, "then": deepcalm or spa,
+                        "transition_after_seconds": 180, "lane": "symphony_to_deepcalm",
+                        "status": "ok"})
+    # Agitated -> deep-calm to bring them DOWN.
+    if is_agitated and deepcalm:
+        return jsonify({"tracks": deepcalm, "then": spa,
+                        "transition_after_seconds": 240, "lane": "deepcalm",
+                        "status": "ok"})
+    # Depressed / flat -> lifting to bring them UP.
+    if is_down and lifting:
+        return jsonify({"tracks": lifting, "then": spa,
+                        "transition_after_seconds": 300, "lane": "lifting",
+                        "status": "ok"})
+    # Default / arrival -> gentle spa, already present.
+    return jsonify({"tracks": spa or deepcalm, "then": [],
+                    "transition_after_seconds": 0, "lane": "spa", "status": "ok"})
 
 
 @app.route("/api/resolution/bridge", methods=["POST"])
@@ -3031,6 +3516,19 @@ def serve_scene(filename):
         return send_file(str(file_path))
     # File not present -> 404 so the frontend uses its animated fallback
     return ("scene not found", 404)
+
+
+@app.route("/audio/<path:filename>")
+def serve_audio(filename):
+    """Serve the bundled, calming instrumental tracks (spa / symphony lanes).
+    Real audio files streamed from the app itself — reliable on every device,
+    no external service, no stutter."""
+    audio_dir = Path(__file__).resolve().parent.parent / "audio"
+    file_path = audio_dir / filename
+    if file_path.exists() and file_path.is_file():
+        from flask import send_file
+        return send_file(str(file_path), mimetype="audio/mpeg")
+    return ("audio not found", 404)
 
 
 
