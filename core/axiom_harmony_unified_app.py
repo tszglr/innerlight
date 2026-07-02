@@ -848,7 +848,7 @@ function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectF
 // ---------------------------------------------------------------------------
 let adaptiveInterval = null;
 let adaptiveArousal = 0.5;   // 0 = very calm/flat, 1 = very activated. Smoothed.
-let adaptiveLaneNow = 'spa'; // which lane the adaptive loop currently favors
+let adaptiveLaneNow = 'calm'; // which lane the adaptive loop currently favors
 let adaptiveLastSwitch = 0;
 
 function readArousalSignal() {
@@ -894,7 +894,7 @@ function adaptiveTick() {
   let want = null;
   if (adaptiveArousal > 0.68 && adaptiveLaneNow !== 'deepcalm') want = 'deepcalm';
   else if (down > 0.55 && adaptiveArousal < 0.45 && adaptiveLaneNow !== 'lifting') want = 'lifting';
-  else if (adaptiveArousal < 0.35 && down < 0.3 && adaptiveLaneNow !== 'spa') want = 'spa';
+  else if (adaptiveArousal < 0.35 && down < 0.3 && adaptiveLaneNow !== 'calm') want = 'calm';
   if (want) {
     adaptiveLaneNow = want;
     adaptiveLastSwitch = now;
@@ -1313,7 +1313,8 @@ async function startExperience() {
     // Start the free adaptive loop — sound responds to face + voice in real time
     startAdaptiveLoop();
     // Start the subtle entrainment pulse gently under the music (can be toggled off)
-    if (window._entrainEnabled !== false) startEntrainment();
+    // Entrainment pulse disabled — it caused a warble on speakers. Off until real audio.
+    // if (window._entrainEnabled !== false) startEntrainment();
     // Background music — DJ crossfade + generative synth
     try {
       initDecks();
@@ -3071,11 +3072,16 @@ def zenisys_ambient():
     def lane(prefix, label):
         if not audio_dir.exists():
             return []
-        files = sorted(p.name for p in audio_dir.glob(f"{prefix}_*.mp3"))
+        def track_number(name):
+            # Sort by the real number in the filename, so 10 comes after 9 (not before 2).
+            try:
+                return int(name.rsplit("_", 1)[1].split(".")[0])
+            except (IndexError, ValueError):
+                return 0
+        files = sorted((p.name for p in audio_dir.glob(f"{prefix}_*.mp3")), key=track_number)
         return [{"url": f"/audio/{n}", "name": label} for n in files]
 
-    spa = lane("spa", "Calm")
-    symphony = lane("symphony", "Symphony")
+    calm = lane("calm", "Calm")
     deepcalm = lane("deepcalm", "Deep calm")
     lifting = lane("lifting", "Lifting")
 
@@ -3087,24 +3093,19 @@ def zenisys_ambient():
     is_agitated = risk in ("high", "critical") or any(m in emotion for m in agitated_markers)
     is_down = any(m in emotion for m in down_markers)
 
-    # Very upset -> symphony first (catch attention), then ease to spa.
-    if risk == "critical" and symphony:
-        return jsonify({"tracks": symphony, "then": deepcalm or spa,
-                        "transition_after_seconds": 180, "lane": "symphony_to_deepcalm",
-                        "status": "ok"})
-    # Agitated -> deep-calm to bring them DOWN.
+    # Agitated / very upset -> deep-calm to bring them DOWN, then ease to calm.
     if is_agitated and deepcalm:
-        return jsonify({"tracks": deepcalm, "then": spa,
+        return jsonify({"tracks": deepcalm, "then": calm,
                         "transition_after_seconds": 240, "lane": "deepcalm",
                         "status": "ok"})
-    # Depressed / flat -> lifting to bring them UP.
+    # Depressed / flat -> lifting to bring them UP, then ease to calm.
     if is_down and lifting:
-        return jsonify({"tracks": lifting, "then": spa,
+        return jsonify({"tracks": lifting, "then": calm,
                         "transition_after_seconds": 300, "lane": "lifting",
                         "status": "ok"})
-    # Default / arrival -> gentle spa, already present.
-    return jsonify({"tracks": spa or deepcalm, "then": [],
-                    "transition_after_seconds": 0, "lane": "spa", "status": "ok"})
+    # Default / arrival -> gentle calm, already present.
+    return jsonify({"tracks": calm or deepcalm, "then": [],
+                    "transition_after_seconds": 0, "lane": "calm", "status": "ok"})
 
 
 @app.route("/api/resolution/bridge", methods=["POST"])
