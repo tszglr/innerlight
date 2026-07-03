@@ -494,9 +494,11 @@ PUBLIC_PAGE = """
     .gate-button:hover { transform:translateY(-2px); background:#4e9079; }
     .gate-sub { font-size:12px; color:#8fa8a0; margin-top:18px !important; }
     .story-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:0 20px 40px;
-      position:relative; overflow:hidden;
-      background:linear-gradient(180deg, #f5faf7 0%, #fdf8f6 50%, #f7f0f9 100%); }
+      position:relative;
+      background:transparent; }
     .story-screen > * { position:relative; z-index:1; }
+    #scene-veil { position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35)); }
     .scene-picker { position:fixed; bottom:14px; right:14px; z-index:20; display:flex; gap:6px;
       background:rgba(255,255,255,0.7); backdrop-filter:blur(6px); border-radius:999px; padding:6px 10px; }
     .scene-btn { background:none; border:0; font-size:18px; cursor:pointer; opacity:0.6; padding:2px 4px; }
@@ -593,14 +595,15 @@ PUBLIC_PAGE = """
     <!-- CALM STORY SCREEN -->
     <section id="story-screen" class="story-screen" style="display:none;">
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
-      <div id="calm-photo-a" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;touch-action:auto;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+      <div id="calm-photo-a" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
         <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
       </div>
-      <div id="calm-photo-b" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;touch-action:auto;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+      <div id="calm-photo-b" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
         <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
       </div>
+      <div id="scene-veil"></div>
       <div class="scene-picker" id="scene-picker">
         <button class="scene-btn active" data-scene="garden" onclick="setScene('garden')" title="Garden">&#127807;</button>
         <button class="scene-btn" data-scene="sunflower" onclick="setScene('sunflower')" title="Sunflower">&#127803;</button>
