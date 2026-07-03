@@ -5014,9 +5014,10 @@ def connect_request():
     kind = "legal" if data.get("kind") == "legal" else "care"
     pro = _scrub(str(data.get("pro", ""))[:60])
     summary = _scrub(str(data.get("summary", ""))[:1500])
-    room = "InnerLight-" + secrets.token_urlsafe(6)
+    rid = secrets.token_urlsafe(6)
+    room = "InnerLight-" + rid
     room_url = "https://meet.jit.si/" + room
-    entry = {"when": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": kind,
+    entry = {"id": rid, "when": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": kind,
              "pro": pro or "unspecified", "room": room_url, "summary": summary}
     with _CONNECT_LOCK:
         try:
@@ -5036,17 +5037,64 @@ def connect_request():
     if topic:
         try:
             import urllib.request as _ur
+            preview = (summary[:180] + "…") if summary else "No summary text was provided."
+            base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+            brief_link = (base + "/responder/" + rid) if base else room_url
             req = _ur.Request(
                 "https://ntfy.sh/" + topic,
-                data=(f"{kind.upper()} connect request — wants: {pro or 'help'}\n"
-                      f"Join now: {room_url}").encode("utf-8"),
-                headers={"Title": "InnerLight: someone is waiting",
-                         "Priority": "urgent", "Tags": "rotating_light"})
+                data=(f"Wants: {pro or 'help'} ({kind})\n\n"
+                      f"WHY: {preview}\n\n"
+                      f"Open full briefing + video: {brief_link}").encode("utf-8"),
+                headers={"Title": f"InnerLight: {pro or 'someone'} is waiting",
+                         "Priority": "urgent", "Tags": "rotating_light",
+                         "Click": brief_link})
             _ur.urlopen(req, timeout=8)
             notified = True
         except Exception:
             notified = False
     return jsonify({"status": "ok", "room": room_url, "notified": notified})
+
+@app.route("/responder/<rid>")
+def responder_brief(rid):
+    if not session.get("founder_ok"):
+        return render_template_string(LOGIN_PAGE), 200
+    try:
+        with open(_CONNECT_FILE) as f:
+            log = json.load(f)
+    except Exception:
+        log = []
+    match = next((c for c in log if c.get("id") == rid), None)
+    if not match:
+        return "<h2 style='font-family:Arial;padding:40px;'>That request was not found.</h2>", 404
+    summary_html = (match.get("summary") or "No summary was captured for this request.").replace("<", "&lt;").replace("\n", "<br>")
+    return render_template_string("""
+<!doctype html><html><head><title>Responder Briefing — InnerLight</title>
+<meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ body{font-family:Arial;margin:0;padding:22px;color:#1e293b;
+      background:linear-gradient(160deg,#0f2447,#14346b 40%,#f8fafc 40.5%);}
+ h1{color:#fff;font-size:20px;margin:0 0 4px;} .sub{color:#c7d6f5;font-size:13px;margin-bottom:18px;}
+ .card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 10px 30px rgba(15,36,71,0.18);margin-bottom:16px;}
+ .badge{display:inline-block;background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:999px;
+        padding:5px 14px;font-size:13px;font-weight:700;margin-bottom:6px;}
+ .why{font-size:16px;line-height:1.7;color:#1e293b;white-space:pre-wrap;}
+ .join{display:inline-block;margin-top:8px;background:linear-gradient(90deg,#1d4ed8,#7c3aed);color:#fff;
+       padding:16px 34px;border-radius:999px;font-size:17px;font-weight:700;text-decoration:none;}
+ .meta{font-size:12.5px;color:#64748b;margin-top:10px;}
+</style></head><body>
+<h1>Someone is waiting for you</h1>
+<div class="sub">Read this first — then join. They should never have to explain from zero.</div>
+<div class="card">
+ <div class="badge">Wants: {{ pro }} &middot; {{ kind }} &middot; {{ when }}</div>
+ <h2 style="font-size:15px;color:#1e3a8a;margin:10px 0 6px;">Why they reached out</h2>
+ <div class="why">{{ summary_html|safe }}</div>
+</div>
+<div class="card" style="text-align:center;">
+ <a class="join" href="{{ room }}" target="_blank">Join the video now</a>
+ <div class="meta">Private room for this person only. You already know why they're here.</div>
+</div>
+</body></html>""", pro=match.get("pro"), kind=match.get("kind"), when=match.get("when"),
+    room=match.get("room"), summary_html=summary_html)
 
 @app.route("/api/admin/connects")
 def admin_connects():
