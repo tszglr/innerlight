@@ -628,9 +628,8 @@ PUBLIC_PAGE = """
           <span id="music-now">&#9834; soft music playing</span>
           <button class="music-change" type="button" onclick="changeMusic()">Change music</button>
           <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()">&#10041; Calm pulse: on</button>
-          <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoice()">&#128263; Voice Off</button>
-          <select id="voice-picker" onchange="selectVoice(this.value)" style="border-radius:999px;border:1px solid #c8ddd2;padding:5px 10px;font-size:13px;color:#3a5a72;background:#fff;max-width:200px;" title="Choose a voice that feels comforting"><option value="">Voice: default</option></select>
-          <button class="music-change" type="button" id="voicefirst-toggle" onclick="toggleVoiceFirst()">&#127908; Voice-First: Off</button>
+          <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()">&#128263; Spoken voice: Off</button>
+          <select id="voice-picker" onchange="selectVoice(this.value)" style="display:none;"><option value="">Voice: default</option></select>
         </div>
         <div id="calm-player" style="margin:18px auto 6px; max-width:560px; background:rgba(20,30,48,0.92); border-radius:20px; padding:14px 14px 12px; box-shadow:0 8px 30px rgba(0,0,0,0.22); transition:max-width 0.5s ease;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -961,9 +960,21 @@ function heartEstimate(){
   bpms.sort((a,b)=>a-b);
   const median = bpms[Math.floor(bpms.length/2)];
   const spread = Math.max(...bpms) - Math.min(...bpms);
-  _regionAgreement = spread <= 8 ? 1 : (spread <= 16 ? 0.5 : 0);
-  if (_regionAgreement === 0) return; // regions disagree -> noisy -> hold, don't update
-  heartBPM = heartBPM ? (heartBPM*0.5 + median*0.5) : median; // more responsive
+  _regionAgreement = spread <= 10 ? 1 : (spread <= 20 ? 0.5 : 0);
+  if (_regionAgreement === 0){
+    // regions disagree -> the current number is unreliable. Count strikes;
+    // after sustained disagreement, CLEAR so it re-acquires (never freeze).
+    window._hrDisagree = (window._hrDisagree||0) + 1;
+    if (window._hrDisagree > 6){ heartBPM = 0; window._heartBPM = 0; window._hrDisagree = 0;
+      for (const k in hrData){ hrData[k] = {R:[],G:[],B:[],t:[]}; } }
+    return;
+  }
+  window._hrDisagree = 0;
+  // If the new median is wildly higher than a settled reading, trust it less
+  // (prevents a noise spike from locking at 150).
+  let blend = 0.5;
+  if (heartBPM && median > heartBPM + 30) blend = 0.2;
+  heartBPM = heartBPM ? (heartBPM*(1-blend) + median*blend) : median;
   if (!heartBaseline && (hrData.forehead && hrData.forehead.t.length > 150)) heartBaseline = heartBPM;
   window._heartBPM = heartBPM; window._heartBaseline = heartBaseline; window._heartConfidence = _regionAgreement;
   window._heartUpdatedAt = Date.now();
@@ -999,26 +1010,19 @@ setInterval(heartReport, 15000);
 (function heartChip(){
   const chip = document.createElement('div');
   chip.id = 'heart-chip';
-  chip.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:55;display:none;'
-    + 'background:rgba(255,255,255,0.88);border-radius:999px;padding:8px 16px;'
-    + 'font-family:Arial;font-size:15px;color:#8a4653;box-shadow:0 6px 22px rgba(40,20,30,0.18);';
-  chip.innerHTML = '<span id="heart-beat" style="display:inline-block;">&#10084;&#65039;</span> <b id="heart-num">--</b> <span class="hr-label" style="font-size:11.5px;color:#a98790;">your rhythm</span>';
+  chip.style.cssText = 'position:fixed;bottom:22px;right:22px;z-index:55;display:none;'
+    + 'background:rgba(255,255,255,0.92);border-radius:999px;padding:12px 22px;'
+    + 'font-family:Arial;font-size:22px;color:#8a4653;box-shadow:0 8px 26px rgba(40,20,30,0.2);';
+  chip.innerHTML = '<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> <b id="heart-num" style="font-size:26px;">--</b> <span class="hr-label" style="font-size:13px;color:#a98790;">bpm</span>';
   document.body.appendChild(chip);
   setInterval(()=>{
-    const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 8000);
-    if (window._heartBPM && window._heartBPM > 40 && fresh){
+    if (window._heartBPM && window._heartBPM > 40){
       chip.style.display = 'block';
-      const conf = window._heartConfidence || 0;
-      const label = conf >= 1 ? 'your rhythm' : 'your rhythm (settling)';
       document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
-      const lbl = chip.querySelector('.hr-label'); if (lbl) lbl.textContent = label;
       const b = document.getElementById('heart-beat');
-      // pulse the heart at the ACTUAL rate so it feels alive and honest
-      b.style.transition = 'transform 0.15s ease'; b.style.transform = 'scale(1.3)';
+      // pulse the heart gently so it feels alive — no words, just the number
+      b.style.transition = 'transform 0.15s ease'; b.style.transform = 'scale(1.28)';
       setTimeout(()=>{ b.style.transform = 'scale(1)'; }, 150);
-    } else if (window._heartBPM && !fresh){
-      // reading went stale -> tell the truth instead of showing a frozen number
-      const lbl = chip.querySelector('.hr-label'); if (lbl) lbl.textContent = 'reading\u2026 hold still, good light';
     }
   }, 1500);
 })();
@@ -1512,20 +1516,9 @@ function zenisysSetSolfeggio(plan) {
 
 // Fetch a plan from the backend and render it. The smooth path for InnerLight.
 async function zenisysPlayEmotion(emotion, intensity, opts) {
-  opts = opts || {};
-  try {
-    const prev = ZENISYS.currentPlan ? ZENISYS.currentPlan.emotion : '';
-    const url = '/api/zenisys/plan?emotion=' + encodeURIComponent(emotion || 'calm')
-              + '&intensity=' + (intensity != null ? intensity : 0.5)
-              + '&binaural=' + (opts.binaural ? '1' : '0')
-              + '&solfeggio=' + (opts.solfeggio ? '1' : '0')
-              + '&prev=' + encodeURIComponent(prev);
-    const res = await fetch(url);
-    const plan = await res.json();
-    if (!ZENISYS.started) { await zenisysStart(plan); }
-    else { zenisysApplyPlan(plan); }
-    return plan;
-  } catch (e) { console.log('[Zenisys] play error', e); }
+  // DISABLED: synthetic pad/chords/binaural/solfeggio produce an electronic
+  // sound. Only the real, loved music tracks play now. This is a hard no-op.
+  return null;
 }
 
 function zenisysStop() {
@@ -1621,8 +1614,8 @@ function showCalmScale(phase){
   if (document.getElementById('sam-card')) return;
   const card = document.createElement('div');
   card.id = 'sam-card';
-  card.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:60;'
-    + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 18px;'
+  card.style.cssText = 'position:fixed;top:80px;right:18px;z-index:60;max-width:200px;'
+    + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 16px;'
     + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
   card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">How are you feeling right now? (tap one, or ignore me)</div>'
     + '<div style="font-size:30px;letter-spacing:14px;cursor:pointer;">'
@@ -2243,6 +2236,14 @@ function speakBrowser(text) {
   speechSynthesis.speak(utter);
 }
 
+function toggleVoiceCombined(){
+  const btn = document.getElementById('voice-toggle');
+  const turningOn = !voiceEnabled;
+  voiceEnabled = turningOn;
+  try { window._voiceFirst = turningOn; } catch(e){}
+  if (typeof applyVoiceFirst === 'function') { try { applyVoiceFirst(turningOn); } catch(e){} }
+  if (btn) btn.innerHTML = turningOn ? '&#128266; Spoken voice: On' : '&#128263; Spoken voice: Off';
+}
 function toggleVoice() {
   voiceEnabled = !voiceEnabled;
   if (!voiceEnabled) speechSynthesis.cancel();
