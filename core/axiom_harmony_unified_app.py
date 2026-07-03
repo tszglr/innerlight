@@ -820,6 +820,10 @@ function mpTick(){
       if (window._faceLostRun === 3) metric('distraction');
     }
     window._heartFaceBox = null;
+    window._heartRegions = null;
+    // Face gone -> let the reading re-acquire instead of holding a stale number.
+    window._heartStale = (window._heartStale||0) + 1;
+    if (window._heartStale > 20){ heartBPM = 0; window._heartBPM = 0; }
     return;
   }
   const b = {}; shapes.forEach(c => b[c.categoryName] = c.score);
@@ -900,6 +904,7 @@ function heartTick(){
   const regions = window._heartRegions;
   if (!video || !video.videoWidth || !regions) return;
   const now = performance.now();
+  window._heartStale = 0;
   const all = HR_REGIONS.concat(HR_EXPERIMENTAL);
   for (const name of all){
     const s = sampleRegion(video, regions[name]);
@@ -948,9 +953,10 @@ function heartEstimate(){
   const spread = Math.max(...bpms) - Math.min(...bpms);
   _regionAgreement = spread <= 8 ? 1 : (spread <= 16 ? 0.5 : 0);
   if (_regionAgreement === 0) return; // regions disagree -> noisy -> hold, don't update
-  heartBPM = heartBPM ? (heartBPM*0.6 + median*0.4) : median;
+  heartBPM = heartBPM ? (heartBPM*0.5 + median*0.5) : median; // more responsive
   if (!heartBaseline && (hrData.forehead && hrData.forehead.R.length > 380)) heartBaseline = heartBPM;
   window._heartBPM = heartBPM; window._heartBaseline = heartBaseline; window._heartConfidence = _regionAgreement;
+  window._heartUpdatedAt = Date.now();
   // EXPERIMENTAL sub-zones: how close is each to the trusted median? (learning)
   for (const name of HR_EXPERIMENTAL){
     if (hrData[name]){ const e = posEstimate(hrData[name]); if (e){
@@ -986,17 +992,25 @@ setInterval(heartReport, 15000);
   chip.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:55;display:none;'
     + 'background:rgba(255,255,255,0.88);border-radius:999px;padding:8px 16px;'
     + 'font-family:Arial;font-size:15px;color:#8a4653;box-shadow:0 6px 22px rgba(40,20,30,0.18);';
-  chip.innerHTML = '<span id="heart-beat" style="display:inline-block;">&#10084;&#65039;</span> <b id="heart-num">--</b> <span style="font-size:11.5px;color:#a98790;">your rhythm</span>';
+  chip.innerHTML = '<span id="heart-beat" style="display:inline-block;">&#10084;&#65039;</span> <b id="heart-num">--</b> <span class="hr-label" style="font-size:11.5px;color:#a98790;">your rhythm</span>';
   document.body.appendChild(chip);
   setInterval(()=>{
-    if (window._heartBPM && window._heartBPM > 40){
+    const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 8000);
+    if (window._heartBPM && window._heartBPM > 40 && fresh){
       chip.style.display = 'block';
+      const conf = window._heartConfidence || 0;
+      const label = conf >= 1 ? 'your rhythm' : 'your rhythm (settling)';
       document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
+      const lbl = chip.querySelector('.hr-label'); if (lbl) lbl.textContent = label;
       const b = document.getElementById('heart-beat');
-      b.style.transition = 'transform 0.18s ease'; b.style.transform = 'scale(1.25)';
-      setTimeout(()=>{ b.style.transform = 'scale(1)'; }, 200);
+      // pulse the heart at the ACTUAL rate so it feels alive and honest
+      b.style.transition = 'transform 0.15s ease'; b.style.transform = 'scale(1.3)';
+      setTimeout(()=>{ b.style.transform = 'scale(1)'; }, 150);
+    } else if (window._heartBPM && !fresh){
+      // reading went stale -> tell the truth instead of showing a frozen number
+      const lbl = chip.querySelector('.hr-label'); if (lbl) lbl.textContent = 'reading\u2026 hold still, good light';
     }
-  }, 2000);
+  }, 1500);
 })();
 
 // --- Face detection ---
