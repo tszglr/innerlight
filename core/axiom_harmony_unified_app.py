@@ -4512,6 +4512,7 @@ _STUDY_SYSTEM = (
     "might happen.\n"
     "7. ROUTING LESSON — one paragraph: what words in a person's story would tell "
     "InnerLight this specialty is the right handoff.\n"
+    "Be CONCISE: the whole walk-through under 600 words — depth over sprawl.\n"
     "Begin every response with the line: 'FOUNDER STUDY — educational simulation, "
     "not legal or medical advice.'"
 )
@@ -4533,7 +4534,7 @@ def admin_study_api():
               f"education only): {scenario}")
     body = json.dumps({
         "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
-        "max_tokens": 1600,
+        "max_tokens": 950,
         "system": _STUDY_SYSTEM,
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
@@ -4659,9 +4660,15 @@ async function runStudy(){
     const r = await fetch('/api/admin/study',{method:'POST',headers:{'Content-Type':'application/json'},
       body: JSON.stringify({scenario: document.getElementById('scenario').value,
                             focus: document.getElementById('focus').value})});
-    const d = await r.json();
-    out.textContent = d.text || 'No response.';
-  }catch(e){ out.textContent = 'Could not reach the study engine: ' + e; }
+    const raw = await r.text();
+    let d = null;
+    try { d = JSON.parse(raw); } catch(parseErr){
+      out.textContent = 'The study took longer than the server was allowed to think, so the answer was cut off mid-work. '
+        + 'Press "Study it" once more — a retry usually lands. If this keeps happening, the server patience setting needs raising (Render > Settings > Start Command).';
+      wait.style.display='none'; out.style.display='block'; return;
+    }
+    out.textContent = (d && d.text) ? d.text : 'No response.';
+  }catch(e){ out.textContent = 'Could not reach the study engine. Check the connection and press "Study it" again.'; }
   wait.style.display='none'; out.style.display='block';
   if (typeof loadShelf==='function') loadShelf();
 }
