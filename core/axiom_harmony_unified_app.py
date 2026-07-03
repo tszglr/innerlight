@@ -1383,6 +1383,7 @@ function zenisysSetBinaural(plan) {
     try { ZENISYS.binauralNodes.forEach(n => n.stop && n.stop()); } catch(e){}
     ZENISYS.binauralNodes = null;
   }
+  return; // binaural layer disabled — real tracks only
   if (!plan.binaural_beat_hz || !plan.carrier_hz) return;
   const ctx = ZENISYS.audioCtx;
   if (!ctx) return;
@@ -1408,6 +1409,7 @@ function zenisysSetBinaural(plan) {
 
 // Solfeggio drone: a single quiet sustained tone at the chosen frequency.
 function zenisysSetSolfeggio(plan) {
+  return; // solfeggio drone disabled — real tracks only
   if (ZENISYS.solfeggioNode) {
     try { ZENISYS.solfeggioNode.stop(); } catch(e){}
     ZENISYS.solfeggioNode = null;
@@ -1452,8 +1454,10 @@ function zenisysStop() {
 }
 
 // --- Legacy bridge: keep the old function names working, route to Zenisys ---
-function startSynthPad(emotion) { zenisysPlayEmotion(emotion, 0.5, {}); }
-function updateSynthEmotion(emotion) { zenisysPlayEmotion(emotion, 0.5, {}); }
+// Synthetic layers OFF by founder decision: only the real, loved music tracks
+// play. These are kept as no-ops so any caller is harmless.
+function startSynthPad(emotion) { /* disabled — real tracks only */ }
+function updateSynthEmotion(emotion) { /* disabled — real tracks only */ }
 
 </script>
 <script>
@@ -1728,9 +1732,7 @@ function switchAmbient(url, name, vol) {
   activeDeck = activeDeck === 'A' ? 'B' : 'A';
   const now = $('music-now'); if (now) now.textContent = '\u266a ' + (name || 'music');
   beginTrackWatch(name);
-  // Also update the generative synth layer emotion
-  const emo = currentFaceEmotion || 'calm';
-  updateSynthEmotion(emo);
+  // (Synthetic layers disabled — only the real music tracks play.)
 }
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -3162,14 +3164,21 @@ LEGAL_HANDOFF_PAGE = r"""
   </header>
   <main>
     <section class="panel who">
-      <h2>Who you may be connected with</h2>
-      <p>You'll be told which one applies before any live conversation:</p>
-      <ul>
-        <li><b>Attorney / lawyer</b> &mdash; can give you legal advice about your specific situation and may represent you.</li>
-        <li><b>Legal-aid organization</b> &mdash; free or low-cost legal help, often for housing, benefits, disability, or family matters.</li>
-        <li><b>Legal-access navigator</b> &mdash; helps you find the right legal resource and understand your options.</li>
-        <li><b>Self-help / civic resources</b> &mdash; plain-language information about your rights and the process.</li>
-      </ul>
+      <h2>Self-help &amp; civic resources &mdash; free, trusted, available right now</h2>
+      <p>These are established, free legal-information sources. They explain your rights and the process in plain language. They are information, <b>not</b> legal advice &mdash; only a lawyer can advise on your specific case &mdash; but they are a strong, fast place to start understanding where you stand.</p>
+      <div class="reslib">
+        <a class="res" href="https://www.lawhelp.org/" target="_blank" rel="noopener"><b>LawHelp.org</b><span>Find free legal aid and self-help by state and topic.</span></a>
+        <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Plain-language legal dictionary &amp; explanations from Cornell Law School.</span></a>
+        <a class="res" href="https://www.courts.ca.gov/selfhelp.htm" target="_blank" rel="noopener"><b>California Courts Self-Help</b><span>Official step-by-step guides for common court matters.</span></a>
+        <a class="res" href="https://www.usa.gov/legal-aid" target="_blank" rel="noopener"><b>USA.gov Legal Aid</b><span>Government directory of free and low-cost legal help.</span></a>
+        <a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Legal Services Corporation</b><span>Find your local federally funded legal-aid office.</span></a>
+        <a class="res" href="https://www.nolo.com/legal-encyclopedia" target="_blank" rel="noopener"><b>Nolo Legal Encyclopedia</b><span>Readable articles on tenants, family, debt, and more.</span></a>
+      </div>
+    </section>
+
+    <section class="panel who">
+      <h2>Choose who you want to reach</h2>
+      <p>When you're ready for a person, you pick. Your summary goes only where you choose, only when you press send.</p>
     </section>
 
     <section class="panel">
@@ -3208,6 +3217,11 @@ LEGAL_HANDOFF_PAGE = r"""
                border:1.5px solid #d5e2ec; background:#fff; cursor:pointer; font-size:15px; }
     .pro-btn span { display:block; font-size:12.5px; color:#7b8b99; margin-top:3px; font-weight:400; }
     .pro-btn.picked { border-color:#2e6e8e; background:#f0f7fb; box-shadow:0 0 0 2px rgba(46,110,142,0.18); }
+    .reslib { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-top:12px; }
+    .res { display:block; text-decoration:none; border:1px solid #d5e2ec; border-radius:12px; padding:13px 15px;
+           background:#fff; color:#1e3a5c; transition:all 0.2s ease; }
+    .res:hover { border-color:#2e6e8e; box-shadow:0 4px 14px rgba(46,110,142,0.15); transform:translateY(-1px); }
+    .res span { display:block; font-size:12.5px; color:#7b8b99; margin-top:4px; }
   </style>
   <script>
     let pickedPro = '';
