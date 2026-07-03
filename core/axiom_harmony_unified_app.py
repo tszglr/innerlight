@@ -624,6 +624,7 @@ PUBLIC_PAGE = """
             <button type="button" class="calm-tab active" data-mode="anchor" onclick="setCalmMode('anchor')" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Touch &amp; Calm</button>
             <button type="button" class="calm-tab" data-mode="trace" onclick="setCalmMode('trace')" style="background:rgba(255,255,255,0.10);color:#cfe3f2;border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;">Trace</button>
             <button type="button" class="calm-tab" data-mode="call" onclick="setCalmMode('call')" style="background:rgba(255,255,255,0.10);color:#cfe3f2;border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;">Call &amp; Answer</button>
+            <button type="button" class="calm-tab" data-mode="words" onclick="setCalmMode('words')" style="background:rgba(255,255,255,0.10);color:#cfe3f2;border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;">Word Play</button>
           </div>
           <canvas id="calm-touch" style="width:100%;height:240px;display:block;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;cursor:pointer;transition:height 0.5s ease;"></canvas>
         </div>
@@ -730,6 +731,47 @@ let currentFaceEmotion = null;
 let faceEmotionScores = {};
 
 
+
+// ================= WORD PLAY — gentle focus game =================
+// A calm word appears; find it among eight. Right answer glows soft green,
+// a new round follows. Occupies a racing mind without stressing it.
+const WORD_BANK = ['RIVER','MEADOW','CANDLE','HARBOR','WILLOW','LANTERN','BREEZE','GARDEN',
+                   'PEBBLE','FEATHER','MOON','SUNRISE','OCEAN','MAPLE','VALLEY','CLOUD',
+                   'EMBER','ORCHARD','STARLIGHT','RAIN'];
+let wordsPanel = null, wordsTarget = '';
+function buildWordsPanel(){
+  const anchorEl = document.querySelector('.calm-tab');
+  const host = (anchorEl && anchorEl.closest('div') && anchorEl.closest('div').parentNode) || document.body;
+  wordsPanel = document.createElement('div');
+  wordsPanel.id = 'words-panel';
+  wordsPanel.style.cssText = 'padding:14px;text-align:center;';
+  wordsPanel.innerHTML = '<div id="words-prompt" style="font-size:14px;color:#cfe3f2;margin-bottom:12px;"></div>'
+    + '<div id="words-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:340px;margin:0 auto;"></div>';
+  host.appendChild(wordsPanel);
+  wordsRound();
+}
+function wordsRound(){
+  if (!wordsPanel) return;
+  const pool = WORD_BANK.slice().sort(()=>Math.random()-0.5).slice(0,8);
+  wordsTarget = pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById('words-prompt').innerHTML = 'Find: <b style="font-size:19px;letter-spacing:2px;color:#fff;">' + wordsTarget + '</b>';
+  const grid = document.getElementById('words-grid');
+  grid.innerHTML = pool.slice().sort(()=>Math.random()-0.5).map(w =>
+    '<button onclick="wordsPick(this)" data-w="'+w+'" style="padding:13px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);'
+    + 'background:rgba(255,255,255,0.08);color:#e6f1fa;font-size:15px;letter-spacing:1px;cursor:pointer;transition:all 0.25s ease;">'+w+'</button>'
+  ).join('');
+}
+function wordsPick(btn){
+  if (btn.dataset.w === wordsTarget){
+    btn.style.background = 'rgba(90,180,130,0.55)'; btn.style.borderColor = '#7dd3a8';
+    metric('wordplay');
+    setTimeout(wordsRound, 900);
+  } else {
+    btn.style.background = 'rgba(180,90,90,0.25)';
+    setTimeout(()=>{ btn.style.background = 'rgba(255,255,255,0.08)'; }, 450);
+  }
+}
+
 // ================= MEDIAPIPE 52-MOVEMENT READER (with iris/gaze) =================
 let mpLandmarker = null, mpActive = false, mpGazeAwayRun = 0;
 (async function loadMediaPipe(){
@@ -811,9 +853,9 @@ function heartTick(){
   if (hrBuf.length > 512){ hrBuf.shift(); hrTimes.shift(); }
 }
 function heartEstimate(){
-  if (hrBuf.length < 200) return;
+  if (hrBuf.length < 150) return;
   const dur = (hrTimes[hrTimes.length-1] - hrTimes[0]) / 1000;
-  if (dur < 12) return;
+  if (dur < 10) return;
   const n = hrBuf.length, mean = hrBuf.reduce((a,b)=>a+b,0)/n;
   const sig = hrBuf.map(v => v - mean);
   // simple detrend
@@ -826,7 +868,19 @@ function heartEstimate(){
     if (pow > bestPow){ bestPow = pow; bestBpm = bpm; }
   }
   if (!bestBpm) return;
-  heartBPM = heartBPM ? (heartBPM*0.7 + bestBpm*0.3) : bestBpm;
+  // HARMONIC GUARD: the camera often locks onto the echo at DOUBLE the true
+  // pulse (53 shows as 106). If half the found rate also carries strong
+  // rhythm, the half is the heart — take it.
+  if (bestBpm >= 90){
+    const half = bestBpm / 2;
+    if (half >= 42){
+      const f = half/60; let re = 0, im = 0;
+      for (let i = 0; i < n; i++){ const ph = 2*Math.PI*f*(i/fs); re += sig[i]*Math.cos(ph); im += sig[i]*Math.sin(ph); }
+      const halfPow = re*re + im*im;
+      if (halfPow > bestPow * 0.45) bestBpm = Math.round(half);
+    }
+  }
+  heartBPM = heartBPM ? (heartBPM*0.6 + bestBpm*0.4) : bestBpm;
   if (!heartBaseline && hrBuf.length > 400) heartBaseline = heartBPM; // personal baseline after ~30s
   window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
 }
@@ -838,7 +892,7 @@ function heartReport(){
   }
 }
 setInterval(heartTick, 66);       // ~15 samples per second
-setInterval(heartEstimate, 5000); // re-estimate every 5s
+setInterval(heartEstimate, 3000); // re-estimate every 3s — fresher readings
 setInterval(heartReport, 15000);
 // Show the person their own rhythm — watching a number ease downward is a
 // proven calming aid (biofeedback). Appears only once the reading is stable.
@@ -858,7 +912,7 @@ setInterval(heartReport, 15000);
       b.style.transition = 'transform 0.18s ease'; b.style.transform = 'scale(1.25)';
       setTimeout(()=>{ b.style.transform = 'scale(1)'; }, 200);
     }
-  }, 3000);
+  }, 2000);
 })();
 
 // --- Face detection ---
@@ -969,9 +1023,9 @@ function adaptiveTick() {
   //    (deep-calm to bring an activated person DOWN; lifting to reach a flat/
   //    down person UP). Rate-limited so it can't flip back and forth.
   const now = Date.now();
-  if (now - adaptiveLastSwitch < 25000) return; // at most one shift per 25s
+  if (now - adaptiveLastSwitch < 15000) return; // at most one shift per 15s
   let want = null;
-  if (adaptiveArousal > 0.68 && adaptiveLaneNow !== 'deepcalm') want = 'deepcalm';
+  if (adaptiveArousal > 0.60 && adaptiveLaneNow !== 'deepcalm') want = 'deepcalm';
   else if (down > 0.55 && adaptiveArousal < 0.45 && adaptiveLaneNow !== 'lifting') want = 'lifting';
   else if (adaptiveArousal < 0.35 && down < 0.3 && adaptiveLaneNow !== 'calm') want = 'calm';
   if (want) {
@@ -1388,6 +1442,18 @@ let ambientIndex = 0;
 const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+// Your hand wins: auto-scroll is allowed ONLY when you're already near the
+// bottom. The moment you scroll up to read, nothing drags you back down.
+function nearBottom(el){
+  if (!el || el === document.body) {
+    return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 160);
+  }
+  return (el.scrollTop + el.clientHeight) >= (el.scrollHeight - 160);
+}
+function politeScrollIntoView(el){
+  if (nearBottom(document.body)) politeScrollIntoView(el);
+}
+
 // ---- LENS THREE: wordless calm scale (tap a face, or ignore it) ----
 function showCalmScale(phase){
   if (document.getElementById('sam-card')) return;
@@ -1447,7 +1513,7 @@ async function startExperience() {
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
   const gate = $('welcome-gate'); if (gate) gate.style.display = 'none';
   const screen = $('story-screen'); if (screen) screen.style.display = 'flex';
-  const msg = $('message'); if (msg) msg.focus();
+  const msg = $('message'); if (msg) msg.focus({preventScroll:true});
   metric('session_start');
   // Start on a real photograph (the founder's garden) and rotate slowly
   setScene('garden', false);
@@ -2300,7 +2366,7 @@ function showWarmHandoff(thread, warm, resolution, action, value) {
   // The person taps "Connect now" when ready — we never auto-launch during the warm words
   const goBtn = el.querySelector('#bridge-go');
   if (goBtn) goBtn.onclick = function() { performBridgeAction(action, value); };
-  el.scrollIntoView({behavior:'smooth', block:'center'});
+  politeScrollIntoView(el);
 }
 function performBridgeAction(action, value) {
   switch(action) {
@@ -2325,7 +2391,7 @@ function showExit(thread, exitMsg, resolution) {
   `;
   thread.appendChild(el);
   speak(exitMsg.message);
-  el.scrollIntoView({behavior:'smooth', block:'center'});
+  politeScrollIntoView(el);
 }
 function restartConversation() {
   const box = document.createElement('div');
@@ -2339,7 +2405,7 @@ function restartConversation() {
     </div>
   `;
   document.getElementById('conversation-thread').appendChild(box);
-  document.getElementById('conv-answer').focus();
+  document.getElementById('conv-answer').focus({preventScroll:true});
 }
 function appendExchange(thread, reply, question, safetyHtml) {
   // Remove any previous reply box (keep conversation flat)
@@ -2373,8 +2439,8 @@ function appendExchange(thread, reply, question, safetyHtml) {
   thread.appendChild(replyBox);
   // Focus and scroll
   const ta = document.getElementById('conv-answer');
-  if (ta) ta.focus();
-  replyBox.scrollIntoView({behavior:'smooth', block:'center'});
+  if (ta) ta.focus({preventScroll:true});
+  politeScrollIntoView(replyBox);
 }
 async function updateMusicForEmotion(data) {
   const textEmotion = (data.zenisys_music || {}).emotion || 'calm';
@@ -2420,7 +2486,7 @@ async function continueConversation() {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   thread.appendChild(userMsg);
-  thread.scrollTop = thread.scrollHeight;
+  if (nearBottom(thread)) thread.scrollTop = thread.scrollHeight;
   // Call the API
   const res = await fetch('/api/innerlight/learn', {
     method:'POST',
@@ -2539,6 +2605,11 @@ async function continueInnerLight() { return continueConversation(); }
   let calmMode = 'anchor';
   window.setCalmMode = function(m){
     calmMode = m;
+    if (m === 'words'){
+      if (!wordsPanel) buildWordsPanel();
+      wordsPanel.style.display = 'block';
+      try { metric('soundbox_open_ms', Date.now() - TAP_MS); } catch(e){}
+    } else if (wordsPanel){ wordsPanel.style.display = 'none'; }
     document.querySelectorAll('.calm-tab').forEach(b=>{
       const on = b.dataset.mode===m;
       b.style.background = on ? '#6fb3d4' : 'rgba(255,255,255,0.10)';
@@ -4271,7 +4342,7 @@ def metrics_event():
                "lane_switch", "handoff_click", "listen_autostop",
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
-               "gaze_aversion", "heart_read", "selfreport"}
+               "gaze_aversion", "heart_read", "selfreport", "wordplay"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -4332,6 +4403,9 @@ def metrics_event():
         elif etype == "distraction":
             d["distractions"] = d.get("distractions", 0) + 1
             if sess: sess["distractions"] += 1
+        elif etype == "wordplay":
+            d["wordplay_rounds"] = d.get("wordplay_rounds", 0) + 1
+            if sess: sess["wordplay"] = sess.get("wordplay", 0) + 1
         elif etype == "gaze_aversion":
             d["gaze_aversions"] = d.get("gaze_aversions", 0) + 1
             if sess: sess["gaze"] = sess.get("gaze", 0) + 1
@@ -4461,7 +4535,7 @@ def admin_dashboard():
             sess_rows += (f"<tr><td>Person {i}</td><td>{e.get('shifts',0)}</td>"
                           f"<td>{e.get('messages',0)}</td><td>{e.get('hesitations',0)}</td>"
                           f"<td>{e.get('scenes',0)}</td><td>{e.get('distractions',0)}</td>"
-                          f"<td>{e.get('lanes',0)}</td></tr>")
+                          f"<td>{e.get('wordplay',0)}</td><td>{e.get('lanes',0)}</td></tr>")
     sess_rows = sess_rows or "<tr><td colspan=7>No sessions recorded yet today.</td></tr>"
     return render_template_string("""
 <!doctype html><html><head><title>InnerLight — Operations</title>
@@ -4509,7 +4583,7 @@ def admin_dashboard():
 <h2>Today, person by person — anonymous session breakdown</h2>
 <table>
 <tr><th>Session</th><th>Expression shifts</th><th>Messages</th><th>Hesitations</th>
-<th>Scene changes</th><th>Distractions (looked away)</th><th>Music lane shifts</th></tr>
+<th>Scene changes</th><th>Distractions (looked away)</th><th>Word plays</th><th>Music lane shifts</th></tr>
 {{ sess_rows|safe }}
 </table>
 <h2>Track reactions — the research core (all days shown)</h2>
