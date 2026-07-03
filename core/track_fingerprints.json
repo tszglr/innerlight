@@ -71,14 +71,6 @@
   "busyness": 0.0506,
   "calm_score": 0.553
  },
- "calm_19.mp3": {
-  "bpm": 117.5,
-  "key": "F#",
-  "energy": 0.1198,
-  "brightness": 2580,
-  "busyness": 0.1094,
-  "calm_score": 0
- },
  "calm_2.mp3": {
   "bpm": 73.8,
   "key": "C",
@@ -278,14 +270,6 @@
   "brightness": 787,
   "busyness": 0.0448,
   "calm_score": 0.561
- },
- "lifting_12.mp3": {
-  "bpm": 32.3,
-  "key": "A",
-  "energy": 0.0292,
-  "brightness": 1239,
-  "busyness": 0.0734,
-  "calm_score": 0.281
  },
  "lifting_13.mp3": {
   "bpm": 117.5,
