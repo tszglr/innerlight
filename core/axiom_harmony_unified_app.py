@@ -728,6 +728,118 @@ let faceReady = false;
 let currentFaceEmotion = null;
 let faceEmotionScores = {};
 
+
+// ================= MEDIAPIPE 52-MOVEMENT READER (with iris/gaze) =================
+let mpLandmarker = null, mpActive = false, mpGazeAwayRun = 0;
+(async function loadMediaPipe(){
+  try {
+    const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');
+    const files = await vision.FilesetResolver.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+    mpLandmarker = await vision.FaceLandmarker.createFromOptions(files, {
+      baseOptions: { modelAssetPath:
+        'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task' },
+      outputFaceBlendshapes: true, runningMode: 'VIDEO', numFaces: 1 });
+    mpActive = true;
+    console.log('[Face] MediaPipe 52-movement reader active');
+    setInterval(mpTick, 500);
+  } catch (e) { console.log('[Face] MediaPipe unavailable, staying on fallback reader:', e); }
+})();
+
+function mpTick(){
+  if (!mpActive || !mpLandmarker) return;
+  if (window._lastTypedAt && (performance.now() - window._lastTypedAt) < 700) return;
+  const video = document.getElementById('visual-preview');
+  if (!video || !video.videoWidth) return;
+  let res;
+  try { res = mpLandmarker.detectForVideo(video, performance.now()); } catch(e){ return; }
+  const shapes = (res && res.faceBlendshapes && res.faceBlendshapes[0]) ? res.faceBlendshapes[0].categories : null;
+  if (!shapes){
+    if (window._faceWasPresent){
+      window._faceLostRun = (window._faceLostRun||0) + 1;
+      if (window._faceLostRun === 3) metric('distraction');
+    }
+    window._heartFaceBox = null;
+    return;
+  }
+  const b = {}; shapes.forEach(c => b[c.categoryName] = c.score);
+  // --- Movements -> the score keys the whole system already speaks ---
+  const angry = Math.min(1, (b.browDownLeft + b.browDownRight)/2 * 1.4 + (b.jawClench||0)*0.6 + (b.mouthPressLeft + b.mouthPressRight)/2*0.5);
+  const happy = Math.min(1, (b.mouthSmileLeft + b.mouthSmileRight)/2 * 1.3 + (b.cheekSquintLeft + b.cheekSquintRight)/2*0.4);
+  const sad = Math.min(1, (b.browInnerUp||0)*0.9 + (b.mouthFrownLeft + b.mouthFrownRight)/2 * 1.1);
+  const surprised = Math.min(1, (b.eyeWideLeft + b.eyeWideRight)/2 * 1.1 + (b.jawOpen||0)*0.7 + (b.browOuterUpLeft + b.browOuterUpRight)/2*0.5);
+  const disgusted = Math.min(1, (b.noseSneerLeft + b.noseSneerRight)/2 * 1.5 + (b.mouthUpperUpLeft + b.mouthUpperUpRight)/2*0.4);
+  const fearful = Math.min(1, ((b.eyeWideLeft + b.eyeWideRight)/2 * 0.6 + (b.browInnerUp||0)*0.5));
+  const activity = angry + happy + sad + surprised + disgusted;
+  const neutral = Math.max(0, 1 - Math.min(1, activity));
+  faceEmotionScores = { angry, happy, sad, surprised, disgusted, fearful, neutral };
+  let top = 'neutral', tv = neutral;
+  for (const [k,v] of Object.entries(faceEmotionScores)) if (v > tv){ top = k; tv = v; }
+  if (top !== currentFaceEmotion) metric('face_shift');
+  currentFaceEmotion = top;
+  window._faceWasPresent = true; window._faceLostRun = 0;
+  // --- IRIS / GAZE: eyes fleeing while the face stays = avoidance ---
+  const gazeAway = Math.max((b.eyeLookOutLeft||0)+(b.eyeLookInRight||0), (b.eyeLookOutRight||0)+(b.eyeLookInLeft||0),
+                            ((b.eyeLookDownLeft||0)+(b.eyeLookDownRight||0)));
+  if (gazeAway > 0.9){ mpGazeAwayRun++; if (mpGazeAwayRun === 4) metric('gaze_aversion'); }
+  else mpGazeAwayRun = 0;
+  window._eyesClosed = ((b.eyeBlinkLeft||0)+(b.eyeBlinkRight||0))/2 > 0.6;
+  // --- Face anchor for the heart engine (forehead region in video pixels) ---
+  const lm = res.faceLandmarks && res.faceLandmarks[0];
+  if (lm && lm[10] && lm[151]){
+    const fx = lm[10].x * video.videoWidth, fy = lm[10].y * video.videoHeight;
+    window._heartFaceBox = { x: fx - video.videoWidth*0.06, y: fy, w: video.videoWidth*0.12, h: video.videoHeight*0.07 };
+  }
+}
+
+// ================= HEART ENGINE (webcam pulse reading) =================
+// The camera watches the tiny color changes in the forehead skin each time
+// the heart beats (remote photoplethysmography). Runs fully on-device;
+// only an anonymous average number ever leaves.
+let hrBuf = [], hrTimes = [], heartBPM = 0, heartBaseline = 0, hrCanvas = null;
+function heartTick(){
+  const video = document.getElementById('visual-preview');
+  const box = window._heartFaceBox;
+  if (!video || !video.videoWidth || !box) return;
+  if (!hrCanvas){ hrCanvas = document.createElement('canvas'); hrCanvas.width = 48; hrCanvas.height = 24; }
+  const ctx = hrCanvas.getContext('2d', { willReadFrequently: true });
+  try { ctx.drawImage(video, box.x, box.y, box.w, box.h, 0, 0, 48, 24); } catch(e){ return; }
+  const d = ctx.getImageData(0,0,48,24).data;
+  let g = 0; for (let i = 1; i < d.length; i += 4) g += d[i];
+  hrBuf.push(g / (d.length/4)); hrTimes.push(performance.now());
+  if (hrBuf.length > 512){ hrBuf.shift(); hrTimes.shift(); }
+}
+function heartEstimate(){
+  if (hrBuf.length < 200) return;
+  const dur = (hrTimes[hrTimes.length-1] - hrTimes[0]) / 1000;
+  if (dur < 12) return;
+  const n = hrBuf.length, mean = hrBuf.reduce((a,b)=>a+b,0)/n;
+  const sig = hrBuf.map(v => v - mean);
+  // simple detrend
+  for (let i = 1; i < n; i++) sig[i] = sig[i] - 0.95*sig[i-1];
+  const fs = n / dur; let bestBpm = 0, bestPow = 0;
+  for (let bpm = 45; bpm <= 160; bpm += 1){
+    const f = bpm/60; let re = 0, im = 0;
+    for (let i = 0; i < n; i++){ const ph = 2*Math.PI*f*(i/fs); re += sig[i]*Math.cos(ph); im += sig[i]*Math.sin(ph); }
+    const pow = re*re + im*im;
+    if (pow > bestPow){ bestPow = pow; bestBpm = bpm; }
+  }
+  if (!bestBpm) return;
+  heartBPM = heartBPM ? (heartBPM*0.7 + bestBpm*0.3) : bestBpm;
+  if (!heartBaseline && hrBuf.length > 400) heartBaseline = heartBPM; // personal baseline after ~30s
+  window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
+}
+let _hrReported = 0;
+function heartReport(){
+  if (heartBPM > 40 && Date.now() - _hrReported > 60000){
+    _hrReported = Date.now();
+    metric('heart_read', Math.round(heartBPM));
+  }
+}
+setInterval(heartTick, 66);       // ~15 samples per second
+setInterval(heartEstimate, 5000); // re-estimate every 5s
+setInterval(heartReport, 15000);
+
 // --- Face detection ---
 async function loadFaceModels() {
   try {
@@ -737,6 +849,7 @@ async function loadFaceModels() {
   } catch (e) { console.log('[Face] Models unavailable:', e); }
 }
 async function detectFaceEmotion() {
+  if (mpActive) return; // the 52-movement reader has the watch
   if (!faceReady) return;
   if (window._faceBusy) return;  // don't let detections pile up on slower phones
   // Don't compete with the keyboard: if the person typed very recently, skip
@@ -792,6 +905,11 @@ let adaptiveLaneNow = 'calm'; // which lane the adaptive loop currently favors
 let adaptiveLastSwitch = 0;
 
 function readArousalSignal() {
+  // Heart above its own resting baseline = the body's testimony of activation.
+  let heartPush = 0;
+  if (window._heartBPM && window._heartBaseline){
+    heartPush = Math.max(0, Math.min(0.3, (window._heartBPM - window._heartBaseline) / 45));
+  }
   // Combine face + voice into a single 0..1 "activation" estimate.
   // Face: anger/fear/disgust push UP; sad pushes DOWN-but-present; happy/neutral calm.
   let faceUp = 0, faceDown = 0;
@@ -805,7 +923,7 @@ function readArousalSignal() {
   let inst = Math.min(1, Math.max(0, faceUp*0.6 + voiceUp*0.5));
   // "Down/flat" is low arousal but still needs reaching — track it separately.
   window._adaptiveDown = faceDown;
-  return inst;
+  return Math.min(1, (inst) + heartPush);
 }
 
 function adaptiveTick() {
@@ -847,6 +965,14 @@ function adaptiveTick() {
           ambientTracks = tracks; ambientIndex = 0;
           switchAmbient(tracks[0].url, tracks[0].name);
           metric('lane_switch');
+          // The view answers too: agitated -> stillness (moons); low -> warmth (sun).
+          if (!sceneUserChose){
+            const sceneFor = { deepcalm: ['moon','moonleaf','horizon'],
+                               lifting: ['sunflower','sunset','garden'],
+                               calm: ['garden','horizon','daymoon'] };
+            const opts = sceneFor[want] || SCENE_ORDER;
+            setScene(opts[Math.floor(Math.random()*opts.length)], false);
+          }
         }
       }).catch(()=>{});
   }
@@ -1241,6 +1367,29 @@ let ambientIndex = 0;
 const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+// ---- LENS THREE: wordless calm scale (tap a face, or ignore it) ----
+function showCalmScale(phase){
+  if (document.getElementById('sam-card')) return;
+  const card = document.createElement('div');
+  card.id = 'sam-card';
+  card.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:60;'
+    + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 18px;'
+    + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
+  card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">How are you feeling right now? (tap one, or ignore me)</div>'
+    + '<div style="font-size:30px;letter-spacing:14px;cursor:pointer;">'
+    + ['&#128551;','&#128533;','&#128528;','&#128578;','&#128522;'].map(function(f,i){
+        return '<span data-v="'+(i+1)+'" style="cursor:pointer;">'+f+'</span>';
+      }).join('')
+    + '</div>';
+  card.addEventListener('click', function(ev){
+    const v = ev.target && ev.target.dataset && ev.target.dataset.v;
+    if (v) metric('selfreport', phase + '|' + v);
+    card.style.opacity = '0'; setTimeout(()=>card.remove(), 1000);
+  });
+  document.body.appendChild(card);
+  setTimeout(()=>{ if (card.parentNode){ card.style.opacity='0'; setTimeout(()=>card.remove(),1000);} }, 25000);
+}
+
 let TAP_MS = Date.now();
 // PRELOAD: fetch the calm lane and warm up the first track before the tap,
 // so sound begins the instant the person enters.
@@ -1269,6 +1418,11 @@ let TAP_MS = Date.now();
 
 async function startExperience() {
   TAP_MS = Date.now();
+  // Warm the sound engine at the tap so the sound box answers instantly later.
+  try { if (typeof ensureZenisysContext === 'function') ensureZenisysContext(); } catch(e){}
+  try { const ac = new (window.AudioContext||window.webkitAudioContext)(); if (ac.state==='suspended') ac.resume(); window._warmCtx = ac; } catch(e){}
+  setTimeout(()=>showCalmScale('arrival'), 9000);      // after the music has risen
+  setTimeout(()=>showCalmScale('later'), 4*60*1000);   // the change measurement
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
   const gate = $('welcome-gate'); if (gate) gate.style.display = 'none';
   const screen = $('story-screen'); if (screen) screen.style.display = 'flex';
@@ -4026,7 +4180,8 @@ def metrics_event():
     allowed = {"session_start", "first_sound_ms", "message_sent",
                "lane_switch", "handoff_click", "listen_autostop",
                "face_shift", "scene_change", "hesitation",
-               "soundbox_open_ms", "track_skip", "track_react", "distraction"}
+               "soundbox_open_ms", "track_skip", "track_react", "distraction",
+               "gaze_aversion", "heart_read", "selfreport"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -4087,6 +4242,22 @@ def metrics_event():
         elif etype == "distraction":
             d["distractions"] = d.get("distractions", 0) + 1
             if sess: sess["distractions"] += 1
+        elif etype == "gaze_aversion":
+            d["gaze_aversions"] = d.get("gaze_aversions", 0) + 1
+            if sess: sess["gaze"] = sess.get("gaze", 0) + 1
+        elif etype == "heart_read" and isinstance(value, (int, float)) and 40 <= value <= 180:
+            d["heart_sum"] = d.get("heart_sum", 0) + int(value)
+            d["heart_count"] = d.get("heart_count", 0) + 1
+        elif etype == "selfreport" and value:
+            try:
+                phase, score = str(value).split("|", 1)
+                score = int(score)
+                if phase in ("arrival", "later") and 1 <= score <= 5:
+                    key = f"sam_{phase}"
+                    d[key + "_sum"] = d.get(key + "_sum", 0) + score
+                    d[key + "_count"] = d.get(key + "_count", 0) + 1
+            except Exception:
+                pass
         elif etype == "handoff_click":
             dest = str(value)[:24] if value else "unknown"
             d["handoffs"][dest] = d["handoffs"].get(dest, 0) + 1
@@ -4161,12 +4332,17 @@ def admin_dashboard():
         avg_box = (d.get("soundbox_ms_sum",0) / d["soundbox_count"]) if d.get("soundbox_count") else 0
         handoffs = ", ".join(f"{k}: {v}" for k, v in sorted(d.get("handoffs", {}).items())) or "—"
         dislikes = ", ".join(f"{k}: {v}" for k, v in sorted(d.get("track_dislikes", {}).items(), key=lambda x: -x[1])[:5]) or "—"
-        rows.append(f"<tr><td>{day}</td><td>{d.get('sessions',0)}</td>"
+        true_sessions = max(d.get('sessions', 0), len(d.get('by_session', {})))
+        rows.append(f"<tr><td>{day}</td><td>{true_sessions}</td>"
                     f"<td>{avg_ms/1000:.1f}s</td><td>{d.get('messages',0)}</td>"
                     f"<td>{d.get('face_shifts',0)}</td><td>{d.get('lane_switches',0)}</td>"
                     f"<td>{d.get('scene_changes',0)}</td><td>{d.get('hesitations',0)}</td>"
                     f"<td>{avg_box/1000:.0f}s</td><td>{handoffs}</td>"
-                    f"<td>{dislikes}</td><td>{d.get('autostops',0)}</td></tr>")
+                    f"<td>{dislikes}</td><td>{d.get('autostops',0)}</td>"
+                    f"<td>{d.get('gaze_aversions',0)}</td>"
+                    f"<td>{(d.get('heart_sum',0)/d.get('heart_count',1)):.0f} bpm</td>"
+                    f"<td>{(d.get('sam_arrival_sum',0)/max(1,d.get('sam_arrival_count',0))):.1f} &rarr; "
+                    f"{(d.get('sam_later_sum',0)/max(1,d.get('sam_later_count',0))):.1f}</td></tr>")
     body = "".join(rows) or "<tr><td colspan=11>No activity recorded yet.</td></tr>"
     # Bar graph of sessions per day (oldest -> newest)
     graph_days = list(reversed(days))
@@ -4234,7 +4410,8 @@ def admin_dashboard():
 <tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
 <th>Expression shifts seen</th><th>Music lane shifts</th><th>Scene changes</th>
 <th>Hesitations (typed then erased)</th><th>Avg time to open sound box</th>
-<th>Handoff clicks</th><th>Tracks that drew dislike</th><th>Listening auto-stops</th></tr>
+<th>Handoff clicks</th><th>Tracks that drew dislike</th><th>Listening auto-stops</th>
+<th>Gaze aversions (eyes fled)</th><th>Avg heart rate seen</th><th>Calm scale: arrival &rarr; later</th></tr>
 {{ body|safe }}
 </table>
 <h2>Sessions per day</h2>
