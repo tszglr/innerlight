@@ -690,7 +690,7 @@ let canvasAnim = null;
 
 function setScene(scene, byUser=true) {
   currentScene = scene;
-  if (byUser) sceneUserChose = true;   // the person chose — stop auto-rotation
+  if (byUser) { sceneUserChose = true; metric('scene_change'); }   // the person chose — stop auto-rotation
   document.querySelectorAll('.scene-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.scene === scene);
   });
@@ -751,6 +751,7 @@ async function detectFaceEmotion() {
       faceEmotionScores = det.expressions;
       let top = 'neutral', topVal = 0;
       for (const [k, v] of Object.entries(det.expressions)) { if (v > topVal) { top = k; topVal = v; } }
+      if (top !== currentFaceEmotion) metric('face_shift');
       currentFaceEmotion = top;
       // The reading stays SILENT — it steers the sound in the background, but
       // no label is ever shown to the person. A wrong label ("you look angry")
@@ -1232,6 +1233,20 @@ let ambientIndex = 0;
 // Anonymous metric ping — counts only, never content.
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+// --- HESITATION SENSOR: they almost said something, then erased it. ---
+(function(){
+  let deepest = 0;
+  document.addEventListener('input', function(ev){
+    const el = ev.target;
+    if (!el || el.id !== 'message') return;
+    const len = (el.value || '').length;
+    if (len > deepest) deepest = len;
+    if (len === 0 && deepest > 12) { metric('hesitation'); deepest = 0; }
+    if (len < 3) deepest = Math.max(deepest, len);
+  });
+  document.addEventListener('claude-message-sent', function(){ deepest = 0; });
+})();
+
 async function startExperience() {
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
   const gate = $('welcome-gate'); if (gate) gate.style.display = 'none';
@@ -1321,6 +1336,39 @@ function scheduleSpaTransition(spaTracks, delayMs) {
     const now = $('music-now'); if (now) now.textContent = '\u266a ' + (spaTracks[0].name || 'Spa');
   }, delayMs);
 }
+
+// --- TRACK GUARDIAN: is the person reacting against THIS track? ---
+// Watches displeasure (disgust/anger/surprise mix) during a track's first
+// minute, compared to the person's own level before the track began.
+let trackWatch = null; // {name, startMs, baseline, strikes}
+function beginTrackWatch(name){
+  const sc = faceEmotionScores || {};
+  const displeasure = (sc.disgusted||0)*1.2 + (sc.angry||0) + (sc.surprised||0)*0.6;
+  trackWatch = { name: name || 'unknown', startMs: Date.now(), baseline: displeasure, strikes: 0 };
+}
+function trackGuardianTick(){
+  if (!trackWatch) return;
+  const age = Date.now() - trackWatch.startMs;
+  if (age > 60000) { trackWatch = null; return; } // opening minute passed - track accepted
+  if (age < 4000) return;                          // let the crossfade settle first
+  const sc = faceEmotionScores || {};
+  const displeasure = (sc.disgusted||0)*1.2 + (sc.angry||0) + (sc.surprised||0)*0.6;
+  if (displeasure - trackWatch.baseline > 0.35) trackWatch.strikes++;
+  else if (trackWatch.strikes > 0) trackWatch.strikes--;
+  if (trackWatch.strikes >= 4) {
+    // A held reaction against this track: change the song, not the lane.
+    const disliked = trackWatch.name;
+    trackWatch = null;
+    metric('track_skip', disliked);
+    if (ambientTracks.length > 1) {
+      ambientIndex = (ambientIndex + 1) % ambientTracks.length;
+      const t = ambientTracks[ambientIndex];
+      switchAmbient(t.url, t.name);
+    }
+  }
+}
+setInterval(trackGuardianTick, 1500);
+
 function switchAmbient(url, name, vol) {
   // DJ-style: crossfade to the new track instead of hard-switching
   const inactive = getInactiveDeck();
@@ -1330,6 +1378,7 @@ function switchAmbient(url, name, vol) {
   crossfade(getActiveDeck(), inactive, CROSSFADE_MS);
   activeDeck = activeDeck === 'A' ? 'B' : 'A';
   const now = $('music-now'); if (now) now.textContent = '\u266a ' + (name || 'music');
+  beginTrackWatch(name);
   // Also update the generative synth layer emotion
   const emo = currentFaceEmotion || 'calm';
   updateSynthEmotion(emo);
@@ -3937,7 +3986,9 @@ def metrics_event():
     etype = str(data.get("type", ""))[:40]
     value = data.get("value")
     allowed = {"session_start", "first_sound_ms", "message_sent",
-               "lane_switch", "handoff_click", "listen_autostop"}
+               "lane_switch", "handoff_click", "listen_autostop",
+               "face_shift", "scene_change", "hesitation",
+               "soundbox_open_ms", "track_skip"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -3945,7 +3996,10 @@ def metrics_event():
         m = _metrics_load()
         d = m.setdefault(day, {"sessions": 0, "messages": 0, "lane_switches": 0,
                                "autostops": 0, "first_sound_ms_sum": 0,
-                               "first_sound_count": 0, "handoffs": {}})
+                               "first_sound_count": 0, "handoffs": {},
+                               "face_shifts": 0, "scene_changes": 0,
+                               "hesitations": 0, "track_skips": 0,
+                               "soundbox_ms_sum": 0, "soundbox_count": 0})
         if etype == "session_start":
             d["sessions"] += 1
         elif etype == "message_sent":
@@ -3957,6 +4011,20 @@ def metrics_event():
         elif etype == "first_sound_ms" and isinstance(value, (int, float)) and 0 <= value < 600000:
             d["first_sound_ms_sum"] += int(value)
             d["first_sound_count"] += 1
+        elif etype == "face_shift":
+            d["face_shifts"] = d.get("face_shifts", 0) + 1
+        elif etype == "scene_change":
+            d["scene_changes"] = d.get("scene_changes", 0) + 1
+        elif etype == "hesitation":
+            d["hesitations"] = d.get("hesitations", 0) + 1
+        elif etype == "track_skip":
+            d["track_skips"] = d.get("track_skips", 0) + 1
+            tname = str(value)[:40] if value else "unknown"
+            td = d.setdefault("track_dislikes", {})
+            td[tname] = td.get(tname, 0) + 1
+        elif etype == "soundbox_open_ms" and isinstance(value, (int, float)) and 0 <= value < 3600000:
+            d["soundbox_ms_sum"] = d.get("soundbox_ms_sum", 0) + int(value)
+            d["soundbox_count"] = d.get("soundbox_count", 0) + 1
         elif etype == "handoff_click":
             dest = str(value)[:24] if value else "unknown"
             d["handoffs"][dest] = d["handoffs"].get(dest, 0) + 1
@@ -3981,11 +4049,15 @@ def admin_dashboard():
     for day in days:
         d = m[day]
         avg_ms = (d["first_sound_ms_sum"] / d["first_sound_count"]) if d.get("first_sound_count") else 0
+        avg_box = (d.get("soundbox_ms_sum",0) / d["soundbox_count"]) if d.get("soundbox_count") else 0
         handoffs = ", ".join(f"{k}: {v}" for k, v in sorted(d.get("handoffs", {}).items())) or "—"
+        dislikes = ", ".join(f"{k}: {v}" for k, v in sorted(d.get("track_dislikes", {}).items(), key=lambda x: -x[1])[:5]) or "—"
         rows.append(f"<tr><td>{day}</td><td>{d.get('sessions',0)}</td>"
                     f"<td>{avg_ms/1000:.1f}s</td><td>{d.get('messages',0)}</td>"
-                    f"<td>{d.get('lane_switches',0)}</td><td>{handoffs}</td>"
-                    f"<td>{d.get('autostops',0)}</td></tr>")
+                    f"<td>{d.get('face_shifts',0)}</td><td>{d.get('lane_switches',0)}</td>"
+                    f"<td>{d.get('scene_changes',0)}</td><td>{d.get('hesitations',0)}</td>"
+                    f"<td>{avg_box/1000:.0f}s</td><td>{handoffs}</td>"
+                    f"<td>{dislikes}</td><td>{d.get('autostops',0)}</td></tr>")
     body = "".join(rows) or "<tr><td colspan=7>No activity recorded yet.</td></tr>"
     return render_template_string("""
 <!doctype html><html><head><title>InnerLight — Operations</title>
@@ -4003,8 +4075,10 @@ def admin_dashboard():
 <div class="sub">Anonymous counts and clock-times only. No words, names, faces, or voices are ever stored.</div>
 <table>
 <tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
-<th>Music lane shifts</th><th>Handoff clicks</th><th>Listening auto-stops</th></tr>
+<th>Expression shifts seen</th><th>Music lane shifts</th><th>Scene changes</th>
+<th>Hesitations (typed then erased)</th><th>Avg time to open sound box</th>
+<th>Handoff clicks</th><th>Tracks that drew dislike</th><th>Listening auto-stops</th></tr>
 {{ body|safe }}
 </table>
-<div class="note">Time to first sound = seconds between a person arriving and calm music playing — the product promise in one number. Metrics reset if the server is rebuilt; a permanent store comes with the provider back-end.</div>
+<div class="note"><b>Research reading guide:</b> Expression shifts vs. music lane shifts is the core question — is the sound answering the face? Hesitations (typing then erasing) mark moments a person almost spoke. Time to first sound = seconds between a person arriving and calm music playing — the product promise in one number. Metrics reset if the server is rebuilt; a permanent store comes with the provider back-end.</div>
 </body></html>""", body=body)
