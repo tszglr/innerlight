@@ -844,76 +844,135 @@ function mpTick(){
   if (gazeAway > 0.9){ mpGazeAwayRun++; if (mpGazeAwayRun === 4) metric('gaze_aversion'); }
   else mpGazeAwayRun = 0;
   window._eyesClosed = ((b.eyeBlinkLeft||0)+(b.eyeBlinkRight||0))/2 > 0.6;
-  // --- Face anchor for the heart engine (forehead region in video pixels) ---
+  // --- Heart regions from landmarks: forehead + both cheeks (proven, reliable),
+  //     plus experimental sub-zones of stable skin NEAR eyes/mouth (research). ---
   const lm = res.faceLandmarks && res.faceLandmarks[0];
-  if (lm && lm[10] && lm[151]){
-    const fx = lm[10].x * video.videoWidth, fy = lm[10].y * video.videoHeight;
-    window._heartFaceBox = { x: fx - video.videoWidth*0.06, y: fy, w: video.videoWidth*0.12, h: video.videoHeight*0.07 };
+  if (lm){
+    const W = video.videoWidth, H = video.videoHeight;
+    const P = (i, sx, sy, sw, sh) => lm[i] ? { x: lm[i].x*W - W*sw/2 + sx*W, y: lm[i].y*H - H*sh/2 + sy*H, w: W*sw, h: H*sh } : null;
+    window._heartRegions = {
+      // RELIABLE trio — eyes and mouth excluded
+      forehead:   P(10, 0, 0.03, 0.13, 0.06),
+      cheekLeft:  P(50, 0, 0,    0.08, 0.06),
+      cheekRight: P(280,0, 0,    0.08, 0.06),
+      // EXPERIMENTAL — stable skin beside the noisy zones (your frontier idea)
+      underEyeL:  P(230,0, 0.015,0.05, 0.028),
+      underEyeR:  P(450,0, 0.015,0.05, 0.028),
+      noseBridge: P(6,  0, 0,    0.045,0.05),
+      mouthSideL: P(216,0, 0,    0.045,0.045),
+      mouthSideR: P(436,0, 0,    0.045,0.045)
+    };
+    // keep the legacy single box pointing at the forehead for safety
+    window._heartFaceBox = window._heartRegions.forehead;
   }
 }
 
-// ================= HEART ENGINE (webcam pulse reading) =================
-// The camera watches the tiny color changes in the forehead skin each time
-// the heart beats (remote photoplethysmography). Runs fully on-device;
-// only an anonymous average number ever leaves.
-let hrBuf = [], hrTimes = [], heartBPM = 0, heartBaseline = 0, hrCanvas = null;
-let hrR = [], hrG = [], hrB = [];
+// ================= HEART ENGINE v2 — MULTI-REGION (webcam pulse) =================
+// Reads THREE reliable skin regions (forehead + both cheeks), runs POS on each,
+// and only trusts the number when the regions AGREE. Also samples experimental
+// sub-zones near the eyes/mouth and logs how well each agrees with the reliable
+// signal — so your own data reveals which sub-zones are trustworthy over time.
+const HR_REGIONS = ['forehead','cheekLeft','cheekRight'];
+const HR_EXPERIMENTAL = ['underEyeL','underEyeR','noseBridge','mouthSideL','mouthSideR'];
+const hrData = {}; // name -> {R:[],G:[],B:[],t:[]}
+let heartBPM = 0, heartBaseline = 0, hrCanvas = null;
+let _regionAgreement = 0, _expScores = {};
+
+function sampleRegion(video, box){
+  if (!box || box.w < 4 || box.h < 4) return null;
+  if (!hrCanvas){ hrCanvas = document.createElement('canvas'); hrCanvas.width = 40; hrCanvas.height = 20; }
+  const ctx = hrCanvas.getContext('2d', { willReadFrequently: true });
+  try { ctx.drawImage(video, box.x, box.y, box.w, box.h, 0, 0, 40, 20); } catch(e){ return null; }
+  const d = ctx.getImageData(0,0,40,20).data;
+  let r=0,g=0,b=0,skin=0,cnt=0;
+  for (let i=0;i<d.length;i+=4){
+    const R=d[i],G=d[i+1],B=d[i+2];
+    // simple skin test: R>G>B and R high enough — rejects hair/shadow/cloth
+    if (R>60 && R>G && G>B && (R-B)>12){ r+=R; g+=G; b+=B; skin++; }
+    cnt++;
+  }
+  if (skin < cnt*0.35) return null; // patch isn't mostly skin -> discard
+  return { r:r/skin, g:g/skin, b:b/skin };
+}
+
 function heartTick(){
   const video = document.getElementById('visual-preview');
-  const box = window._heartFaceBox;
-  if (!video || !video.videoWidth || !box) return;
-  if (!hrCanvas){ hrCanvas = document.createElement('canvas'); hrCanvas.width = 48; hrCanvas.height = 24; }
-  const ctx = hrCanvas.getContext('2d', { willReadFrequently: true });
-  try { ctx.drawImage(video, box.x, box.y, box.w, box.h, 0, 0, 48, 24); } catch(e){ return; }
-  const d = ctx.getImageData(0,0,48,24).data;
-  // Capture ALL THREE colors — POS needs red, green, and blue.
-  let r=0,g=0,b=0,cnt=0;
-  for (let i = 0; i < d.length; i += 4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; cnt++; }
-  hrR.push(r/cnt); hrG.push(g/cnt); hrB.push(b/cnt);
-  hrTimes.push(performance.now());
-  if (hrR.length > 512){ hrR.shift(); hrG.shift(); hrB.shift(); hrTimes.shift(); }
-}
-function heartEstimate(){
-  const n = hrR.length;
-  if (n < 160) return;
-  const dur = (hrTimes[hrTimes.length-1] - hrTimes[0]) / 1000;
-  if (dur < 10) return;
-  const fs = n / dur;
-  // --- POS: Plane-Orthogonal-to-Skin (de Haan/Wang). Uses R,G,B together and
-  // projects onto a plane tuned to skin tone, cancelling light & motion noise. ---
-  // 1) temporally normalize each channel by its own mean
-  const mean = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
-  const mR=mean(hrR), mG=mean(hrG), mB=mean(hrB);
-  if (mR<=0||mG<=0||mB<=0) return;
-  const Rn=hrR.map(v=>v/mR-1), Gn=hrG.map(v=>v/mG-1), Bn=hrB.map(v=>v/mB-1);
-  // 2) two projection signals
-  const S1=[], S2=[];
-  for (let i=0;i<n;i++){ S1.push(Gn[i]-Bn[i]); S2.push(Gn[i]+Bn[i]-2*Rn[i]); }
-  // 3) tune and combine (alpha = std(S1)/std(S2))
-  const std = arr => { const m=mean(arr); return Math.sqrt(arr.reduce((a,b)=>a+(b-m)*(b-m),0)/arr.length)||1e-6; };
-  const alpha = std(S1)/std(S2);
-  let sig = S1.map((v,i)=>v + alpha*S2[i]);
-  // 4) detrend + band-limit feel
-  const ms = mean(sig); sig = sig.map(v=>v-ms);
-  for (let i=1;i<n;i++) sig[i] = sig[i] - 0.92*sig[i-1];
-  // 5) find dominant frequency in the human range (physiological band only)
-  let bestBpm=0, bestPow=0;
-  for (let bpm=42; bpm<=170; bpm+=1){
-    const f=bpm/60; let re=0, im=0;
-    for (let i=0;i<n;i++){ const ph=2*Math.PI*f*(i/fs); re+=sig[i]*Math.cos(ph); im+=sig[i]*Math.sin(ph); }
-    const pow=re*re+im*im;
-    if (pow>bestPow){ bestPow=pow; bestBpm=bpm; }
+  const regions = window._heartRegions;
+  if (!video || !video.videoWidth || !regions) return;
+  const now = performance.now();
+  const all = HR_REGIONS.concat(HR_EXPERIMENTAL);
+  for (const name of all){
+    const s = sampleRegion(video, regions[name]);
+    if (!s) continue;
+    const D = hrData[name] || (hrData[name] = {R:[],G:[],B:[],t:[]});
+    D.R.push(s.r); D.G.push(s.g); D.B.push(s.b); D.t.push(now);
+    if (D.R.length > 512){ D.R.shift(); D.G.shift(); D.B.shift(); D.t.shift(); }
   }
-  if (!bestBpm) return;
-  heartBPM = heartBPM ? (heartBPM*0.6 + bestBpm*0.4) : bestBpm;
-  if (!heartBaseline && n > 380) heartBaseline = heartBPM;
-  window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
+}
+
+// POS on one region's buffers -> {bpm, power}
+function posEstimate(D){
+  const n = D.R.length;
+  if (n < 150) return null;
+  const dur = (D.t[n-1]-D.t[0])/1000; if (dur < 10) return null;
+  const fs = n/dur;
+  const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
+  const mR=mean(D.R), mG=mean(D.G), mB=mean(D.B);
+  if (mR<=0||mG<=0||mB<=0) return null;
+  const Rn=D.R.map(v=>v/mR-1), Gn=D.G.map(v=>v/mG-1), Bn=D.B.map(v=>v/mB-1);
+  const S1=[],S2=[];
+  for (let i=0;i<n;i++){ S1.push(Gn[i]-Bn[i]); S2.push(Gn[i]+Bn[i]-2*Rn[i]); }
+  const std=a=>{const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/a.length)||1e-6;};
+  const alpha=std(S1)/std(S2);
+  let sig=S1.map((v,i)=>v+alpha*S2[i]);
+  const ms=mean(sig); sig=sig.map(v=>v-ms);
+  for (let i=1;i<n;i++) sig[i]=sig[i]-0.92*sig[i-1];
+  let bestBpm=0,bestPow=0;
+  for (let bpm=42;bpm<=170;bpm+=1){
+    const f=bpm/60; let re=0,im=0;
+    for (let i=0;i<n;i++){ const ph=2*Math.PI*f*(i/fs); re+=sig[i]*Math.cos(ph); im+=sig[i]*Math.sin(ph); }
+    const pow=re*re+im*im; if (pow>bestPow){bestPow=pow;bestBpm=bpm;}
+  }
+  return bestBpm ? { bpm:bestBpm, power:bestPow } : null;
+}
+
+function heartEstimate(){
+  // Reliable trio
+  const est = {};
+  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e) est[name]=e; } }
+  const bpms = Object.values(est).map(e=>e.bpm);
+  if (bpms.length < 2) return; // need at least two regions agreeing
+  // agreement: how tight are the regions? (median + spread)
+  bpms.sort((a,b)=>a-b);
+  const median = bpms[Math.floor(bpms.length/2)];
+  const spread = Math.max(...bpms) - Math.min(...bpms);
+  _regionAgreement = spread <= 8 ? 1 : (spread <= 16 ? 0.5 : 0);
+  if (_regionAgreement === 0) return; // regions disagree -> noisy -> hold, don't update
+  heartBPM = heartBPM ? (heartBPM*0.6 + median*0.4) : median;
+  if (!heartBaseline && (hrData.forehead && hrData.forehead.R.length > 380)) heartBaseline = heartBPM;
+  window._heartBPM = heartBPM; window._heartBaseline = heartBaseline; window._heartConfidence = _regionAgreement;
+  // EXPERIMENTAL sub-zones: how close is each to the trusted median? (learning)
+  for (const name of HR_EXPERIMENTAL){
+    if (hrData[name]){ const e = posEstimate(hrData[name]); if (e){
+      const err = Math.abs(e.bpm - median);
+      _expScores[name] = _expScores[name] || {n:0, close:0};
+      _expScores[name].n++;
+      if (err <= 6) _expScores[name].close++;
+    }}
+  }
+  window._expScores = _expScores;
 }
 let _hrReported = 0;
 function heartReport(){
   if (heartBPM > 40 && Date.now() - _hrReported > 60000){
     _hrReported = Date.now();
     metric('heart_read', Math.round(heartBPM));
+    // Log which experimental sub-zones tracked the truth (research learning)
+    if (window._expScores){
+      for (const [zone, sc] of Object.entries(window._expScores)){
+        if (sc.n >= 5){ metric('subzone', zone + '|' + Math.round(100*sc.close/sc.n)); }
+      }
+    }
   }
 }
 setInterval(heartTick, 66);       // ~15 samples per second
@@ -4475,7 +4534,7 @@ def metrics_event():
                "lane_switch", "handoff_click", "listen_autostop",
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
-               "gaze_aversion", "heart_read", "selfreport", "wordplay"}
+               "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -4536,6 +4595,16 @@ def metrics_event():
         elif etype == "distraction":
             d["distractions"] = d.get("distractions", 0) + 1
             if sess: sess["distractions"] += 1
+        elif etype == "subzone" and value:
+            try:
+                zone, pct = str(value).split("|", 1)
+                pct = int(pct); zone = zone[:20]
+                if 0 <= pct <= 100:
+                    z = d.setdefault("subzones", {})
+                    e2 = z.setdefault(zone, {"sum": 0, "n": 0})
+                    e2["sum"] += pct; e2["n"] += 1
+            except Exception:
+                pass
         elif etype == "wordplay":
             d["wordplay_rounds"] = d.get("wordplay_rounds", 0) + 1
             if sess: sess["wordplay"] = sess.get("wordplay", 0) + 1
@@ -4670,6 +4739,21 @@ def admin_dashboard():
                           f"<td>{e.get('scenes',0)}</td><td>{e.get('distractions',0)}</td>"
                           f"<td>{e.get('wordplay',0)}</td><td>{e.get('lanes',0)}</td></tr>")
     sess_rows = sess_rows or "<tr><td colspan=7>No sessions recorded yet today.</td></tr>"
+    # Experimental sub-zone accuracy across all shown days
+    zagg = {}
+    for d0 in days:
+        for zone, e in m[d0].get("subzones", {}).items():
+            a = zagg.setdefault(zone, {"sum": 0, "n": 0})
+            a["sum"] += e.get("sum", 0); a["n"] += e.get("n", 0)
+    ZLABEL = {"underEyeL":"Under left eye","underEyeR":"Under right eye","noseBridge":"Nose bridge",
+              "mouthSideL":"Left of mouth","mouthSideR":"Right of mouth"}
+    if zagg:
+        subzone_rows = "".join(
+            f'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eef2f8;">'
+            f'<span>{ZLABEL.get(z, z)}</span><b style="color:#4f46e5;">{(a["sum"]/a["n"]):.0f}% agreement</b></div>'
+            for z, a in sorted(zagg.items(), key=lambda x: -(x[1]["sum"]/max(1,x[1]["n"]))))
+    else:
+        subzone_rows = '<i>No experimental sub-zone data yet. It gathers as people use the camera.</i>'
     return render_template_string("""
 <!doctype html><html><head><title>InnerLight — Operations</title>
 <meta name="robots" content="noindex,nofollow">
@@ -4726,6 +4810,11 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   }).join('');
 }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
 </script>
+<h2>Experimental biometric sub-zones — the frontier map</h2>
+<div class="card-like" id="subzones" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;margin-bottom:8px;">
+<div style="font-size:12px;color:#64748b;margin-bottom:10px;">How often each experimental skin zone (near eyes/mouth) agreed with the trusted forehead+cheek reading. Higher % = more trustworthy. This is your own data revealing which frontier zones can be read accurately.</div>
+{{ subzone_rows|safe }}
+</div>
 <h2>Sessions per day</h2>
 <div class="graph">{{ bars|safe }}</div>
 <h2>Today, person by person — anonymous session breakdown</h2>
@@ -4793,7 +4882,7 @@ music (lower is better; phones cannot legally start sound before a tap). Express
 silent face reading. Hesitations = typed a real thought, erased it unsent. Distractions = an engaged face
 turned away for a couple of seconds. Track verdicts come from each song's opening minute judged against that
 person's own baseline. All counts are anonymous — no words, names, faces, or voices are ever stored.</div>
-</body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows)
+</body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows, subzone_rows=subzone_rows)
 
 
 # ===========================================================================
