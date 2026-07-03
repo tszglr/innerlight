@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, jsonify, render_template_string, request, session, redirect
 
 from ahp_encryption import AxiomHarmonyProtocol
 from clarion_engine import Clarion
@@ -3990,6 +3990,10 @@ def _metrics_save(m):
     except Exception:
         pass
 
+app.secret_key = hashlib.sha256(
+    ("innerlight-founder-session::" + os.environ.get("ADMIN_KEY", "unset")).encode()
+).hexdigest()
+
 @app.route("/api/metrics/event", methods=["POST"])
 def metrics_event():
     """Receive one anonymous counter event from the app."""
@@ -4052,6 +4056,53 @@ def metrics_event():
         _metrics_save(m)
     return jsonify({"status": "ok"})
 
+
+LOGIN_PAGE = """
+<!doctype html><html><head><title>InnerLight — Founder Sign In</title>
+<meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      font-family:Arial;background:linear-gradient(135deg,#0f2447 0%,#1d4ed8 55%,#7c3aed 100%);}
+ .card{background:rgba(255,255,255,0.97);border-radius:16px;padding:36px 34px;width:330px;
+       box-shadow:0 18px 50px rgba(10,20,60,0.45);}
+ h1{font-size:19px;color:#1e3a8a;margin:0 0 4px;} .sub{font-size:12px;color:#64748b;margin-bottom:22px;}
+ label{display:block;font-size:12px;color:#334155;font-weight:700;margin:12px 0 5px;letter-spacing:0.3px;}
+ input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;
+       font-size:15px;} input:focus{outline:2px solid #3b82f6;border-color:#3b82f6;}
+ button{margin-top:20px;width:100%;padding:12px;border:0;border-radius:9px;font-size:15px;font-weight:700;
+        color:#fff;background:linear-gradient(90deg,#1d4ed8,#7c3aed);cursor:pointer;}
+ .err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:9px 12px;
+      font-size:13px;margin-bottom:6px;display:{{ 'block' if err else 'none' }};}
+</style></head><body>
+<form class="card" method="POST" action="/admin/login">
+  <h1>Founder's Operations Room</h1>
+  <div class="sub">InnerLight &mdash; God's Love For Us LLC</div>
+  <div class="err">{{ err or '' }}</div>
+  <label>Username</label>
+  <input name="username" autocomplete="username" autofocus>
+  <label>Password</label>
+  <input name="password" type="password" autocomplete="current-password">
+  <button type="submit">Enter</button>
+</form></body></html>
+"""
+
+@app.route("/admin/login", methods=["POST"])
+def admin_login():
+    admin_key = os.environ.get("ADMIN_KEY", "")
+    admin_user = os.environ.get("ADMIN_USER", "founder")
+    u = request.form.get("username", "")
+    p = request.form.get("password", "")
+    if admin_key and secrets.compare_digest(p, admin_key) and secrets.compare_digest(u, admin_user):
+        session["founder_ok"] = True
+        session.permanent = False
+        return redirect("/admin")
+    return render_template_string(LOGIN_PAGE, err="That username or password is not right."), 401
+
+@app.route("/admin/logout")
+def admin_logout():
+    session.pop("founder_ok", None)
+    return redirect("/admin")
+
 @app.route("/admin")
 def admin_dashboard():
     """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
@@ -4060,9 +4111,9 @@ def admin_dashboard():
         return ("<h2 style='font-family:Arial;padding:40px;'>Admin key not set yet.</h2>"
                 "<p style='font-family:Arial;padding:0 40px;'>On Render: Environment &rarr; "
                 "Add Environment Variable &rarr; name <b>ADMIN_KEY</b>, value = a password only "
-                "you know &rarr; Save &amp; redeploy. Then open /admin?key=that-password</p>"), 200
-    if request.args.get("key", "") != admin_key:
-        return "<h2 style='font-family:Arial;padding:40px;'>Locked.</h2>", 403
+                "you know &rarr; Save &amp; redeploy. Then sign in at /admin</p>"), 200
+    if not session.get("founder_ok"):
+        return render_template_string(LOGIN_PAGE), 200
     with _METRICS_LOCK:
         m = _metrics_load()
     days = sorted(m.keys(), reverse=True)[:14]
@@ -4102,22 +4153,31 @@ def admin_dashboard():
 <!doctype html><html><head><title>InnerLight — Operations</title>
 <meta name="robots" content="noindex,nofollow">
 <style>
- body{font-family:Arial;background:#f4f9f6;color:#173; margin:0;padding:28px;}
- h1{color:#0f766e;font-size:22px;} .sub{color:#567;font-size:13px;margin-bottom:18px;}
- table{border-collapse:collapse;width:100%;background:#fff;border-radius:8px;overflow:hidden;
-       box-shadow:0 2px 10px rgba(0,0,0,0.06);}
- th,td{padding:10px 12px;text-align:left;font-size:14px;border-bottom:1px solid #e3efe9;}
- th{background:#0f766e;color:#fff;font-size:12px;letter-spacing:0.4px;}
- .note{margin-top:16px;font-size:12px;color:#678;}
- .graph{display:flex;align-items:flex-end;gap:8px;background:#fff;padding:18px;border-radius:8px;
-        box-shadow:0 2px 10px rgba(0,0,0,0.06);margin:18px 0;overflow-x:auto;}
+ body{font-family:Arial;margin:0;padding:28px;color:#1e293b;
+      background:linear-gradient(160deg,#0f2447 0%,#14346b 30%,#eef2ff 30.5%,#f8fafc 100%);}
+ .top{display:flex;justify-content:space-between;align-items:flex-start;color:#fff;margin-bottom:24px;}
+ h1{color:#fff;font-size:23px;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
+ .sub{color:#c7d6f5;font-size:13px;margin-top:5px;}
+ .logout{color:#c7d6f5;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
+         padding:7px 14px;border-radius:999px;} .logout:hover{background:rgba(255,255,255,0.12);}
+ table{border-collapse:collapse;width:100%;background:#fff;border-radius:12px;overflow:hidden;
+       box-shadow:0 8px 28px rgba(15,36,71,0.14);}
+ th,td{padding:10px 12px;text-align:left;font-size:13.5px;border-bottom:1px solid #e6ecf8;}
+ th{background:linear-gradient(90deg,#1d4ed8,#4f46e5,#7c3aed);color:#fff;font-size:11.5px;letter-spacing:0.5px;}
+ tr:hover td{background:#f4f7ff;}
+ .note{margin-top:16px;font-size:12.5px;color:#475569;background:#fff;border-left:4px solid #4f46e5;
+       border-radius:8px;padding:14px 16px;box-shadow:0 4px 16px rgba(15,36,71,0.08);line-height:1.65;}
+ .graph{display:flex;align-items:flex-end;gap:8px;background:#fff;padding:18px;border-radius:12px;
+        box-shadow:0 8px 28px rgba(15,36,71,0.14);margin:18px 0;overflow-x:auto;}
  .bar-col{display:flex;flex-direction:column;align-items:center;min-width:44px;}
- .bar{width:26px;background:linear-gradient(180deg,#14b8a6,#0f766e);border-radius:4px 4px 0 0;}
- .bar-lbl{font-size:10px;color:#678;margin-top:4px;} .bar-num{font-size:11px;color:#0f766e;font-weight:700;}
- h2{color:#0f766e;font-size:16px;margin-top:26px;}
+ .bar{width:26px;background:linear-gradient(180deg,#60a5fa,#4f46e5);border-radius:4px 4px 0 0;}
+ .bar-lbl{font-size:10px;color:#64748b;margin-top:4px;} .bar-num{font-size:11px;color:#4f46e5;font-weight:700;}
+ h2{color:#1e3a8a;font-size:16px;margin-top:26px;}
 </style></head><body>
+<div class="top"><div>
 <h1>InnerLight — Founder's Operations Room</h1>
 <div class="sub">Anonymous counts and clock-times only. No words, names, faces, or voices are ever stored.</div>
+</div><a class="logout" href="/admin/logout">Sign out</a></div>
 <table>
 <tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
 <th>Expression shifts seen</th><th>Music lane shifts</th><th>Scene changes</th>
@@ -4132,5 +4192,15 @@ def admin_dashboard():
 <tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
 {{ t_rows|safe }}
 </table>
-<div class="note"><b>Research reading guide:</b> Expression shifts vs. music lane shifts is the core question — is the sound answering the face? Hesitations (typing then erasing) mark moments a person almost spoke. Time to first sound = seconds between a person arriving and calm music playing — the product promise in one number. Metrics reset if the server is rebuilt; a permanent store comes with the provider back-end.</div>
+<div class="note"><b>Research reading guide — how to read this board:</b><br>
+<b>Sessions</b>: how many times a person entered InnerLight that day (uptake, in research language).<br>
+<b>Avg time to first sound</b>: seconds from arrival until calm music was playing — the product promise in one number; lower is better.<br>
+<b>Expression shifts seen</b>: how many times the silent face reading changed state. Compare this to <b>Music lane shifts</b> — the core research question is whether the sound answers the face.<br>
+<b>Scene changes</b>: how often people chose their own view — a measure of engagement and of which realities people reach for.<br>
+<b>Hesitations</b>: a person typed a real thought (more than a few words) and erased it without sending — the almost-said. High hesitation means people want to speak but don't feel safe yet.<br>
+<b>Avg time to open sound box</b>: how long before a person engages the sound controls — a curiosity/engagement measure.<br>
+<b>Handoff clicks</b>: how many times people reached for human help, by destination — the bridge working.<br>
+<b>Tracks liked / neutral / disliked</b>: the Track Guardian's verdict on each song's opening minute, judged against that person's own baseline face — measured musical reaction, the heart of the study.<br>
+<b>Listening auto-stops</b>: times the budget guard closed an idle microphone.<br>
+These map to the five research checkpoints grant reviewers look for: uptake (sessions), level of use (messages, scene changes), duration (sound box, session length), adherence (lane shifts answering expression shifts), and completion (handoffs).</div>
 </body></html>""", body=body, bars=bars, t_rows=t_rows)
