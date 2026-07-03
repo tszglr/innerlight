@@ -533,7 +533,7 @@ PUBLIC_PAGE = """
       font-weight:600; cursor:pointer; }
     .story-send:hover { background:#4e9079; }
     .help-rail-placeholder {}
-    #help-rail { position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:30;
+    #help-rail { position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:90;
       display:flex; flex-direction:column; gap:8px; }
     #help-rail .rail-btn { background:rgba(255,255,255,0.95); color:#2e6e8e; border:1px solid #2e6e8e;
       border-radius:12px; padding:10px 12px; font-size:13px; font-weight:700; cursor:pointer; text-decoration:none;
@@ -541,10 +541,17 @@ PUBLIC_PAGE = """
     #help-rail .rail-988 { background:#e8534e; color:#fff; border:0; }
     @media (max-width:760px){
       #help-rail { top:auto; bottom:0; left:0; right:0; transform:none; flex-direction:row;
-        justify-content:space-around; background:rgba(255,255,255,0.97); padding:8px 6px;
-        box-shadow:0 -3px 14px rgba(20,40,60,0.12); }
-      #help-rail .rail-btn { flex:1; min-width:0; margin:0 3px; }
-      .story-screen { padding-bottom:80px; }
+        justify-content:space-around; background:#ffffff; padding:10px 6px; z-index:95;
+        box-shadow:0 -3px 14px rgba(20,40,60,0.18); }
+      #help-rail .rail-btn { flex:1; min-width:0; margin:0 3px; padding:12px 4px; font-size:13px; }
+      /* Scene picker sits ABOVE the help bar, never overlapping it */
+      .scene-picker { bottom:76px !important; right:10px !important; z-index:40 !important;
+        background:rgba(255,255,255,0.85); border-radius:999px; padding:4px 8px; }
+      /* Heart chip also lifts above the help bar */
+      #heart-chip { bottom:80px !important; }
+      /* Give the whole page room so nothing hides behind the fixed help bar */
+      .story-screen { padding-bottom:150px; }
+      body { padding-bottom:70px; }
     }
     .story-mic { background:#fff; color:#5a7d6d; border:1px solid #c8ddd2; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
@@ -1588,14 +1595,24 @@ setTimeout(runReadinessCheck, 2500);
 
 // Guarantee the page can always scroll — nothing may lock the body.
 (function ensureScrollable(){
-  try {
-    document.documentElement.style.overflowY = 'auto';
-    document.body.style.overflowY = 'auto';
-    document.body.style.position = 'static';
-    document.body.style.touchAction = 'auto';
-    document.documentElement.style.height = 'auto';
-    document.body.style.height = 'auto';
-  } catch(e){}
+  function unlock(){
+    try {
+      document.documentElement.style.overflowY = 'auto';
+      document.body.style.overflowY = 'auto';
+      document.body.style.position = 'static';
+      document.body.style.touchAction = 'auto';
+      document.documentElement.style.height = 'auto';
+      document.body.style.height = 'auto';
+      document.documentElement.style.minHeight = '100%';
+      // make sure the app container never traps height
+      const scr = document.querySelector('.story-screen');
+      if (scr){ scr.style.overflow = 'visible'; scr.style.height = 'auto'; }
+    } catch(e){}
+  }
+  unlock();
+  window.addEventListener('resize', unlock);
+  window.addEventListener('orientationchange', unlock);
+  setInterval(unlock, 3000); // keep it unlocked no matter what re-locks it
 })();
 // Your hand wins: auto-scroll is allowed ONLY when you're already near the
 // bottom. The moment you scroll up to read, nothing drags you back down.
