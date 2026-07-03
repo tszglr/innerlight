@@ -4545,7 +4545,22 @@ if __name__ == "__main__":
 # Protected by the ADMIN_KEY environment variable set on Render.
 # ===========================================================================
 _METRICS_LOCK = threading.Lock()
-_METRICS_FILE = os.environ.get("METRICS_FILE", "/tmp/innerlight_metrics.json")
+
+# ===========================================================================
+# RESEARCH DATA HOME — persistent storage selection.
+# If a Render persistent disk is mounted at /var/data, all research data
+# (metrics, cases, studies, connect requests) lives there and survives every
+# deploy. Without the disk, data falls back to /tmp and WILL be lost on
+# deploy — a loud warning is printed so this is never silent again.
+# ===========================================================================
+_DATA_DIR = "/var/data" if os.path.isdir("/var/data") else "/tmp"
+if _DATA_DIR == "/tmp":
+    print("[InnerLight] WARNING: no persistent disk at /var/data — research data "
+          "will NOT survive deploys. Add a Render disk mounted at /var/data.")
+else:
+    print("[InnerLight] Research data home: /var/data (persistent — survives deploys)")
+
+_METRICS_FILE = os.environ.get("METRICS_FILE", _DATA_DIR + "/innerlight_metrics.json")
 
 def _metrics_load():
     try:
@@ -4997,7 +5012,7 @@ def admin_study_api():
     except Exception as exc:
         return jsonify({"status": "error", "text": f"Study call failed: {exc}"}), 200
 
-_STUDY_FILE = os.environ.get("STUDY_FILE", "/tmp/innerlight_study_log.json")
+_STUDY_FILE = os.environ.get("STUDY_FILE", _DATA_DIR + "/innerlight_study_log.json")
 _STUDY_LOCK = threading.Lock()
 
 def _study_load():
@@ -5150,7 +5165,7 @@ async function runStudy(){
 # emails, phone numbers, and handles are masked. Cases are founder-only,
 # disclosed in the privacy notes, never public, never sold.
 # ===========================================================================
-_CASES_FILE = os.environ.get("CASES_FILE", "/tmp/innerlight_cases.json")
+_CASES_FILE = os.environ.get("CASES_FILE", _DATA_DIR + "/innerlight_cases.json")
 _CASES_LOCK = threading.Lock()
 _SCRUB_PATTERNS = [
     (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "[email removed]"),
@@ -5226,7 +5241,7 @@ def admin_cases():
 # that an InnerLight responder meets them first while the professional
 # network grows. Set NTFY_TOPIC on Render to your secret topic name.
 # ===========================================================================
-_CONNECT_FILE = os.environ.get("CONNECT_FILE", "/tmp/innerlight_connects.json")
+_CONNECT_FILE = os.environ.get("CONNECT_FILE", _DATA_DIR + "/innerlight_connects.json")
 _CONNECT_LOCK = threading.Lock()
 
 @app.route("/api/connect/request", methods=["POST"])
