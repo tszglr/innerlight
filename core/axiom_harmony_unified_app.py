@@ -4221,6 +4221,10 @@ def admin_dashboard():
  .bar{width:26px;background:linear-gradient(180deg,#60a5fa,#4f46e5);border-radius:4px 4px 0 0;}
  .bar-lbl{font-size:10px;color:#64748b;margin-top:4px;} .bar-num{font-size:11px;color:#4f46e5;font-weight:700;}
  h2{color:#1e3a8a;font-size:16px;margin-top:26px;}
+ .sci-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px;}
+ .sci{background:#fff;border-radius:10px;padding:14px 16px;font-size:12.8px;line-height:1.6;color:#334155;
+      box-shadow:0 4px 16px rgba(15,36,71,0.08);border-top:3px solid #4f46e5;}
+ .sci b{color:#1e3a8a;font-size:13.2px;}
 </style></head><body>
 <div class="top"><div>
 <h1>InnerLight — Founder's Operations Room</h1>
@@ -4246,17 +4250,60 @@ def admin_dashboard():
 <tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
 {{ t_rows|safe }}
 </table>
-<div class="note"><b>Research reading guide — how to read this board:</b><br>
-<b>Sessions</b>: how many times a person entered InnerLight that day (uptake, in research language).<br>
-<b>Avg time to first sound</b>: seconds from arrival until calm music was playing — the product promise in one number; lower is better.<br>
-<b>Expression shifts seen</b>: how many times the silent face reading changed state. Compare this to <b>Music lane shifts</b> — the core research question is whether the sound answers the face.<br>
-<b>Scene changes</b>: how often people chose their own view — a measure of engagement and of which realities people reach for.<br>
-<b>Hesitations</b>: a person typed a real thought (more than a few words) and erased it without sending — the almost-said. High hesitation means people want to speak but don't feel safe yet.<br>
-<b>Avg time to open sound box</b>: how long before a person engages the sound controls — a curiosity/engagement measure.<br>
-<b>Handoff clicks</b>: how many times people reached for human help, by destination — the bridge working.<br>
-<b>Tracks liked / neutral / disliked</b>: the Track Guardian's verdict on each song's opening minute, judged against that person's own baseline face — measured musical reaction, the heart of the study.<br>
-<b>Listening auto-stops</b>: times the budget guard closed an idle microphone.<br>
-These map to the five research checkpoints grant reviewers look for: uptake (sessions), level of use (messages, scene changes), duration (sound box, session length), adherence (lane shifts answering expression shifts), and completion (handoffs).</div>
+<h2>The research basis for every number</h2>
+<div class="sci-grid">
+ <div class="sci"><b>Sessions &amp; uptake</b><br>
+ Meta-analytic reviews of digital mental-health trials converged on five reportable engagement checkpoints:
+ uptake, level of use, duration, adherence, and completion. "Sessions" is our uptake measure — the entry
+ point every published engagement framework requires. Without it, no other number can be interpreted.</div>
+ <div class="sci"><b>Time to first sound</b><br>
+ Music-medicine research on the Iso-Principle (meeting a person's state with sound, then guiding it) treats
+ stimulus onset timing as part of the intervention itself. InnerLight's clinical premise is sound arriving
+ during the crisis wait-gap — so seconds-to-sound is our fidelity measure: is the intervention actually
+ being delivered at the moment of need?</div>
+ <div class="sci"><b>Expression shifts</b><br>
+ Observational affect coding — a researcher watching and logging visible reactions — is a standard lens in
+ music-intervention studies. Automated expression tracking is our continuous version of that observer.
+ Shift frequency indicates emotional lability (rapid state change), a recognized marker of distress and of
+ responsiveness to stimulus change.</div>
+ <div class="sci"><b>Music lane shifts vs expression shifts</b><br>
+ The core hypothesis under test: adaptive sound answers the observed state (stimulus-response coupling).
+ Comparing these two columns is our first-order evidence of whether the system is responding — the
+ adherence checkpoint, in engagement-framework terms.</div>
+ <div class="sci"><b>Track reactions (liked / neutral / disliked)</b><br>
+ Published music-and-stress protocols log per-song participant reactions because affective response to
+ music is highly individual; preference moderates outcome. Our Track Guardian automates per-track reaction
+ logging against each person's own baseline — measured musical reception, per stimulus.</div>
+ <div class="sci"><b>Hesitations (typed, then erased)</b><br>
+ Behavioral research on help-seeking treats approach-avoidance behavior as a disclosure-readiness marker.
+ A composed-then-deleted message is an observable approach that stopped short — evidence of wanting to
+ speak without yet feeling safe. High hesitation with low messaging signals a trust barrier to fix.</div>
+ <div class="sci"><b>Distractions (looked away)</b><br>
+ Attention-orienting research uses gaze departure and head turning as disengagement markers. In our
+ grounding-based design (real scenes pulling a distressed mind back), sustained visual engagement is part
+ of the mechanism — so looking away is a mechanism-level measure, not housekeeping.</div>
+ <div class="sci"><b>Scene changes</b><br>
+ Perceived control and choice are established moderators of stress response. A person choosing their own
+ view is exercising agency; which realities people reach for (garden, moon, horizon) is itself preference
+ data for grounding-scene design.</div>
+ <div class="sci"><b>Handoff clicks</b><br>
+ The outcome that defines InnerLight: connection to human help (the completion checkpoint). Time-to-
+ resolution, not engagement time, is our success philosophy — this column is the bridge working, counted.</div>
+ <div class="sci"><b>Per-person session rows</b><br>
+ Aggregates hide individuals; research standards require unit-of-analysis clarity. The person-by-person
+ table preserves anonymous within-session structure so 149 shifts by one person is never mistaken for
+ 74 by two — the difference between anecdote and data.</div>
+ <div class="sci"><b>Coming next, per the measurement model</b><br>
+ The strongest published protocols triangulate three lenses: physiological (heart rate and heart-rate
+ variability — the autonomic markers used across music-anxiety trials), observational (our camera), and
+ self-report (wordless calm scales like the Self-Assessment Manikin). InnerLight has lens two running,
+ lens one in build (webcam pulse reading), lens three queued — full triangulation is the destination.</div>
+</div>
+<div class="note"><b>Plain reading guide:</b> Sessions = entries that day. Avg time to first sound = tap until
+music (lower is better; phones cannot legally start sound before a tap). Expression shifts = changes in the
+silent face reading. Hesitations = typed a real thought, erased it unsent. Distractions = an engaged face
+turned away for a couple of seconds. Track verdicts come from each song's opening minute judged against that
+person's own baseline. All counts are anonymous — no words, names, faces, or voices are ever stored.</div>
 </body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows)
 
 
