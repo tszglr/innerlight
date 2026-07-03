@@ -747,10 +747,17 @@ async function detectFaceEmotion() {
   window._faceBusy = true;
   try {
     const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+    if (!det && window._faceWasPresent){
+      // Face was engaged, now it's gone: looked away, turned the head, left.
+      window._faceLostRun = (window._faceLostRun||0) + 1;
+      if (window._faceLostRun === 3) metric('distraction'); // ~2s of looking away
+    }
     if (det && det.expressions) {
       faceEmotionScores = det.expressions;
       let top = 'neutral', topVal = 0;
       for (const [k, v] of Object.entries(det.expressions)) { if (v > topVal) { top = k; topVal = v; } }
+      window._faceWasPresent = true;
+      window._faceLostRun = 0;
       if (top !== currentFaceEmotion) metric('face_shift');
       currentFaceEmotion = top;
       // The reading stays SILENT — it steers the sound in the background, but
@@ -1231,8 +1238,21 @@ let ambientTracks = [];
 let ambientIndex = 0;
 
 // Anonymous metric ping — counts only, never content.
-function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value})}); } catch(e){} }
+const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
+function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+let TAP_MS = Date.now();
+// PRELOAD: fetch the calm lane and warm up the first track before the tap,
+// so sound begins the instant the person enters.
+(function preloadFirstSound(){
+  fetch('/api/zenisys/ambient').then(r=>r.json()).then(d=>{
+    if (d.tracks && d.tracks.length){
+      window._preloadedTracks = d.tracks;
+      const deck = document.getElementById('deckA') || document.querySelector('audio');
+      if (deck){ deck.src = d.tracks[0].url; deck.preload='auto'; deck.load(); }
+    }
+  }).catch(()=>{});
+})();
 // --- HESITATION SENSOR: they almost said something, then erased it. ---
 (function(){
   let deepest = 0;
@@ -1248,6 +1268,7 @@ const PAGE_OPEN_MS = Date.now();
 })();
 
 async function startExperience() {
+  TAP_MS = Date.now();
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
   const gate = $('welcome-gate'); if (gate) gate.style.display = 'none';
   const screen = $('story-screen'); if (screen) screen.style.display = 'flex';
@@ -1279,11 +1300,12 @@ async function startExperience() {
       ambientIndex = 0;
       if (ambientTracks.length) {
         const deck = getActiveDeck();
-        deck.src = ambientTracks[0].url;
+        if (window._preloadedTracks && !ambientTracks.length) ambientTracks = window._preloadedTracks;
+        if (deck.src !== ambientTracks[0].url) deck.src = ambientTracks[0].url;
         // GENTLE ARRIVAL: enter soft, then rise smoothly into full rich volume —
         // never an abrupt hit of sound in the ear.
         deck.volume = TARGET_VOL * 0.30;
-        deck.play().then(()=>metric('first_sound_ms', Date.now()-PAGE_OPEN_MS)).catch(()=>{});
+        deck.play().then(()=>metric('first_sound_ms', Date.now()-TAP_MS)).catch(()=>{});
         (function arrivalRise(){
           const RISE_MS = 10000; // ten calm seconds from soft to full
           const start = performance.now(), from = deck.volume, to = TARGET_VOL;
@@ -4000,10 +4022,11 @@ def metrics_event():
     data = request.get_json(silent=True) or {}
     etype = str(data.get("type", ""))[:40]
     value = data.get("value")
+    sid = str(data.get("sid", ""))[:12] or "anon"
     allowed = {"session_start", "first_sound_ms", "message_sent",
                "lane_switch", "handoff_click", "listen_autostop",
                "face_shift", "scene_change", "hesitation",
-               "soundbox_open_ms", "track_skip", "track_react"}
+               "soundbox_open_ms", "track_skip", "track_react", "distraction"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -4015,12 +4038,20 @@ def metrics_event():
                                "face_shifts": 0, "scene_changes": 0,
                                "hesitations": 0, "track_skips": 0,
                                "soundbox_ms_sum": 0, "soundbox_count": 0})
+        by = d.setdefault("by_session", {})
+        if len(by) < 300 or sid in by:
+            sess = by.setdefault(sid, {"shifts": 0, "messages": 0, "hesitations": 0,
+                                       "scenes": 0, "distractions": 0, "lanes": 0})
+        else:
+            sess = None
         if etype == "session_start":
             d["sessions"] += 1
         elif etype == "message_sent":
             d["messages"] += 1
+            if sess: sess["messages"] += 1
         elif etype == "lane_switch":
             d["lane_switches"] += 1
+            if sess: sess["lanes"] += 1
         elif etype == "listen_autostop":
             d["autostops"] += 1
         elif etype == "first_sound_ms" and isinstance(value, (int, float)) and 0 <= value < 600000:
@@ -4028,10 +4059,13 @@ def metrics_event():
             d["first_sound_count"] += 1
         elif etype == "face_shift":
             d["face_shifts"] = d.get("face_shifts", 0) + 1
+            if sess: sess["shifts"] += 1
         elif etype == "scene_change":
             d["scene_changes"] = d.get("scene_changes", 0) + 1
+            if sess: sess["scenes"] += 1
         elif etype == "hesitation":
             d["hesitations"] = d.get("hesitations", 0) + 1
+            if sess: sess["hesitations"] += 1
         elif etype == "track_skip":
             d["track_skips"] = d.get("track_skips", 0) + 1
             tname = str(value)[:40] if value else "unknown"
@@ -4050,6 +4084,9 @@ def metrics_event():
                     entry[verdict] += 1
             except Exception:
                 pass
+        elif etype == "distraction":
+            d["distractions"] = d.get("distractions", 0) + 1
+            if sess: sess["distractions"] += 1
         elif etype == "handoff_click":
             dest = str(value)[:24] if value else "unknown"
             d["handoffs"][dest] = d["handoffs"].get(dest, 0) + 1
@@ -4149,6 +4186,17 @@ def admin_dashboard():
         f"<tr><td>{t}</td><td>{e['liked']}</td><td>{e['neutral']}</td><td>{e['disliked']}</td></tr>"
         for t, e in sorted(agg.items(), key=lambda x: -(x[1]['liked'] + x[1]['neutral'] + x[1]['disliked'])))
     t_rows = t_rows or "<tr><td colspan=4>No track reactions recorded yet.</td></tr>"
+    # Per-session breakdown for the most recent day shown
+    sess_rows = ""
+    if days:
+        latest = days[0]
+        by = m[latest].get("by_session", {})
+        for i, (sid0, e) in enumerate(sorted(by.items()), 1):
+            sess_rows += (f"<tr><td>Person {i}</td><td>{e.get('shifts',0)}</td>"
+                          f"<td>{e.get('messages',0)}</td><td>{e.get('hesitations',0)}</td>"
+                          f"<td>{e.get('scenes',0)}</td><td>{e.get('distractions',0)}</td>"
+                          f"<td>{e.get('lanes',0)}</td></tr>")
+    sess_rows = sess_rows or "<tr><td colspan=7>No sessions recorded yet today.</td></tr>"
     return render_template_string("""
 <!doctype html><html><head><title>InnerLight — Operations</title>
 <meta name="robots" content="noindex,nofollow">
@@ -4187,6 +4235,12 @@ def admin_dashboard():
 </table>
 <h2>Sessions per day</h2>
 <div class="graph">{{ bars|safe }}</div>
+<h2>Today, person by person — anonymous session breakdown</h2>
+<table>
+<tr><th>Session</th><th>Expression shifts</th><th>Messages</th><th>Hesitations</th>
+<th>Scene changes</th><th>Distractions (looked away)</th><th>Music lane shifts</th></tr>
+{{ sess_rows|safe }}
+</table>
 <h2>Track reactions — the research core (all days shown)</h2>
 <table>
 <tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
@@ -4203,7 +4257,7 @@ def admin_dashboard():
 <b>Tracks liked / neutral / disliked</b>: the Track Guardian's verdict on each song's opening minute, judged against that person's own baseline face — measured musical reaction, the heart of the study.<br>
 <b>Listening auto-stops</b>: times the budget guard closed an idle microphone.<br>
 These map to the five research checkpoints grant reviewers look for: uptake (sessions), level of use (messages, scene changes), duration (sound box, session length), adherence (lane shifts answering expression shifts), and completion (handoffs).</div>
-</body></html>""", body=body, bars=bars, t_rows=t_rows)
+</body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows)
 
 
 # ===========================================================================
@@ -4269,9 +4323,39 @@ def admin_study_api():
             out = json.loads(resp.read().decode("utf-8"))
         text = "".join(b.get("text", "") for b in out.get("content", [])
                        if b.get("type") == "text")
+        _study_save_entry({"when": time.strftime("%Y-%m-%d %H:%M"),
+                           "focus": focus, "scenario": scenario, "walkthrough": text})
         return jsonify({"status": "ok", "text": text})
     except Exception as exc:
         return jsonify({"status": "error", "text": f"Study call failed: {exc}"}), 200
+
+_STUDY_FILE = os.environ.get("STUDY_FILE", "/tmp/innerlight_study_log.json")
+_STUDY_LOCK = threading.Lock()
+
+def _study_load():
+    try:
+        with open(_STUDY_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def _study_save_entry(entry):
+    with _STUDY_LOCK:
+        log = _study_load()
+        log.append(entry)
+        log = log[-200:]  # keep the most recent 200 studies
+        try:
+            with open(_STUDY_FILE, "w") as f:
+                json.dump(log, f)
+        except Exception:
+            pass
+
+@app.route("/api/admin/study/history")
+def admin_study_history():
+    if not session.get("founder_ok"):
+        return jsonify({"status": "locked"}), 403
+    log = _study_load()
+    return jsonify({"status": "ok", "studies": list(reversed(log))})
 
 @app.route("/admin/study")
 def admin_study_page():
@@ -4323,6 +4407,26 @@ Nothing here is ever shown to users. Nothing here is legal or medical advice.</d
 </div>
 <div class="card"><div class="stamp">FOUNDER STUDY &mdash; EDUCATIONAL SIMULATION &mdash; NOT LEGAL OR MEDICAL ADVICE</div>
 <div id="out"></div></div>
+<div class="card">
+ <h2 style="margin-top:0;color:#1e3a8a;font-size:16px;">Saved studies — your growing casebook</h2>
+ <div id="shelf" style="font-size:13.5px;color:#334155;">Loading&hellip;</div>
+</div>
+<script>
+async function loadShelf(){
+  try{
+    const r = await fetch('/api/admin/study/history'); const d = await r.json();
+    const shelf = document.getElementById('shelf');
+    if (!d.studies || !d.studies.length){ shelf.textContent = 'No studies saved yet. Every study you run is kept here.'; return; }
+    shelf.innerHTML = d.studies.map(function(st, i){
+      return '<details style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">'
+        + '<summary style="cursor:pointer;font-weight:700;color:#1d4ed8;">' + st.when + ' &mdash; ' + st.focus
+        + ' &mdash; ' + (st.scenario||'').slice(0,90).replace(/</g,'&lt;') + '&hellip;</summary>'
+        + '<div style="white-space:pre-wrap;margin-top:10px;line-height:1.65;">' + (st.walkthrough||'').replace(/</g,'&lt;') + '</div></details>';
+    }).join('');
+  }catch(e){ document.getElementById('shelf').textContent = 'Could not load saved studies.'; }
+}
+loadShelf();
+</script>
 <script>
 async function runStudy(){
   const out = document.getElementById('out'), wait = document.getElementById('wait');
@@ -4335,5 +4439,6 @@ async function runStudy(){
     out.textContent = d.text || 'No response.';
   }catch(e){ out.textContent = 'Could not reach the study engine: ' + e; }
   wait.style.display='none'; out.style.display='block';
+  if (typeof loadShelf==='function') loadShelf();
 }
 </script></body></html>""")
