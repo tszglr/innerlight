@@ -1,0 +1,242 @@
+{
+ "calm_1.mp3": {
+  "bpm": 117.5,
+  "key": "A",
+  "energy": 0.0706,
+  "brightness": 936,
+  "busyness": 0.0307,
+  "calm_score": 0.613
+ },
+ "calm_10.mp3": {
+  "bpm": 117.5,
+  "key": "G",
+  "energy": 0.1436,
+  "brightness": 2005,
+  "busyness": 0.0589,
+  "calm_score": 0.235
+ },
+ "calm_11.mp3": {
+  "bpm": 99.4,
+  "key": "G",
+  "energy": 0.1471,
+  "brightness": 1047,
+  "busyness": 0.0461,
+  "calm_score": 0.515
+ },
+ "calm_12.mp3": {
+  "bpm": 95.7,
+  "key": "A",
+  "energy": 0.0985,
+  "brightness": 1262,
+  "busyness": 0.0499,
+  "calm_score": 0.452
+ },
+ "calm_13.mp3": {
+  "bpm": 117.5,
+  "key": "F",
+  "energy": 0.1092,
+  "brightness": 618,
+  "busyness": 0.0242,
+  "calm_score": 0.715
+ },
+ "calm_14.mp3": {
+  "bpm": 73.8,
+  "key": "G",
+  "energy": 0.0218,
+  "brightness": 879,
+  "busyness": 0.0444,
+  "calm_score": 0.553
+ },
+ "calm_15.mp3": {
+  "bpm": 95.7,
+  "key": "A",
+  "energy": 0.0547,
+  "brightness": 820,
+  "busyness": 0.0328,
+  "calm_score": 0.64
+ },
+ "calm_2.mp3": {
+  "bpm": 73.8,
+  "key": "C",
+  "energy": 0.0453,
+  "brightness": 1872,
+  "busyness": 0.0938,
+  "calm_score": 0.066
+ },
+ "calm_3.mp3": {
+  "bpm": 117.5,
+  "key": "F",
+  "energy": 0.1747,
+  "brightness": 479,
+  "busyness": 0.0194,
+  "calm_score": 0.771
+ },
+ "calm_4.mp3": {
+  "bpm": 107.7,
+  "key": "F",
+  "energy": 0.1071,
+  "brightness": 858,
+  "busyness": 0.0468,
+  "calm_score": 0.542
+ },
+ "calm_5.mp3": {
+  "bpm": 112.3,
+  "key": "C",
+  "energy": 0.1798,
+  "brightness": 1484,
+  "busyness": 0.0604,
+  "calm_score": 0.334
+ },
+ "calm_6.mp3": {
+  "bpm": 71.8,
+  "key": "D",
+  "energy": 0.1156,
+  "brightness": 1540,
+  "busyness": 0.0439,
+  "calm_score": 0.422
+ },
+ "calm_7.mp3": {
+  "bpm": 86.1,
+  "key": "F",
+  "energy": 0.0165,
+  "brightness": 1559,
+  "busyness": 0.0847,
+  "calm_score": 0.191
+ },
+ "calm_8.mp3": {
+  "bpm": 107.7,
+  "key": "A#",
+  "energy": 0.2241,
+  "brightness": 446,
+  "busyness": 0.0224,
+  "calm_score": 0.767
+ },
+ "calm_9.mp3": {
+  "bpm": 143.6,
+  "key": "F#",
+  "energy": 0.0453,
+  "brightness": 710,
+  "busyness": 0.0272,
+  "calm_score": 0.659
+ },
+ "deepcalm_1.mp3": {
+  "bpm": 112.3,
+  "key": "G",
+  "energy": 0.2615,
+  "brightness": 333,
+  "busyness": 0.0091,
+  "calm_score": 0.864
+ },
+ "deepcalm_2.mp3": {
+  "bpm": 112.3,
+  "key": "B",
+  "energy": 0.2247,
+  "brightness": 351,
+  "busyness": 0.017,
+  "calm_score": 0.814
+ },
+ "deepcalm_3.mp3": {
+  "bpm": 143.6,
+  "key": "G",
+  "energy": 0.0764,
+  "brightness": 667,
+  "busyness": 0.0281,
+  "calm_score": 0.662
+ },
+ "deepcalm_4.mp3": {
+  "bpm": 95.7,
+  "key": "A",
+  "energy": 0.0936,
+  "brightness": 1317,
+  "busyness": 0.0505,
+  "calm_score": 0.438
+ },
+ "deepcalm_5.mp3": {
+  "bpm": 112.3,
+  "key": "F#",
+  "energy": 0.1451,
+  "brightness": 461,
+  "busyness": 0.0396,
+  "calm_score": 0.66
+ },
+ "deepcalm_6.mp3": {
+  "bpm": 99.4,
+  "key": "G",
+  "energy": 0.1034,
+  "brightness": 868,
+  "busyness": 0.0338,
+  "calm_score": 0.622
+ },
+ "deepcalm_7.mp3": {
+  "bpm": 99.4,
+  "key": "F#",
+  "energy": 0.1312,
+  "brightness": 400,
+  "busyness": 0.02,
+  "calm_score": 0.796
+ },
+ "deepcalm_8.mp3": {
+  "bpm": 89.1,
+  "key": "B",
+  "energy": 0.1247,
+  "brightness": 1842,
+  "busyness": 0.0645,
+  "calm_score": 0.255
+ },
+ "lifting_1.mp3": {
+  "bpm": 129.2,
+  "key": "B",
+  "energy": 0.1427,
+  "brightness": 893,
+  "busyness": 0.0247,
+  "calm_score": 0.648
+ },
+ "lifting_2.mp3": {
+  "bpm": 129.2,
+  "key": "G#",
+  "energy": 0.2808,
+  "brightness": 1762,
+  "busyness": 0.0724,
+  "calm_score": 0.196
+ },
+ "lifting_3.mp3": {
+  "bpm": 152.0,
+  "key": "F",
+  "energy": 0.2337,
+  "brightness": 2532,
+  "busyness": 0.1087,
+  "calm_score": 0
+ },
+ "lifting_4.mp3": {
+  "bpm": 123.0,
+  "key": "C#",
+  "energy": 0.2341,
+  "brightness": 1398,
+  "busyness": 0.0473,
+  "calm_score": 0.42
+ },
+ "lifting_5.mp3": {
+  "bpm": 123.0,
+  "key": "C",
+  "energy": 0.1299,
+  "brightness": 541,
+  "busyness": 0.0174,
+  "calm_score": 0.765
+ },
+ "lifting_6.mp3": {
+  "bpm": 152.0,
+  "key": "F#",
+  "energy": 0.0505,
+  "brightness": 1795,
+  "busyness": 0.055,
+  "calm_score": 0.273
+ },
+ "lifting_7.mp3": {
+  "bpm": 80.7,
+  "key": "F",
+  "energy": 0.1244,
+  "brightness": 1628,
+  "busyness": 0.0429,
+  "calm_score": 0.417
+ }
+}

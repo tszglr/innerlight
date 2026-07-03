@@ -3556,21 +3556,41 @@ def zenisys_ambient():
     risk = (request.args.get("risk", "") or "").lower()
     audio_dir = Path(__file__).resolve().parent.parent / "audio"
 
-    def lane(prefix, label):
+    # LEARNED CALM DNA: fingerprints analyzed from the real tracks (tempo, key,
+    # brightness, busyness -> a 0-1 calm score). Lets us order by measured calm,
+    # not just filename. This is the analysis half of generative sound.
+    global _FINGERPRINTS
+    try:
+        _FINGERPRINTS
+    except NameError:
+        try:
+            with open(Path(__file__).resolve().parent / "track_fingerprints.json") as fpf:
+                _FINGERPRINTS = json.load(fpf)
+        except Exception:
+            _FINGERPRINTS = {}
+
+    def lane(prefix, label, calmest_first=None):
         if not audio_dir.exists():
             return []
         def track_number(name):
-            # Sort by the real number in the filename, so 10 comes after 9 (not before 2).
             try:
                 return int(name.rsplit("_", 1)[1].split(".")[0])
             except (IndexError, ValueError):
                 return 0
-        files = sorted((p.name for p in audio_dir.glob(f"{prefix}_*.mp3")), key=track_number)
-        return [{"url": f"/audio/{n}", "name": label} for n in files]
+        files = [p.name for p in audio_dir.glob(f"{prefix}_*.mp3")]
+        if calmest_first is not None and _FINGERPRINTS:
+            def calm_of(n):
+                fp = _FINGERPRINTS.get(n, {})
+                return fp.get("calm_score", 0.5)
+            files.sort(key=calm_of, reverse=calmest_first)  # True: calmest first
+        else:
+            files.sort(key=track_number)
+        return [{"url": f"/audio/{n}", "name": label,
+                 "fp": _FINGERPRINTS.get(n, {})} for n in files]
 
     calm = lane("calm", "Calm")
-    deepcalm = lane("deepcalm", "Deep calm")
-    lifting = lane("lifting", "Lifting")
+    deepcalm = lane("deepcalm", "Deep calm", calmest_first=True)   # calmest first to settle agitation
+    lifting = lane("lifting", "Lifting", calmest_first=False)      # brightest first to lift low mood
 
     agitated_markers = ("anger", "angry", "agitat", "panic", "fear", "rage", "upset",
                         "anxious", "anxiety", "frustrat", "furious", "tense")
