@@ -510,7 +510,7 @@ PUBLIC_PAGE = """
       width:auto; padding:0; z-index:40; text-align:right; }
     .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
-      border-radius:18px; padding:4px 16px; max-height:52vh; overflow-y:auto; scroll-behavior:smooth; }
+      border-radius:18px; padding:4px 16px; scroll-behavior:smooth; }
     #conversation-thread:empty { background:none; padding:0; }
     .story-video { width:300px; height:300px; max-width:78vw; max-height:78vw; object-fit:cover; border-radius:28px; border:3px solid #c8ddd2;
       margin:0 auto 8px; display:block; background:#e8f0eb; box-shadow:0 8px 30px rgba(0,0,0,0.18);
@@ -530,6 +530,20 @@ PUBLIC_PAGE = """
     .story-send { background:#5ba08a; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
     .story-send:hover { background:#4e9079; }
+    .help-rail-placeholder {}
+    #help-rail { position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:30;
+      display:flex; flex-direction:column; gap:8px; }
+    #help-rail .rail-btn { background:rgba(255,255,255,0.95); color:#2e6e8e; border:1px solid #2e6e8e;
+      border-radius:12px; padding:10px 12px; font-size:13px; font-weight:700; cursor:pointer; text-decoration:none;
+      text-align:center; box-shadow:0 4px 14px rgba(20,40,60,0.14); min-width:76px; }
+    #help-rail .rail-988 { background:#e8534e; color:#fff; border:0; }
+    @media (max-width:760px){
+      #help-rail { top:auto; bottom:0; left:0; right:0; transform:none; flex-direction:row;
+        justify-content:space-around; background:rgba(255,255,255,0.97); padding:8px 6px;
+        box-shadow:0 -3px 14px rgba(20,40,60,0.12); }
+      #help-rail .rail-btn { flex:1; min-width:0; margin:0 3px; }
+      .story-screen { padding-bottom:80px; }
+    }
     .story-mic { background:#fff; color:#5a7d6d; border:1px solid #c8ddd2; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
     .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#6d8f80; font-size:13px; }
@@ -629,10 +643,11 @@ PUBLIC_PAGE = """
           <canvas id="calm-touch" style="width:100%;height:240px;display:block;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;cursor:pointer;transition:height 0.5s ease;"></canvas>
         </div>
         <div id="conversation-thread" style="margin-top:22px;"></div>
-        <div id="help-bar" style="margin:16px auto 8px;max-width:560px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
-          <a href="tel:988" class="help-btn" style="background:#e8534e;color:#fff;border:0;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:700;text-decoration:none;">&#128222; Call 988 now</a>
-          <button type="button" class="help-btn" onclick="openHelp('telehealth')" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;">Talk to a provider</button>
-          <button type="button" class="help-btn" onclick="openHelp('attorney')" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;">Legal help</button>
+        <div id="help-rail">
+          <a href="tel:988" class="rail-btn rail-988" title="Call 988 now">&#128222; 988</a>
+          <button type="button" class="rail-btn" onclick="openHelp('telehealth')" title="Talk to a provider">Provider</button>
+          <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help">Legal</button>
+          <button type="button" class="rail-btn" onclick="testMic()" title="Test my microphone">Test mic</button>
         </div>
         <div id="urgent-help" style="display:none;margin:6px auto;max-width:560px;text-align:center;padding:12px;background:rgba(232,83,78,0.1);border:1px solid rgba(232,83,78,0.4);border-radius:14px;color:#b3322e;font-weight:600;"></div>
         <div id="live-transcript" style="display:none;margin-top:14px;padding:14px 16px;background:rgba(111,179,212,0.12);border:1px solid rgba(111,179,212,0.4);border-radius:14px;">
@@ -649,7 +664,6 @@ PUBLIC_PAGE = """
           </div>
         </div>
         <div id="mic-test-row" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
-          <button type="button" onclick="testMic()" style="align-self:flex-start;background:#fff;color:#5a7d6d;border:1px solid #c8ddd2;border-radius:999px;padding:7px 14px;font-size:12px;cursor:pointer;">Test my microphone</button>
           <span id="mic-test-status" style="font-size:12px;color:#6e8ba3;"></span>
           <audio id="mic-test-playback" controls style="display:none;width:100%;max-width:320px;"></audio>
         </div>
@@ -1450,6 +1464,45 @@ let ambientIndex = 0;
 const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+// ================= READINESS CHECK — tests the device, installs nothing =================
+// Runs quietly at start; if something could hurt the experience, it offers a
+// plain-language recommendation. It never changes the person's computer.
+function runReadinessCheck(){
+  const notes = [];
+  // 1) Reduced-motion / heavy load hint via frame timing
+  let frames = 0; const t0 = performance.now();
+  function countFrame(){ frames++; if (performance.now() - t0 < 1000) requestAnimationFrame(countFrame); else finishFps(); }
+  function finishFps(){
+    const fps = frames;
+    if (fps > 0 && fps < 30) notes.push('Your screen is updating slowly (about ' + fps + ' frames per second). Closing other browser tabs and programs usually makes scrolling smooth again.');
+    // 2) Memory pressure (Chrome exposes this)
+    if (performance.memory && performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit > 0.8){
+      notes.push('This browser tab is using a lot of memory. Refreshing the page, or closing other tabs, will help it run smoothly.');
+    }
+    // 3) Camera/mic presence
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices){
+      navigator.mediaDevices.enumerateDevices().then(function(list){
+        const hasCam = list.some(d=>d.kind==='videoinput');
+        const hasMic = list.some(d=>d.kind==='audioinput');
+        if (!hasCam) notes.push('No camera was found, so the calming heart reading and gentle scene response will not run. A webcam enables the full experience.');
+        if (!hasMic) notes.push('No microphone was found. You can still type, but speaking aloud will not be available.');
+        showReadiness(notes);
+      }).catch(function(){ showReadiness(notes); });
+    } else { showReadiness(notes); }
+  }
+  requestAnimationFrame(countFrame);
+}
+function showReadiness(notes){
+  if (!notes.length) return; // all good, stay silent
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:70;background:#fffbeb;border-bottom:1px solid #fcd34d;'
+    + 'color:#92400e;font-family:Arial;font-size:13px;padding:10px 16px;text-align:center;';
+  bar.innerHTML = 'For the smoothest experience: ' + notes.join(' &nbsp;•&nbsp; ')
+    + ' <button onclick="this.parentNode.remove()" style="margin-left:10px;background:#92400e;color:#fff;border:0;border-radius:6px;padding:4px 12px;cursor:pointer;">Got it</button>';
+  document.body.appendChild(bar);
+}
+setTimeout(runReadinessCheck, 2500);
+
 // Guarantee the page can always scroll — nothing may lock the body.
 (function ensureScrollable(){
   try {
@@ -2505,7 +2558,7 @@ async function continueConversation() {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   thread.appendChild(userMsg);
-  if (nearBottom(thread)) thread.scrollTop = thread.scrollHeight;
+  if (nearBottom(document.body)) window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'});
   // Call the API
   const res = await fetch('/api/innerlight/learn', {
     method:'POST',
