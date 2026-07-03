@@ -1344,15 +1344,25 @@ let trackWatch = null; // {name, startMs, baseline, strikes}
 function beginTrackWatch(name){
   const sc = faceEmotionScores || {};
   const displeasure = (sc.disgusted||0)*1.2 + (sc.angry||0) + (sc.surprised||0)*0.6;
-  trackWatch = { name: name || 'unknown', startMs: Date.now(), baseline: displeasure, strikes: 0 };
+  const easeB = ((sc.happy||0) + (sc.neutral||0)*0.3);
+  trackWatch = { name: name || 'unknown', startMs: Date.now(), baseline: displeasure, easeBase: easeB, easeSum: 0, samples: 0, strikes: 0 };
 }
 function trackGuardianTick(){
   if (!trackWatch) return;
   const age = Date.now() - trackWatch.startMs;
-  if (age > 60000) { trackWatch = null; return; } // opening minute passed - track accepted
-  if (age < 4000) return;                          // let the crossfade settle first
   const sc = faceEmotionScores || {};
   const displeasure = (sc.disgusted||0)*1.2 + (sc.angry||0) + (sc.surprised||0)*0.6;
+  const ease = (sc.happy||0) + (sc.neutral||0)*0.3;
+  if (age > 60000) {
+    // Opening minute complete: render the verdict — liked, or neutral.
+    const avgEase = trackWatch.easeSum / Math.max(1, trackWatch.samples);
+    const verdict = (avgEase - trackWatch.easeBase > 0.12) ? 'liked' : 'neutral';
+    metric('track_react', trackWatch.name + '|' + verdict);
+    trackWatch = null; return;
+  }
+  if (age < 4000) return;                          // let the crossfade settle first
+  trackWatch.easeSum = (trackWatch.easeSum||0) + ease;
+  trackWatch.samples = (trackWatch.samples||0) + 1;
   if (displeasure - trackWatch.baseline > 0.35) trackWatch.strikes++;
   else if (trackWatch.strikes > 0) trackWatch.strikes--;
   if (trackWatch.strikes >= 4) {
@@ -1360,6 +1370,7 @@ function trackGuardianTick(){
     const disliked = trackWatch.name;
     trackWatch = null;
     metric('track_skip', disliked);
+    metric('track_react', disliked + '|disliked');
     if (ambientTracks.length > 1) {
       ambientIndex = (ambientIndex + 1) % ambientTracks.length;
       const t = ambientTracks[ambientIndex];
@@ -3988,7 +3999,7 @@ def metrics_event():
     allowed = {"session_start", "first_sound_ms", "message_sent",
                "lane_switch", "handoff_click", "listen_autostop",
                "face_shift", "scene_change", "hesitation",
-               "soundbox_open_ms", "track_skip"}
+               "soundbox_open_ms", "track_skip", "track_react"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -4025,6 +4036,16 @@ def metrics_event():
         elif etype == "soundbox_open_ms" and isinstance(value, (int, float)) and 0 <= value < 3600000:
             d["soundbox_ms_sum"] = d.get("soundbox_ms_sum", 0) + int(value)
             d["soundbox_count"] = d.get("soundbox_count", 0) + 1
+        elif etype == "track_react" and value:
+            try:
+                tname, verdict = str(value).rsplit("|", 1)
+                tname = tname[:40]
+                if verdict in ("liked", "neutral", "disliked"):
+                    tr = d.setdefault("track_reactions", {})
+                    entry = tr.setdefault(tname, {"liked": 0, "neutral": 0, "disliked": 0})
+                    entry[verdict] += 1
+            except Exception:
+                pass
         elif etype == "handoff_click":
             dest = str(value)[:24] if value else "unknown"
             d["handoffs"][dest] = d["handoffs"].get(dest, 0) + 1
@@ -4058,7 +4079,25 @@ def admin_dashboard():
                     f"<td>{d.get('scene_changes',0)}</td><td>{d.get('hesitations',0)}</td>"
                     f"<td>{avg_box/1000:.0f}s</td><td>{handoffs}</td>"
                     f"<td>{dislikes}</td><td>{d.get('autostops',0)}</td></tr>")
-    body = "".join(rows) or "<tr><td colspan=7>No activity recorded yet.</td></tr>"
+    body = "".join(rows) or "<tr><td colspan=11>No activity recorded yet.</td></tr>"
+    # Bar graph of sessions per day (oldest -> newest)
+    graph_days = list(reversed(days))
+    max_sess = max([m[d0].get("sessions", 0) for d0 in graph_days] + [1])
+    bars = "".join(
+        f"<div class='bar-col'><div class='bar' style='height:{max(3, int(120 * m[d0].get('sessions',0) / max_sess))}px'"
+        f" title='{m[d0].get('sessions',0)} sessions'></div><div class='bar-lbl'>{d0[5:]}</div>"
+        f"<div class='bar-num'>{m[d0].get('sessions',0)}</div></div>"
+        for d0 in graph_days) or "<i>No sessions yet.</i>"
+    # Aggregate track reactions across shown days
+    agg = {}
+    for d0 in days:
+        for tname, e in m[d0].get("track_reactions", {}).items():
+            a = agg.setdefault(tname, {"liked": 0, "neutral": 0, "disliked": 0})
+            for k in a: a[k] += e.get(k, 0)
+    t_rows = "".join(
+        f"<tr><td>{t}</td><td>{e['liked']}</td><td>{e['neutral']}</td><td>{e['disliked']}</td></tr>"
+        for t, e in sorted(agg.items(), key=lambda x: -(x[1]['liked'] + x[1]['neutral'] + x[1]['disliked'])))
+    t_rows = t_rows or "<tr><td colspan=4>No track reactions recorded yet.</td></tr>"
     return render_template_string("""
 <!doctype html><html><head><title>InnerLight — Operations</title>
 <meta name="robots" content="noindex,nofollow">
@@ -4070,6 +4109,12 @@ def admin_dashboard():
  th,td{padding:10px 12px;text-align:left;font-size:14px;border-bottom:1px solid #e3efe9;}
  th{background:#0f766e;color:#fff;font-size:12px;letter-spacing:0.4px;}
  .note{margin-top:16px;font-size:12px;color:#678;}
+ .graph{display:flex;align-items:flex-end;gap:8px;background:#fff;padding:18px;border-radius:8px;
+        box-shadow:0 2px 10px rgba(0,0,0,0.06);margin:18px 0;overflow-x:auto;}
+ .bar-col{display:flex;flex-direction:column;align-items:center;min-width:44px;}
+ .bar{width:26px;background:linear-gradient(180deg,#14b8a6,#0f766e);border-radius:4px 4px 0 0;}
+ .bar-lbl{font-size:10px;color:#678;margin-top:4px;} .bar-num{font-size:11px;color:#0f766e;font-weight:700;}
+ h2{color:#0f766e;font-size:16px;margin-top:26px;}
 </style></head><body>
 <h1>InnerLight — Founder's Operations Room</h1>
 <div class="sub">Anonymous counts and clock-times only. No words, names, faces, or voices are ever stored.</div>
@@ -4080,5 +4125,12 @@ def admin_dashboard():
 <th>Handoff clicks</th><th>Tracks that drew dislike</th><th>Listening auto-stops</th></tr>
 {{ body|safe }}
 </table>
+<h2>Sessions per day</h2>
+<div class="graph">{{ bars|safe }}</div>
+<h2>Track reactions — the research core (all days shown)</h2>
+<table>
+<tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
+{{ t_rows|safe }}
+</table>
 <div class="note"><b>Research reading guide:</b> Expression shifts vs. music lane shifts is the core question — is the sound answering the face? Hesitations (typing then erasing) mark moments a person almost spoke. Time to first sound = seconds between a person arriving and calm music playing — the product promise in one number. Metrics reset if the server is rebuilt; a permanent store comes with the provider back-end.</div>
-</body></html>""", body=body)
+</body></html>""", body=body, bars=bars, t_rows=t_rows)
