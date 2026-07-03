@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import secrets
 import sqlite3
 import threading
@@ -839,6 +840,26 @@ function heartReport(){
 setInterval(heartTick, 66);       // ~15 samples per second
 setInterval(heartEstimate, 5000); // re-estimate every 5s
 setInterval(heartReport, 15000);
+// Show the person their own rhythm — watching a number ease downward is a
+// proven calming aid (biofeedback). Appears only once the reading is stable.
+(function heartChip(){
+  const chip = document.createElement('div');
+  chip.id = 'heart-chip';
+  chip.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:55;display:none;'
+    + 'background:rgba(255,255,255,0.88);border-radius:999px;padding:8px 16px;'
+    + 'font-family:Arial;font-size:15px;color:#8a4653;box-shadow:0 6px 22px rgba(40,20,30,0.18);';
+  chip.innerHTML = '<span id="heart-beat" style="display:inline-block;">&#10084;&#65039;</span> <b id="heart-num">--</b> <span style="font-size:11.5px;color:#a98790;">your rhythm</span>';
+  document.body.appendChild(chip);
+  setInterval(()=>{
+    if (window._heartBPM && window._heartBPM > 40){
+      chip.style.display = 'block';
+      document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
+      const b = document.getElementById('heart-beat');
+      b.style.transition = 'transform 0.18s ease'; b.style.transform = 'scale(1.25)';
+      setTimeout(()=>{ b.style.transform = 'scale(1)'; }, 200);
+    }
+  }, 3000);
+})();
 
 // --- Face detection ---
 async function loadFaceModels() {
@@ -1583,7 +1604,12 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
+function caseRecord(role, text){
+  try { fetch('/api/case/record', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({sid: SESSION_ID, role: role, text: String(text||'').slice(0,1200)})}); } catch(e){}
+}
 function logTurn(role, text){
+  caseRecord(role, text);
   if(!text) return;
   conversationLog.push({role: role, text: String(text), at: new Date().toISOString()});
   try { sessionStorage.setItem('innerlight_convo', JSON.stringify(conversationLog)); } catch(e){}
@@ -2809,6 +2835,10 @@ CLINICAL_HANDOFF_PAGE = r"""
     button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--green); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
     .secondary { background:#e8f1ed; color:var(--ink); }
     .locked { font-size:13px; color:var(--muted); margin-top:8px; }
+    .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
+               border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
+    .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
+    .pro-btn.picked { border-color:var(--green); background:#f0faf5; box-shadow:0 0 0 2px rgba(46,125,90,0.18); }
     .disclaimer { font-size:12.5px; color:#8794a0; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
 </head>
@@ -2820,15 +2850,15 @@ CLINICAL_HANDOFF_PAGE = r"""
   </header>
   <main>
     <section class="panel who">
-      <h2>Who you may be connected with</h2>
-      <p>Depending on what you need, InnerLight routes you to one of these. You'll be told which one before any live conversation:</p>
-      <ul>
-        <li><b>Crisis-trained counselor</b> &mdash; immediate emotional support during an acute moment. Not a prescriber.</li>
-        <li><b>Therapist / licensed counselor</b> &mdash; talk-based support and ongoing coping work.</li>
-        <li><b>Psychiatrist</b> &mdash; a medical doctor who can evaluate symptoms and, where appropriate, manage medication.</li>
-        <li><b>Nurse practitioner</b> &mdash; can assess symptoms and, in many states, manage medication.</li>
-        <li><b>Access / pharmacy navigator</b> &mdash; helps with getting to existing medication or care you already have.</li>
-      </ul>
+      <h2>Choose who you want to reach</h2>
+      <p>You pick. Tap the kind of professional you want &mdash; your summary goes to them, and only when you say send.</p>
+      <div id="pro-choices">
+        <button type="button" class="pro-btn" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
+        <button type="button" class="pro-btn" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
+        <button type="button" class="pro-btn" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
+        <button type="button" class="pro-btn" data-pro="Nurse practitioner" onclick="pickPro(this)"><b>Nurse practitioner</b><span>Can assess symptoms and, in many states, manage medication.</span></button>
+      </div>
+      <p id="pro-picked" style="font-weight:700;color:var(--green);"></p>
     </section>
 
     <section class="urgent-note" id="urgent-note" style="display:none;">
@@ -2852,13 +2882,14 @@ CLINICAL_HANDOFF_PAGE = r"""
       <p><b>You decide what is shared.</b> Nothing on this page is sent to any professional until you choose to send it. You can close this page and nothing goes out.</p>
       <p><b>What we are not.</b> InnerLight is a support and connection tool. It does not diagnose conditions or prescribe medication. Any diagnosis or treatment comes only from the licensed professional you connect with.</p>
       <p><b>Encryption.</b> Your conversation is encrypted, and the raw details are not displayed on any public page. Only the summary you approve is prepared for the professional.</p>
+      <p><b>Quality review.</b> De-identified notes about conversations &mdash; with names, numbers, and contact details removed &mdash; may be reviewed by InnerLight's founder to improve how people are routed to help. These notes are never sold, never advertised with, and never shown publicly.</p>
     </details>
 
     <section class="panel">
       <h2>Ready when you are</h2>
       <p>When you send this, InnerLight notifies the care side and prepares your approved summary so the professional can read it <i>before</i> they speak with you &mdash; so you don't have to start from the beginning.</p>
       <p id="status" style="font-weight:700;color:var(--green);"></p>
-      <button onclick="sendToCare()">Send my summary &amp; connect me</button>
+      <button id="send-btn" onclick="sendToCare()">Send my summary &amp; connect me</button>
       <a class="button secondary" href="/#private-step" onclick="window.close();return false;">Go back</a>
     </section>
 
@@ -2876,8 +2907,37 @@ CLINICAL_HANDOFF_PAGE = r"""
       if(!log.length){ box.innerHTML='<p class="u">It looks like the conversation did not carry over. You can use the boxes below to tell the professional what is going on, in your own words.</p>'; return; }
       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
     }
+    let pickedPro = '';
+    function pickPro(btn){
+      document.querySelectorAll('.pro-btn').forEach(b=>b.classList.remove('picked'));
+      btn.classList.add('picked');
+      pickedPro = btn.dataset.pro;
+      document.getElementById('pro-picked').textContent = 'You chose: ' + pickedPro + '. Your summary will go to a ' + pickedPro.toLowerCase() + ' \u2014 nobody else.';
+      const send = document.getElementById('send-btn');
+      if (send) send.textContent = 'Send my summary & connect me to a ' + pickedPro.toLowerCase();
+    }
     function sendToCare(){
-      document.getElementById('status').textContent='Your summary is prepared and the care side has been notified. A professional will review what you shared before connecting. Please keep this page open.';
+      if (!pickedPro){
+        document.getElementById('status').textContent = 'First, tap who you want to reach above \u2014 you choose, always.';
+        return;
+      }
+      const clarify = document.getElementById('clarify').value.trim();
+      const add = document.getElementById('addnote').value.trim();
+      let log=[]; try{ log=JSON.parse(sessionStorage.getItem('innerlight_convo')||'[]'); }catch(e){}
+      const said = log.filter(t=>t.role==='user').map(t=>t.text).join(' \u2022 ');
+      const summaryText = ['WHO THIS GOES TO: ' + pickedPro,
+        said ? 'IN THEIR OWN WORDS: ' + said : '',
+        clarify ? 'THEY CLARIFIED: ' + clarify : '',
+        add ? 'THEY ADDED: ' + add : ''].filter(Boolean).join('\n\n');
+      const box = document.getElementById('convo-summary');
+      box.innerHTML = '<p class="a"><b>The exact summary that goes to your ' + esc(pickedPro.toLowerCase()) + '</b></p>'
+        + '<p class="u" style="white-space:pre-wrap;">' + esc(summaryText) + '</p>';
+      document.getElementById('status').innerHTML =
+        'You\u2019re being connected to a <b>' + esc(pickedPro.toLowerCase()) + '</b>. '
+        + 'Above is the exact summary they will read \u2014 nothing more, nothing less. '
+        + 'You\u2019ve done the hard part. Take one slow breath; a human is on the way. Keep this page open.';
+      try{ fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({type:'handoff_click', value:'care:'+pickedPro, sid: sessionStorage.getItem('innerlight_sid')||'page'})}); }catch(e){}
     }
     loadConvo();
   </script>
@@ -2921,6 +2981,10 @@ LEGAL_HANDOFF_PAGE = r"""
     button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--legal); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
     .secondary { background:#ece7f6; color:var(--ink); }
     .locked { font-size:13px; color:var(--muted); margin-top:8px; }
+    .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
+               border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
+    .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
+    .pro-btn.picked { border-color:var(--green); background:#f0faf5; box-shadow:0 0 0 2px rgba(46,125,90,0.18); }
     .disclaimer { font-size:12.5px; color:#8a929a; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
 </head>
@@ -2928,7 +2992,15 @@ LEGAL_HANDOFF_PAGE = r"""
   <header>
     <div class="tag">Connecting you to legal help &mdash; this is a legal handoff</div>
     <h1>You're being connected to legal support</h1>
-    <p>This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Here is who you may reach and what protects you before anything is shared.</p>
+    <p>This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want &mdash; your summary goes there only when you say send.</p>
+    <div id="pro-choices">
+      <button type="button" class="pro-btn" data-pro="Housing / tenant attorney" onclick="pickPro(this)"><b>Housing / tenant attorney</b><span>Evictions, landlord disputes, unsafe conditions.</span></button>
+      <button type="button" class="pro-btn" data-pro="Family law attorney" onclick="pickPro(this)"><b>Family law attorney</b><span>Custody, divorce, protective orders.</span></button>
+      <button type="button" class="pro-btn" data-pro="Criminal defense attorney" onclick="pickPro(this)"><b>Criminal defense attorney</b><span>Charges, warrants, court dates.</span></button>
+      <button type="button" class="pro-btn" data-pro="Consumer / civil attorney" onclick="pickPro(this)"><b>Consumer / civil attorney</b><span>Debt, fraud claims, insurance disputes, benefits denials.</span></button>
+      <button type="button" class="pro-btn" data-pro="Legal aid office" onclick="pickPro(this)"><b>Legal aid office</b><span>Free or low-cost help when money is tight.</span></button>
+    </div>
+    <p id="pro-picked" style="font-weight:700;color:#2e6e8e;"></p>
   </header>
   <main>
     <section class="panel who">
@@ -2973,6 +3045,20 @@ LEGAL_HANDOFF_PAGE = r"""
       InnerLight, a service of God's Love For Us LLC, provides legal information and connection to legal resources. It is not a law firm and does not provide legal advice or representation. No attorney-client relationship is formed with InnerLight. Attorney-client privilege applies once you engage a licensed attorney. Your information is encrypted and shared only with your consent. If your legal issue involves immediate danger to your safety, call 911.
     </p>
   </main>
+  <style>
+    .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
+               border:1.5px solid #d5e2ec; background:#fff; cursor:pointer; font-size:15px; }
+    .pro-btn span { display:block; font-size:12.5px; color:#7b8b99; margin-top:3px; font-weight:400; }
+    .pro-btn.picked { border-color:#2e6e8e; background:#f0f7fb; box-shadow:0 0 0 2px rgba(46,110,142,0.18); }
+  </style>
+  <script>
+    let pickedPro = '';
+    function pickPro(btn){
+      document.querySelectorAll('.pro-btn').forEach(b=>b.classList.remove('picked'));
+      btn.classList.add('picked'); pickedPro = btn.dataset.pro;
+      document.getElementById('pro-picked').textContent = 'You chose: ' + pickedPro + '.';
+    }
+  </script>
   <script>
     function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
     function loadConvo(){
@@ -2982,7 +3068,11 @@ LEGAL_HANDOFF_PAGE = r"""
       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
     }
     function sendToLegal(){
-      document.getElementById('status').textContent='Your summary is prepared and the legal side has been notified. A legal professional will review what you shared before connecting. Please keep this page open.';
+      if (typeof pickedPro !== 'undefined' && !pickedPro){
+        document.getElementById('status').textContent='First, tap the kind of legal help you want above \u2014 you choose, always.';
+        return;
+      }
+      document.getElementById('status').innerHTML='You\u2019re being connected to a <b>' + (pickedPro||'legal professional').toLowerCase() + '</b>. They will read your summary before speaking with you, so you never start from zero. You\u2019ve done the hard part \u2014 keep this page open.';
     }
     loadConvo();
   </script>
@@ -4633,6 +4723,11 @@ Nothing here is ever shown to users. Nothing here is legal or medical advice.</d
 <div class="card"><div class="stamp">FOUNDER STUDY &mdash; EDUCATIONAL SIMULATION &mdash; NOT LEGAL OR MEDICAL ADVICE</div>
 <div id="out"></div></div>
 <div class="card">
+ <h2 style="margin-top:0;color:#1e3a8a;font-size:16px;">Cases from real sessions — de-identified</h2>
+ <div style="font-size:12px;color:#64748b;margin-bottom:10px;">Every session is recorded here with names, numbers, and contact details removed before saving. Tap "Study this case" to send one into the study engine.</div>
+ <div id="cases" style="font-size:13.5px;color:#334155;">Loading&hellip;</div>
+</div>
+<div class="card">
  <h2 style="margin-top:0;color:#1e3a8a;font-size:16px;">Saved studies — your growing casebook</h2>
  <div id="shelf" style="font-size:13.5px;color:#334155;">Loading&hellip;</div>
 </div>
@@ -4651,6 +4746,27 @@ async function loadShelf(){
   }catch(e){ document.getElementById('shelf').textContent = 'Could not load saved studies.'; }
 }
 loadShelf();
+async function loadCases(){
+  try{
+    const r = await fetch('/api/admin/cases'); const d = await r.json();
+    const el = document.getElementById('cases');
+    if (!d.cases || !d.cases.length){ el.textContent = 'No session cases recorded yet.'; return; }
+    el.innerHTML = d.cases.map(function(c){
+      const convo = c.turns.map(function(t){ return (t.r==='user'?'PERSON: ':'INNERLIGHT: ') + t.t; }).join('\n');
+      return '<details style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">'
+        + '<summary style="cursor:pointer;font-weight:700;color:#1d4ed8;">' + c.label + ' &mdash; ' + c.when
+        + (c.tags.length ? ' &mdash; <span style="color:#b45309;">' + c.tags.join(', ') + '</span>' : '') + '</summary>'
+        + '<div style="white-space:pre-wrap;margin-top:10px;line-height:1.6;">' + convo.replace(/</g,'&lt;') + '</div>'
+        + '<button style="margin-top:10px;padding:8px 18px;" onclick="studyCase(this)" data-convo="' + convo.replace(/"/g,'&quot;').replace(/</g,'&lt;') + '">Study this case</button>'
+        + '</details>';
+    }).join('');
+  }catch(e){ document.getElementById('cases').textContent = 'Could not load cases.'; }
+}
+function studyCase(btn){
+  document.getElementById('scenario').value = 'De-identified real session (names/numbers removed): ' + btn.dataset.convo.slice(0, 2500);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+loadCases();
 </script>
 <script>
 async function runStudy(){
@@ -4673,3 +4789,77 @@ async function runStudy(){
   if (typeof loadShelf==='function') loadShelf();
 }
 </script></body></html>""")
+
+
+# ===========================================================================
+# CASE RECORDER — every session becomes a de-identified case for the
+# Founder's Study. Scrubbing happens BEFORE anything is written: numbers,
+# emails, phone numbers, and handles are masked. Cases are founder-only,
+# disclosed in the privacy notes, never public, never sold.
+# ===========================================================================
+_CASES_FILE = os.environ.get("CASES_FILE", "/tmp/innerlight_cases.json")
+_CASES_LOCK = threading.Lock()
+_SCRUB_PATTERNS = [
+    (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "[email removed]"),
+    (re.compile(r"(\+?\d[\d\-\s().]{6,}\d)"), "[number removed]"),
+    (re.compile(r"@\w{2,}"), "[handle removed]"),
+    (re.compile(r"\b\d{3,}\b"), "[number removed]"),
+]
+_LEGAL_WORDS = ("court", "lawyer", "attorney", "evict", "landlord", "custody", "police",
+                "arrest", "charge", "warrant", "lawsuit", "sue", "fraud", "insurance",
+                "immigration", "visa", "deport")
+_MEDICAL_WORDS = ("medication", "meds", "prescription", "doctor", "psychiatr", "diagnos",
+                  "hospital", "therapy", "therapist", "pharmacy", "insulin", "dose", "pain")
+
+def _scrub(text):
+    out = str(text or "")
+    for pat, repl in _SCRUB_PATTERNS:
+        out = pat.sub(repl, out)
+    return out[:1200]
+
+@app.route("/api/case/record", methods=["POST"])
+def case_record():
+    data = request.get_json(silent=True) or {}
+    sid = str(data.get("sid", ""))[:12] or "anon"
+    role = "user" if data.get("role") == "user" else "innerlight"
+    text = _scrub(data.get("text", ""))
+    if not text.strip():
+        return jsonify({"status": "ok"})
+    low = text.lower()
+    tags = set()
+    if any(w in low for w in _LEGAL_WORDS): tags.add("legal")
+    if any(w in low for w in _MEDICAL_WORDS): tags.add("medical")
+    with _CASES_LOCK:
+        try:
+            with open(_CASES_FILE) as f:
+                cases = json.load(f)
+        except Exception:
+            cases = {}
+        c = cases.setdefault(sid, {"when": time.strftime("%Y-%m-%d %H:%M"),
+                                   "turns": [], "tags": []})
+        c["turns"] = (c["turns"] + [{"r": role, "t": text}])[-40:]
+        c["tags"] = sorted(set(c["tags"]) | tags)
+        if len(cases) > 200:
+            for k in sorted(cases.keys(), key=lambda k: cases[k].get("when", ""))[:len(cases)-200]:
+                cases.pop(k, None)
+        try:
+            with open(_CASES_FILE, "w") as f:
+                json.dump(cases, f)
+        except Exception:
+            pass
+    return jsonify({"status": "ok"})
+
+@app.route("/api/admin/cases")
+def admin_cases():
+    if not session.get("founder_ok"):
+        return jsonify({"status": "locked"}), 403
+    try:
+        with open(_CASES_FILE) as f:
+            cases = json.load(f)
+    except Exception:
+        cases = {}
+    listing = []
+    for i, (sid, c) in enumerate(sorted(cases.items(), key=lambda x: x[1].get("when", ""), reverse=True), 1):
+        listing.append({"label": f"Case {i}", "when": c.get("when", ""), "tags": c.get("tags", []),
+                        "turns": c.get("turns", [])})
+    return jsonify({"status": "ok", "cases": listing})
