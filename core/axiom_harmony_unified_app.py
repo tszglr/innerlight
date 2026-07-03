@@ -578,8 +578,14 @@ PUBLIC_PAGE = """
     <!-- CALM STORY SCREEN -->
     <section id="story-screen" class="story-screen" style="display:none;">
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
-      <img id="calm-photo-a" alt="" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;">
-      <img id="calm-photo-b" alt="" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;">
+      <div id="calm-photo-a" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+        <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
+      </div>
+      <div id="calm-photo-b" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+        <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
+      </div>
       <div class="scene-picker" id="scene-picker">
         <button class="scene-btn active" data-scene="garden" onclick="setScene('garden')" title="Garden">&#127807;</button>
         <button class="scene-btn" data-scene="sunflower" onclick="setScene('sunflower')" title="Sunflower">&#127803;</button>
@@ -688,15 +694,19 @@ function setScene(scene, byUser=true) {
   document.querySelectorAll('.scene-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.scene === scene);
   });
-  const imgA = document.getElementById('calm-photo-a');
-  const imgB = document.getElementById('calm-photo-b');
+  const frameA = document.getElementById('calm-photo-a');
+  const frameB = document.getElementById('calm-photo-b');
   const src = SCENE_PHOTOS[scene];
-  if (!imgA || !imgB || !src) return;
-  // Crossfade: load into the hidden layer, then trade opacities slowly.
-  const showing = imgA.style.opacity !== '0' ? imgA : imgB;
-  const hidden  = showing === imgA ? imgB : imgA;
-  hidden.onload = () => { hidden.style.opacity = '1'; showing.style.opacity = '0'; };
-  hidden.src = src;
+  if (!frameA || !frameB || !src) return;
+  // Crossfade: load into the hidden frame, then trade opacities slowly.
+  // Each frame shows the WHOLE photo, with a soft blurred copy filling the
+  // edges — no cropping deep into the picture, no blank bars.
+  const showing = frameA.style.opacity !== '0' ? frameA : frameB;
+  const hidden  = showing === frameA ? frameB : frameA;
+  const img = hidden.querySelector('.scene-full');
+  hidden.querySelector('.scene-fill').style.backgroundImage = "url('" + src + "')";
+  img.onload = () => { hidden.style.opacity = '1'; showing.style.opacity = '0'; };
+  img.src = src;
 }
 
 function startSceneRotation() {
@@ -828,6 +838,7 @@ function adaptiveTick() {
         if (tracks.length) {
           ambientTracks = tracks; ambientIndex = 0;
           switchAmbient(tracks[0].url, tracks[0].name);
+          metric('lane_switch');
         }
       }).catch(()=>{});
   }
@@ -1217,11 +1228,16 @@ function val(id) { const e = $(id); return e ? e.value : ''; }
 function chk(id) { const e = $(id); return e ? !!e.checked : false; }
 let ambientTracks = [];
 let ambientIndex = 0;
+
+// Anonymous metric ping — counts only, never content.
+function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value})}); } catch(e){} }
+const PAGE_OPEN_MS = Date.now();
 async function startExperience() {
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
   const gate = $('welcome-gate'); if (gate) gate.style.display = 'none';
   const screen = $('story-screen'); if (screen) screen.style.display = 'flex';
   const msg = $('message'); if (msg) msg.focus();
+  metric('session_start');
   // Start on a real photograph (the founder's garden) and rotate slowly
   setScene('garden', false);
   startSceneRotation();
@@ -1252,7 +1268,7 @@ async function startExperience() {
         // GENTLE ARRIVAL: enter soft, then rise smoothly into full rich volume —
         // never an abrupt hit of sound in the ear.
         deck.volume = TARGET_VOL * 0.30;
-        deck.play().catch(()=>{});
+        deck.play().then(()=>metric('first_sound_ms', Date.now()-PAGE_OPEN_MS)).catch(()=>{});
         (function arrivalRise(){
           const RISE_MS = 10000; // ten calm seconds from soft to full
           const start = performance.now(), from = deck.volume, to = TARGET_VOL;
@@ -1527,12 +1543,14 @@ function startDeepgramStream(tempToken){
       // Send mic audio in small chunks as it's captured.
       const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
       dgRecorder = new MediaRecorder(micStreamLive, { mimeType: mime });
+      dgTouchActivity(); // arm the budget guard the moment listening begins
       dgRecorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0 && dgSocket && dgSocket.readyState === 1) dgSocket.send(e.data);
       };
       dgRecorder.start(250); // send every 250ms for low-latency live text
     };
     dgSocket.onmessage = (msg) => {
+      dgTouchActivity(); // every received word resets the 60s quiet timer
       let data; try { data = JSON.parse(msg.data); } catch(e){ return; }
       const alt = data && data.channel && data.channel.alternatives && data.channel.alternatives[0];
       if (!alt) return;
@@ -1569,6 +1587,28 @@ function stopDeepgramStream(){
   try { if (dgRecorder && dgRecorder.state !== 'inactive') dgRecorder.stop(); } catch(e){}
   try { if (dgSocket) { dgSocket.send(JSON.stringify({type:'CloseStream'})); dgSocket.close(); } } catch(e){}
   dgRecorder = null; dgSocket = null;
+  if (dgIdleTimer) { clearTimeout(dgIdleTimer); dgIdleTimer = null; }
+}
+
+// --- BUDGET GUARD: live transcription costs money per minute, so it never
+// runs unattended. Any time 60s pass with no new words, listening fully stops
+// (socket, recorder, and mic all closed) and the person can tap to resume.
+let dgIdleTimer = null;
+function dgTouchActivity(){
+  if (dgIdleTimer) clearTimeout(dgIdleTimer);
+  dgIdleTimer = setTimeout(() => {
+    if (!voiceListening) return;
+    voiceListening = false;
+    if (voiceRecognizer) { try { voiceRecognizer.stop(); } catch(e){} }
+    stopDeepgramStream();
+    stopMicStream();
+    const micBtn = document.querySelector('.story-mic');
+    if (micBtn) micBtn.innerHTML = '&#127908; Speak';
+    const lbl = $('listen-label');
+    if (lbl) lbl.textContent = 'Listening paused (quiet for a while) \u2014 tap the mic to continue';
+    metric('listen_autostop');
+    const dot = $('listen-dot'); if (dot) dot.style.background = '#9ab0c4';
+  }, 60000);
 }
 
 // --- VOICE TONE ANALYSIS (feeds quantum emotion engine) ---
@@ -1777,6 +1817,7 @@ async function analyzeVisualEmotion() {
   if ((data.zenisys_mode_hint || '') && zenisysCtx) adaptZenisys(data.zenisys_mode_hint);
 }
 function openHelp(kind){
+  metric('handoff_click', kind);
   // Each path is honest about WHERE the person is going and WHO they will reach.
   // The conversation is carried over so they never fill out a jargon form.
   try { sessionStorage.setItem('innerlight_convo', JSON.stringify(conversationLog)); } catch(e){}
@@ -3864,3 +3905,106 @@ if __name__ == "__main__":
     app.run(host="127.0.0.1", port=int(os.environ.get("AHP_UNIFIED_PORT", "5010")), debug=False)
 
 
+
+
+# ===========================================================================
+# FOUNDER'S ADMIN DASHBOARD — anonymous operational metrics ONLY.
+# Never stores names, words, voices, faces, or anything a person said.
+# Counts and clock-times: sessions, time-to-first-sound, lane shifts, handoffs.
+# Protected by the ADMIN_KEY environment variable set on Render.
+# ===========================================================================
+_METRICS_LOCK = threading.Lock()
+_METRICS_FILE = os.environ.get("METRICS_FILE", "/tmp/innerlight_metrics.json")
+
+def _metrics_load():
+    try:
+        with open(_METRICS_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _metrics_save(m):
+    try:
+        with open(_METRICS_FILE, "w") as f:
+            json.dump(m, f)
+    except Exception:
+        pass
+
+@app.route("/api/metrics/event", methods=["POST"])
+def metrics_event():
+    """Receive one anonymous counter event from the app."""
+    data = request.get_json(silent=True) or {}
+    etype = str(data.get("type", ""))[:40]
+    value = data.get("value")
+    allowed = {"session_start", "first_sound_ms", "message_sent",
+               "lane_switch", "handoff_click", "listen_autostop"}
+    if etype not in allowed:
+        return jsonify({"status": "ignored"}), 200
+    day = time.strftime("%Y-%m-%d")
+    with _METRICS_LOCK:
+        m = _metrics_load()
+        d = m.setdefault(day, {"sessions": 0, "messages": 0, "lane_switches": 0,
+                               "autostops": 0, "first_sound_ms_sum": 0,
+                               "first_sound_count": 0, "handoffs": {}})
+        if etype == "session_start":
+            d["sessions"] += 1
+        elif etype == "message_sent":
+            d["messages"] += 1
+        elif etype == "lane_switch":
+            d["lane_switches"] += 1
+        elif etype == "listen_autostop":
+            d["autostops"] += 1
+        elif etype == "first_sound_ms" and isinstance(value, (int, float)) and 0 <= value < 600000:
+            d["first_sound_ms_sum"] += int(value)
+            d["first_sound_count"] += 1
+        elif etype == "handoff_click":
+            dest = str(value)[:24] if value else "unknown"
+            d["handoffs"][dest] = d["handoffs"].get(dest, 0) + 1
+        _metrics_save(m)
+    return jsonify({"status": "ok"})
+
+@app.route("/admin")
+def admin_dashboard():
+    """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
+    admin_key = os.environ.get("ADMIN_KEY", "")
+    if not admin_key:
+        return ("<h2 style='font-family:Arial;padding:40px;'>Admin key not set yet.</h2>"
+                "<p style='font-family:Arial;padding:0 40px;'>On Render: Environment &rarr; "
+                "Add Environment Variable &rarr; name <b>ADMIN_KEY</b>, value = a password only "
+                "you know &rarr; Save &amp; redeploy. Then open /admin?key=that-password</p>"), 200
+    if request.args.get("key", "") != admin_key:
+        return "<h2 style='font-family:Arial;padding:40px;'>Locked.</h2>", 403
+    with _METRICS_LOCK:
+        m = _metrics_load()
+    days = sorted(m.keys(), reverse=True)[:14]
+    rows = []
+    for day in days:
+        d = m[day]
+        avg_ms = (d["first_sound_ms_sum"] / d["first_sound_count"]) if d.get("first_sound_count") else 0
+        handoffs = ", ".join(f"{k}: {v}" for k, v in sorted(d.get("handoffs", {}).items())) or "—"
+        rows.append(f"<tr><td>{day}</td><td>{d.get('sessions',0)}</td>"
+                    f"<td>{avg_ms/1000:.1f}s</td><td>{d.get('messages',0)}</td>"
+                    f"<td>{d.get('lane_switches',0)}</td><td>{handoffs}</td>"
+                    f"<td>{d.get('autostops',0)}</td></tr>")
+    body = "".join(rows) or "<tr><td colspan=7>No activity recorded yet.</td></tr>"
+    return render_template_string("""
+<!doctype html><html><head><title>InnerLight — Operations</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+ body{font-family:Arial;background:#f4f9f6;color:#173; margin:0;padding:28px;}
+ h1{color:#0f766e;font-size:22px;} .sub{color:#567;font-size:13px;margin-bottom:18px;}
+ table{border-collapse:collapse;width:100%;background:#fff;border-radius:8px;overflow:hidden;
+       box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+ th,td{padding:10px 12px;text-align:left;font-size:14px;border-bottom:1px solid #e3efe9;}
+ th{background:#0f766e;color:#fff;font-size:12px;letter-spacing:0.4px;}
+ .note{margin-top:16px;font-size:12px;color:#678;}
+</style></head><body>
+<h1>InnerLight — Founder's Operations Room</h1>
+<div class="sub">Anonymous counts and clock-times only. No words, names, faces, or voices are ever stored.</div>
+<table>
+<tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
+<th>Music lane shifts</th><th>Handoff clicks</th><th>Listening auto-stops</th></tr>
+{{ body|safe }}
+</table>
+<div class="note">Time to first sound = seconds between a person arriving and calm music playing — the product promise in one number. Metrics reset if the server is rebuilt; a permanent store comes with the provider back-end.</div>
+</body></html>""", body=body)
