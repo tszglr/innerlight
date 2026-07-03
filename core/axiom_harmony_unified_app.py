@@ -1272,7 +1272,7 @@ let deckA, deckB, activeDeck = 'A';
 let crossfading = false;
 const CROSSFADE_MS = 4000; // 4 second blend
 const CROSSFADE_TRIGGER = 8; // start blend 8 seconds before track ends
-const TARGET_VOL = 0.14;
+const TARGET_VOL = 0.09;   // sweet spot: present but never in-your-ear
 
 function initDecks() {
   deckA = document.getElementById('ambient-a');
@@ -1717,7 +1717,7 @@ async function startExperience() {
         if (deck.src !== ambientTracks[0].url) deck.src = ambientTracks[0].url;
         // GENTLE ARRIVAL: enter soft, then rise smoothly into full rich volume —
         // never an abrupt hit of sound in the ear.
-        deck.volume = TARGET_VOL * 0.30;
+        deck.volume = TARGET_VOL * 0.22;  // enter very soft, rise gently
         deck.play().then(()=>metric('first_sound_ms', Date.now()-TAP_MS)).catch(()=>{});
         (function arrivalRise(){
           const RISE_MS = 10000; // ten calm seconds from soft to full
@@ -3689,7 +3689,7 @@ def zenisys_ambient():
         return [{"url": f"/audio/{n}", "name": label,
                  "fp": _FINGERPRINTS.get(n, {})} for n in files]
 
-    calm = lane("calm", "Calm")
+    calm = lane("calm", "Calm", calmest_first=True)   # gentlest measured track greets arrival
     deepcalm = lane("deepcalm", "Deep calm", calmest_first=True)   # calmest first to settle agitation
     lifting = lane("lifting", "Lifting", calmest_first=False)      # brightest first to lift low mood
 
@@ -5237,9 +5237,16 @@ def connect_request():
     summary = _scrub(str(data.get("summary", ""))[:1500])
     rid = secrets.token_urlsafe(6)
     room = "InnerLight-" + rid
+    fast = ("#config.prejoinPageEnabled=false"
+            "&config.prejoinConfig.enabled=false"
+            "&config.disableDeepLinking=true")
     room_url = "https://meet.jit.si/" + room
+    guest_url = room_url + fast + '&userInfo.displayName=%22Guest%22'
+    responder_url = room_url + fast + '&userInfo.displayName=%22InnerLight%20Responder%22'
     entry = {"id": rid, "when": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": kind,
-             "pro": pro or "unspecified", "room": room_url, "summary": summary}
+             "pro": pro or "unspecified", "room": room_url,
+             "guest_room": guest_url, "responder_room": responder_url,
+             "summary": summary}
     with _CONNECT_LOCK:
         try:
             with open(_CONNECT_FILE) as f:
@@ -5258,22 +5265,23 @@ def connect_request():
     if topic:
         try:
             import urllib.request as _ur
-            preview = (summary[:180] + "…") if summary else "No summary text was provided."
+            preview = (summary[:300] + "…") if summary else "No summary text was provided."
             base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
-            brief_link = (base + "/responder/" + rid) if base else room_url
+            brief_link = (base + "/responder/" + rid) if base else responder_url
             req = _ur.Request(
                 "https://ntfy.sh/" + topic,
                 data=(f"Wants: {pro or 'help'} ({kind})\n\n"
                       f"WHY: {preview}\n\n"
-                      f"Open full briefing + video: {brief_link}").encode("utf-8"),
+                      f"JOIN VIDEO NOW (one tap, no login): {responder_url}\n\n"
+                      f"Full briefing: {brief_link}").encode("utf-8"),
                 headers={"Title": f"InnerLight: {pro or 'someone'} is waiting",
                          "Priority": "urgent", "Tags": "rotating_light",
-                         "Click": brief_link})
+                         "Click": responder_url})
             _ur.urlopen(req, timeout=8)
             notified = True
         except Exception:
             notified = False
-    return jsonify({"status": "ok", "room": room_url, "notified": notified})
+    return jsonify({"status": "ok", "room": guest_url, "notified": notified})
 
 @app.route("/responder/<rid>")
 def responder_brief(rid):
@@ -5315,7 +5323,7 @@ def responder_brief(rid):
  <div class="meta">Private room for this person only. You already know why they're here.</div>
 </div>
 </body></html>""", pro=match.get("pro"), kind=match.get("kind"), when=match.get("when"),
-    room=match.get("room"), summary_html=summary_html)
+    room=match.get("responder_room", match.get("room")), summary_html=summary_html)
 
 @app.route("/api/admin/connects")
 def admin_connects():
