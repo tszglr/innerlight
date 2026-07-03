@@ -4177,7 +4177,7 @@ def admin_dashboard():
 <div class="top"><div>
 <h1>InnerLight — Founder's Operations Room</h1>
 <div class="sub">Anonymous counts and clock-times only. No words, names, faces, or voices are ever stored.</div>
-</div><a class="logout" href="/admin/logout">Sign out</a></div>
+</div><div><a class="logout" href="/admin/study" style="margin-right:8px;">Founder's Study</a><a class="logout" href="/admin/logout">Sign out</a></div></div>
 <table>
 <tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
 <th>Expression shifts seen</th><th>Music lane shifts</th><th>Scene changes</th>
@@ -4204,3 +4204,136 @@ def admin_dashboard():
 <b>Listening auto-stops</b>: times the budget guard closed an idle microphone.<br>
 These map to the five research checkpoints grant reviewers look for: uptake (sessions), level of use (messages, scene changes), duration (sound box, session length), adherence (lane shifts answering expression shifts), and completion (handoffs).</div>
 </body></html>""", body=body, bars=bars, t_rows=t_rows)
+
+
+# ===========================================================================
+# FOUNDER'S STUDY — private educational wing of the operations room.
+# Purpose: the founder's own learning (legalese, medical terminology, process,
+# legislative drafting) AND training ground for specialty routing. Everything
+# produced here is a clearly-labeled educational SIMULATION for the founder
+# only. It is never shown to users and is never legal or medical advice.
+# ===========================================================================
+_STUDY_SYSTEM = (
+    "You are the private study tutor for the founder of InnerLight, a crisis-support "
+    "product. The founder is a Political Science student preparing for law school. "
+    "Everything you produce is an EDUCATIONAL SIMULATION for the founder's own learning "
+    "and for designing better handoff routing. It is never given to end users and is "
+    "not legal or medical advice. Plain language first; define every term of legalese "
+    "or medical terminology in parentheses the first time it appears; spell out every "
+    "acronym. Structure every answer in exactly these sections with these headings:\n"
+    "1. WHAT THIS IS — classify the scenario (area of law or care, e.g. contract law, "
+    "family law, telehealth psychiatry) and why it fits there.\n"
+    "2. WHO HANDLES IT — the right kind of professional, and what makes that specialty "
+    "the right routing target.\n"
+    "3. THE PROCESS — what that professional would typically do, step by step.\n"
+    "4. THE PAPERWORK — what filings/forms/documents typically exist at the relevant "
+    "level (local, state, or federal), by their common names, and what each is for.\n"
+    "5. WHAT IS NORMALLY SAID — the typical language/phrases used in this process, "
+    "each translated to plain words.\n"
+    "6. TWO MOCK OUTCOMES — two plausible, clearly-hypothetical endings and why each "
+    "might happen.\n"
+    "7. ROUTING LESSON — one paragraph: what words in a person's story would tell "
+    "InnerLight this specialty is the right handoff.\n"
+    "Begin every response with the line: 'FOUNDER STUDY — educational simulation, "
+    "not legal or medical advice.'"
+)
+
+@app.route("/api/admin/study", methods=["POST"])
+def admin_study_api():
+    if not session.get("founder_ok"):
+        return jsonify({"status": "locked"}), 403
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
+    if not key:
+        return jsonify({"status": "error",
+                        "text": "The comprehension key is not set on the server."}), 200
+    data = request.get_json(silent=True) or {}
+    scenario = str(data.get("scenario", ""))[:4000].strip()
+    focus = str(data.get("focus", "legal"))[:20]
+    if not scenario:
+        return jsonify({"status": "error", "text": "Describe a scenario first."}), 200
+    prompt = (f"Study focus: {focus}. Scenario to study (hypothetical, for founder "
+              f"education only): {scenario}")
+    body = json.dumps({
+        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
+        "max_tokens": 1600,
+        "system": _STUDY_SYSTEM,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode("utf-8")
+    import urllib.request
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages", data=body,
+        headers={"Content-Type": "application/json", "x-api-key": key,
+                 "anthropic-version": "2023-06-01"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            out = json.loads(resp.read().decode("utf-8"))
+        text = "".join(b.get("text", "") for b in out.get("content", [])
+                       if b.get("type") == "text")
+        return jsonify({"status": "ok", "text": text})
+    except Exception as exc:
+        return jsonify({"status": "error", "text": f"Study call failed: {exc}"}), 200
+
+@app.route("/admin/study")
+def admin_study_page():
+    if not session.get("founder_ok"):
+        return render_template_string(LOGIN_PAGE), 200
+    return render_template_string("""
+<!doctype html><html><head><title>Founder's Study — InnerLight</title>
+<meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ body{font-family:Arial;margin:0;padding:28px;color:#1e293b;
+      background:linear-gradient(160deg,#0f2447 0%,#14346b 30%,#eef2ff 30.5%,#f8fafc 100%);}
+ .top{display:flex;justify-content:space-between;align-items:flex-start;color:#fff;margin-bottom:22px;}
+ h1{color:#fff;font-size:23px;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
+ .sub{color:#c7d6f5;font-size:13px;margin-top:5px;max-width:760px;line-height:1.5;}
+ .nav a{color:#c7d6f5;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
+        padding:7px 14px;border-radius:999px;margin-left:8px;} .nav a:hover{background:rgba(255,255,255,0.12);}
+ .card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:18px;}
+ label{font-size:12px;font-weight:700;color:#334155;display:block;margin-bottom:6px;}
+ textarea{width:100%;box-sizing:border-box;min-height:110px;padding:12px;border:1px solid #cbd5e1;
+          border-radius:9px;font-size:15px;font-family:Arial;} textarea:focus{outline:2px solid #3b82f6;}
+ select{padding:10px;border:1px solid #cbd5e1;border-radius:9px;font-size:14px;margin-right:10px;}
+ button{padding:11px 26px;border:0;border-radius:9px;font-size:15px;font-weight:700;color:#fff;
+        background:linear-gradient(90deg,#1d4ed8,#7c3aed);cursor:pointer;margin-top:12px;}
+ #out{white-space:pre-wrap;font-size:14.5px;line-height:1.7;color:#1e293b;display:none;}
+ .stamp{display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;
+        font-weight:700;border-radius:6px;padding:4px 10px;margin-bottom:12px;letter-spacing:0.4px;}
+ .wait{display:none;color:#4f46e5;font-weight:700;font-size:13px;margin-top:12px;}
+</style></head><body>
+<div class="top"><div>
+<h1>Founder's Study</h1>
+<div class="sub">Your private learning wing. Describe any hypothetical scenario and receive an educational
+walk-through: the area of law or care, who handles it, the process, the paperwork by government level,
+the language used (translated), two mock outcomes, and the routing lesson for InnerLight.
+Nothing here is ever shown to users. Nothing here is legal or medical advice.</div>
+</div><div class="nav"><a href="/admin">Operations Room</a><a href="/admin/logout">Sign out</a></div></div>
+<div class="card">
+ <label>Scenario to study (hypothetical)</label>
+ <textarea id="scenario" placeholder="Example: A renter in San Jose gets a 3-day notice from their landlord after complaining about mold..."></textarea>
+ <div style="margin-top:12px;">
+  <label>Study focus</label>
+  <select id="focus">
+    <option value="legal">Legal — area of law, filings, courtroom language</option>
+    <option value="medical">Medical/telehealth — care pathway, terminology</option>
+    <option value="legislative">Legislative — how a bill/policy change would work</option>
+  </select>
+  <button onclick="runStudy()">Study it</button>
+ </div>
+ <div class="wait" id="wait">Preparing your study material&hellip; (this uses your comprehension credit, so it only runs when you press the button)</div>
+</div>
+<div class="card"><div class="stamp">FOUNDER STUDY &mdash; EDUCATIONAL SIMULATION &mdash; NOT LEGAL OR MEDICAL ADVICE</div>
+<div id="out"></div></div>
+<script>
+async function runStudy(){
+  const out = document.getElementById('out'), wait = document.getElementById('wait');
+  out.style.display='none'; wait.style.display='block';
+  try{
+    const r = await fetch('/api/admin/study',{method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({scenario: document.getElementById('scenario').value,
+                            focus: document.getElementById('focus').value})});
+    const d = await r.json();
+    out.textContent = d.text || 'No response.';
+  }catch(e){ out.textContent = 'Could not reach the study engine: ' + e; }
+  wait.style.display='none'; out.style.display='block';
+}
+</script></body></html>""")
