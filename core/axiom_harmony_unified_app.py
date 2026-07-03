@@ -911,7 +911,10 @@ function heartTick(){
     if (!s) continue;
     const D = hrData[name] || (hrData[name] = {R:[],G:[],B:[],t:[]});
     D.R.push(s.r); D.G.push(s.g); D.B.push(s.b); D.t.push(now);
-    if (D.R.length > 512){ D.R.shift(); D.G.shift(); D.B.shift(); D.t.shift(); }
+    // Rolling ~14s window (fresh data only) — prevents freezing on stale samples.
+    const CUTOFF = now - 14000;
+    while (D.t.length && D.t[0] < CUTOFF){ D.R.shift(); D.G.shift(); D.B.shift(); D.t.shift(); }
+    if (D.R.length > 320){ D.R.shift(); D.G.shift(); D.B.shift(); D.t.shift(); }
   }
 }
 
@@ -946,7 +949,14 @@ function heartEstimate(){
   const est = {};
   for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e) est[name]=e; } }
   const bpms = Object.values(est).map(e=>e.bpm);
-  if (bpms.length < 2) return; // need at least two regions agreeing
+  if (bpms.length === 0) return;
+  if (bpms.length === 1){
+    // single region: accept but mark low confidence, and keep it moving
+    heartBPM = heartBPM ? (heartBPM*0.5 + bpms[0]*0.5) : bpms[0];
+    window._heartBPM = heartBPM; window._heartConfidence = 0.5; window._heartUpdatedAt = Date.now();
+    if (!heartBaseline && hrData.forehead && hrData.forehead.t.length > 150) heartBaseline = heartBPM;
+    return;
+  }
   // agreement: how tight are the regions? (median + spread)
   bpms.sort((a,b)=>a-b);
   const median = bpms[Math.floor(bpms.length/2)];
@@ -954,7 +964,7 @@ function heartEstimate(){
   _regionAgreement = spread <= 8 ? 1 : (spread <= 16 ? 0.5 : 0);
   if (_regionAgreement === 0) return; // regions disagree -> noisy -> hold, don't update
   heartBPM = heartBPM ? (heartBPM*0.5 + median*0.5) : median; // more responsive
-  if (!heartBaseline && (hrData.forehead && hrData.forehead.R.length > 380)) heartBaseline = heartBPM;
+  if (!heartBaseline && (hrData.forehead && hrData.forehead.t.length > 150)) heartBaseline = heartBPM;
   window._heartBPM = heartBPM; window._heartBaseline = heartBaseline; window._heartConfidence = _regionAgreement;
   window._heartUpdatedAt = Date.now();
   // EXPERIMENTAL sub-zones: how close is each to the trusted median? (learning)
