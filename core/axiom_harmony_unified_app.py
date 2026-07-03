@@ -3003,10 +3003,22 @@ CLINICAL_HANDOFF_PAGE = r"""
       const box = document.getElementById('convo-summary');
       box.innerHTML = '<p class="a"><b>The exact summary that goes to your ' + esc(pickedPro.toLowerCase()) + '</b></p>'
         + '<p class="u" style="white-space:pre-wrap;">' + esc(summaryText) + '</p>';
-      document.getElementById('status').innerHTML =
-        'You\u2019re being connected to a <b>' + esc(pickedPro.toLowerCase()) + '</b>. '
-        + 'Above is the exact summary they will read \u2014 nothing more, nothing less. '
-        + 'You\u2019ve done the hard part. Take one slow breath; a human is on the way. Keep this page open.';
+      document.getElementById('status').innerHTML = 'Reaching a human for you\u2026';
+      fetch('/api/connect/request', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({kind:'care', pro: pickedPro, summary: summaryText})})
+      .then(r=>r.json()).then(function(d){
+        document.getElementById('status').innerHTML =
+          'Your request for a <b>' + esc(pickedPro.toLowerCase()) + '</b> is in, and a human has been alerted. '
+          + 'While our professional network grows, an <b>InnerLight responder</b> \u2014 our founder, not a licensed '
+          + 'provider \u2014 will meet you first, stay with you, and help arrange the ' + esc(pickedPro.toLowerCase()) + ' you chose. '
+          + 'Above is the exact summary they will read.<br><br>'
+          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#2e7d5a;color:#fff;'
+          + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>'
+          + '<br><span style="font-size:12.5px;color:#8794a0;">The room is private to this request. If no one joins within a few minutes, '
+          + 'call or text 988 anytime \u2014 you never have to wait alone.</span>';
+      }).catch(function(){
+        document.getElementById('status').textContent = 'The connection request could not go through. If you need someone now, call or text 988.';
+      });
       try{ fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},
         body: JSON.stringify({type:'handoff_click', value:'care:'+pickedPro, sid: sessionStorage.getItem('innerlight_sid')||'page'})}); }catch(e){}
     }
@@ -3143,7 +3155,19 @@ LEGAL_HANDOFF_PAGE = r"""
         document.getElementById('status').textContent='First, tap the kind of legal help you want above \u2014 you choose, always.';
         return;
       }
-      document.getElementById('status').innerHTML='You\u2019re being connected to a <b>' + (pickedPro||'legal professional').toLowerCase() + '</b>. They will read your summary before speaking with you, so you never start from zero. You\u2019ve done the hard part \u2014 keep this page open.';
+      document.getElementById('status').innerHTML='Reaching a human for you\u2026';
+      fetch('/api/connect/request', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({kind:'legal', pro: pickedPro||'legal help', summary: ''})})
+      .then(r=>r.json()).then(function(d){
+        document.getElementById('status').innerHTML =
+          'Your request for a <b>' + (pickedPro||'legal professional').toLowerCase() + '</b> is in, and a human has been alerted. '
+          + 'While our network grows, an <b>InnerLight responder</b> \u2014 our founder, not an attorney \u2014 will meet you first '
+          + 'and help arrange the right legal help.<br><br>'
+          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#2e6e8e;color:#fff;'
+          + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>';
+      }).catch(function(){
+        document.getElementById('status').textContent='The connection request could not go through right now.';
+      });
     }
     loadConvo();
   </script>
@@ -4578,6 +4602,21 @@ def admin_dashboard():
 <th>Gaze aversions (eyes fled)</th><th>Avg heart rate seen</th><th>Calm scale: arrival &rarr; later</th></tr>
 {{ body|safe }}
 </table>
+<h2>Incoming connection requests — people who asked for a human</h2>
+<div class="card-like" id="connects" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;">Loading&hellip;</div>
+<script>
+fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
+  const el = document.getElementById('connects');
+  if(!d.connects || !d.connects.length){ el.textContent = 'No connection requests yet.'; return; }
+  el.innerHTML = d.connects.map(function(c){
+    return '<div style="border-bottom:1px solid #e6ecf8;padding:9px 0;">'
+      + '<b style="color:#1e3a8a;">' + c.when + '</b> — ' + c.kind.toUpperCase() + ' — wants: <b>' + c.pro + '</b> '
+      + '— <a href="' + c.room + '" target="_blank" style="color:#4f46e5;font-weight:700;">Join room</a>'
+      + (c.summary ? '<div style="color:#475569;margin-top:4px;white-space:pre-wrap;">' + c.summary.replace(/</g,'&lt;') + '</div>' : '')
+      + '</div>';
+  }).join('');
+}).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
+</script>
 <h2>Sessions per day</h2>
 <div class="graph">{{ bars|safe }}</div>
 <h2>Today, person by person — anonymous session breakdown</h2>
@@ -4937,3 +4976,66 @@ def admin_cases():
         listing.append({"label": f"Case {i}", "when": c.get("when", ""), "tags": c.get("tags", []),
                         "turns": c.get("turns", [])})
     return jsonify({"status": "ok", "cases": listing})
+
+
+# ===========================================================================
+# LIVE CONNECT — temporary founder-responder model.
+# When a person asks to connect, this: (1) creates a private video room,
+# (2) fires an instant push alert to the founder's phone (ntfy), and
+# (3) logs the request for the operations room. The person is told honestly
+# that an InnerLight responder meets them first while the professional
+# network grows. Set NTFY_TOPIC on Render to your secret topic name.
+# ===========================================================================
+_CONNECT_FILE = os.environ.get("CONNECT_FILE", "/tmp/innerlight_connects.json")
+_CONNECT_LOCK = threading.Lock()
+
+@app.route("/api/connect/request", methods=["POST"])
+def connect_request():
+    data = request.get_json(silent=True) or {}
+    kind = "legal" if data.get("kind") == "legal" else "care"
+    pro = _scrub(str(data.get("pro", ""))[:60])
+    summary = _scrub(str(data.get("summary", ""))[:1500])
+    room = "InnerLight-" + secrets.token_urlsafe(6)
+    room_url = "https://meet.jit.si/" + room
+    entry = {"when": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": kind,
+             "pro": pro or "unspecified", "room": room_url, "summary": summary}
+    with _CONNECT_LOCK:
+        try:
+            with open(_CONNECT_FILE) as f:
+                log = json.load(f)
+        except Exception:
+            log = []
+        log = (log + [entry])[-100:]
+        try:
+            with open(_CONNECT_FILE, "w") as f:
+                json.dump(log, f)
+        except Exception:
+            pass
+    # Ring the founder's phone via ntfy push
+    topic = os.environ.get("NTFY_TOPIC", "").strip()
+    notified = False
+    if topic:
+        try:
+            import urllib.request as _ur
+            req = _ur.Request(
+                "https://ntfy.sh/" + topic,
+                data=(f"{kind.upper()} connect request — wants: {pro or 'help'}\n"
+                      f"Join now: {room_url}").encode("utf-8"),
+                headers={"Title": "InnerLight: someone is waiting",
+                         "Priority": "urgent", "Tags": "rotating_light"})
+            _ur.urlopen(req, timeout=8)
+            notified = True
+        except Exception:
+            notified = False
+    return jsonify({"status": "ok", "room": room_url, "notified": notified})
+
+@app.route("/api/admin/connects")
+def admin_connects():
+    if not session.get("founder_ok"):
+        return jsonify({"status": "locked"}), 403
+    try:
+        with open(_CONNECT_FILE) as f:
+            log = json.load(f)
+    except Exception:
+        log = []
+    return jsonify({"status": "ok", "connects": list(reversed(log))})
