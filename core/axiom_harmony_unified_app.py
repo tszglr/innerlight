@@ -579,11 +579,11 @@ PUBLIC_PAGE = """
     <!-- CALM STORY SCREEN -->
     <section id="story-screen" class="story-screen" style="display:none;">
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
-      <div id="calm-photo-a" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+      <div id="calm-photo-a" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;touch-action:auto;opacity:0;transition:opacity 3s ease;overflow:hidden;">
         <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
       </div>
-      <div id="calm-photo-b" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+      <div id="calm-photo-b" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;touch-action:auto;opacity:0;transition:opacity 3s ease;overflow:hidden;">
         <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
       </div>
@@ -602,9 +602,9 @@ PUBLIC_PAGE = """
       <div class="story-wrap">
         <h2 class="story-title">Tell me your story.</h2>
         <p class="story-sub">Take your time. Say whatever feels true. I am listening.</p>
-        <textarea id="message" class="story-input" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCheckin();}"></textarea>
+        <textarea id="message" class="story-input" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
-          <button class="story-send" onclick="sendCheckin()">Share</button>
+          <button class="story-send" onclick="sendCheckin()">Send</button>
           <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing">&#127908; Speak</button>
         </div>
         <div class="music-bar">
@@ -840,6 +840,7 @@ function mpTick(){
 // the heart beats (remote photoplethysmography). Runs fully on-device;
 // only an anonymous average number ever leaves.
 let hrBuf = [], hrTimes = [], heartBPM = 0, heartBaseline = 0, hrCanvas = null;
+let hrR = [], hrG = [], hrB = [];
 function heartTick(){
   const video = document.getElementById('visual-preview');
   const box = window._heartFaceBox;
@@ -848,40 +849,47 @@ function heartTick(){
   const ctx = hrCanvas.getContext('2d', { willReadFrequently: true });
   try { ctx.drawImage(video, box.x, box.y, box.w, box.h, 0, 0, 48, 24); } catch(e){ return; }
   const d = ctx.getImageData(0,0,48,24).data;
-  let g = 0; for (let i = 1; i < d.length; i += 4) g += d[i];
-  hrBuf.push(g / (d.length/4)); hrTimes.push(performance.now());
-  if (hrBuf.length > 512){ hrBuf.shift(); hrTimes.shift(); }
+  // Capture ALL THREE colors — POS needs red, green, and blue.
+  let r=0,g=0,b=0,cnt=0;
+  for (let i = 0; i < d.length; i += 4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; cnt++; }
+  hrR.push(r/cnt); hrG.push(g/cnt); hrB.push(b/cnt);
+  hrTimes.push(performance.now());
+  if (hrR.length > 512){ hrR.shift(); hrG.shift(); hrB.shift(); hrTimes.shift(); }
 }
 function heartEstimate(){
-  if (hrBuf.length < 150) return;
+  const n = hrR.length;
+  if (n < 160) return;
   const dur = (hrTimes[hrTimes.length-1] - hrTimes[0]) / 1000;
   if (dur < 10) return;
-  const n = hrBuf.length, mean = hrBuf.reduce((a,b)=>a+b,0)/n;
-  const sig = hrBuf.map(v => v - mean);
-  // simple detrend
-  for (let i = 1; i < n; i++) sig[i] = sig[i] - 0.95*sig[i-1];
-  const fs = n / dur; let bestBpm = 0, bestPow = 0;
-  for (let bpm = 45; bpm <= 160; bpm += 1){
-    const f = bpm/60; let re = 0, im = 0;
-    for (let i = 0; i < n; i++){ const ph = 2*Math.PI*f*(i/fs); re += sig[i]*Math.cos(ph); im += sig[i]*Math.sin(ph); }
-    const pow = re*re + im*im;
-    if (pow > bestPow){ bestPow = pow; bestBpm = bpm; }
+  const fs = n / dur;
+  // --- POS: Plane-Orthogonal-to-Skin (de Haan/Wang). Uses R,G,B together and
+  // projects onto a plane tuned to skin tone, cancelling light & motion noise. ---
+  // 1) temporally normalize each channel by its own mean
+  const mean = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+  const mR=mean(hrR), mG=mean(hrG), mB=mean(hrB);
+  if (mR<=0||mG<=0||mB<=0) return;
+  const Rn=hrR.map(v=>v/mR-1), Gn=hrG.map(v=>v/mG-1), Bn=hrB.map(v=>v/mB-1);
+  // 2) two projection signals
+  const S1=[], S2=[];
+  for (let i=0;i<n;i++){ S1.push(Gn[i]-Bn[i]); S2.push(Gn[i]+Bn[i]-2*Rn[i]); }
+  // 3) tune and combine (alpha = std(S1)/std(S2))
+  const std = arr => { const m=mean(arr); return Math.sqrt(arr.reduce((a,b)=>a+(b-m)*(b-m),0)/arr.length)||1e-6; };
+  const alpha = std(S1)/std(S2);
+  let sig = S1.map((v,i)=>v + alpha*S2[i]);
+  // 4) detrend + band-limit feel
+  const ms = mean(sig); sig = sig.map(v=>v-ms);
+  for (let i=1;i<n;i++) sig[i] = sig[i] - 0.92*sig[i-1];
+  // 5) find dominant frequency in the human range (physiological band only)
+  let bestBpm=0, bestPow=0;
+  for (let bpm=42; bpm<=170; bpm+=1){
+    const f=bpm/60; let re=0, im=0;
+    for (let i=0;i<n;i++){ const ph=2*Math.PI*f*(i/fs); re+=sig[i]*Math.cos(ph); im+=sig[i]*Math.sin(ph); }
+    const pow=re*re+im*im;
+    if (pow>bestPow){ bestPow=pow; bestBpm=bpm; }
   }
   if (!bestBpm) return;
-  // HARMONIC GUARD: the camera often locks onto the echo at DOUBLE the true
-  // pulse (53 shows as 106). If half the found rate also carries strong
-  // rhythm, the half is the heart — take it.
-  if (bestBpm >= 90){
-    const half = bestBpm / 2;
-    if (half >= 42){
-      const f = half/60; let re = 0, im = 0;
-      for (let i = 0; i < n; i++){ const ph = 2*Math.PI*f*(i/fs); re += sig[i]*Math.cos(ph); im += sig[i]*Math.sin(ph); }
-      const halfPow = re*re + im*im;
-      if (halfPow > bestPow * 0.45) bestBpm = Math.round(half);
-    }
-  }
   heartBPM = heartBPM ? (heartBPM*0.6 + bestBpm*0.4) : bestBpm;
-  if (!heartBaseline && hrBuf.length > 400) heartBaseline = heartBPM; // personal baseline after ~30s
+  if (!heartBaseline && n > 380) heartBaseline = heartBPM;
   window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
 }
 let _hrReported = 0;
@@ -1442,6 +1450,17 @@ let ambientIndex = 0;
 const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+// Guarantee the page can always scroll — nothing may lock the body.
+(function ensureScrollable(){
+  try {
+    document.documentElement.style.overflowY = 'auto';
+    document.body.style.overflowY = 'auto';
+    document.body.style.position = 'static';
+    document.body.style.touchAction = 'auto';
+    document.documentElement.style.height = 'auto';
+    document.body.style.height = 'auto';
+  } catch(e){}
+})();
 // Your hand wins: auto-scroll is allowed ONLY when you're already near the
 // bottom. The moment you scroll up to read, nothing drags you back down.
 function nearBottom(el){
@@ -2398,7 +2417,7 @@ function restartConversation() {
   box.className = 'reply-box';
   box.style.cssText = 'margin-top:16px;';
   box.innerHTML = `
-    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="I'm listening... (press Enter to send)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();continueConversation();}"></textarea>
+    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="I'm listening... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="story-send" onclick="continueConversation()">Reply</button>
       <button class="story-mic" type="button" onclick="startVoiceCapture()">&#127908; Speak</button>
@@ -2430,7 +2449,7 @@ function appendExchange(thread, reply, question, safetyHtml) {
   replyBox.className = 'reply-box';
   replyBox.style.cssText = 'margin-top:16px;';
   replyBox.innerHTML = `
-    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="Take your time... or tap Speak (press Enter to send)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();continueConversation();}"></textarea>
+    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="Take your time... or tap Speak (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="story-send" onclick="continueConversation()">Reply</button>
       <button class="story-mic" type="button" onclick="startVoiceCapture()">&#127908; Speak</button>
