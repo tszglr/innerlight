@@ -638,7 +638,7 @@ PUBLIC_PAGE = """
           <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()">&#128263; Spoken voice: Off</button>
           <select id="voice-picker" onchange="selectVoice(this.value)" style="display:none;"><option value="">Voice: default</option></select>
         </div>
-        <div id="calm-player" style="margin:18px auto 6px; max-width:560px; background:rgba(20,30,48,0.92); border-radius:20px; padding:14px 14px 12px; box-shadow:0 8px 30px rgba(0,0,0,0.22); transition:max-width 0.5s ease;">
+        <div id="calm-player" style="display:none; margin:18px auto 6px; max-width:560px; background:rgba(20,30,48,0.92); border-radius:20px; padding:14px 14px 12px; box-shadow:0 8px 30px rgba(0,0,0,0.22); transition:max-width 0.5s ease;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span style="color:#cfe3f2;font-size:14px;font-weight:600;">&#10024; Calm space &mdash; touch and move to make light and sound</span>
             <span id="calm-music-note" style="color:#7fa9c9;font-size:12px;">music softens while you play</span>
@@ -656,6 +656,7 @@ PUBLIC_PAGE = """
           <a href="tel:988" class="rail-btn rail-988" title="Call 988 now">&#128222; 988</a>
           <button type="button" class="rail-btn" onclick="openHelp('telehealth')" title="Talk to a provider">Provider</button>
           <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help">Legal</button>
+          <button type="button" class="rail-btn" onclick="openActivities()" title="Calming activities">Activities</button>
           <button type="button" class="rail-btn" onclick="testMic()" title="Test my microphone">Test mic</button>
         </div>
         <div id="urgent-help" style="display:none;margin:6px auto;max-width:560px;text-align:center;padding:12px;background:rgba(232,83,78,0.1);border:1px solid rgba(232,83,78,0.4);border-radius:14px;color:#b3322e;font-weight:600;"></div>
@@ -754,6 +755,162 @@ let currentFaceEmotion = null;
 let faceEmotionScores = {};
 
 
+
+
+// ================= CALMING ACTIVITIES — evidence-based, off the front screen =================
+// Eight activities, each drawn from established calming research:
+// paced breathing (parasympathetic activation), 5-4-3-2-1 grounding (attention
+// re-anchoring), visuospatial matching (the "Tetris effect" channel), word
+// focus, slow tracing, counting anchor, progressive muscle release, and a
+// three-good-things gratitude micro-practice. After ~10 minutes of continuous
+// play, a gentle check-in offers conversation — distraction is a bridge, not
+// a destination.
+let actOverlay=null, actOpenedAt=0, actReengaged=false, actTimers=[];
+function actClearTimers(){ actTimers.forEach(t=>{clearInterval(t);clearTimeout(t);}); actTimers=[]; }
+function openActivities(){
+  metric('activity_open','overlay');
+  if (actOverlay){ actOverlay.style.display='block'; actOpenedAt=Date.now(); actReengaged=false; return; }
+  actOpenedAt = Date.now(); actReengaged=false;
+  actOverlay = document.createElement('div');
+  actOverlay.id='activities-overlay';
+  actOverlay.style.cssText='position:fixed;inset:0;z-index:80;background:rgba(10,18,30,0.96);overflow-y:auto;padding:22px 16px 90px;';
+  actOverlay.innerHTML = `
+   <div style="max-width:640px;margin:0 auto;font-family:Arial;color:#e6f1fa;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <h2 style="margin:0;font-size:20px;color:#fff;">Calming activities</h2>
+      <button onclick="closeActivities()" style="background:rgba(255,255,255,0.12);color:#cfe3f2;border:1px solid rgba(255,255,255,0.25);border-radius:999px;padding:8px 18px;font-size:14px;cursor:pointer;">Back</button>
+    </div>
+    <div style="font-size:12.5px;color:#9db8cf;margin-bottom:14px;">Small things that help a racing mind. Your music keeps playing. Pick anything.</div>
+    <div id="act-menu" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;"></div>
+    <div id="act-stage" style="margin-top:16px;"></div>
+   </div>`;
+  document.body.appendChild(actOverlay);
+  const acts=[
+    ['breathe','Breathing circle','Slow the body directly'],
+    ['ground','5-4-3-2-1 senses','Come back to the room'],
+    ['words','Word Play','Find the calm word'],
+    ['shapes','Shape match','Busy the picture-mind'],
+    ['trace','Slow trace','Follow the drifting light'],
+    ['stars','Count the stars','A gentle anchor'],
+    ['release','Body release','Unclench, head to toe'],
+    ['good','Three good things','Small true lights'],
+  ];
+  const menu = actOverlay.querySelector('#act-menu');
+  menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:13px;cursor:pointer;color:#e6f1fa;">
+     <b style="font-size:14.5px;">${a[1]}</b><span style="display:block;font-size:11.5px;color:#9db8cf;margin-top:3px;">${a[2]}</span></button>`).join('');
+  // gentle re-engagement after 10 minutes of play
+  actTimers.push(setInterval(()=>{
+    if (!actOverlay || actOverlay.style.display==='none' || actReengaged) return;
+    if (Date.now()-actOpenedAt > 10*60*1000){
+      actReengaged = true; metric('reengage_prompt');
+      const bar = document.createElement('div');
+      bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:rgba(111,179,212,0.95);color:#0c1322;border-radius:14px;padding:14px 16px;font-size:14px;text-align:center;';
+      bar.innerHTML = `I'm still right here with you. Want to talk for a moment?
+        <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" style="background:#0c1322;color:#fff;border:0;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Let's talk</button>
+        <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" style="background:rgba(12,19,34,0.15);color:#0c1322;border:1px solid #0c1322;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Keep playing</button></div>`;
+      actOverlay.firstElementChild.appendChild(bar);
+    }
+  },20000));
+}
+function closeActivities(){ if(actOverlay) actOverlay.style.display='none'; actClearTimers(); }
+function actStage(){ const st=actOverlay.querySelector('#act-stage'); st.innerHTML=''; return st; }
+function startAct(name){
+  metric('activity_open', name); actClearTimers();
+  // re-add re-engagement timer since actClearTimers wiped it
+  const st = actStage();
+  if (name==='breathe'){
+    st.innerHTML = `<div style="text-align:center;padding:10px;">
+      <div id="br-circle" style="width:120px;height:120px;border-radius:50%;margin:18px auto;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 5s ease-in-out;"></div>
+      <div id="br-word" style="font-size:22px;color:#fff;">Breathe in&hellip;</div>
+      <div style="font-size:12px;color:#9db8cf;margin-top:6px;">In for 5 &middot; hold for 5 &middot; out for 5. Let the circle lead.</div></div>`;
+    const c=st.querySelector('#br-circle'), w=st.querySelector('#br-word');
+    let phase=0; const run=()=>{ if(!c.isConnected) return;
+      if(phase===0){ w.textContent='Breathe in\u2026'; c.style.transform='scale(1.55)'; }
+      if(phase===1){ w.textContent='Hold\u2026'; }
+      if(phase===2){ w.textContent='Let it out\u2026'; c.style.transform='scale(1)'; }
+      phase=(phase+1)%3; };
+    run(); actTimers.push(setInterval(run,5000));
+  }
+  if (name==='ground'){
+    const steps=[['5 things you can SEE','Look around slowly. Name five things — their color, their shape.'],
+      ['4 things you can TOUCH','The chair. Your sleeve. The floor under your feet. Really feel four.'],
+      ['3 things you can HEAR','The room. The music. Something far away.'],
+      ['2 things you can SMELL','Or two smells you like remembering.'],
+      ['1 thing you can TASTE','Even just the inside of your own breath.'],
+      ['One slow breath','You are here. This moment is safe enough to stand in.']];
+    let i=0; st.innerHTML=`<div style="text-align:center;padding:16px;"><div id="g-title" style="font-size:22px;color:#fff;"></div>
+      <div id="g-sub" style="font-size:14px;color:#b9d0e2;margin:12px 0 18px;line-height:1.6;"></div>
+      <button id="g-next" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Done &mdash; next</button></div>`;
+    const show=()=>{ st.querySelector('#g-title').textContent=steps[i][0]; st.querySelector('#g-sub').textContent=steps[i][1];
+      if(i===steps.length-1) st.querySelector('#g-next').textContent='Finish'; };
+    st.querySelector('#g-next').onclick=()=>{ i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
+    show();
+  }
+  if (name==='words'){ if(!wordsPanel) buildWordsPanel(); wordsPanel.style.display='block'; st.appendChild(wordsPanel); wordsRound(); }
+  if (name==='shapes'){
+    st.innerHTML=`<div style="text-align:center;"><div id="sh-prompt" style="font-size:15px;color:#cfe3f2;margin:8px 0 12px;"></div>
+      <div id="sh-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto;"></div></div>`;
+    const SH=['\u25CF','\u25A0','\u25B2','\u2666','\u2605','\u2B22']; const CO=['#7dd3a8','#6fb3d4','#d4a86f','#c78ad4'];
+    const round=()=>{ const tS=SH[Math.floor(Math.random()*SH.length)], tC=CO[Math.floor(Math.random()*CO.length)];
+      st.querySelector('#sh-prompt').innerHTML='Find: <span style="color:'+tC+';font-size:26px;">'+tS+'</span>';
+      const cells=[{s:tS,c:tC}]; while(cells.length<8){ const s2=SH[Math.floor(Math.random()*SH.length)], c2=CO[Math.floor(Math.random()*CO.length)];
+        if(!(s2===tS&&c2===tC)) cells.push({s:s2,c:c2}); }
+      cells.sort(()=>Math.random()-0.5);
+      st.querySelector('#sh-grid').innerHTML=cells.map(x=>`<button onclick="(function(b){ if(b.dataset.hit==='1'){ b.style.background='rgba(125,211,168,0.4)'; setTimeout(window._shRound,700);} })(this)" data-hit="${x.s===tS&&x.c===tC?1:0}" style="font-size:30px;padding:14px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:${x.c};cursor:pointer;">${x.s}</button>`).join('');
+    };
+    window._shRound=round; round();
+  }
+  if (name==='trace'){
+    st.innerHTML=`<div style="text-align:center;"><div style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Rest your finger or cursor on the light, and drift with it.</div>
+    <canvas id="tr-cv" width="600" height="300" style="width:100%;max-width:600px;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;"></canvas></div>`;
+    const cv=st.querySelector('#tr-cv'), ctx=cv.getContext('2d'); let t0=performance.now();
+    const draw=()=>{ if(!cv.isConnected) return; const t=(performance.now()-t0)/1000;
+      ctx.fillStyle='rgba(12,19,34,0.18)'; ctx.fillRect(0,0,600,300);
+      const x=300+220*Math.sin(t*0.28), y=150+90*Math.sin(t*0.19+1.3);
+      const g=ctx.createRadialGradient(x,y,2,x,y,26); g.addColorStop(0,'#cfe9ff'); g.addColorStop(1,'rgba(111,179,212,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,26,0,7); ctx.fill(); requestAnimationFrame(draw); };
+    draw();
+  }
+  if (name==='stars'){
+    st.innerHTML=`<div style="text-align:center;"><div id="st-p" style="font-size:14px;color:#cfe3f2;margin-bottom:10px;">Stars will appear, slowly. Count them, then answer.</div>
+      <div id="st-sky" style="position:relative;height:220px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);"></div>
+      <div id="st-ans" style="margin-top:12px;"></div></div>`;
+    const n=4+Math.floor(Math.random()*5); const sky=st.querySelector('#st-sky');
+    for(let i=0;i<n;i++){ actTimers.push(setTimeout(()=>{ if(!sky.isConnected)return; const d=document.createElement('div');
+      d.style.cssText='position:absolute;width:8px;height:8px;border-radius:50%;background:#fffbe8;box-shadow:0 0 12px #fffbe8;opacity:0;transition:opacity 2s;';
+      d.style.left=(8+Math.random()*84)+'%'; d.style.top=(10+Math.random()*75)+'%'; sky.appendChild(d);
+      requestAnimationFrame(()=>d.style.opacity='0.95'); }, 1200+i*1700)); }
+    actTimers.push(setTimeout(()=>{ if(!st.isConnected)return; const ans=st.querySelector('#st-ans');
+      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='rgba(125,211,168,0.5)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(180,90,90,0.3)'; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#e6f1fa;cursor:pointer;">${v}</button>`).join('');
+    }, 1200+n*1700+800));
+  }
+  if (name==='release'){
+    const steps=[['Your hands','Make gentle fists\u2026 hold\u2026 and let them fall open.'],
+      ['Your shoulders','Lift them toward your ears\u2026 hold\u2026 and let them drop.'],
+      ['Your jaw','Press lips together lightly\u2026 and let the jaw hang loose.'],
+      ['Your brow','Raise your eyebrows\u2026 hold\u2026 and smooth them down.'],
+      ['Your stomach','Tighten gently\u2026 hold\u2026 and soften.'],
+      ['Your legs','Press your feet into the floor\u2026 and release.'],
+      ['All of you','One slow breath. Notice what feels 5% looser than before.']];
+    let i=0; st.innerHTML=`<div style="text-align:center;padding:16px;"><div id="r-t" style="font-size:22px;color:#fff;"></div>
+      <div id="r-s" style="font-size:14px;color:#b9d0e2;margin:12px 0 18px;line-height:1.6;"></div>
+      <button id="r-n" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Released &mdash; next</button></div>`;
+    const show=()=>{ st.querySelector('#r-t').textContent=steps[i][0]; st.querySelector('#r-s').textContent=steps[i][1];
+      if(i===steps.length-1) st.querySelector('#r-n').textContent='Finish'; };
+    st.querySelector('#r-n').onclick=()=>{ i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
+    show();
+  }
+  if (name==='good'){
+    st.innerHTML=`<div style="max-width:420px;margin:0 auto;text-align:center;">
+      <div style="font-size:14px;color:#cfe3f2;margin-bottom:12px;">Three small true things that are good — today, this week, ever. Nothing you write here is saved or sent anywhere.</div>
+      ${[1,2,3].map(i=>`<input id="tg-${i}" placeholder="Good thing ${i}" style="width:100%;box-sizing:border-box;margin:6px 0;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;font-size:15px;">`).join('')}
+      <button onclick="(function(){ const v=[1,2,3].map(i=>document.getElementById('tg-'+i).value.trim()).filter(Boolean); const m=document.getElementById('tg-msg'); m.textContent = v.length ? 'Those are real. Carry them with you \u2014 they came from you.' : 'Even one small thing counts. Try one.'; })()" style="margin-top:10px;background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Hold onto these</button>
+      <div id="tg-msg" style="margin-top:12px;color:#7dd3a8;font-size:14px;"></div></div>`;
+  }
+  if (name==='menuDone'){
+    st.innerHTML=`<div style="text-align:center;padding:20px;color:#7dd3a8;font-size:16px;">Well done. Pick another, or press Back when you're ready.</div>`;
+  }
+}
 
 // ================= WORD PLAY — gentle focus game =================
 // A calm word appears; find it among eight. Right answer glows soft green,
@@ -4609,7 +4766,8 @@ def metrics_event():
                "lane_switch", "handoff_click", "listen_autostop",
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
-               "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone"}
+               "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
+               "activity_open", "reengage_prompt"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -4680,6 +4838,12 @@ def metrics_event():
                     e2["sum"] += pct; e2["n"] += 1
             except Exception:
                 pass
+        elif etype == "activity_open" and value:
+            a = d.setdefault("activities", {})
+            nm = str(value)[:20]
+            a[nm] = a.get(nm, 0) + 1
+        elif etype == "reengage_prompt":
+            d["reengage_prompts"] = d.get("reengage_prompts", 0) + 1
         elif etype == "wordplay":
             d["wordplay_rounds"] = d.get("wordplay_rounds", 0) + 1
             if sess: sess["wordplay"] = sess.get("wordplay", 0) + 1
