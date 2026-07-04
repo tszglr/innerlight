@@ -765,6 +765,72 @@ let faceEmotionScores = {};
 // three-good-things gratitude micro-practice. After ~10 minutes of continuous
 // play, a gentle check-in offers conversation — distraction is a bridge, not
 // a destination.
+
+// ===== THE CALM GARDEN: every success blooms. Your calm, growing something. =====
+let gardenBlooms = 0;
+const GARDEN_FLOWERS = ['🌼','🌸','🌷','🌻','🌹','🏵️','🌺','💐'];
+function gardenBar(){
+  let g = actOverlay && actOverlay.querySelector('#calm-garden');
+  if (!g && actOverlay){
+    g = document.createElement('div');
+    g.id = 'calm-garden';
+    g.style.cssText = 'min-height:44px;margin:6px 0 12px;padding:8px 12px;border-radius:14px;'
+      + 'background:linear-gradient(180deg, rgba(40,70,50,0.35), rgba(20,40,30,0.5));'
+      + 'border:1px solid rgba(125,211,168,0.25);font-size:24px;letter-spacing:4px;line-height:1.5;';
+    g.innerHTML = '<span style="font-size:11.5px;color:#9fd4b4;display:block;letter-spacing:0.4px;">Your calm garden — each success grows it</span><span id="garden-row"></span>';
+    const menu = actOverlay.querySelector('#act-menu');
+    menu.parentNode.insertBefore(g, menu);
+  }
+  return g;
+}
+function bloom(){
+  gardenBlooms++;
+  metric('bloom');
+  const g = gardenBar(); if (!g) return;
+  const row = g.querySelector('#garden-row');
+  const f = document.createElement('span');
+  f.textContent = GARDEN_FLOWERS[gardenBlooms % GARDEN_FLOWERS.length];
+  f.style.cssText = 'display:inline-block;transform:scale(0);transition:transform 0.8s cubic-bezier(0.34,1.56,0.64,1);';
+  row.appendChild(f);
+  requestAnimationFrame(()=>{ f.style.transform='scale(1)'; });
+  softChime();
+  burstAt(f);
+}
+// Soft two-note chime, very quiet, warm — success you can hear
+let chimeCtx=null;
+function softChime(){
+  try{
+    chimeCtx = chimeCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = chimeCtx.currentTime;
+    [523.25, 659.25].forEach((f,i)=>{
+      const o = chimeCtx.createOscillator(), g = chimeCtx.createGain();
+      o.type='sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(0, t+i*0.12);
+      g.gain.linearRampToValueAtTime(0.035, t+i*0.12+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+i*0.12+0.9);
+      o.connect(g); g.connect(chimeCtx.destination);
+      o.start(t+i*0.12); o.stop(t+i*0.12+1);
+    });
+  }catch(e){}
+}
+// Tiny particle burst of light at an element — the juice
+function burstAt(el){
+  try{
+    const r = el.getBoundingClientRect();
+    for (let i=0;i<7;i++){
+      const p = document.createElement('div');
+      const a = Math.random()*6.28, d = 26+Math.random()*30;
+      p.style.cssText = 'position:fixed;width:6px;height:6px;border-radius:50%;z-index:90;pointer-events:none;'
+        + 'background:#bfe8cf;box-shadow:0 0 8px #bfe8cf;left:'+(r.left+r.width/2)+'px;top:'+(r.top+r.height/2)+'px;'
+        + 'transition:all 0.9s ease-out;opacity:1;';
+      document.body.appendChild(p);
+      requestAnimationFrame(()=>{ p.style.left=(r.left+r.width/2+Math.cos(a)*d)+'px';
+        p.style.top=(r.top+r.height/2+Math.sin(a)*d)+'px'; p.style.opacity='0'; });
+      setTimeout(()=>p.remove(), 1000);
+    }
+  }catch(e){}
+}
+
 let actOverlay=null, actOpenedAt=0, actReengaged=false, actTimers=[];
 function actClearTimers(){ actTimers.forEach(t=>{clearInterval(t);clearTimeout(t);}); actTimers=[]; }
 function openActivities(){
@@ -785,6 +851,7 @@ function openActivities(){
     <div id="act-stage" style="margin-top:16px;"></div>
    </div>`;
   document.body.appendChild(actOverlay);
+  gardenBar();
   const acts=[
     ['breathe','Breathing circle','Slow the body directly'],
     ['ground','5-4-3-2-1 senses','Come back to the room'],
@@ -805,7 +872,7 @@ function openActivities(){
       actReengaged = true; metric('reengage_prompt');
       const bar = document.createElement('div');
       bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:rgba(111,179,212,0.95);color:#0c1322;border-radius:14px;padding:14px 16px;font-size:14px;text-align:center;';
-      bar.innerHTML = `I'm still right here with you. Want to talk for a moment?
+      bar.innerHTML = (gardenBlooms>0 ? 'Look at what you grew \u2014 '+gardenBlooms+' blooms. ' : '') + `I'm still right here with you. Want to talk for a moment?
         <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" style="background:#0c1322;color:#fff;border:0;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Let's talk</button>
         <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" style="background:rgba(12,19,34,0.15);color:#0c1322;border:1px solid #0c1322;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Keep playing</button></div>`;
       actOverlay.firstElementChild.appendChild(bar);
@@ -820,16 +887,42 @@ function startAct(name){
   const st = actStage();
   if (name==='breathe'){
     st.innerHTML = `<div style="text-align:center;padding:10px;">
-      <div id="br-circle" style="width:120px;height:120px;border-radius:50%;margin:18px auto;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 5s ease-in-out;"></div>
+      <div style="position:relative;width:180px;height:180px;margin:14px auto;">
+        <div id="br-aura" style="position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(207,233,255,0.35);"></div>
+        <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 5s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+          <b id="br-bpm" style="font-size:30px;color:#fff;">--</b>
+          <span style="font-size:10.5px;color:#cfe9ff;">your heart</span>
+        </div>
+      </div>
       <div id="br-word" style="font-size:22px;color:#fff;">Breathe in&hellip;</div>
-      <div style="font-size:12px;color:#9db8cf;margin-top:6px;">In for 5 &middot; hold for 5 &middot; out for 5. Let the circle lead.</div></div>`;
+      <div id="br-msg" style="font-size:12.5px;color:#9db8cf;margin-top:6px;min-height:18px;">In for 5 &middot; hold for 5 &middot; out for 5. Watch your own heart answer.</div></div>`;
     const c=st.querySelector('#br-circle'), w=st.querySelector('#br-word');
-    let phase=0; const run=()=>{ if(!c.isConnected) return;
-      if(phase===0){ w.textContent='Breathe in\u2026'; c.style.transform='scale(1.55)'; }
+    let phase=0, cycles=0; const run=()=>{ if(!c.isConnected) return;
+      if(phase===0){ w.textContent='Breathe in\u2026'; c.style.transform='scale(1.45)'; }
       if(phase===1){ w.textContent='Hold\u2026'; }
-      if(phase===2){ w.textContent='Let it out\u2026'; c.style.transform='scale(1)'; }
+      if(phase===2){ w.textContent='Let it out\u2026'; c.style.transform='scale(1)';
+        cycles++; if (cycles % 3 === 0) bloom(); }
       phase=(phase+1)%3; };
     run(); actTimers.push(setInterval(run,5000));
+    // TRUE BIOFEEDBACK: the person's live heart rate inside the circle, the
+    // aura pulsing at their actual rhythm, drops celebrated as they happen.
+    let brStartBpm = 0;
+    actTimers.push(setInterval(()=>{
+      const el = st.querySelector('#br-bpm'); if (!el || !el.isConnected) return;
+      const bpm = window._heartBPM && window._heartBPM > 40 ? Math.round(window._heartBPM) : 0;
+      el.textContent = bpm || '--';
+      if (bpm){
+        if (!brStartBpm) brStartBpm = bpm;
+        const aura = st.querySelector('#br-aura');
+        if (aura){ aura.animate([{transform:'scale(1)',opacity:0.5},{transform:'scale(1.08)',opacity:0.15}],
+          { duration: Math.max(350, 60000/bpm), iterations: 1 }); }
+        const msg = st.querySelector('#br-msg');
+        if (msg && brStartBpm - bpm >= 5){
+          msg.textContent = brStartBpm + ' \u2192 ' + bpm + ' \u2014 your heart is listening. Keep going.';
+          msg.style.color = '#7dd3a8';
+        }
+      }
+    }, 1500));
   }
   if (name==='ground'){
     const steps=[['5 things you can SEE','Look around slowly. Name five things — their color, their shape.'],
@@ -843,7 +936,7 @@ function startAct(name){
       <button id="g-next" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Done &mdash; next</button></div>`;
     const show=()=>{ st.querySelector('#g-title').textContent=steps[i][0]; st.querySelector('#g-sub').textContent=steps[i][1];
       if(i===steps.length-1) st.querySelector('#g-next').textContent='Finish'; };
-    st.querySelector('#g-next').onclick=()=>{ i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
+    st.querySelector('#g-next').onclick=()=>{ bloom(); i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
     show();
   }
   if (name==='words'){ if(!wordsPanel) buildWordsPanel(); wordsPanel.style.display='block'; st.appendChild(wordsPanel); wordsRound(); }
@@ -856,7 +949,7 @@ function startAct(name){
       const cells=[{s:tS,c:tC}]; while(cells.length<8){ const s2=SH[Math.floor(Math.random()*SH.length)], c2=CO[Math.floor(Math.random()*CO.length)];
         if(!(s2===tS&&c2===tC)) cells.push({s:s2,c:c2}); }
       cells.sort(()=>Math.random()-0.5);
-      st.querySelector('#sh-grid').innerHTML=cells.map(x=>`<button onclick="(function(b){ if(b.dataset.hit==='1'){ b.style.background='rgba(125,211,168,0.4)'; setTimeout(window._shRound,700);} })(this)" data-hit="${x.s===tS&&x.c===tC?1:0}" style="font-size:30px;padding:14px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:${x.c};cursor:pointer;">${x.s}</button>`).join('');
+      st.querySelector('#sh-grid').innerHTML=cells.map(x=>`<button onclick="(function(b){ if(b.dataset.hit==='1'){ b.style.background='rgba(125,211,168,0.4)'; bloom(); setTimeout(window._shRound,700);} })(this)" data-hit="${x.s===tS&&x.c===tC?1:0}" style="font-size:30px;padding:14px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:${x.c};cursor:pointer;">${x.s}</button>`).join('');
     };
     window._shRound=round; round();
   }
@@ -881,7 +974,7 @@ function startAct(name){
       d.style.left=(8+Math.random()*84)+'%'; d.style.top=(10+Math.random()*75)+'%'; sky.appendChild(d);
       requestAnimationFrame(()=>d.style.opacity='0.95'); }, 1200+i*1700)); }
     actTimers.push(setTimeout(()=>{ if(!st.isConnected)return; const ans=st.querySelector('#st-ans');
-      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='rgba(125,211,168,0.5)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(180,90,90,0.3)'; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#e6f1fa;cursor:pointer;">${v}</button>`).join('');
+      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='rgba(125,211,168,0.5)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; bloom(); setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(180,90,90,0.3)'; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#e6f1fa;cursor:pointer;">${v}</button>`).join('');
     }, 1200+n*1700+800));
   }
   if (name==='release'){
@@ -897,14 +990,14 @@ function startAct(name){
       <button id="r-n" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Released &mdash; next</button></div>`;
     const show=()=>{ st.querySelector('#r-t').textContent=steps[i][0]; st.querySelector('#r-s').textContent=steps[i][1];
       if(i===steps.length-1) st.querySelector('#r-n').textContent='Finish'; };
-    st.querySelector('#r-n').onclick=()=>{ i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
+    st.querySelector('#r-n').onclick=()=>{ bloom(); i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
     show();
   }
   if (name==='good'){
     st.innerHTML=`<div style="max-width:420px;margin:0 auto;text-align:center;">
       <div style="font-size:14px;color:#cfe3f2;margin-bottom:12px;">Three small true things that are good — today, this week, ever. Nothing you write here is saved or sent anywhere.</div>
       ${[1,2,3].map(i=>`<input id="tg-${i}" placeholder="Good thing ${i}" style="width:100%;box-sizing:border-box;margin:6px 0;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;font-size:15px;">`).join('')}
-      <button onclick="(function(){ const v=[1,2,3].map(i=>document.getElementById('tg-'+i).value.trim()).filter(Boolean); const m=document.getElementById('tg-msg'); m.textContent = v.length ? 'Those are real. Carry them with you \u2014 they came from you.' : 'Even one small thing counts. Try one.'; })()" style="margin-top:10px;background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Hold onto these</button>
+      <button onclick="(function(){ const v=[1,2,3].map(i=>document.getElementById('tg-'+i).value.trim()).filter(Boolean); const m=document.getElementById('tg-msg'); m.textContent = v.length ? 'Those are real. Carry them with you \u2014 they came from you.' : 'Even one small thing counts. Try one.'; if (v.length) bloom(); })()" style="margin-top:10px;background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Hold onto these</button>
       <div id="tg-msg" style="margin-top:12px;color:#7dd3a8;font-size:14px;"></div></div>`;
   }
   if (name==='menuDone'){
@@ -944,7 +1037,7 @@ function wordsRound(){
 function wordsPick(btn){
   if (btn.dataset.w === wordsTarget){
     btn.style.background = 'rgba(90,180,130,0.55)'; btn.style.borderColor = '#7dd3a8';
-    metric('wordplay');
+    metric('wordplay'); if (typeof bloom==='function') bloom();
     setTimeout(wordsRound, 900);
   } else {
     btn.style.background = 'rgba(180,90,90,0.25)';
@@ -4767,7 +4860,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt"}
+               "activity_open", "reengage_prompt", "bloom"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -4842,6 +4935,9 @@ def metrics_event():
             a = d.setdefault("activities", {})
             nm = str(value)[:20]
             a[nm] = a.get(nm, 0) + 1
+        elif etype == "bloom":
+            d["blooms"] = d.get("blooms", 0) + 1
+            if sess: sess["blooms"] = sess.get("blooms", 0) + 1
         elif etype == "reengage_prompt":
             d["reengage_prompts"] = d.get("reengage_prompts", 0) + 1
         elif etype == "wordplay":
