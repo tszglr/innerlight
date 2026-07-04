@@ -5518,7 +5518,7 @@ async function loadCases(){
     const el = document.getElementById('cases');
     if (!d.cases || !d.cases.length){ el.textContent = 'No session cases recorded yet.'; return; }
     el.innerHTML = d.cases.map(function(c){
-      const convo = c.turns.map(function(t){ return (t.r==='user'?'PERSON: ':'INNERLIGHT: ') + t.t; }).join('\n');
+      const convo = c.turns.map(function(t){ return (t.r==='user'?'PERSON: ':'INNERLIGHT: ') + t.t; }).join(String.fromCharCode(10));
       return '<details style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">'
         + '<summary style="cursor:pointer;font-weight:700;color:#1d4ed8;">' + c.label + ' &mdash; ' + c.when
         + (c.tags.length ? ' &mdash; <span style="color:#b45309;">' + c.tags.join(', ') + '</span>' : '') + '</summary>'
