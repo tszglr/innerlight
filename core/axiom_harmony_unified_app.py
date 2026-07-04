@@ -1249,6 +1249,35 @@ function posEstimate(D){
   return { bpm:bestBpm, power:bestPow, snr:snr };
 }
 
+
+// ---- Physiology-informed heart smoother (Kalman-style; 2026 research) ----
+// State: estimated bpm + how fast it's drifting. New readings are trusted in
+// proportion to their signal quality AND their plausibility (small change =
+// believable, huge jump = rejected). This kills the wild leaps that made the
+// number look broken.
+let _hrState = null; // {bpm, vel, variance}
+function heartSmooth(measuredBpm, quality){
+  const now = performance.now();
+  if (!_hrState){ _hrState = {bpm: measuredBpm, vel: 0, variance: 25, t: now}; return measuredBpm; }
+  const dt = Math.min(3, (now - _hrState.t)/1000) || 1; _hrState.t = now;
+  // PREDICT: heart rate drifts slowly; expected = last + drift
+  const predicted = _hrState.bpm + _hrState.vel * dt;
+  _hrState.variance += 4 * dt;           // uncertainty grows with time
+  // measurement noise: worse quality => noisier => trust prediction more.
+  // also, an implausibly large jump is treated as very noisy.
+  const jump = Math.abs(measuredBpm - predicted);
+  const qFactor = Math.max(0.15, Math.min(1, quality/6));   // SNR-driven
+  let measNoise = (12 / qFactor) + (jump > 18 ? (jump-18)*3 : 0);
+  // KALMAN gain
+  const K = _hrState.variance / (_hrState.variance + measNoise);
+  const newBpm = predicted + K * (measuredBpm - predicted);
+  _hrState.vel = 0.7*_hrState.vel + 0.3*((newBpm - _hrState.bpm)/dt);
+  _hrState.vel = Math.max(-8, Math.min(8, _hrState.vel));    // cap drift speed
+  _hrState.bpm = newBpm;
+  _hrState.variance = (1 - K) * _hrState.variance;
+  return newBpm;
+}
+
 function heartEstimate(){
   // SNR-WEIGHTED CONSENSUS (research's superior method): every region votes,
   // weighted by its OWN signal quality. Noisy regions fade out automatically —
@@ -1280,13 +1309,12 @@ function heartEstimate(){
   // confidence from total quality + how many regions agreed in the winning cluster
   const totalSNR = ests.reduce((s,e)=>s+e.snr,0);
   const conf = Math.min(1, (bestW/ Math.max(1,totalSNR)) * (best.length>=2?1:0.6) * Math.min(1, bestW/6));
-  // guard a sudden jump (noise spike) from yanking a settled reading
-  let blend = 0.45;
-  if (heartBPM && Math.abs(rate-heartBPM) > 30) blend = 0.15;
-  heartBPM = heartBPM ? (heartBPM*(1-blend) + rate*blend) : rate;
+  // Physiology-informed smoothing: quality- and plausibility-weighted.
+  heartBPM = heartSmooth(rate, bestW);
   if (!heartBaseline && (hrData.forehead && hrData.forehead.t.length > 150)) heartBaseline = heartBPM;
   window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
-  window._heartConfidence = conf >= 0.55 ? 1 : (conf >= 0.3 ? 0.5 : 0);
+  const settled = _hrState && _hrState.variance < 22;
+  window._heartConfidence = (conf >= 0.55 && settled) ? 1 : ((conf >= 0.35 && settled) ? 0.5 : 0);
   window._heartUpdatedAt = Date.now();
   const median = Math.round(rate);
   // EXPERIMENTAL sub-zones: how close is each to the trusted median? (learning)
