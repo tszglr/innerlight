@@ -3444,12 +3444,22 @@ def page_about():
     <h1>Why InnerLight exists</h1>
     <p class="lead">InnerLight was built by a father who lived the wait &mdash; and decided no family should face it alone.</p>
 
-    <p>Toshay S. Zeigler grew up in Coney Island, Brooklyn. His childhood included poverty, instability, and time in
-    foster care &mdash; experiences that taught him early that the quality of a person's life often depends on whether
-    the systems designed to help actually work when they are needed.</p>
+    <p>Toshay S. Zeigler was born two months after a family tragedy that shaped generations of mental-health
+    struggle in his family. He entered foster care at nineteen months old and stayed until he was six. From six to
+    thirteen he lived with his mother, stepfather, and siblings on 36th Street in Coney Island, Brooklyn &mdash; years
+    when poverty, addiction, and violence were commonplace around him.</p>
 
-    <p>As an adult he built careers in logistics, dispatching, transportation, and in-home care. But the greatest
-    education of his life came from being a father. Toshay is the primary caregiver for his daughters, both of whom
+    <p>Then, on November 7, 1987, at thirteen years old, Toshay and his older brother made a decision few adults could
+    make: with the help of a family friend, they walked into the Staten Island Police Station and asked to be placed
+    somewhere else. He advocated for himself before he knew the word. The system he asked for protection &mdash;
+    foster care and group homes until eighteen &mdash; proved, in many ways, worse than what he had fled. He has
+    lived every seat in the room: the baby the system took, the child returned to an unsafe home, the teenager who
+    sought help voluntarily, and the one the help failed anyway. No one has to explain fragmented systems to him.
+    He was the child inside the fragments.</p>
+
+    <p>As an adult he built careers in logistics, dispatching, transportation, and in-home care, and &mdash; decades
+    after a difficult first attempt at college &mdash; earned two associate degrees and a university-transfer
+    certificate while caregiving and working. But the greatest education of his life came from being a father. Toshay is the primary caregiver for his daughters, both of whom
     have faced significant mental-health challenges. One has gone through repeated psychiatric crises. Every crisis
     meant navigating hospitals, psychiatrists, medications, school systems, insurance, county agencies, disability
     services, and community programs &mdash; while trying to keep a family together.</p>
