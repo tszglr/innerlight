@@ -1151,6 +1151,7 @@ function mpTick(){
       forehead:   P(10, 0, 0.03, 0.13, 0.06),
       cheekLeft:  P(50, 0, 0,    0.08, 0.06),
       cheekRight: P(280,0, 0,    0.08, 0.06),
+      wholeFace:  (lm[10]&&lm[152]) ? { x: lm[234].x*W, y: lm[10].y*H, w: (lm[454].x-lm[234].x)*W, h: (lm[152].y-lm[10].y)*H } : null,
       // EXPERIMENTAL — stable skin beside the noisy zones (your frontier idea)
       underEyeL:  P(230,0, 0.015,0.05, 0.028),
       underEyeR:  P(450,0, 0.015,0.05, 0.028),
@@ -1168,7 +1169,7 @@ function mpTick(){
 // and only trusts the number when the regions AGREE. Also samples experimental
 // sub-zones near the eyes/mouth and logs how well each agrees with the reliable
 // signal — so your own data reveals which sub-zones are trustworthy over time.
-const HR_REGIONS = ['forehead','cheekLeft','cheekRight'];
+const HR_REGIONS = ['forehead','cheekLeft','cheekRight','wholeFace'];
 const HR_EXPERIMENTAL = ['underEyeL','underEyeR','noseBridge','mouthSideL','mouthSideR'];
 const hrData = {}; // name -> {R:[],G:[],B:[],t:[]}
 let heartBPM = 0, heartBaseline = 0, hrCanvas = null;
@@ -1227,50 +1228,62 @@ function posEstimate(D){
   let sig=S1.map((v,i)=>v+alpha*S2[i]);
   const ms=mean(sig); sig=sig.map(v=>v-ms);
   for (let i=1;i<n;i++) sig[i]=sig[i]-0.92*sig[i-1];
-  let bestBpm=0,bestPow=0;
+  let bestBpm=0,bestPow=0,total=0,cnt=0;
+  const spec=[];
   for (let bpm=42;bpm<=170;bpm+=1){
     const f=bpm/60; let re=0,im=0;
     for (let i=0;i<n;i++){ const ph=2*Math.PI*f*(i/fs); re+=sig[i]*Math.cos(ph); im+=sig[i]*Math.sin(ph); }
-    const pow=re*re+im*im; if (pow>bestPow){bestPow=pow;bestBpm=bpm;}
+    const pow=re*re+im*im; spec.push([bpm,pow]); total+=pow; cnt++;
+    if (pow>bestPow){bestPow=pow;bestBpm=bpm;}
   }
-  return bestBpm ? { bpm:bestBpm, power:bestPow } : null;
+  if (!bestBpm) return null;
+  // SNR = how much the winning peak stands above the average of everything else.
+  // A clean heartbeat is a tall, lonely spike; noise is a flat smear.
+  const avgOther = (total - bestPow) / Math.max(1,(cnt-1));
+  const snr = bestPow / (avgOther + 1e-9);
+  return { bpm:bestBpm, power:bestPow, snr:snr };
 }
 
 function heartEstimate(){
-  // Reliable trio
-  const est = {};
-  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e) est[name]=e; } }
-  const bpms = Object.values(est).map(e=>e.bpm);
-  if (bpms.length === 0) return;
-  if (bpms.length === 1){
-    // single region: accept but mark low confidence, and keep it moving
-    heartBPM = heartBPM ? (heartBPM*0.5 + bpms[0]*0.5) : bpms[0];
-    window._heartBPM = heartBPM; window._heartConfidence = 0.5; window._heartUpdatedAt = Date.now();
-    if (!heartBaseline && hrData.forehead && hrData.forehead.t.length > 150) heartBaseline = heartBPM;
+  // SNR-WEIGHTED CONSENSUS (research's superior method): every region votes,
+  // weighted by its OWN signal quality. Noisy regions fade out automatically —
+  // no rigid agreement test that freezes when one patch is dirty.
+  const ests = [];
+  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e && e.snr>1.2) ests.push(e); } }
+  if (ests.length === 0){
+    // nothing clean right now -> after sustained emptiness, clear & re-acquire
+    window._hrEmpty = (window._hrEmpty||0)+1;
+    if (window._hrEmpty > 8){ heartBPM=0; window._heartBPM=0; window._hrEmpty=0; }
     return;
   }
-  // agreement: how tight are the regions? (median + spread)
-  bpms.sort((a,b)=>a-b);
-  const median = bpms[Math.floor(bpms.length/2)];
-  const spread = Math.max(...bpms) - Math.min(...bpms);
-  _regionAgreement = spread <= 10 ? 1 : (spread <= 20 ? 0.5 : 0);
-  if (_regionAgreement === 0){
-    // regions disagree -> the current number is unreliable. Count strikes;
-    // after sustained disagreement, CLEAR so it re-acquires (never freeze).
-    window._hrDisagree = (window._hrDisagree||0) + 1;
-    if (window._hrDisagree > 6){ heartBPM = 0; window._heartBPM = 0; window._hrDisagree = 0;
-      for (const k in hrData){ hrData[k] = {R:[],G:[],B:[],t:[]}; } }
-    return;
+  window._hrEmpty = 0;
+  // Weighted average of the regions' rates, weight = signal quality (SNR).
+  // But guard the classic doubling error: cluster rates, pick the strongest cluster.
+  ests.sort((a,b)=>a.bpm-b.bpm);
+  // group rates within 8 bpm of each other, sum their SNR weight
+  let clusters=[], cur=[ests[0]];
+  for (let i=1;i<ests.length;i++){
+    if (ests[i].bpm - cur[cur.length-1].bpm <= 8) cur.push(ests[i]);
+    else { clusters.push(cur); cur=[ests[i]]; }
   }
-  window._hrDisagree = 0;
-  // If the new median is wildly higher than a settled reading, trust it less
-  // (prevents a noise spike from locking at 150).
-  let blend = 0.5;
-  if (heartBPM && median > heartBPM + 30) blend = 0.2;
-  heartBPM = heartBPM ? (heartBPM*(1-blend) + median*blend) : median;
+  clusters.push(cur);
+  // pick the cluster with the most total signal quality
+  let best=clusters[0], bestW=-1;
+  for (const c of clusters){ const w=c.reduce((s,e)=>s+e.snr,0); if (w>bestW){bestW=w;best=c;} }
+  const wsum = best.reduce((s,e)=>s+e.snr,0);
+  const rate = best.reduce((s,e)=>s+e.bpm*e.snr,0)/wsum;
+  // confidence from total quality + how many regions agreed in the winning cluster
+  const totalSNR = ests.reduce((s,e)=>s+e.snr,0);
+  const conf = Math.min(1, (bestW/ Math.max(1,totalSNR)) * (best.length>=2?1:0.6) * Math.min(1, bestW/6));
+  // guard a sudden jump (noise spike) from yanking a settled reading
+  let blend = 0.45;
+  if (heartBPM && Math.abs(rate-heartBPM) > 30) blend = 0.15;
+  heartBPM = heartBPM ? (heartBPM*(1-blend) + rate*blend) : rate;
   if (!heartBaseline && (hrData.forehead && hrData.forehead.t.length > 150)) heartBaseline = heartBPM;
-  window._heartBPM = heartBPM; window._heartBaseline = heartBaseline; window._heartConfidence = _regionAgreement;
+  window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
+  window._heartConfidence = conf >= 0.55 ? 1 : (conf >= 0.3 ? 0.5 : 0);
   window._heartUpdatedAt = Date.now();
+  const median = Math.round(rate);
   // EXPERIMENTAL sub-zones: how close is each to the trusted median? (learning)
   for (const name of HR_EXPERIMENTAL){
     if (hrData[name]){ const e = posEstimate(hrData[name]); if (e){
