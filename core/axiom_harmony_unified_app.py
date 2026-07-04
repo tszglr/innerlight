@@ -1150,22 +1150,46 @@ function mpTick(){
   const lm = res.faceLandmarks && res.faceLandmarks[0];
   if (lm){
     const W = video.videoWidth, H = video.videoHeight;
-    const P = (i, sx, sy, sw, sh) => lm[i] ? { x: lm[i].x*W - W*sw/2 + sx*W, y: lm[i].y*H - H*sh/2 + sy*H, w: W*sw, h: H*sh } : null;
+    // FACE SIZE = distance proxy. Face width as a fraction of frame width.
+    // Close phone use ~0.45+; comfortable ~0.30; too-far desktop < 0.20.
+    const faceFrac = (lm[454] && lm[234]) ? Math.abs(lm[454].x - lm[234].x) : 0;
+    window._faceFrac = faceFrac;
+    // ADAPTIVE PATCHES: when the face is small (person far), enlarge the skin
+    // patches relative to the face so we still gather enough skin pixels.
+    // scale 1.0 at comfortable distance, up to ~1.8 when far.
+    const grow = faceFrac > 0 ? Math.max(1, Math.min(1.8, 0.32 / faceFrac)) : 1;
+    window._patchGrow = grow;
+    const P = (i, sx, sy, sw, sh) => lm[i] ? { x: lm[i].x*W - W*sw*grow/2 + sx*W, y: lm[i].y*H - H*sh*grow/2 + sy*H, w: W*sw*grow, h: H*sh*grow } : null;
     window._heartRegions = {
-      // RELIABLE trio — eyes and mouth excluded
       forehead:   P(10, 0, 0.03, 0.13, 0.06),
       cheekLeft:  P(50, 0, 0,    0.08, 0.06),
       cheekRight: P(280,0, 0,    0.08, 0.06),
       wholeFace:  (lm[10]&&lm[152]) ? { x: lm[234].x*W, y: lm[10].y*H, w: (lm[454].x-lm[234].x)*W, h: (lm[152].y-lm[10].y)*H } : null,
-      // EXPERIMENTAL — stable skin beside the noisy zones (your frontier idea)
       underEyeL:  P(230,0, 0.015,0.05, 0.028),
       underEyeR:  P(450,0, 0.015,0.05, 0.028),
       noseBridge: P(6,  0, 0,    0.045,0.05),
       mouthSideL: P(216,0, 0,    0.045,0.045),
       mouthSideR: P(436,0, 0,    0.045,0.045)
     };
-    // keep the legacy single box pointing at the forehead for safety
     window._heartFaceBox = window._heartRegions.forehead;
+
+    // DISTANCE GUIDANCE: if the face is too small for a trustworthy reading,
+    // gently ask the person to come closer. Works on phone and computer.
+    (function distanceNudge(){
+      let tip = document.getElementById('hr-distance-tip');
+      const tooFar = faceFrac > 0 && faceFrac < 0.20;
+      if (tooFar){
+        if (!tip){
+          tip = document.createElement('div');
+          tip.id = 'hr-distance-tip';
+          tip.style.cssText = 'position:fixed;bottom:120px;right:22px;z-index:56;max-width:210px;'
+            + 'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;'
+            + 'padding:11px 15px;border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);';
+          tip.textContent = 'Lean in a little \u2014 move closer to your camera so I can read your heart clearly.';
+          document.body.appendChild(tip);
+        }
+      } else if (tip){ tip.remove(); }
+    })();
   }
 }
 
@@ -1283,7 +1307,7 @@ function heartEstimate(){
   // weighted by its OWN signal quality. Noisy regions fade out automatically —
   // no rigid agreement test that freezes when one patch is dirty.
   const ests = [];
-  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e && e.snr>1.2) ests.push(e); } }
+  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e && e.snr > (window._patchGrow>1.3 ? 1.05 : 1.2)) ests.push(e); } }
   if (ests.length === 0){
     // nothing clean right now -> after sustained emptiness, clear & re-acquire
     window._hrEmpty = (window._hrEmpty||0)+1;
@@ -4946,6 +4970,9 @@ app.secret_key = hashlib.sha256(
     ("innerlight-founder-session::" + os.environ.get("ADMIN_KEY", "unset")).encode()
 ).hexdigest()
 
+_LIVE_FEED = []  # rolling last-N events for real-time proof on the dashboard
+_LIVE_TOTAL = {"count": 0, "day": ""}
+
 @app.route("/api/metrics/event", methods=["POST"])
 def metrics_event():
     """Receive one anonymous counter event from the app."""
@@ -4962,6 +4989,16 @@ def metrics_event():
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
+    # LIVE FEED (real-time proof of tracking)
+    global _LIVE_FEED, _LIVE_TOTAL
+    if _LIVE_TOTAL.get("day") != day:
+        _LIVE_TOTAL = {"count": 0, "day": day}
+    _LIVE_TOTAL["count"] += 1
+    _LIVE_FEED.append({"t": time.strftime("%H:%M:%S"), "type": etype,
+                       "val": (str(value)[:24] if value is not None else ""),
+                       "sid": sid[:4] + "\u2026"})
+    if len(_LIVE_FEED) > 60:
+        _LIVE_FEED = _LIVE_FEED[-60:]
     with _METRICS_LOCK:
         m = _metrics_load()
         d = m.setdefault(day, {"sessions": 0, "messages": 0, "lane_switches": 0,
@@ -5109,6 +5146,26 @@ def admin_login():
 def admin_logout():
     session.pop("founder_ok", None)
     return redirect("/admin")
+
+@app.route("/api/admin/live")
+def admin_live():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    day = time.strftime("%Y-%m-%d")
+    with _METRICS_LOCK:
+        m = _metrics_load()
+        d = m.get(day, {})
+        sessions_today = len(d.get("by_session", {}))
+        blooms = d.get("blooms", 0)
+        msgs = d.get("messages", 0)
+    return jsonify({
+        "events_today": _LIVE_TOTAL.get("count", 0) if _LIVE_TOTAL.get("day") == day else 0,
+        "sessions_today": sessions_today,
+        "blooms_today": blooms,
+        "messages_today": msgs,
+        "server_time": time.strftime("%H:%M:%S"),
+        "feed": list(reversed(_LIVE_FEED[-18:]))
+    })
 
 @app.route("/admin")
 def admin_dashboard():
