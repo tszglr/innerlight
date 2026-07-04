@@ -5593,12 +5593,44 @@ def connect_request():
     summary = _scrub(str(data.get("summary", ""))[:1500])
     rid = secrets.token_urlsafe(6)
     room = "InnerLight-" + rid
-    fast = ("#config.prejoinPageEnabled=false"
-            "&config.prejoinConfig.enabled=false"
-            "&config.disableDeepLinking=true")
-    room_url = "https://meet.jit.si/" + room
-    guest_url = room_url + fast + '&userInfo.displayName=%22Guest%22'
-    responder_url = room_url + fast + '&userInfo.displayName=%22InnerLight%20Responder%22'
+    # ---- VIDEO ROOM: Daily.co when key present (true one-click, no login,
+    # no prejoin, no app nag) -> the crisis-speed standard. Jitsi fallback. ----
+    guest_url = responder_url = room_url = None
+    daily_key = os.environ.get("DAILY_API_KEY", "").strip()
+    if daily_key:
+        try:
+            import urllib.request as _dr
+            payload = json.dumps({
+                "name": room.lower(),
+                "privacy": "public",
+                "properties": {
+                    "enable_prejoin_ui": False,
+                    "enable_knocking": False,
+                    "start_video_off": False,
+                    "start_audio_off": False,
+                    "exp": int(time.time()) + 3*60*60,
+                    "eject_at_room_exp": True,
+                    "max_participants": 4
+                }
+            }).encode("utf-8")
+            req0 = _dr.Request("https://api.daily.co/v1/rooms", data=payload,
+                               headers={"Authorization": "Bearer " + daily_key,
+                                        "Content-Type": "application/json"})
+            with _dr.urlopen(req0, timeout=8) as r0:
+                info = json.loads(r0.read().decode("utf-8"))
+                room_url = info.get("url")
+                guest_url = room_url
+                responder_url = room_url
+        except Exception as e:
+            print("[InnerLight] Daily room creation failed, falling back to Jitsi:", e)
+            room_url = None
+    if not room_url:
+        fast = ("#config.prejoinPageEnabled=false"
+                "&config.prejoinConfig.enabled=false"
+                "&config.disableDeepLinking=true")
+        room_url = "https://meet.jit.si/" + room
+        guest_url = room_url + fast + '&userInfo.displayName=%22Guest%22'
+        responder_url = room_url + fast + '&userInfo.displayName=%22InnerLight%20Responder%22'
     entry = {"id": rid, "when": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": kind,
              "pro": pro or "unspecified", "room": room_url,
              "guest_room": guest_url, "responder_room": responder_url,
