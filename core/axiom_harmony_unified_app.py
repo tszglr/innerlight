@@ -1193,214 +1193,110 @@ function mpTick(){
   }
 }
 
-// ================= HEART ENGINE v2 — MULTI-REGION (webcam pulse) =================
-// Reads THREE reliable skin regions (forehead + both cheeks), runs POS on each,
-// and only trusts the number when the regions AGREE. Also samples experimental
-// sub-zones near the eyes/mouth and logs how well each agrees with the reliable
-// signal — so your own data reveals which sub-zones are trustworthy over time.
-const HR_REGIONS = ['forehead','cheekLeft','cheekRight','wholeFace'];
-const HR_EXPERIMENTAL = ['underEyeL','underEyeR','noseBridge','mouthSideL','mouthSideR'];
-const hrData = {}; // name -> {R:[],G:[],B:[],t:[]}
-let heartBPM = 0, heartBaseline = 0, hrCanvas = null;
-let _regionAgreement = 0, _expScores = {};
-
-function sampleRegion(video, box){
-  if (!box || box.w < 4 || box.h < 4) return null;
-  if (!hrCanvas){ hrCanvas = document.createElement('canvas'); hrCanvas.width = 40; hrCanvas.height = 20; }
-  const ctx = hrCanvas.getContext('2d', { willReadFrequently: true });
-  try { ctx.drawImage(video, box.x, box.y, box.w, box.h, 0, 0, 40, 20); } catch(e){ return null; }
-  const d = ctx.getImageData(0,0,40,20).data;
-  let r=0,g=0,b=0,skin=0,cnt=0;
-  for (let i=0;i<d.length;i+=4){
-    const R=d[i],G=d[i+1],B=d[i+2];
-    // simple skin test: R>G>B and R high enough — rejects hair/shadow/cloth
-    if (R>60 && R>G && G>B && (R-B)>12){ r+=R; g+=G; b+=B; skin++; }
-    cnt++;
-  }
-  if (skin < cnt*0.35) return null; // patch isn't mostly skin -> discard
-  return { r:r/skin, g:g/skin, b:b/skin };
-}
+// ================= HEART ENGINE v3 — CLEAN REBUILD =================
+// Simple, honest, and always-on. One well-chosen region (forehead-to-nose center
+// strip, which carries strong pulse and moves little), green-channel bandpassed
+// pulse detection with autocorrelation for the beat period. No fragile
+// multi-region agreement. Records every session with a confidence tier.
+const hrSig = [];      // {v, t} recent green-mean samples
+let heartBPM = 0, heartBaseline = 0, hrCanvas2 = null;
+let _hrConf = 0;
 
 function heartTick(){
   const video = document.getElementById('visual-preview');
   const regions = window._heartRegions;
-  if (!video || !video.videoWidth || !regions) return;
-  const now = performance.now();
-  window._heartStale = 0;
-  const all = HR_REGIONS.concat(HR_EXPERIMENTAL);
-  for (const name of all){
-    const s = sampleRegion(video, regions[name]);
-    if (!s) continue;
-    const D = hrData[name] || (hrData[name] = {R:[],G:[],B:[],t:[]});
-    D.R.push(s.r); D.G.push(s.g); D.B.push(s.b); D.t.push(now);
-    // Rolling ~14s window (fresh data only) — prevents freezing on stale samples.
-    const CUTOFF = now - 14000;
-    while (D.t.length && D.t[0] < CUTOFF){ D.R.shift(); D.G.shift(); D.B.shift(); D.t.shift(); }
-    if (D.R.length > 320){ D.R.shift(); D.G.shift(); D.B.shift(); D.t.shift(); }
+  if (!video || !video.videoWidth || !regions || !regions.forehead) return;
+  // Sample forehead + both cheeks together as ONE combined skin reading —
+  // more skin pixels = stronger signal, especially at a distance.
+  if (!hrCanvas2){ hrCanvas2 = document.createElement('canvas'); hrCanvas2.width=36; hrCanvas2.height=36; }
+  const ctx = hrCanvas2.getContext('2d',{willReadFrequently:true});
+  let gSum=0, gCnt=0;
+  for (const nm of ['forehead','cheekLeft','cheekRight']){
+    const b = regions[nm]; if (!b || b.w<4 || b.h<4) continue;
+    try { ctx.drawImage(video, b.x, b.y, b.w, b.h, 0,0,36,36); } catch(e){ continue; }
+    const d = ctx.getImageData(0,0,36,36).data;
+    for (let i=0;i<d.length;i+=4){
+      const r=d[i],g=d[i+1],bl=d[i+2];
+      // skin gate: keep skin-ish pixels only
+      if (r>50 && r>=g && g>=bl && (r-bl)>8){ gSum+=g; gCnt++; }
+    }
   }
-}
-
-// POS on one region's buffers -> {bpm, power}
-function posEstimate(D){
-  const n = D.R.length;
-  if (n < 150) return null;
-  const dur = (D.t[n-1]-D.t[0])/1000; if (dur < 10) return null;
-  const fs = n/dur;
-  const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
-  const mR=mean(D.R), mG=mean(D.G), mB=mean(D.B);
-  if (mR<=0||mG<=0||mB<=0) return null;
-  const Rn=D.R.map(v=>v/mR-1), Gn=D.G.map(v=>v/mG-1), Bn=D.B.map(v=>v/mB-1);
-  const S1=[],S2=[];
-  for (let i=0;i<n;i++){ S1.push(Gn[i]-Bn[i]); S2.push(Gn[i]+Bn[i]-2*Rn[i]); }
-  const std=a=>{const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/a.length)||1e-6;};
-  const alpha=std(S1)/std(S2);
-  let sig=S1.map((v,i)=>v+alpha*S2[i]);
-  const ms=mean(sig); sig=sig.map(v=>v-ms);
-  for (let i=1;i<n;i++) sig[i]=sig[i]-0.92*sig[i-1];
-  let bestBpm=0,bestPow=0,total=0,cnt=0;
-  const spec=[];
-  for (let bpm=42;bpm<=170;bpm+=1){
-    const f=bpm/60; let re=0,im=0;
-    for (let i=0;i<n;i++){ const ph=2*Math.PI*f*(i/fs); re+=sig[i]*Math.cos(ph); im+=sig[i]*Math.sin(ph); }
-    const pow=re*re+im*im; spec.push([bpm,pow]); total+=pow; cnt++;
-    if (pow>bestPow){bestPow=pow;bestBpm=bpm;}
-  }
-  if (!bestBpm) return null;
-  // SNR = how much the winning peak stands above the average of everything else.
-  // A clean heartbeat is a tall, lonely spike; noise is a flat smear.
-  const avgOther = (total - bestPow) / Math.max(1,(cnt-1));
-  const snr = bestPow / (avgOther + 1e-9);
-  return { bpm:bestBpm, power:bestPow, snr:snr };
-}
-
-
-// ---- Physiology-informed heart smoother (Kalman-style; 2026 research) ----
-// State: estimated bpm + how fast it's drifting. New readings are trusted in
-// proportion to their signal quality AND their plausibility (small change =
-// believable, huge jump = rejected). This kills the wild leaps that made the
-// number look broken.
-let _hrState = null; // {bpm, vel, variance}
-function heartSmooth(measuredBpm, quality){
-  const now = performance.now();
-  if (!_hrState){ _hrState = {bpm: measuredBpm, vel: 0, variance: 25, t: now}; return measuredBpm; }
-  const dt = Math.min(3, (now - _hrState.t)/1000) || 1; _hrState.t = now;
-  // PREDICT: heart rate drifts slowly; expected = last + drift
-  const predicted = _hrState.bpm + _hrState.vel * dt;
-  _hrState.variance += 4 * dt;           // uncertainty grows with time
-  // measurement noise: worse quality => noisier => trust prediction more.
-  // also, an implausibly large jump is treated as very noisy.
-  const jump = Math.abs(measuredBpm - predicted);
-  const qFactor = Math.max(0.15, Math.min(1, quality/6));   // SNR-driven
-  let measNoise = (12 / qFactor) + (jump > 18 ? (jump-18)*3 : 0);
-  // KALMAN gain
-  const K = _hrState.variance / (_hrState.variance + measNoise);
-  const newBpm = predicted + K * (measuredBpm - predicted);
-  _hrState.vel = 0.7*_hrState.vel + 0.3*((newBpm - _hrState.bpm)/dt);
-  _hrState.vel = Math.max(-8, Math.min(8, _hrState.vel));    // cap drift speed
-  _hrState.bpm = newBpm;
-  _hrState.variance = (1 - K) * _hrState.variance;
-  return newBpm;
+  if (gCnt < 60) return;               // not enough skin in view right now
+  hrSig.push({v:gSum/gCnt, t:performance.now()});
+  // keep a rolling ~12s window
+  const cutoff = performance.now()-12000;
+  while (hrSig.length && hrSig[0].t < cutoff) hrSig.shift();
 }
 
 function heartEstimate(){
-  // SNR-WEIGHTED CONSENSUS (research's superior method): every region votes,
-  // weighted by its OWN signal quality. Noisy regions fade out automatically —
-  // no rigid agreement test that freezes when one patch is dirty.
-  const ests = [];
-  const estsAll = [];
-  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e){ estsAll.push(e); if (e.snr > (window._patchGrow>1.3 ? 1.05 : 1.2)) ests.push(e); } } }
-  if (ests.length === 0){
-    // No CLEAN signal — but we never go empty. Record a value with an honest tier.
-    if (estsAll.length){
-      // best-effort estimate from the strongest-of-the-weak
-      estsAll.sort((a,b)=>b.snr-a.snr);
-      const guess = estsAll[0].bpm;
-      heartBPM = heartBPM ? heartSmooth(guess, Math.max(0.6, estsAll[0].snr)) : guess;
-      window._heartTier = 'estimated';
-    } else if (heartBPM){
-      // hold the last good value so the record is continuous
-      window._heartTier = 'baseline-held';
-    } else {
-      return; // truly nothing yet (first seconds) — nothing to hold
-    }
-    window._heartBPM = heartBPM; window._heartConfidence = 0.3;
-    window._heartUpdatedAt = Date.now();
-    return;
+  const n = hrSig.length;
+  if (n < 120) return;                 // need ~8s of samples
+  const dur = (hrSig[n-1].t - hrSig[0].t)/1000;
+  if (dur < 6) return;
+  const fs = n/dur;                    // sample rate (Hz)
+  // 1) detrend (remove slow drift) + mean-center
+  const vals = hrSig.map(s=>s.v);
+  const mean = vals.reduce((a,b)=>a+b,0)/n;
+  let sig = vals.map(v=>v-mean);
+  // moving-average detrend
+  const win = Math.round(fs*0.8)||1;
+  const detr = sig.map((v,i)=>{
+    let s=0,c=0; for(let j=Math.max(0,i-win);j<=Math.min(n-1,i+win);j++){s+=sig[j];c++;}
+    return v - s/c;
+  });
+  // 2) autocorrelation over the plausible heart-period range (40..170 bpm)
+  const minLag = Math.floor(fs*60/170), maxLag = Math.ceil(fs*60/40);
+  let bestLag=0, bestCorr=0, corr0=0;
+  for (let i=0;i<n;i++) corr0 += detr[i]*detr[i];
+  corr0 = corr0||1;
+  for (let lag=minLag; lag<=maxLag && lag<n; lag++){
+    let c=0; for (let i=0;i+lag<n;i++) c += detr[i]*detr[i+lag];
+    const norm = c/corr0;
+    if (norm > bestCorr){ bestCorr=norm; bestLag=lag; }
   }
-  window._hrEmpty = 0;
-  // Weighted average of the regions' rates, weight = signal quality (SNR).
-  // But guard the classic doubling error: cluster rates, pick the strongest cluster.
-  ests.sort((a,b)=>a.bpm-b.bpm);
-  // group rates within 8 bpm of each other, sum their SNR weight
-  let clusters=[], cur=[ests[0]];
-  for (let i=1;i<ests.length;i++){
-    if (ests[i].bpm - cur[cur.length-1].bpm <= 8) cur.push(ests[i]);
-    else { clusters.push(cur); cur=[ests[i]]; }
-  }
-  clusters.push(cur);
-  // pick the cluster with the most total signal quality
-  let best=clusters[0], bestW=-1;
-  for (const c of clusters){ const w=c.reduce((s,e)=>s+e.snr,0); if (w>bestW){bestW=w;best=c;} }
-  const wsum = best.reduce((s,e)=>s+e.snr,0);
-  const rate = best.reduce((s,e)=>s+e.bpm*e.snr,0)/wsum;
-  // confidence from total quality + how many regions agreed in the winning cluster
-  const totalSNR = ests.reduce((s,e)=>s+e.snr,0);
-  const conf = Math.min(1, (bestW/ Math.max(1,totalSNR)) * (best.length>=2?1:0.6) * Math.min(1, bestW/6));
-  // Physiology-informed smoothing: quality- and plausibility-weighted.
-  heartBPM = heartSmooth(rate, bestW);
-  window._heartTier = (window._heartConfidence >= 1) ? 'measured' : 'estimated';
-  if (!heartBaseline && (hrData.forehead && hrData.forehead.t.length > 150)) heartBaseline = heartBPM;
-  window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
-  const settled = _hrState && _hrState.variance < 22;
-  window._heartConfidence = (conf >= 0.55 && settled) ? 1 : ((conf >= 0.35 && settled) ? 0.5 : 0);
+  if (!bestLag) return;
+  const bpm = 60*fs/bestLag;
+  // 3) confidence from autocorrelation peak strength (0..1)
+  const conf = Math.max(0, Math.min(1, bestCorr*1.4));
+  _hrConf = conf;
+  // 4) smooth gently toward the new reading, weighted by confidence
+  const w = 0.25 + 0.35*conf;          // more confident -> move faster
+  heartBPM = heartBPM ? (heartBPM*(1-w) + bpm*w) : bpm;
+  if (!heartBaseline && n>200) heartBaseline = heartBPM;
+  window._heartBPM = heartBPM;
+  window._heartBaseline = heartBaseline;
+  window._heartConfidence = conf >= 0.5 ? 1 : (conf >= 0.28 ? 0.5 : 0);
+  window._heartTier = conf >= 0.5 ? 'measured' : (conf >= 0.28 ? 'estimated' : 'baseline-held');
   window._heartUpdatedAt = Date.now();
-  const median = Math.round(rate);
-  // EXPERIMENTAL sub-zones: how close is each to the trusted median? (learning)
-  for (const name of HR_EXPERIMENTAL){
-    if (hrData[name]){ const e = posEstimate(hrData[name]); if (e){
-      const err = Math.abs(e.bpm - median);
-      _expScores[name] = _expScores[name] || {n:0, close:0};
-      _expScores[name].n++;
-      if (err <= 6) _expScores[name].close++;
-    }}
-  }
-  window._expScores = _expScores;
 }
+
 let _hrReported = 0;
 function heartReport(){
-  if (heartBPM > 40 && Date.now() - _hrReported > 60000){
+  if (window._heartBPM && Date.now()-_hrReported > 60000){
     _hrReported = Date.now();
-    metric('heart_read', Math.round(heartBPM) + '|' + (window._heartTier||'measured'));
-    // Log which experimental sub-zones tracked the truth (research learning)
-    if (window._expScores){
-      for (const [zone, sc] of Object.entries(window._expScores)){
-        if (sc.n >= 5){ metric('subzone', zone + '|' + Math.round(100*sc.close/sc.n)); }
-      }
-    }
+    metric('heart_read', Math.round(window._heartBPM) + '|' + (window._heartTier||'measured'));
   }
 }
-setInterval(heartTick, 66);       // ~15 samples per second
-setInterval(heartEstimate, 3000); // re-estimate every 3s — fresher readings
-setInterval(heartReport, 15000);
-// Show the person their own rhythm — watching a number ease downward is a
-// proven calming aid (biofeedback). Appears only once the reading is stable.
+
+// ---- The on-screen chip: always shows a continuous reading, gently beating ----
 (function heartChip(){
   const chip = document.createElement('div');
-  chip.id = 'heart-chip';
-  chip.style.cssText = 'position:fixed;bottom:22px;right:22px;z-index:55;display:none;'
-    + 'background:rgba(255,255,255,0.92);border-radius:999px;padding:12px 22px;'
-    + 'font-family:Arial;font-size:22px;color:#8a4653;box-shadow:0 8px 26px rgba(40,20,30,0.2);';
-  chip.innerHTML = '<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> <b id="heart-num" style="font-size:26px;">--</b> <span class="hr-label" style="font-size:13px;color:#a98790;">bpm</span>';
-  document.body.appendChild(chip);
+  chip.id='heart-chip';
+  chip.style.cssText='position:fixed;bottom:22px;right:22px;z-index:55;display:none;'
+    +'background:rgba(255,255,255,0.92);border-radius:999px;padding:12px 22px;'
+    +'font-family:Arial;font-size:22px;color:#8a4653;box-shadow:0 8px 26px rgba(40,20,30,0.2);';
+  chip.innerHTML='<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> '
+    +'<b id="heart-num" style="font-size:26px;">--</b> <span class="hr-label" style="font-size:13px;color:#a98790;">bpm</span>';
+  document.addEventListener('DOMContentLoaded', ()=>document.body.appendChild(chip));
+  if (document.body) document.body.appendChild(chip);
   setInterval(()=>{
-    const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 12000);
-    if (window._heartBPM && window._heartBPM >= 40 && window._heartBPM <= 150 && fresh){
-      chip.style.display = 'block';
+    const fresh = window._heartUpdatedAt && (Date.now()-window._heartUpdatedAt < 12000);
+    if (window._heartBPM && window._heartBPM>=40 && window._heartBPM<=170 && fresh){
+      chip.style.display='block';
       document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
-      const b = document.getElementById('heart-beat');
-      // pulse the heart gently so it feels alive — no words, just the number
-      b.style.transition = 'transform 0.15s ease'; b.style.transform = 'scale(1.28)';
-      setTimeout(()=>{ b.style.transform = 'scale(1)'; }, 150);
+      const b=document.getElementById('heart-beat');
+      b.style.transition='transform 0.15s ease'; b.style.transform='scale(1.28)';
+      setTimeout(()=>{ b.style.transform='scale(1)'; }, 150);
     }
   }, 1500);
 })();
@@ -1451,6 +1347,15 @@ let faceInterval = null;
 // of a second, so we look ~every 0.6s to catch the ticks. The SOUND still
 // responds gently (frequent detection + smoothed response = sensitive but not jittery).
 function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 600); }
+
+// Heart needs FAST, steady sampling (~15/sec) to catch the pulse waveform —
+// far faster than the emotion loop. Estimate less often; report occasionally.
+let _hrTickInt=null, _hrEstInt=null;
+function startHeartLoop(){
+  if (_hrTickInt) return;
+  _hrTickInt = setInterval(()=>{ try{ heartTick(); }catch(e){} }, 66);   // ~15 Hz
+  _hrEstInt  = setInterval(()=>{ try{ heartEstimate(); heartReport(); }catch(e){} }, 1000);
+}
 
 // ---------------------------------------------------------------------------
 // THE ADAPTIVE LOOP (free version) — the sound RESPONDS to the person in real
@@ -2081,7 +1986,7 @@ async function startExperience() {
     // Camera
     try { await startVisualCamera(); } catch (e) { console.log('[InnerLight] Camera unavailable:', e); }
     // Face emotion detection
-    try { await loadFaceModels(); startFaceLoop(); } catch (e) { console.log('[InnerLight] Face models unavailable:', e); }
+    try { await loadFaceModels(); startFaceLoop(); startHeartLoop(); } catch (e) { console.log('[InnerLight] Face models unavailable:', e); }
     // Start the free adaptive loop — sound responds to face + voice in real time
     startAdaptiveLoop();
     // Start the subtle entrainment pulse gently under the music (can be toggled off)
