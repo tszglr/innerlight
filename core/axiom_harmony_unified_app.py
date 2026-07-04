@@ -4885,6 +4885,17 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
 <tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
 {{ t_rows|safe }}
 </table>
+<h2>The scientific method — where this study stands</h2>
+<div class="sci-grid">
+ <div class="sci"><b>1. Observation (complete)</b><br>Across ~2,500 rideshare trips, agitated passengers reliably settled when calm instrumental music was already playing on entry. Repeated, real-world, years-long observation.</div>
+ <div class="sci"><b>2. Question (framed)</b><br>Can adaptive calming sound, delivered during the crisis wait-gap, measurably reduce acute distress?</div>
+ <div class="sci"><b>3. Hypothesis (stated, falsifiable)</b><br>People using InnerLight will show measurably lower distress at the end of a session than at arrival — in heart rate, self-reported calm, and facial-expression volatility. If the numbers do not move, the hypothesis is rejected. We accept that outcome in advance.</div>
+ <div class="sci"><b>4. Predictions (specific)</b><br>(a) Heart rate drifts toward the person's own baseline during a session. (b) The wordless calm scale improves arrival &rarr; later. (c) Expression-shift frequency declines after music-lane responses. (d) Track "liked" verdicts exceed "disliked" as lanes adapt.</div>
+ <div class="sci"><b>5. Test (this instrument, now collecting)</b><br>Every column on this board is a measurement in service of the predictions above, recorded anonymously per session against each person's own baseline, on durable storage.</div>
+ <div class="sci"><b>6&ndash;7. Analysis &amp; conclusion (pending pilot)</b><br>No conclusion is claimed yet. InnerLight is unvalidated until a controlled pilot analyzes these measures. This board reports; it does not yet prove.</div>
+ <div class="sci"><b>8. Retest / replication (planned)</b><br>Pilot results, positive or negative, will be re-run before any claim is made. One result is an anecdote; a repeated result is evidence.</div>
+ <div class="sci"><b>9. Peer review (sought)</b><br>University research partnership in progress — independent eyes on the method, the data, and the conclusions.</div>
+</div>
 <h2>The research basis for every number</h2>
 <div class="sci-grid">
  <div class="sci"><b>Sessions &amp; uptake</b><br>
