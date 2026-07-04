@@ -632,7 +632,7 @@ PUBLIC_PAGE = """
           <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing">&#127908; Speak</button>
         </div>
         <div class="music-bar">
-          <span id="music-now">&#9834; soft music playing</span>
+          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #c8ddd2;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now">&#9834; soft music playing</span>
           <button class="music-change" type="button" onclick="changeMusic()">Change music</button>
           <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()">&#10041; Calm pulse: on</button>
           <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()">&#128263; Spoken voice: Off</button>
@@ -886,36 +886,44 @@ function startAct(name){
   // re-add re-engagement timer since actClearTimers wiped it
   const st = actStage();
   if (name==='breathe'){
-    st.innerHTML = `<div style="text-align:center;padding:10px;">
-      <div style="position:relative;width:180px;height:180px;margin:14px auto;">
-        <div id="br-aura" style="position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(207,233,255,0.35);"></div>
-        <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 5s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;">
-          <b id="br-bpm" style="font-size:30px;color:#fff;">--</b>
-          <span style="font-size:10.5px;color:#cfe9ff;">your heart</span>
+    st.innerHTML = `<div style="text-align:center;padding:6px;">
+      <div id="br-word" style="font-size:26px;color:#fff;font-weight:700;min-height:34px;">Breathe in&hellip;</div>
+      <div id="br-count" style="font-size:44px;color:#7dd3a8;font-weight:700;min-height:52px;">5</div>
+      <div style="position:relative;width:150px;height:150px;margin:6px auto 10px;overflow:visible;">
+        <div id="br-aura" style="position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(207,233,255,0.35);"></div>
+        <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 4.6s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+          <b id="br-bpm" style="font-size:26px;color:#fff;">&nbsp;</b>
+          <span id="br-bpm-lbl" style="font-size:10px;color:#cfe9ff;"></span>
         </div>
       </div>
-      <div id="br-word" style="font-size:22px;color:#fff;">Breathe in&hellip;</div>
-      <div id="br-msg" style="font-size:12.5px;color:#9db8cf;margin-top:6px;min-height:18px;">In for 5 &middot; hold for 5 &middot; out for 5. Watch your own heart answer.</div></div>`;
-    const c=st.querySelector('#br-circle'), w=st.querySelector('#br-word');
-    let phase=0, cycles=0; const run=()=>{ if(!c.isConnected) return;
-      if(phase===0){ w.textContent='Breathe in\u2026'; c.style.transform='scale(1.45)'; }
-      if(phase===1){ w.textContent='Hold\u2026'; }
-      if(phase===2){ w.textContent='Let it out\u2026'; c.style.transform='scale(1)';
-        cycles++; if (cycles % 3 === 0) bloom(); }
-      phase=(phase+1)%3; };
-    run(); actTimers.push(setInterval(run,5000));
-    // TRUE BIOFEEDBACK: the person's live heart rate inside the circle, the
-    // aura pulsing at their actual rhythm, drops celebrated as they happen.
+      <div id="br-msg" style="font-size:13px;color:#9db8cf;min-height:20px;">In 5 &middot; hold 5 &middot; out 5. The number counts you through.</div></div>`;
+    const c=st.querySelector('#br-circle'), w=st.querySelector('#br-word'), cd=st.querySelector('#br-count');
+    let phase=0, tick=5, cycles=0;
+    const PHASES=[['Breathe in\u2026',1.35],['Hold\u2026',null],['Let it out\u2026',1.0]];
+    const step=()=>{ if(!c.isConnected) return;
+      cd.textContent = tick;
+      if (tick===5){ // phase start
+        w.textContent = PHASES[phase][0];
+        if (PHASES[phase][1]!==null) c.style.transform='scale('+PHASES[phase][1]+')';
+        if (phase===2){ cycles++; if (cycles%3===0) bloom(); }
+      }
+      tick--; if (tick<0){ tick=5; phase=(phase+1)%3; }
+    };
+    step(); actTimers.push(setInterval(step,1000));
+    // Live heart INSIDE the circle — but only when the reading is trusted.
     let brStartBpm = 0;
     actTimers.push(setInterval(()=>{
       const el = st.querySelector('#br-bpm'); if (!el || !el.isConnected) return;
-      const bpm = window._heartBPM && window._heartBPM > 40 ? Math.round(window._heartBPM) : 0;
-      el.textContent = bpm || '--';
+      const fresh = window._heartUpdatedAt && (Date.now()-window._heartUpdatedAt < 10000);
+      const trusted = (window._heartConfidence||0) >= 1 && fresh;
+      const bpm = trusted && window._heartBPM>=45 && window._heartBPM<=140 ? Math.round(window._heartBPM) : 0;
+      el.textContent = bpm ? bpm : '\u00a0';
+      st.querySelector('#br-bpm-lbl').textContent = bpm ? 'your heart' : '';
       if (bpm){
         if (!brStartBpm) brStartBpm = bpm;
         const aura = st.querySelector('#br-aura');
-        if (aura){ aura.animate([{transform:'scale(1)',opacity:0.5},{transform:'scale(1.08)',opacity:0.15}],
-          { duration: Math.max(350, 60000/bpm), iterations: 1 }); }
+        if (aura){ aura.animate([{transform:'scale(1)',opacity:0.5},{transform:'scale(1.07)',opacity:0.15}],
+          { duration: Math.max(400, 60000/bpm), iterations: 1 }); }
         const msg = st.querySelector('#br-msg');
         if (msg && brStartBpm - bpm >= 5){
           msg.textContent = brStartBpm + ' \u2192 ' + bpm + ' \u2014 your heart is listening. Keep going.';
@@ -925,7 +933,33 @@ function startAct(name){
     }, 1500));
   }
   if (name==='ground'){
-    const steps=[['5 things you can SEE','Look around slowly. Name five things — their color, their shape.'],
+    // Camera-guided: read the room's actual dominant colors and send the
+    // person hunting for them — active engagement, not passive listing.
+    let roomColors = [];
+    try {
+      const video = document.getElementById('visual-preview');
+      if (video && video.videoWidth){
+        const cv=document.createElement('canvas'); cv.width=64; cv.height=36;
+        cv.getContext('2d').drawImage(video,0,0,64,36);
+        const d=cv.getContext('2d').getImageData(0,0,64,36).data;
+        const buckets={};
+        for(let i=0;i<d.length;i+=4){
+          const r=d[i],g=d[i+1],b=d[i+2];
+          const max=Math.max(r,g,b),min=Math.min(r,g,b);
+          if(max-min<28) continue; // skip grays
+          let name='';
+          if(r>g&&r>b) name = g>b*1.3?'orange or warm yellow':'red or warm pink';
+          else if(g>r&&g>b) name='green';
+          else if(b>r&&b>g) name = r>g?'purple or violet':'blue';
+          if(name) buckets[name]=(buckets[name]||0)+1;
+        }
+        roomColors = Object.entries(buckets).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]);
+      }
+    } catch(e){}
+    const seeLine = roomColors.length
+      ? 'Your camera can see ' + roomColors.join(' and ') + ' in this room. Find five things in those colors — hunt them down with your eyes.'
+      : 'Look around slowly. Name five things — their color, their shape.';
+    const steps=[['5 things you can SEE', seeLine],
       ['4 things you can TOUCH','The chair. Your sleeve. The floor under your feet. Really feel four.'],
       ['3 things you can HEAR','The room. The music. Something far away.'],
       ['2 things you can SMELL','Or two smells you like remembering.'],
@@ -968,23 +1002,25 @@ function startAct(name){
     st.innerHTML=`<div style="text-align:center;"><div id="st-p" style="font-size:14px;color:#cfe3f2;margin-bottom:10px;">Stars will appear, slowly. Count them, then answer.</div>
       <div id="st-sky" style="position:relative;height:220px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);"></div>
       <div id="st-ans" style="margin-top:12px;"></div></div>`;
-    const n=4+Math.floor(Math.random()*5); const sky=st.querySelector('#st-sky');
+    window._starStreak = window._starStreak||0;
+    const maxN = Math.min(25, 6 + window._starStreak*3); // streaks earn bigger skies (boredom-proof)
+    const n = 3 + Math.floor(Math.random()*(maxN-2)); const sky=st.querySelector('#st-sky');
     for(let i=0;i<n;i++){ actTimers.push(setTimeout(()=>{ if(!sky.isConnected)return; const d=document.createElement('div');
       d.style.cssText='position:absolute;width:8px;height:8px;border-radius:50%;background:#fffbe8;box-shadow:0 0 12px #fffbe8;opacity:0;transition:opacity 2s;';
       d.style.left=(8+Math.random()*84)+'%'; d.style.top=(10+Math.random()*75)+'%'; sky.appendChild(d);
-      requestAnimationFrame(()=>d.style.opacity='0.95'); }, 1200+i*1700)); }
+      requestAnimationFrame(()=>d.style.opacity='0.95'); }, 900+i*Math.max(500, 1700-n*60))); }
     actTimers.push(setTimeout(()=>{ if(!st.isConnected)return; const ans=st.querySelector('#st-ans');
-      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='rgba(125,211,168,0.5)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; bloom(); setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(180,90,90,0.3)'; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#e6f1fa;cursor:pointer;">${v}</button>`).join('');
-    }, 1200+n*1700+800));
+      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='rgba(125,211,168,0.5)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; bloom(); window._starStreak=(window._starStreak||0)+1; setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(180,90,90,0.3)'; window._starStreak=0; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#e6f1fa;cursor:pointer;">${v}</button>`).join('');
+    }, 900+n*Math.max(500,1700-n*60)+800));
   }
   if (name==='release'){
-    const steps=[['Your hands','Make gentle fists\u2026 hold\u2026 and let them fall open.'],
-      ['Your shoulders','Lift them toward your ears\u2026 hold\u2026 and let them drop.'],
-      ['Your jaw','Press lips together lightly\u2026 and let the jaw hang loose.'],
-      ['Your brow','Raise your eyebrows\u2026 hold\u2026 and smooth them down.'],
-      ['Your stomach','Tighten gently\u2026 hold\u2026 and soften.'],
-      ['Your legs','Press your feet into the floor\u2026 and release.'],
-      ['All of you','One slow breath. Notice what feels 5% looser than before.']];
+    const steps=[['HANDS \u2014 let\u2019s go','Squeeze those fists like you mean it \u2014 5, 4, 3, 2, 1 \u2014 and RELEASE. Feel that? That\u2019s tension leaving the building.'],
+      ['SHOULDERS \u2014 you got this','Drive them up to your ears \u2014 hold it, hold it \u2014 and DROP. Beautiful. Shake it out.'],
+      ['JAW \u2014 easy money','Clench lightly\u2026 hold\u2026 now let it hang like you just finished laughing. That jaw carries more stress than it tells you.'],
+      ['BROW \u2014 smooth operator','Eyebrows UP like you just heard great news \u2014 hold \u2014 and smooth them down. Your face just got lighter.'],
+      ['CORE \u2014 strong center','Brace that stomach like a soft punch is coming \u2014 hold, 3, 2, 1 \u2014 and let it all go. That\u2019s the deepest one.'],
+      ['LEGS \u2014 ground and power','Press your feet into the floor like you own it \u2014 HOLD \u2014 and float. You are anchored AND light.'],
+      ['ALL OF YOU \u2014 champion finish','One big breath in\u2026 and let everything fall loose at once. Look at you \u2014 you just coached your whole body down. That\u2019s real strength.']];
     let i=0; st.innerHTML=`<div style="text-align:center;padding:16px;"><div id="r-t" style="font-size:22px;color:#fff;"></div>
       <div id="r-s" style="font-size:14px;color:#b9d0e2;margin:12px 0 18px;line-height:1.6;"></div>
       <button id="r-n" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Released &mdash; next</button></div>`;
@@ -1273,7 +1309,10 @@ setInterval(heartReport, 15000);
   chip.innerHTML = '<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> <b id="heart-num" style="font-size:26px;">--</b> <span class="hr-label" style="font-size:13px;color:#a98790;">bpm</span>';
   document.body.appendChild(chip);
   setInterval(()=>{
-    if (window._heartBPM && window._heartBPM > 40){
+    const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 10000);
+    const trusted = (window._heartConfidence||0) >= 1 && fresh;
+    if (!trusted){ chip.style.display = 'none'; return; }
+    if (window._heartBPM && window._heartBPM >= 45 && window._heartBPM <= 140){
       chip.style.display = 'block';
       document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
       const b = document.getElementById('heart-beat');
@@ -1522,7 +1561,7 @@ let deckA, deckB, activeDeck = 'A';
 let crossfading = false;
 const CROSSFADE_MS = 4000; // 4 second blend
 const CROSSFADE_TRIGGER = 8; // start blend 8 seconds before track ends
-const TARGET_VOL = 0.09;   // sweet spot: present but never in-your-ear
+let TARGET_VOL = 0.06;    // headphone-safe; user slider can raise it
 
 function initDecks() {
   deckA = document.getElementById('ambient-a');
@@ -1804,6 +1843,19 @@ let ambientIndex = 0;
 const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+// ---- Volume control: mute + slider. Slider 40 = the safe default. ----
+let userMuted = false;
+function currentTarget(){ return userMuted ? 0 : TARGET_VOL; }
+function setVol(v){
+  TARGET_VOL = 0.15 * (v/100); // slider full = 0.15 ceiling, default 40 = 0.06
+  ['deckA','deckB'].forEach(id=>{ const d=document.getElementById(id); if(d && !userMuted) d.volume = Math.min(1, TARGET_VOL); });
+}
+function toggleMute(){
+  userMuted = !userMuted;
+  const b = document.getElementById('mute-btn');
+  if (b) b.innerHTML = userMuted ? '&#128263;' : '&#128266;';
+  ['deckA','deckB'].forEach(id=>{ const d=document.getElementById(id); if(d) d.volume = userMuted ? 0 : Math.min(1, TARGET_VOL); });
+}
 // ================= READINESS CHECK — tests the device, installs nothing =================
 // Runs quietly at start; if something could hurt the experience, it offers a
 // plain-language recommendation. It never changes the person's computer.
