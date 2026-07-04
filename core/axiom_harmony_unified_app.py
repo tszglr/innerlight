@@ -3442,33 +3442,39 @@ def _info_page(title, inner):
 def page_about():
     inner = """
     <h1>Why InnerLight exists</h1>
-    <p class="lead">InnerLight began as a question about protection &mdash; and became a question about people.</p>
+    <p class="lead">InnerLight was built by a father who lived the wait &mdash; and decided no family should face it alone.</p>
 
-    <p>It started as an encryption idea. The founder, Toshay S. Zeigler, set out to build a system that could protect
-    people's most private information in a world where personal data is constantly exposed. Privacy, dignity, and the
-    right to keep your own story your own were the first principles.</p>
+    <p>Toshay S. Zeigler grew up in Coney Island, Brooklyn. His childhood included poverty, instability, and time in
+    foster care &mdash; experiences that taught him early that the quality of a person's life often depends on whether
+    the systems designed to help actually work when they are needed.</p>
 
-    <p>But the deeper he built, the clearer something became: the information most in need of protection isn't financial
-    or technical &mdash; it's human. It's what people carry in their hardest moments. The idea grew from protecting data
-    into protecting <em>people</em> &mdash; specifically, people in the fragile gap between the moment they reach out for
-    help and the moment real human help actually arrives.</p>
+    <p>As an adult he built careers in logistics, dispatching, transportation, and in-home care. But the greatest
+    education of his life came from being a father. Toshay is the primary caregiver for his daughters, both of whom
+    have faced significant mental-health challenges. One has gone through repeated psychiatric crises. Every crisis
+    meant navigating hospitals, psychiatrists, medications, school systems, insurance, county agencies, disability
+    services, and community programs &mdash; while trying to keep a family together.</p>
 
     <div class="soft">
-      <p style="margin:0;">That gap &mdash; the 45 minutes to two hours when someone is in crisis and help is on the
-      way but not yet there &mdash; is where too many people are left alone. InnerLight was built to hold that space:
-      to stay with a person, help them feel heard, and gently bring them back to steadier ground until real help
-      reaches them.</p>
+      <p style="margin:0;">Those years revealed a painful truth: help exists, but it is fragmented. Families are
+      expected to become experts in medicine, law, education, housing, and government during the worst moments of
+      their lives &mdash; and in the gap between "we need help" and "help has arrived," they wait, often 45 minutes
+      to two hours, alone. InnerLight was built to hold that space.</p>
     </div>
 
-    <h2>Who is behind it</h2>
-    <p>InnerLight is created by <strong>Toshay S. Zeigler</strong>, founder of <strong>God's Love For Us LLC</strong>.
-    Toshay's path runs through lived experience with the systems that either help or fail people &mdash; as a caregiver,
-    as a student of law and public policy, and as someone who has spent years thinking about how technology should serve
-    human dignity rather than replace it. He is continuing his education at San Jos&eacute; State University with the
-    long-term goal of law school, building on an Associate degree in Administrative Justice from Mission College.</p>
+    <p>The calming heart of InnerLight was proven in an unexpected place. During years of rideshare driving, Toshay
+    noticed that when calm instrumental music was already playing, agitated passengers settled &mdash; reliably,
+    across thousands of rides. It worked on strangers. It worked on his own family, in his own car, in their hardest
+    moments. That observation didn't create the mission &mdash; his daughters did &mdash; but it revealed the method:
+    the right sound, at the right level, at the right moment, can hold a person until human help arrives.</p>
 
-    <p>He'll tell you plainly: those early college courses didn't all go smoothly &mdash; but they lit the spark for how
-    to start something real, and how the pieces of law, technology, and human care could fit together into one tool.</p>
+    <h2>Who is behind it</h2>
+    <p>InnerLight is created by <strong>Toshay S. Zeigler</strong>, founder of <strong>God's Love For Us LLC</strong>
+    &mdash; a caregiver father, a student of law and public policy at San Jos&eacute; State University with the
+    long-term goal of law school, and the holder of two associate degrees earned while caregiving and working.
+    He did not begin designing with AI because he wanted to build technology. He began because he wanted to build
+    something that would help families like his: systems that organize knowledge, explain complex subjects in plain
+    language, protect privacy, and help people understand their options &mdash; without ever replacing doctors,
+    therapists, attorneys, or other professionals.</p>
 
     <h2>Built by a person, with the help of AI</h2>
     <p>InnerLight is built by Toshay directly, working alongside artificial intelligence as a collaborator and tool. The
@@ -3481,8 +3487,10 @@ def page_about():
     it is the foundation. And no one reaching out for help should have their first response be a waitlist.</p>
 
     <div class="soft">
-      <p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a place to be
-      heard and steadied, and a bridge to the right human help &mdash; never a replacement for it.</p>
+      <p style="margin:0;">If InnerLight succeeds, it will mean another father or mother spends less time searching
+      for answers and more time caring for the people they love. InnerLight does not diagnose, prescribe, or practice
+      medicine or law. It is a place to be heard and steadied, and a bridge to the right human help &mdash; never a
+      replacement for it.</p>
     </div>
     """
     return _info_page("About", inner)
