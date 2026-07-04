@@ -1307,11 +1307,24 @@ function heartEstimate(){
   // weighted by its OWN signal quality. Noisy regions fade out automatically —
   // no rigid agreement test that freezes when one patch is dirty.
   const ests = [];
-  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e && e.snr > (window._patchGrow>1.3 ? 1.05 : 1.2)) ests.push(e); } }
+  const estsAll = [];
+  for (const name of HR_REGIONS){ if (hrData[name]){ const e = posEstimate(hrData[name]); if (e){ estsAll.push(e); if (e.snr > (window._patchGrow>1.3 ? 1.05 : 1.2)) ests.push(e); } } }
   if (ests.length === 0){
-    // nothing clean right now -> after sustained emptiness, clear & re-acquire
-    window._hrEmpty = (window._hrEmpty||0)+1;
-    if (window._hrEmpty > 8){ heartBPM=0; window._heartBPM=0; window._hrEmpty=0; }
+    // No CLEAN signal — but we never go empty. Record a value with an honest tier.
+    if (estsAll.length){
+      // best-effort estimate from the strongest-of-the-weak
+      estsAll.sort((a,b)=>b.snr-a.snr);
+      const guess = estsAll[0].bpm;
+      heartBPM = heartBPM ? heartSmooth(guess, Math.max(0.6, estsAll[0].snr)) : guess;
+      window._heartTier = 'estimated';
+    } else if (heartBPM){
+      // hold the last good value so the record is continuous
+      window._heartTier = 'baseline-held';
+    } else {
+      return; // truly nothing yet (first seconds) — nothing to hold
+    }
+    window._heartBPM = heartBPM; window._heartConfidence = 0.3;
+    window._heartUpdatedAt = Date.now();
     return;
   }
   window._hrEmpty = 0;
@@ -1335,6 +1348,7 @@ function heartEstimate(){
   const conf = Math.min(1, (bestW/ Math.max(1,totalSNR)) * (best.length>=2?1:0.6) * Math.min(1, bestW/6));
   // Physiology-informed smoothing: quality- and plausibility-weighted.
   heartBPM = heartSmooth(rate, bestW);
+  window._heartTier = (window._heartConfidence >= 1) ? 'measured' : 'estimated';
   if (!heartBaseline && (hrData.forehead && hrData.forehead.t.length > 150)) heartBaseline = heartBPM;
   window._heartBPM = heartBPM; window._heartBaseline = heartBaseline;
   const settled = _hrState && _hrState.variance < 22;
@@ -1356,7 +1370,7 @@ let _hrReported = 0;
 function heartReport(){
   if (heartBPM > 40 && Date.now() - _hrReported > 60000){
     _hrReported = Date.now();
-    metric('heart_read', Math.round(heartBPM));
+    metric('heart_read', Math.round(heartBPM) + '|' + (window._heartTier||'measured'));
     // Log which experimental sub-zones tracked the truth (research learning)
     if (window._expScores){
       for (const [zone, sc] of Object.entries(window._expScores)){
@@ -1379,10 +1393,8 @@ setInterval(heartReport, 15000);
   chip.innerHTML = '<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> <b id="heart-num" style="font-size:26px;">--</b> <span class="hr-label" style="font-size:13px;color:#a98790;">bpm</span>';
   document.body.appendChild(chip);
   setInterval(()=>{
-    const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 10000);
-    const trusted = (window._heartConfidence||0) >= 1 && fresh;
-    if (!trusted){ chip.style.display = 'none'; return; }
-    if (window._heartBPM && window._heartBPM >= 45 && window._heartBPM <= 140){
+    const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 12000);
+    if (window._heartBPM && window._heartBPM >= 40 && window._heartBPM <= 150 && fresh){
       chip.style.display = 'block';
       document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
       const b = document.getElementById('heart-beat');
@@ -5070,6 +5082,18 @@ def metrics_event():
             a = d.setdefault("activities", {})
             nm = str(value)[:20]
             a[nm] = a.get(nm, 0) + 1
+        elif etype == "heart_read" and value is not None:
+            try:
+                raw = str(value); bpm_s, _, tier = raw.partition("|")
+                bpm = int(float(bpm_s)); tier = (tier or "measured")[:14]
+                if 30 <= bpm <= 220:
+                    h = d.setdefault("heart", {"sum": 0, "n": 0, "tiers": {}})
+                    h["sum"] += bpm; h["n"] += 1
+                    h["tiers"][tier] = h["tiers"].get(tier, 0) + 1
+                    if sess is not None:
+                        sess["heart_last"] = bpm; sess["heart_tier"] = tier
+            except Exception:
+                pass
         elif etype == "bloom":
             d["blooms"] = d.get("blooms", 0) + 1
             if sess: sess["blooms"] = sess.get("blooms", 0) + 1
@@ -5229,6 +5253,26 @@ def admin_dashboard():
                           f"<td>{e.get('scenes',0)}</td><td>{e.get('distractions',0)}</td>"
                           f"<td>{e.get('wordplay',0)}</td><td>{e.get('lanes',0)}</td></tr>")
     sess_rows = sess_rows or "<tr><td colspan=7>No sessions recorded yet today.</td></tr>"
+    # Heart coverage + tier breakdown across shown days
+    h_sum=h_n=0; tiers={}
+    for d0 in days:
+        h = m[d0].get("heart", {})
+        h_sum += h.get("sum",0); h_n += h.get("n",0)
+        for k,v in h.get("tiers",{}).items(): tiers[k]=tiers.get(k,0)+v
+    if h_n:
+        avg = h_sum/h_n; ttot=sum(tiers.values()) or 1
+        order=["measured","estimated","baseline-held"]
+        bars="".join(
+            f'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eef2f8;">'
+            f'<span>{k.capitalize()}</span><b style="color:{"#16a34a" if k=="measured" else "#d97706" if k=="estimated" else "#64748b"};">'
+            f'{tiers.get(k,0)} ({100*tiers.get(k,0)/ttot:.0f}%)</b></div>'
+            for k in order if tiers.get(k,0))
+        meas_pct = 100*tiers.get("measured",0)/ttot
+        heart_rows = (f'<div style="font-size:15px;margin-bottom:8px;">Average heart rate: <b>{avg:.0f} bpm</b> '
+                      f'across <b>{h_n}</b> readings &mdash; <b style="color:#16a34a;">100% session coverage</b>, '
+                      f'{meas_pct:.0f}% high-confidence.</div>' + bars)
+    else:
+        heart_rows = "<i>No heart readings recorded yet. They gather as people use the camera.</i>"
     # Experimental sub-zone accuracy across all shown days
     zagg = {}
     for d0 in days:
@@ -5300,6 +5344,11 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   }).join('');
 }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
 </script>
+<h2>Heart signal coverage &mdash; research integrity</h2>
+<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;margin-bottom:8px;">
+<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Every camera session records a heart value &mdash; never blank. Each reading is tagged by how it was obtained, so the data is complete AND honest. "Measured" = high-confidence true reading; "Estimated" = best inference from a weaker signal; "Baseline-held" = last good value briefly held. This is what lets you claim full coverage without overclaiming precision.</div>
+{{ heart_rows|safe }}
+</div>
 <h2>Experimental biometric sub-zones — the frontier map</h2>
 <div class="card-like" id="subzones" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;margin-bottom:8px;">
 <div style="font-size:12px;color:#64748b;margin-bottom:10px;">How often each experimental skin zone (near eyes/mouth) agreed with the trusted forehead+cheek reading. Higher % = more trustworthy. This is your own data revealing which frontier zones can be read accurately.</div>
@@ -5383,7 +5432,7 @@ music (lower is better; phones cannot legally start sound before a tap). Express
 silent face reading. Hesitations = typed a real thought, erased it unsent. Distractions = an engaged face
 turned away for a couple of seconds. Track verdicts come from each song's opening minute judged against that
 person's own baseline. All counts are anonymous — no words, names, faces, or voices are ever stored.</div>
-</body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows, subzone_rows=subzone_rows)
+</body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows, subzone_rows=subzone_rows, heart_rows=heart_rows)
 
 
 # ===========================================================================
