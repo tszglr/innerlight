@@ -707,9 +707,12 @@ const SCENE_PHOTOS = {
   horizon:   '/scenes/photo_6_golden_horizon.jpg',
   moon:      '/scenes/photo_3_moon_night.jpg',
   daymoon:   '/scenes/photo_4_moon_day.jpg',
-  moonleaf:  '/scenes/photo_7_moon_leaves.jpg'
+  moonleaf:  '/scenes/photo_7_moon_leaves.jpg',
+  lettuce:   '/scenes/photo_8_lettuce.jpg',
+  wave:      '/scenes/photo_9_wave.jpg',
+  pepper:    '/scenes/photo_10_pepper.jpg'
 };
-const SCENE_ORDER = ['garden','sunflower','sunset','horizon','moon','daymoon','moonleaf'];
+const SCENE_ORDER = ['garden','lettuce','pepper','sunflower','sunset','horizon','wave','moon','daymoon','moonleaf'];
 let sceneAutoTimer = null, sceneUserChose = false;
 let currentScene = 'garden';
 let canvasAnim = null;
