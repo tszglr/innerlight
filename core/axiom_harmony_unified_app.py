@@ -2640,6 +2640,11 @@ function revealUrgentHelp(data){
 // ================= RETURNING-USER MEMORY (opt-in, code-based) =================
 // After a person has shared, we gently offer to save so they never restart.
 // The code is theirs; without it the story cannot be read.
+
+function copyReturnCode(btn){ try{ navigator.clipboard && navigator.clipboard.writeText(btn.getAttribute('data-code')); btn.textContent='Copied \u2713'; }catch(e){} }
+function dismissSaveOffer(){ var o=document.getElementById('save-offer'); if(o) o.remove(); }
+function closeResumeBox(){ var b=document.getElementById('resume-box'); if(b) b.remove(); }
+
 function collectStory(){
   // gather the conversation so far into a plain summary
   try {
@@ -2662,7 +2667,7 @@ function maybeOfferSave(){
     + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
   bar.innerHTML = '<div style="font-size:14px;color:#2c4a3a;margin-bottom:10px;">Would you like to save where you are, so you don\u2019t have to start over if you come back?</div>'
     + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">Save my place</button>'
-    + '<button onclick="document.getElementById(\'save-offer\').remove()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
+    + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
   document.body.appendChild(bar);
 }
 async function doSaveStory(){
@@ -2676,8 +2681,8 @@ async function doSaveStory(){
       if (offer) offer.innerHTML = '<div style="font-size:14px;color:#2c4a3a;margin-bottom:8px;">Saved. This is your return code \u2014 keep it somewhere safe:</div>'
         + '<div style="font-size:22px;font-weight:800;letter-spacing:1px;color:#1e3a5c;margin:6px 0;">' + d.code + '</div>'
         + '<div style="font-size:12px;color:#6d8f80;margin-bottom:10px;">Only this code can reopen your story \u2014 not even we can read it without the code.</div>'
-        + '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + d.code + '\');this.textContent=\'Copied\u2713\'" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">Copy code</button>'
-        + '<button onclick="document.getElementById(\'save-offer\').remove()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">Done</button>';
+        + '<button onclick="copyReturnCode(this)" data-code="' + d.code + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">Copy code</button>'
+        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">Done</button>';
     } else if (offer){ offer.querySelector('div').textContent = 'There was nothing saved yet \u2014 share a little first.'; }
   } catch(e){ if (offer) offer.querySelector('div').textContent = 'Could not save right now. Please try again.'; }
 }
@@ -2691,7 +2696,7 @@ function openResume(){
     + '<input id="resume-code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #c8ddd2;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
     + '<div id="resume-msg" style="font-size:13px;color:#c0564e;min-height:18px;margin:8px 0;"></div>'
     + '<button onclick="doResume()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;">Continue</button> '
-    + '<button onclick="document.getElementById(\'resume-box\').remove()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
+    + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
     + '</div>';
   document.body.appendChild(box);
   setTimeout(()=>{ const el=document.getElementById('resume-code'); if(el) el.focus(); }, 100);
@@ -3818,22 +3823,16 @@ def page_about():
     <h1>Why InnerLight exists</h1>
     <p class="lead">InnerLight was built by a father who lived the wait &mdash; and decided no family should face it alone.</p>
 
-    <p>Toshay S. Zeigler was born two months after a family tragedy that shaped generations of mental-health
-    struggle in his family. He entered foster care at nineteen months old and stayed until he was six. From six to
-    thirteen he lived with his mother, stepfather, and siblings on 36th Street in Coney Island, Brooklyn &mdash; years
-    when poverty, addiction, and violence were commonplace around him.</p>
+    <p>Toshay S. Zeigler understands, from direct experience, what it means to depend on systems that are meant to
+    help &mdash; and to discover how often they fall short. From an early age he learned resilience, self-advocacy,
+    and the value of finding one’s own way forward when institutions falter. Those lessons became the foundation
+    of a lifelong conviction: that people navigating difficult moments deserve better than confusion and delay.</p>
 
-    <p>Then, on November 7, 1987, at thirteen years old, Toshay and his older brother made a decision few adults could
-    make: with the help of a family friend, they walked into the Staten Island Police Station and asked to be placed
-    somewhere else. He advocated for himself before he knew the word. The system he asked for protection &mdash;
-    foster care and group homes until eighteen &mdash; proved, in many ways, worse than what he had fled. He has
-    lived every seat in the room: the baby the system took, the child returned to an unsafe home, the teenager who
-    sought help voluntarily, and the one the help failed anyway. No one has to explain fragmented systems to him.
-    He was the child inside the fragments.</p>
-
-    <p>As an adult he built careers in logistics, dispatching, transportation, and in-home care, and &mdash; decades
-    after a difficult first attempt at college &mdash; earned two associate degrees and a university-transfer
-    certificate while caregiving and working. But the greatest education of his life came from being a father. Toshay is the primary caregiver for his daughters, both of whom
+    <p>He carried that conviction into a varied professional life &mdash; in logistics, operations, transportation,
+    and in-home care &mdash; and, as a dedicated adult learner, earned two associate degrees and a university-transfer
+    certificate while balancing work and family. He is now continuing his studies in political science with the goal
+    of law school, driven by a desire to understand and improve the systems that shape people’s lives. But the
+    experience that shaped him most profoundly has been fatherhood. Toshay is the primary caregiver for his daughters, both of whom
     have faced significant mental-health challenges. One has gone through repeated psychiatric crises. Every crisis
     meant navigating hospitals, psychiatrists, medications, school systems, insurance, county agencies, disability
     services, and community programs &mdash; while trying to keep a family together.</p>
