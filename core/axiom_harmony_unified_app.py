@@ -625,7 +625,7 @@ PUBLIC_PAGE = """
               </div>
       <div class="story-wrap">
         <h2 class="story-title">Tell me your story.</h2>
-        <p class="story-sub">Take your time. Say whatever feels true. I am listening.</p>
+        <p class="story-sub">Take your time. Say whatever feels true. I am listening. &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;">Been here before? Continue your story</a></p>
         <textarea id="message" class="story-input" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
           <button class="story-send" onclick="sendCheckin()">Send</button>
@@ -1346,6 +1346,7 @@ let faceInterval = null;
 // Detect the face often — subtle emotion flickers across a face in fractions
 // of a second, so we look ~every 0.6s to catch the ticks. The SOUND still
 // responds gently (frequent detection + smoothed response = sensitive but not jittery).
+setInterval(maybeOfferSave, 15000);
 function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 600); }
 
 // Heart needs FAST, steady sampling (~15/sec) to catch the pulse waveform —
@@ -2633,6 +2634,90 @@ function revealUrgentHelp(data){
   } else {
     box.style.display = 'none';
   }
+}
+
+
+// ================= RETURNING-USER MEMORY (opt-in, code-based) =================
+// After a person has shared, we gently offer to save so they never restart.
+// The code is theirs; without it the story cannot be read.
+function collectStory(){
+  // gather the conversation so far into a plain summary
+  try {
+    const thread = document.getElementById('conversation-thread');
+    if (thread && thread.textContent.trim().length > 20) return thread.textContent.trim().slice(0, 5500);
+  } catch(e){}
+  const msg = document.getElementById('message');
+  return msg && msg.value ? msg.value.trim().slice(0,5500) : '';
+}
+let _memOffered = false;
+function maybeOfferSave(){
+  if (_memOffered) return;
+  const story = collectStory();
+  if (story.length < 40) return;  // only once there's something worth saving
+  _memOffered = true;
+  const bar = document.createElement('div');
+  bar.id = 'save-offer';
+  bar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:75;'
+    + 'background:rgba(255,255,255,0.97);border:1px solid #cfe0d6;border-radius:16px;padding:14px 18px;'
+    + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
+  bar.innerHTML = '<div style="font-size:14px;color:#2c4a3a;margin-bottom:10px;">Would you like to save where you are, so you don\u2019t have to start over if you come back?</div>'
+    + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">Save my place</button>'
+    + '<button onclick="document.getElementById(\'save-offer\').remove()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
+  document.body.appendChild(bar);
+}
+async function doSaveStory(){
+  const story = collectStory();
+  const offer = document.getElementById('save-offer');
+  try {
+    const r = await fetch('/api/memory/save', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({summary: story})});
+    const d = await r.json();
+    if (d.status === 'ok'){
+      if (offer) offer.innerHTML = '<div style="font-size:14px;color:#2c4a3a;margin-bottom:8px;">Saved. This is your return code \u2014 keep it somewhere safe:</div>'
+        + '<div style="font-size:22px;font-weight:800;letter-spacing:1px;color:#1e3a5c;margin:6px 0;">' + d.code + '</div>'
+        + '<div style="font-size:12px;color:#6d8f80;margin-bottom:10px;">Only this code can reopen your story \u2014 not even we can read it without the code.</div>'
+        + '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + d.code + '\');this.textContent=\'Copied\u2713\'" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">Copy code</button>'
+        + '<button onclick="document.getElementById(\'save-offer\').remove()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">Done</button>';
+    } else if (offer){ offer.querySelector('div').textContent = 'There was nothing saved yet \u2014 share a little first.'; }
+  } catch(e){ if (offer) offer.querySelector('div').textContent = 'Could not save right now. Please try again.'; }
+}
+function openResume(){
+  const box = document.createElement('div');
+  box.id = 'resume-box';
+  box.style.cssText = 'position:fixed;inset:0;z-index:95;background:rgba(10,18,30,0.75);display:flex;align-items:center;justify-content:center;padding:20px;';
+  box.innerHTML = '<div style="background:#fff;border-radius:18px;padding:26px;max-width:360px;width:100%;font-family:Arial;text-align:center;">'
+    + '<h3 style="margin:0 0 6px;color:#1e3a5c;">Continue your story</h3>'
+    + '<p style="font-size:13px;color:#6d8f80;margin:0 0 16px;">Enter the return code you saved last time.</p>'
+    + '<input id="resume-code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #c8ddd2;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
+    + '<div id="resume-msg" style="font-size:13px;color:#c0564e;min-height:18px;margin:8px 0;"></div>'
+    + '<button onclick="doResume()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;">Continue</button> '
+    + '<button onclick="document.getElementById(\'resume-box\').remove()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
+    + '</div>';
+  document.body.appendChild(box);
+  setTimeout(()=>{ const el=document.getElementById('resume-code'); if(el) el.focus(); }, 100);
+}
+async function doResume(){
+  const code = (document.getElementById('resume-code')||{}).value || '';
+  const msg = document.getElementById('resume-msg');
+  if (code.trim().length < 4){ if(msg) msg.textContent='Please enter your full code.'; return; }
+  try {
+    const r = await fetch('/api/memory/resume', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({code: code})});
+    const d = await r.json();
+    if (d.status === 'ok'){
+      const box = document.getElementById('resume-box'); if (box) box.remove();
+      const thread = document.getElementById('conversation-thread');
+      if (thread){
+        const div = document.createElement('div');
+        div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:14px;color:#2c4a3a;';
+        div.innerHTML = '<b>Welcome back.</b> Here\u2019s where you left off, so you don\u2019t have to start over:<br><br>' + (d.summary||'').replace(/</g,'&lt;');
+        thread.appendChild(div);
+        thread.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    } else if (msg){
+      msg.textContent = d.status==='notfound' ? 'We couldn\u2019t find that code. Check it and try again.' : 'That code didn\u2019t work. Please try again.';
+    }
+  } catch(e){ if(msg) msg.textContent='Could not connect. Please try again.'; }
 }
 
 async function sendCheckin() {  startZenisys('greeting');
@@ -4866,6 +4951,85 @@ if _DATA_DIR == "/tmp":
           "will NOT survive deploys. Add a Render disk mounted at /var/data.")
 else:
     print("[InnerLight] Research data home: /var/data (persistent — survives deploys)")
+
+
+# ===========================================================================
+# RETURNING-USER MEMORY ("continue your story")
+# A person may OPT IN to save their session under a generated code like
+# CALM-4821-MOON. The story is encrypted with a key derived from that code —
+# so it cannot be read without it, not even by the founder. Stored on the
+# persistent disk so it follows the person across devices.
+# ===========================================================================
+_MEMORY_FILE = os.environ.get("MEMORY_FILE", _DATA_DIR + "/innerlight_memory.json")
+_MEMORY_LOCK = threading.Lock()
+_CODE_WORDS = ["MOON","CALM","LEAF","WAVE","STAR","DAWN","FERN","TIDE","SAGE","GLOW","PINE","REST"]
+
+def _memory_load():
+    try:
+        with open(_MEMORY_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _memory_save(d):
+    try:
+        with open(_MEMORY_FILE, "w") as f:
+            json.dump(d, f)
+    except Exception as e:
+        print("[InnerLight] memory save failed:", e)
+
+def _new_code():
+    import random
+    return f"{random.choice(_CODE_WORDS)}-{random.randint(1000,9999)}-{random.choice(_CODE_WORDS)}"
+
+def _code_key(code):
+    # normalize so entry is forgiving of case/spacing
+    return "".join(ch for ch in code.upper() if ch.isalnum())
+
+@app.route("/api/memory/save", methods=["POST"])
+def memory_save():
+    """Opt-in: encrypt a session summary under a fresh return code."""
+    data = request.get_json(silent=True) or {}
+    summary = str(data.get("summary", ""))[:6000]
+    if not summary.strip():
+        return jsonify({"status": "empty"}), 200
+    # generate a unique code
+    with _MEMORY_LOCK:
+        store = _memory_load()
+        code = _new_code()
+        tries = 0
+        while _code_key(code) in store and tries < 20:
+            code = _new_code(); tries += 1
+        # encrypt the summary with a key that includes the code
+        enc = AxiomHarmonyProtocol(encryption_key("memory::" + _code_key(code))).encrypt(
+            {"summary": summary, "saved": time.strftime("%Y-%m-%d %H:%M")})
+        store[_code_key(code)] = {"enc": enc, "saved": time.strftime("%Y-%m-%d %H:%M")}
+        # cap total stored
+        if len(store) > 5000:
+            oldest = sorted(store.items(), key=lambda kv: kv[1].get("saved",""))[:100]
+            for k,_ in oldest: store.pop(k, None)
+        _memory_save(store)
+    return jsonify({"status": "ok", "code": code})
+
+@app.route("/api/memory/resume", methods=["POST"])
+def memory_resume():
+    """Return: decrypt a saved story from the person's code."""
+    data = request.get_json(silent=True) or {}
+    code = str(data.get("code", ""))[:40]
+    k = _code_key(code)
+    if not k:
+        return jsonify({"status": "invalid"}), 200
+    with _MEMORY_LOCK:
+        store = _memory_load()
+        rec = store.get(k)
+    if not rec:
+        return jsonify({"status": "notfound"}), 200
+    try:
+        out = AxiomHarmonyProtocol(encryption_key("memory::" + k)).decrypt(rec["enc"]).get("original_data", {})
+        return jsonify({"status": "ok", "summary": out.get("summary",""), "saved": rec.get("saved","")})
+    except Exception:
+        return jsonify({"status": "error"}), 200
+
 
 _METRICS_FILE = os.environ.get("METRICS_FILE", _DATA_DIR + "/innerlight_metrics.json")
 
