@@ -1202,6 +1202,16 @@ const hrSig = [];      // {v, t} recent green-mean samples
 let heartBPM = 0, heartBaseline = 0, hrCanvas2 = null;
 let _hrConf = 0;
 
+// Precomputed gamma lookup tables so brightening is fast (no per-pixel pow()).
+const _gammaLUT = {};
+function gammaTable(g){
+  const key = g.toFixed(2);
+  if (_gammaLUT[key]) return _gammaLUT[key];
+  const t = new Uint8Array(256);
+  for (let i=0;i<256;i++) t[i] = Math.min(255, Math.round(255 * Math.pow(i/255, 1/g)));
+  _gammaLUT[key] = t; return t;
+}
+
 function heartTick(){
   const video = document.getElementById('visual-preview');
   const regions = window._heartRegions;
@@ -1210,20 +1220,60 @@ function heartTick(){
   // more skin pixels = stronger signal, especially at a distance.
   if (!hrCanvas2){ hrCanvas2 = document.createElement('canvas'); hrCanvas2.width=36; hrCanvas2.height=36; }
   const ctx = hrCanvas2.getContext('2d',{willReadFrequently:true});
+
+  // ---- PASS 1: measure how dark the face is (mean luminance of skin area) ----
+  let lumaSum=0, lumaCnt=0;
+  for (const nm of ['forehead','cheekLeft','cheekRight']){
+    const b = regions[nm]; if (!b || b.w<4 || b.h<4) continue;
+    try { ctx.drawImage(video, b.x, b.y, b.w, b.h, 0,0,36,36); } catch(e){ continue; }
+    const d = ctx.getImageData(0,0,36,36).data;
+    for (let i=0;i<d.length;i+=4){ lumaSum += (d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114); lumaCnt++; }
+  }
+  const luma = lumaCnt ? lumaSum/lumaCnt : 128;
+  window._faceLuma = Math.round(luma);
+  // Very dark AND sustained -> offer ONE gentle, optional light suggestion.
+  if (luma < 55){
+    window._darkStreak = (window._darkStreak||0) + 1;
+    if (window._darkStreak === 40 && !window._lightTipShown){   // ~ sustained
+      window._lightTipShown = true;
+      const t = document.createElement('div');
+      t.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:56;max-width:230px;'
+        +'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;padding:11px 15px;'
+        +'border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);text-align:center;';
+      t.innerHTML='A little more light on your face helps me read your calm \u2014 only if you can. '
+        +'<button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;background:#fff;color:#2e6e8e;border:0;border-radius:999px;padding:5px 14px;font-size:12px;cursor:pointer;">Okay</button>';
+      document.body.appendChild(t);
+      setTimeout(()=>{ if(t.isConnected) t.remove(); }, 12000);
+    }
+  } else { window._darkStreak = 0; }
+  // ---- Choose an adaptive gamma. Bright face -> 1.0 (no change).
+  // Dark face -> up to ~2.6 lift (research uses ~2.5 for low light). ----
+  let gamma = 1.0, lowLight = false;
+  if (luma < 110){
+    lowLight = true;
+    // scale: luma 110 -> 1.1, luma 40 -> ~2.6, floor protects very dark noise
+    gamma = Math.min(2.6, 1 + (110 - Math.max(30, luma)) / 45);
+  }
+  window._lowLightBoost = lowLight ? gamma.toFixed(2) : '';
+  const lut = gamma > 1.01 ? gammaTable(gamma) : null;
+  // When we brighten, dark real skin has lower raw values, so relax the gate.
+  const rMin = lowLight ? 28 : 50;
+  const diffMin = lowLight ? 4 : 8;
+
+  // ---- PASS 2: read the (optionally brightened) green pulse signal ----
   let gSum=0, gCnt=0;
   for (const nm of ['forehead','cheekLeft','cheekRight']){
     const b = regions[nm]; if (!b || b.w<4 || b.h<4) continue;
     try { ctx.drawImage(video, b.x, b.y, b.w, b.h, 0,0,36,36); } catch(e){ continue; }
     const d = ctx.getImageData(0,0,36,36).data;
     for (let i=0;i<d.length;i+=4){
-      const r=d[i],g=d[i+1],bl=d[i+2];
-      // skin gate: keep skin-ish pixels only
-      if (r>50 && r>=g && g>=bl && (r-bl)>8){ gSum+=g; gCnt++; }
+      let r=d[i], g=d[i+1], bl=d[i+2];
+      if (lut){ r=lut[r]; g=lut[g]; bl=lut[bl]; }   // brighten for the reading only
+      if (r>rMin && r>=g && g>=bl && (r-bl)>diffMin){ gSum+=g; gCnt++; }
     }
   }
-  if (gCnt < 60) return;               // not enough skin in view right now
+  if (gCnt < 60) return;               // still not enough skin even after lift
   hrSig.push({v:gSum/gCnt, t:performance.now()});
-  // keep a rolling ~12s window
   const cutoff = performance.now()-12000;
   while (hrSig.length && hrSig[0].t < cutoff) hrSig.shift();
 }
@@ -1275,6 +1325,7 @@ function heartReport(){
   if (window._heartBPM && Date.now()-_hrReported > 60000){
     _hrReported = Date.now();
     metric('heart_read', Math.round(window._heartBPM) + '|' + (window._heartTier||'measured'));
+    if (window._lowLightBoost) metric('lowlight_rescue', window._lowLightBoost);
   }
 }
 
@@ -5225,7 +5276,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt", "bloom"}
+               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -5322,6 +5373,8 @@ def metrics_event():
                         sess["heart_last"] = bpm; sess["heart_tier"] = tier
             except Exception:
                 pass
+        elif etype == "lowlight_rescue":
+            d["lowlight_rescues"] = d.get("lowlight_rescues", 0) + 1
         elif etype == "bloom":
             d["blooms"] = d.get("blooms", 0) + 1
             if sess: sess["blooms"] = sess.get("blooms", 0) + 1
