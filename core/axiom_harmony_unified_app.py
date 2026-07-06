@@ -1351,11 +1351,36 @@ function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectF
 
 // Heart needs FAST, steady sampling (~15/sec) to catch the pulse waveform —
 // far faster than the emotion loop. Estimate less often; report occasionally.
+
+// ---- LIVE BIOMETRIC PING: anonymous, every 4s, for the founder's live monitor.
+// Sends only: an anonymous session id, bpm, tier, and derived calm state.
+// No words, no identity. Lets the founder watch the calm curve in real time.
+let _bioPingInt = null;
+function startBioPing(){
+  if (_bioPingInt) return;
+  _bioPingInt = setInterval(()=>{
+    try {
+      const bpm = window._heartBPM ? Math.round(window._heartBPM) : 0;
+      if (!bpm) return;
+      const base = window._heartBaseline ? Math.round(window._heartBaseline) : bpm;
+      // simple state: above baseline+8 = rising/agitated; below-6 = settling; else steady
+      let state = 'steady';
+      if (bpm >= base + 8) state = 'rising';
+      else if (bpm <= base - 6) state = 'settling';
+      const face = (window.currentFaceEmotion || '');
+      fetch('/api/bio/ping', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({sid: sessionId, bpm: bpm, tier: (window._heartTier||'measured'),
+          base: base, state: state, face: face})}).catch(()=>{});
+    } catch(e){}
+  }, 4000);
+}
+
 let _hrTickInt=null, _hrEstInt=null;
 function startHeartLoop(){
   if (_hrTickInt) return;
   _hrTickInt = setInterval(()=>{ try{ heartTick(); }catch(e){} }, 66);   // ~15 Hz
   _hrEstInt  = setInterval(()=>{ try{ heartEstimate(); heartReport(); }catch(e){} }, 1000);
+  startBioPing();
 }
 
 // ---------------------------------------------------------------------------
@@ -4959,6 +4984,59 @@ else:
 # so it cannot be read without it, not even by the founder. Stored on the
 # persistent disk so it follows the person across devices.
 # ===========================================================================
+
+# ---- LIVE BIOMETRIC MONITOR (anonymous, ephemeral) ----
+# Holds the most recent biometric ping per active session so the founder can
+# watch calm-state in real time. In memory only, auto-expires; no identity,
+# no words. This is the live research window.
+_BIO_LIVE = {}   # sid -> {bpm, tier, base, state, face, last, history:[...]}
+_BIO_LOCK = threading.Lock()
+
+@app.route("/api/bio/ping", methods=["POST"])
+def bio_ping():
+    data = request.get_json(silent=True) or {}
+    sid = str(data.get("sid", ""))[:24]
+    if not sid:
+        return jsonify({"status": "ignored"}), 200
+    try:
+        bpm = int(data.get("bpm", 0))
+    except Exception:
+        bpm = 0
+    if not (30 <= bpm <= 220):
+        return jsonify({"status": "ignored"}), 200
+    now = time.time()
+    with _BIO_LOCK:
+        rec = _BIO_LIVE.get(sid) or {"history": []}
+        rec.update({"bpm": bpm, "tier": str(data.get("tier",""))[:14],
+                    "base": int(data.get("base", bpm)), "state": str(data.get("state",""))[:12],
+                    "face": str(data.get("face",""))[:16], "last": now})
+        rec["history"].append({"t": time.strftime("%H:%M:%S"), "bpm": bpm})
+        rec["history"] = rec["history"][-40:]   # last ~40 readings
+        _BIO_LIVE[sid] = rec
+        # expire anything older than 90s
+        for k in [k for k,v in _BIO_LIVE.items() if now - v.get("last",0) > 90]:
+            _BIO_LIVE.pop(k, None)
+    return jsonify({"status": "ok"})
+
+@app.route("/api/admin/bio/live")
+def admin_bio_live():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    now = time.time()
+    with _BIO_LOCK:
+        active = []
+        for i, (sid, v) in enumerate(sorted(_BIO_LIVE.items(), key=lambda kv: kv[1].get("last",0), reverse=True)):
+            if now - v.get("last",0) > 90: continue
+            active.append({
+                "who": "Person " + str(i+1),
+                "bpm": v.get("bpm"), "base": v.get("base"), "state": v.get("state"),
+                "tier": v.get("tier"), "face": v.get("face"),
+                "ago": int(now - v.get("last",0)),
+                "spark": [h["bpm"] for h in v.get("history", [])][-24:]
+            })
+    return jsonify({"active": active, "count": len(active), "server_time": time.strftime("%H:%M:%S")})
+
+
 _MEMORY_FILE = os.environ.get("MEMORY_FILE", _DATA_DIR + "/innerlight_memory.json")
 _MEMORY_LOCK = threading.Lock()
 _CODE_WORDS = ["MOON","CALM","LEAF","WAVE","STAR","DAWN","FERN","TIDE","SAGE","GLOW","PINE","REST"]
@@ -5411,6 +5489,43 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
       + '</div>';
   }).join('');
 }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
+</script>
+<h2>Live sessions &mdash; real-time biometric monitor</h2>
+<div class="card-like" style="background:#0f2447;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.2);margin-bottom:14px;color:#e6f1fa;">
+<div style="font-size:12px;color:#9db8cf;margin-bottom:10px;">Anonymous, live. Each person currently using InnerLight with their camera on appears here \u2014 heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the biometric signal. <span id="bio-clock" style="float:right;"></span></div>
+<div id="bio-live-list"><i style="color:#7d97b0;">Waiting for a live session\u2026</i></div>
+</div>
+<script>
+(function(){
+  function spark(vals){
+    if(!vals||!vals.length) return '';
+    const w=180,h=34,min=Math.min.apply(null,vals),max=Math.max.apply(null,vals),rng=(max-min)||1;
+    const pts=vals.map(function(v,i){return (i/(vals.length-1)*w).toFixed(1)+','+(h-(v-min)/rng*h).toFixed(1);}).join(' ');
+    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="#7dd3a8" stroke-width="2"/></svg>';
+  }
+  function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#7dd3a8':'#9db8cf'); }
+  function stateWord(st){ return st==='rising'?'rising / activating':(st==='settling'?'settling / calming':'steady'); }
+  async function poll(){
+    try{
+      const r=await fetch('/api/admin/bio/live'); if(!r.ok) return;
+      const d=await r.json();
+      var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
+      var el=document.getElementById('bio-live-list'); if(!el) return;
+      if(!d.active||!d.active.length){ el.innerHTML='<i style="color:#7d97b0;">No live sessions right now. When someone uses InnerLight with their camera, they appear here live.</i>'; return; }
+      el.innerHTML=d.active.map(function(p){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">'
+          +'<div style="min-width:80px;"><b>'+p.who+'</b><div style="font-size:11px;color:#7d97b0;">'+p.ago+'s ago</div></div>'
+          +'<div style="text-align:center;"><span style="font-size:26px;font-weight:800;">'+p.bpm+'</span> <span style="font-size:12px;color:#9db8cf;">bpm</span>'
+          +'<div style="font-size:11px;color:#7d97b0;">baseline '+p.base+'</div></div>'
+          +'<div style="text-align:center;color:'+stateColor(p.state)+';font-size:13px;font-weight:700;min-width:120px;">'+stateWord(p.state)
+          +'<div style="font-size:10.5px;color:#7d97b0;font-weight:400;">'+(p.tier||'')+(p.face?' \u00b7 '+p.face:'')+'</div></div>'
+          +'<div>'+spark(p.spark)+'</div>'
+          +'</div>';
+      }).join('');
+    }catch(e){}
+  }
+  poll(); setInterval(poll, 3000);
+})();
 </script>
 <h2>Heart signal coverage &mdash; research integrity</h2>
 <div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;margin-bottom:8px;">
