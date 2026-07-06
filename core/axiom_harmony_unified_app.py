@@ -1347,10 +1347,56 @@ let faceInterval = null;
 // of a second, so we look ~every 0.6s to catch the ticks. The SOUND still
 // responds gently (frequent detection + smoothed response = sensitive but not jittery).
 setInterval(maybeOfferSave, 15000);
+  setTimeout(offerFeedback, 6*60*1000);
 function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 600); }
 
 // Heart needs FAST, steady sampling (~15/sec) to catch the pulse waveform —
 // far faster than the emotion loop. Estimate less often; report occasionally.
+
+
+// ---- GENTLE FEEDBACK ASK (optional, anonymous) ----
+// Offered once, only after real engagement, never nagged. Their words become
+// anonymized research that helps prove InnerLight helps real people.
+let _fbShown = false;
+function closeFb(){ const c=document.getElementById('fb-card'); if(c) c.remove(); }
+function offerFeedback(){
+  if (_fbShown) return;
+  _fbShown = true;
+  const box = document.createElement('div');
+  box.id = 'fb-card';
+  box.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:78;'
+    + 'background:rgba(255,255,255,0.98);border:1px solid #cfe0d6;border-radius:16px;padding:16px 18px;'
+    + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;';
+  box.innerHTML =
+     '<div style="font-size:14px;color:#2c4a3a;margin-bottom:10px;text-align:center;">If you have a moment: did this help? Your answer is anonymous and helps us help others.</div>'
+   + '<div style="text-align:center;margin-bottom:8px;">'
+   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #7dd3a8;background:#f0faf4;color:#2c6a48;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">It helped</button>'
+   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #c8ddd2;background:#fff;color:#5a7d6d;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Somewhat</button>'
+   +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Not really</button>'
+   + '</div>'
+   + '<textarea id="fb-words" placeholder="Anything you want to share about how you feel, or what helped? (optional)" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #c8ddd2;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
+   + '<div style="text-align:center;margin-top:8px;">'
+   +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">Share</button>'
+   +   '<button onclick="closeFb()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">No thanks</button>'
+   + '</div>';
+  document.body.appendChild(box);
+  box.querySelectorAll('.fb-h').forEach(function(b){
+    b.onclick = function(){ box.querySelectorAll('.fb-h').forEach(function(x){x.style.outline='none';});
+      b.style.outline='2px solid #2e6e8e'; window._fbHelped = b.getAttribute('data-v'); };
+  });
+}
+async function submitFeedback(){
+  const words = (document.getElementById('fb-words')||{}).value || '';
+  const helped = window._fbHelped || '';
+  let feeling = '';
+  if (helped==='yes') feeling='calmer'; else if (helped==='no') feeling='same';
+  try {
+    await fetch('/api/feedback', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({helped: helped, feeling: feeling, words: words})});
+  } catch(e){}
+  const card = document.getElementById('fb-card');
+  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#2c6a48;padding:6px;">Thank you for sharing \u2014 it genuinely helps us reach others. <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:6px 14px;cursor:pointer;">Close</button></div>';
+}
 
 // ---- LIVE BIOMETRIC PING: anonymous, every 4s, for the founder's live monitor.
 // Sends only: an anonymous session id, bpm, tier, and derived calm state.
@@ -5526,6 +5572,40 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   }).join('');
 }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
 </script>
+<h2>What people said &mdash; voices from real sessions</h2>
+<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
+<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Anonymous feedback from people who used InnerLight. Identifying details are automatically removed. This is the human evidence alongside the numbers.</div>
+<div id="fb-report"><i style="color:#94a3b8;">Loading feedback\u2026</i></div>
+</div>
+<script>
+(function(){
+  async function load(){
+    try{
+      const r=await fetch('/api/admin/feedback'); if(!r.ok) return;
+      const d=await r.json();
+      const el=document.getElementById('fb-report'); if(!el) return;
+      if(!d.total){ el.innerHTML='<i style="color:#94a3b8;">No feedback yet. As people share, their words appear here.</i>'; return; }
+      const h=d.helped||{}, tot=d.total||1;
+      const pct=function(n){return Math.round(100*(n||0)/tot);};
+      let html='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:14px;">'
+        +'<div style="flex:1;min-width:120px;background:#f0faf4;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#16a34a;">'+pct(h.yes)+'%</b><br>said it helped</div>'
+        +'<div style="flex:1;min-width:120px;background:#f8fafc;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#64748b;">'+pct(h.somewhat)+'%</b><br>somewhat</div>'
+        +'<div style="flex:1;min-width:120px;background:#fdf5f5;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#9a6a6a;">'+pct(h.no)+'%</b><br>not really</div>'
+        +'<div style="flex:1;min-width:120px;background:#eef4fb;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#1e3a5c;">'+d.total+'</b><br>total responses</div>'
+        +'</div>';
+      if(d.quotes&&d.quotes.length){
+        html+='<div style="font-size:13px;color:#475569;font-weight:700;margin:6px 0;">In their own words:</div>';
+        html+=d.quotes.map(function(q){
+          return '<div style="border-left:3px solid #7dd3a8;background:#f8fafc;border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14px;color:#334155;font-style:italic;">“'
+            +(q.words||'').replace(/</g,'&lt;')+'”<span style="display:block;font-style:normal;font-size:11px;color:#94a3b8;margin-top:4px;">'+(q.when||'')+(q.helped?' · '+q.helped:'')+'</span></div>';
+        }).join('');
+      }
+      el.innerHTML=html;
+    }catch(e){}
+  }
+  load();
+})();
+</script>
 <h2>Live sessions &mdash; real-time biometric monitor</h2>
 <div class="card-like" style="background:#0f2447;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.2);margin-bottom:14px;color:#e6f1fa;">
 <div style="font-size:12px;color:#9db8cf;margin-bottom:10px;">Anonymous, live. Each person currently using InnerLight with their camera on appears here \u2014 heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the biometric signal. <span id="bio-clock" style="float:right;"></span></div>
@@ -5877,6 +5957,69 @@ async function runStudy(){
 # emails, phone numbers, and handles are masked. Cases are founder-only,
 # disclosed in the privacy notes, never public, never sold.
 # ===========================================================================
+
+# ---- USER FEEDBACK (anonymized qualitative research data) ----
+# A person may optionally share, at a natural pause, how they feel and what
+# helped. Stored WITHOUT identity, server-side-scrubbed, for the research report.
+_FEEDBACK_FILE = os.environ.get("FEEDBACK_FILE", _DATA_DIR + "/innerlight_feedback.json")
+_FEEDBACK_LOCK = threading.Lock()
+
+def _fb_load():
+    try:
+        with open(_FEEDBACK_FILE) as f: return json.load(f)
+    except Exception: return []
+
+def _fb_save(d):
+    try:
+        with open(_FEEDBACK_FILE, "w") as f: json.dump(d, f)
+    except Exception as e: print("[InnerLight] feedback save failed:", e)
+
+@app.route("/api/feedback", methods=["POST"])
+def feedback_submit():
+    data = request.get_json(silent=True) or {}
+    helped = str(data.get("helped", ""))[:12]          # 'yes'/'somewhat'/'no'
+    feeling = str(data.get("feeling", ""))[:12]         # 'calmer'/'same'/'worse'
+    words = str(data.get("words", ""))[:800]
+    # scrub any identifying details from free text (reuse the case scrubber)
+    try:
+        words = _scrub_text(words)
+    except Exception:
+        pass
+    if not (helped or feeling or words.strip()):
+        return jsonify({"status": "empty"}), 200
+    with _FEEDBACK_LOCK:
+        fb = _fb_load()
+        fb.append({"when": time.strftime("%Y-%m-%d %H:%M"), "helped": helped,
+                   "feeling": feeling, "words": words.strip()})
+        fb = fb[-2000:]
+        _fb_save(fb)
+    return jsonify({"status": "ok"})
+
+@app.route("/api/admin/feedback")
+def admin_feedback():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    with _FEEDBACK_LOCK:
+        fb = _fb_load()
+    # aggregate
+    tot = len(fb)
+    helped = {"yes":0,"somewhat":0,"no":0}
+    feeling = {"calmer":0,"same":0,"worse":0}
+    for r in fb:
+        if r.get("helped") in helped: helped[r["helped"]] += 1
+        if r.get("feeling") in feeling: feeling[r["feeling"]] += 1
+    quotes = [r for r in reversed(fb) if r.get("words")][:40]
+    return jsonify({"total": tot, "helped": helped, "feeling": feeling, "quotes": quotes})
+
+
+
+def _scrub_text(t):
+    import re
+    t = re.sub(r"[\w.+-]+@[\w-]+\.[\w.-]+", "[email]", t)
+    t = re.sub(r"(\+?\d[\d\-() ]{7,}\d)", "[number]", t)
+    t = re.sub(r"@\w+", "[handle]", t)
+    return t
+
 _CASES_FILE = os.environ.get("CASES_FILE", _DATA_DIR + "/innerlight_cases.json")
 _CASES_LOCK = threading.Lock()
 _SCRUB_PATTERNS = [
