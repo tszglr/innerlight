@@ -1434,6 +1434,7 @@ function adaptiveTick() {
   const deck = getActiveDeck();
   if (deck && !crossfading) {
     const band = 0.04; // small, never dramatic
+    if (_duckActive) return; // music is ducked for voice — do not touch volume
     let target = TARGET_VOL - (adaptiveArousal - 0.5) * band; // higher arousal => softer
     target = Math.max(TARGET_VOL - band, Math.min(TARGET_VOL + band*0.5, target));
     // ease toward target
@@ -1570,6 +1571,39 @@ function toggleEntrainment() {
 }
 
 // --- DJ CROSSFADE ENGINE ---
+
+// ---- MUSIC DUCKING FOR VOICE (first user feedback): music must fully stop
+// while the person speaks, wait 2s after they finish, then FADE gently back. ----
+let _duckActive = false, _duckRestoreTimer = null, _duckFadeTimer = null;
+function duckMusicForVoice(){
+  _duckActive = true;
+  if (_duckRestoreTimer){ clearTimeout(_duckRestoreTimer); _duckRestoreTimer = null; }
+  if (_duckFadeTimer){ clearInterval(_duckFadeTimer); _duckFadeTimer = null; }
+  // silence both decks immediately (quick 250ms fade to 0 so it is not a jarring cut)
+  const decks = [document.getElementById('ambient-a'), document.getElementById('ambient-b')];
+  decks.forEach(d=>{ if(!d) return; const from=d.volume; let step=0;
+    const iv=setInterval(()=>{ step++; d.volume=Math.max(0, from*(1-step/8)); if(step>=8){ clearInterval(iv); d.volume=0; } }, 30);
+  });
+}
+function restoreMusicAfterVoice(){
+  // Wait 2 full seconds after voice ends, THEN fade in gently over ~4s.
+  if (_duckRestoreTimer) clearTimeout(_duckRestoreTimer);
+  _duckRestoreTimer = setTimeout(()=>{
+    _duckActive = false;
+    const active = (typeof getActiveDeck==='function') ? getActiveDeck() : document.getElementById('ambient-a');
+    if (!active) return;
+    const ceiling = (typeof userMuted!=='undefined' && userMuted) ? 0 : TARGET_VOL;
+    if (ceiling <= 0) return;
+    let step = 0; const steps = 80;         // ~4s at 50ms
+    if (_duckFadeTimer) clearInterval(_duckFadeTimer);
+    _duckFadeTimer = setInterval(()=>{
+      step++; const ease = step/steps;
+      active.volume = Math.min(ceiling, ceiling * ease * ease); // ease-in (gentle start)
+      if (step >= steps){ clearInterval(_duckFadeTimer); _duckFadeTimer=null; active.volume = ceiling; }
+    }, 50);
+  }, 2000);
+}
+
 let deckA, deckB, activeDeck = 'A';
 let crossfading = false;
 const CROSSFADE_MS = 4000; // 4 second blend
@@ -2262,6 +2296,7 @@ async function startVoiceCapture() {
     if (voiceRecognizer) { try { voiceRecognizer.stop(); } catch (e) {} }
     stopDeepgramStream();
     stopMicStream();
+    restoreMusicAfterVoice();   // 2s pause, then gentle fade back in
     const micBtn = document.querySelector('.story-mic');
     if (micBtn) micBtn.innerHTML = '&#127908; Speak';
     const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Saved \u2014 press Enter to send, or keep editing';
@@ -2277,6 +2312,7 @@ async function startVoiceCapture() {
   }
   voiceListening = true;
   voiceFinalTranscript = '';
+  duckMusicForVoice();   // stop the music while they speak
   const panel = $('live-transcript'); const dot = $('listen-dot'); const lbl = $('listen-label'); const tEl = $('transcript-text');
   if (panel) panel.style.display = 'block';
   if (dot) dot.style.background = '#e05a5a';
