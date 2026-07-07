@@ -1406,6 +1406,79 @@ function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectF
 // far faster than the emotion loop. Estimate less often; report occasionally.
 
 
+
+
+// ---- GENTLE COMPLETION (never a dead end, never a dependency) ----
+// Around 30 minutes, warmly encourage the bridge to a real person. Flexible if
+// they are pouring out. Never says no, never closes the door, never pushes hard.
+let _sessionStart = Date.now();
+let _gentleNudges = 0;
+function gentleCompletionCheck(){
+  const mins = (Date.now() - _sessionStart) / 60000;
+  // First warm bridge at ~20 min, a softer second at ~35 — then we stop nudging.
+  if (mins >= 20 && _gentleNudges === 0){ _gentleNudges = 1; showGentleBridge(
+    'You have shared a lot, and I am really glad you did. Whenever you feel ready, the most helpful next step is talking with a real person who can stay with you beyond this moment. I can connect you gently, whenever you want.'); }
+  else if (mins >= 35 && _gentleNudges === 1){ _gentleNudges = 2; showGentleBridge(
+    'I am still right here with you, and there is no rush. When you are ready, a real person can carry this forward with you. Would you like me to help you reach someone now?'); }
+}
+function showGentleBridge(message){
+  // never blocks, never closes anything — a soft, dismissable invitation
+  if (document.getElementById('gentle-bridge')) return;
+  const b = document.createElement('div');
+  b.id = 'gentle-bridge';
+  b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:74;'
+    + 'background:rgba(255,255,255,0.98);border:1px solid #cfe0d6;border-radius:16px;padding:16px 18px;'
+    + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;text-align:center;';
+  b.innerHTML = '<div style="font-size:14px;color:#2c4a3a;line-height:1.5;margin-bottom:12px;">' + message + '</div>'
+    + '<button onclick="bridgeConnect()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me with someone</button>'
+    + '<button onclick="closeGentleBridge()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Keep talking a little longer</button>';
+  document.body.appendChild(b);
+}
+function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} closeGentleBridge(); }
+function closeGentleBridge(){ const b=document.getElementById('gentle-bridge'); if(b) b.remove(); }
+setInterval(gentleCompletionCheck, 60000);
+
+// ---- GENTLE PROVIDER GUIDANCE (navigation, not diagnosis) ----
+// Reads ONLY the person's own explicit words about what they need, and gently
+// suggests which kind of professional can best help — so they don't lose time
+// at the wrong door. Never infers a condition, never diagnoses, never says no.
+function suggestProviderFrom(text){
+  if (!text) return null;
+  const t = ' ' + text.toLowerCase() + ' ';
+  // Signals the person themselves raises about MEDICATION / medical management
+  const medWords = ['medication','meds','prescription','prescribe','pill','dosage','dose',
+    'psychiatrist','side effect','refill','antidepressant','my meds','off my medication'];
+  // Signals about ongoing TALK therapy
+  const talkWords = ['therapist','therapy','counseling','someone to talk to','talk it through',
+    'process this','coping','cope','work through'];
+  // Signals of acute crisis handled by crisis-trained support
+  const crisisWords = ['can\u2019t go on','end it','hurt myself','harm myself','suicid','not safe',
+    'crisis','right now i need','emergency'];
+  const has = (arr)=>arr.some(w=>t.indexOf(w)>=0);
+  if (has(crisisWords)) return {pro:'Crisis-trained counselor',
+    why:'It sounds like you need support right now, this moment. A crisis-trained counselor is here for exactly that.'};
+  if (has(medWords)) return {pro:'Psychiatrist',
+    why:'From what you\u2019re describing about medication, a psychiatrist \u2014 a medical doctor who can evaluate this and manage medication \u2014 may be the right person to help.'};
+  if (has(talkWords)) return {pro:'Therapist / licensed counselor',
+    why:'It sounds like ongoing talk-based support could help. A therapist or licensed counselor works with people on exactly this.'};
+  return null;
+}
+// When we show the care page, pre-highlight the suggested provider (still the
+// person's choice — we never auto-select or force it).
+function applyProviderSuggestion(){
+  try {
+    const story = (document.getElementById('conversation-thread')||{}).textContent || '';
+    const s = suggestProviderFrom(story);
+    if (!s) return;
+    const tip = document.getElementById('pro-suggestion');
+    if (tip){ tip.style.display='block'; tip.innerHTML = s.why +
+      ' <span style="color:#6d8f80;">You can choose any option below \u2014 this is only a suggestion.</span>'; }
+    document.querySelectorAll('.pro-btn').forEach(function(b){
+      if (b.getAttribute('data-pro') === s.pro){ b.classList.add('suggested'); }
+    });
+  } catch(e){}
+}
+
 // ---- GENTLE FEEDBACK ASK (optional, anonymous) ----
 // Offered once, only after real engagement, never nagged. Their words become
 // anonymized research that helps prove InnerLight helps real people.
@@ -2771,6 +2844,7 @@ async function analyzeVisualEmotion() {
   $('emotion-status').textContent = `Emotion profile: ${data.primary_emotion || 'needs more context'}, distress ${data.distress_score || '?'}/10, confidence ${data.confidence || '?'}.`;
   if ((data.zenisys_mode_hint || '') && zenisysCtx) adaptZenisys(data.zenisys_mode_hint);
 }
+window._applyProviderSuggestion = applyProviderSuggestion;
 function openHelp(kind){
   metric('handoff_click', kind);
   // Each path is honest about WHERE the person is going and WHO they will reach.
@@ -3626,6 +3700,7 @@ CLINICAL_HANDOFF_PAGE = r"""
                border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
     .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
     .pro-btn.picked { border-color:var(--green); background:#f0faf5; box-shadow:0 0 0 2px rgba(46,125,90,0.18); }
+    .pro-btn.suggested { border-color:#2e6e8e; box-shadow:0 0 0 2px rgba(46,110,142,0.25); }
     .disclaimer { font-size:12.5px; color:#8794a0; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
 </head>
@@ -3640,6 +3715,7 @@ CLINICAL_HANDOFF_PAGE = r"""
       <h2>Choose who you want to reach</h2>
       <p>You pick. Tap the kind of professional you want &mdash; your summary goes to them, and only when you say send.</p>
       <div id="pro-choices">
+        <div id="pro-suggestion" style="display:none;background:#f0faf4;border:1px solid #c8e6d4;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#2c6a48;margin-bottom:12px;"></div>
         <button type="button" class="pro-btn" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
         <button type="button" class="pro-btn" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
         <button type="button" class="pro-btn" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
