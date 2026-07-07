@@ -593,6 +593,7 @@ PUBLIC_PAGE = """
         <div class="gate-links">
           <a href="/about">About</a><span>&middot;</span>
           <a href="/how-it-works">How it works</a><span>&middot;</span>
+          <a href="/research">Research</a><span>&middot;</span>
           <a href="/privacy">Your privacy</a><span>&middot;</span>
           <a href="/contact">Contact</a>
         </div>
@@ -3950,7 +3951,7 @@ def _info_page(title, inner):
   h2 { font-size:18px; font-weight:600; color:#3a6553; margin:30px 0 10px; }
   p { font-size:16px; color:#40564d; margin-bottom:15px; }
   .lead { font-size:18px; color:#35544a; margin-bottom:22px; }
-  .soft { background:rgba(255,255,255,.6); border:1px solid #d8e8e0; border-left:4px solid #7eb8a0;
+  .cite { font-size:12.5px; color:#5f7d8c; margin:2px 0 10px; padding-left:12px; border-left:2px solid #cfe0d6; } .soft { background:rgba(255,255,255,.6); border:1px solid #d8e8e0; border-left:4px solid #7eb8a0;
           border-radius:0 14px 14px 0; padding:18px 22px; margin:22px 0; }
   a { color:#3a8f74; }
   .back { display:inline-block; margin-top:38px; color:#6d8f80; text-decoration:none; font-size:15px;
@@ -3967,6 +3968,7 @@ def _info_page(title, inner):
     <div class="footer">
       <a href="/about">About</a>&middot;
       <a href="/how-it-works">How it works</a>&middot;
+      <a href="/research">Research</a>&middot;
       <a href="/privacy">Your privacy</a>&middot;
       <a href="/contact">Contact</a>
       <div style="margin-top:10px;">&copy; 2026 God's Love For Us LLC &middot; Created by Toshay S. Zeigler</div>
@@ -4035,6 +4037,61 @@ def page_about():
     </div>
     """
     return _info_page("About", inner)
+
+
+
+@app.route("/research")
+def page_research():
+    inner = """
+    <h1>Research foundations &amp; methods</h1>
+    <p class="lead">A transparent, detailed account of the science InnerLight is built on, the technologies it uses, and why &mdash; written for researchers, clinicians, and reviewers. InnerLight itself is not yet validated in a controlled trial; this page documents the established principles behind its design and our commitment to testing it honestly.</p>
+
+    <div class="soft"><p style="margin:0;"><strong>A note on our posture:</strong> every design choice below draws on peer-reviewed work. That grounds our <em>approach</em>. It does <strong>not</strong> mean InnerLight is proven &mdash; validating the tool itself is precisely the research we are undertaking. We will report negative results as readily as positive ones.</p></div>
+
+    <h2>1. Calming sound &mdash; the Iso-Principle</h2>
+    <p>InnerLight&rsquo;s use of sound is built on the <strong>Iso-Principle</strong> from music therapy: meet a person&rsquo;s current emotional state with matching music, then gradually shift the music toward calm to carry them with it. This is a long-standing clinical method with controlled experimental support.</p>
+    <p class="cite">Starcke K., Mayr J., von Georgi R. (2021). &ldquo;Emotion modulation through music after sadness induction &mdash; the Iso principle in a controlled experimental study.&rdquo; <em>International Journal of Environmental Research and Public Health</em>, 18(23).</p>
+    <p class="cite">Music with auditory beat stimulation RCT protocol (2025). <em>BMJ Open</em>, 15(6):e094784 &mdash; describes Iso-principle personalization against baseline Self-Assessment Manikin (SAM) scores.</p>
+
+    <h2>2. Target tempo for relaxation (60&ndash;80 BPM)</h2>
+    <p>Research indicates that music in the <strong>60&ndash;80 beats-per-minute</strong> range supports relaxation by aligning neural oscillations (alpha-wave activity) with the musical rhythm, shifting arousal from tense toward calm. InnerLight prioritizes tracks and, in development, dynamic tempo shaping toward this range.</p>
+    <p class="cite">Xu R., Li J. (2025). &ldquo;AI-driven music intervention based on five-tone theory for anxiety: a preliminary pre-post feasibility study.&rdquo; <em>Frontiers in Psychology</em>, 16:1669029. (Real-time HRV-guided tempo modulation.)</p>
+    <p class="cite">Frontiers in Digital Health (2025), 7:1552396 &mdash; review of music therapy, entrainment, and AI-driven biofeedback.</p>
+
+    <h2>3. Real-time, physiology-guided adaptation (in development)</h2>
+    <p>The strongest current evidence favors adjusting <strong>musical parameters</strong> &mdash; tempo, volume, complexity &mdash; smoothly and in real time in response to physiological signals, rather than abruptly switching tracks. When tension rises, effective systems slow the tempo and simplify the music with <em>soft transitions</em>. This is the direction of InnerLight&rsquo;s ongoing sound development, using the person&rsquo;s heart signal as the primary, steadier feedback channel.</p>
+    <p class="cite">REMAST: Real-time Emotion-based Music Arrangement with Soft Transition (arXiv:2305.08029).</p>
+    <p class="cite">Williams et al. (2020); Jiao (2025) &mdash; adaptive functional music generation with real-time biofeedback, reviewed in <em>Frontiers in Psychology</em> (2026), 16:1741463.</p>
+
+    <h2>4. Contactless heart reading &mdash; remote photoplethysmography (rPPG)</h2>
+    <p>InnerLight reads heart rate from a standard webcam using <strong>remote photoplethysmography</strong>: detecting the tiny color changes in facial skin as blood pulses beneath it. We combine forehead and cheek skin regions (avoiding the eyes and mouth, which introduce motion noise), verify skin pixels, detect the beat period by autocorrelation, and apply physiology-informed smoothing so implausible jumps are rejected. In low light, the signal is automatically brightened (adaptive gamma correction) before analysis so people in dim conditions are not excluded.</p>
+    <p class="cite">Method basis: chrominance- and plane-based rPPG (POS/CHROM family); forehead and cheek regions of interest shown to carry strong pulsatile signal in systematic reviews of rPPG ROI selection.</p>
+    <p class="cite">Low-light handling follows gamma-correction and histogram-based enhancement approaches evaluated for rPPG under poor illumination.</p>
+    <p><strong>Why webcam rPPG, and not a wearable or a specific product:</strong> a crisis tool must work for anyone, instantly, with no device to buy, pair, or install. Wearables and clinical pulse oximeters are more accurate but exclude anyone who doesn&rsquo;t own one in the moment. Deep-learning rPPG models are strong but require a server and heavy computation. Browser-based rPPG is the only approach that runs immediately for everyone on a phone or computer &mdash; so we use it, and we are transparent about its limits: it needs reasonable light and a mostly still face, and we label every reading by confidence (measured / estimated / baseline-held) rather than overstating precision.</p>
+
+    <h2>5. Facial-signal reading &mdash; MediaPipe</h2>
+    <p>For facial-expression signals InnerLight uses <strong>Google&rsquo;s MediaPipe Face Landmarker</strong>, which measures dozens of specific facial-movement values (blendshapes) rather than guessing a single emotion label. We chose MediaPipe because it is free, runs entirely in the browser (no images ever leave the person&rsquo;s device for this), is well-documented, and is widely used and maintained &mdash; important for a tool that must be reproducible by a research team.</p>
+
+    <h2>6. Grounding through real imagery</h2>
+    <p>InnerLight uses real photographs, not animation, as grounding scenes. Realism is used deliberately: concrete sensory grounding is a recognized technique for interrupting distress and dissociation and returning attention to the present.</p>
+
+    <h2>7. Privacy &amp; encryption</h2>
+    <p>Privacy is foundational, not an afterthought. Specifically:</p>
+    <ul>
+      <li><strong>Session content is not stored in raw form.</strong> Only a summary a person chooses to save is retained, and identifying details (emails, phone numbers, handles, long digit strings) are automatically removed before any research record is stored.</li>
+      <li><strong>Returning-user memory is encrypted with a key derived from the person&rsquo;s own return code.</strong> Their saved story cannot be read without that code &mdash; not by us, not by anyone with server access. If the code is lost, the data is unrecoverable by design. This uses the Axiom Harmony Protocol, our applied encryption layer, so that the person &mdash; not the operator &mdash; holds the key to their own story.</li>
+      <li><strong>The live biometric monitor is anonymous and ephemeral.</strong> It shows heart rate and calm-state under anonymous labels (Person 1, Person 2), holds no words, and expires shortly after a session ends.</li>
+      <li><strong>Facial analysis runs on-device.</strong> The person&rsquo;s video is analyzed in their own browser for heart and expression signals; the raw video is not transmitted for that analysis.</li>
+    </ul>
+
+    <h2>8. What we measure, and how we stay honest</h2>
+    <p>InnerLight records anonymous, aggregate research metrics designed around recognized digital-health frameworks: uptake, engagement, session duration, adherence, and completion, alongside expression shifts, sound responses, self-reported calm (a wordless Self-Assessment Manikin scale), and heart-rate trends measured against each person&rsquo;s own baseline. Every heart reading carries a confidence tier so coverage is complete without overstating precision. We follow the scientific method explicitly: a falsifiable hypothesis, stated predictions, an instrument that gathers the data, and a commitment to replication and peer review.</p>
+
+    <div class="soft"><p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a companion for the wait and a bridge to human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p></div>
+
+    <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
+    """
+    return _info_page("Research &amp; Methods", inner)
 
 
 @app.route("/how-it-works")
