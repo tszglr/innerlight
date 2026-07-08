@@ -3862,6 +3862,7 @@ CLINICAL_HANDOFF_PAGE = r"""
       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
     }
     let pickedPro = '';
+    const PAGE_OPEN_TS = Date.now();
     function pickPro(btn){
       document.querySelectorAll('.pro-btn').forEach(b=>b.classList.remove('picked'));
       btn.classList.add('picked');
@@ -3888,7 +3889,7 @@ CLINICAL_HANDOFF_PAGE = r"""
         + '<p class="u" style="white-space:pre-wrap;">' + esc(summaryText) + '</p>';
       document.getElementById('status').innerHTML = 'Reaching a human for you\u2026';
       fetch('/api/connect/request', {method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({kind:'care', pro: pickedPro, summary: summaryText})})
+        body: JSON.stringify({kind:'care', pro: pickedPro, summary: summaryText, hp:'', elapsed: (Date.now()-PAGE_OPEN_TS)})})
       .then(r=>r.json()).then(function(d){
         document.getElementById('status').innerHTML =
           'Your request for a <b>' + esc(pickedPro.toLowerCase()) + '</b> is in, and a human has been alerted. '
@@ -4031,6 +4032,7 @@ LEGAL_HANDOFF_PAGE = r"""
   </style>
   <script>
     let pickedPro = '';
+    const PAGE_OPEN_TS = Date.now();
     function pickPro(btn){
       document.querySelectorAll('.pro-btn').forEach(b=>b.classList.remove('picked'));
       btn.classList.add('picked'); pickedPro = btn.dataset.pro;
@@ -4555,6 +4557,8 @@ def resolution_bridge():
 
 @app.route("/api/transcribe/token")
 def api_transcribe_token():
+    if not _rate_ok("dg", 6, 3600) or not _budget_ok("deepgram"):
+        return _gentle_429()
     """Provide the browser a SHORT-LIVED Deepgram token so it can stream live
     microphone audio for transcription (the Zoom way). The real DEEPGRAM_API_KEY
     stays on the server and is never sent to the page. Uses Deepgram's modern
@@ -4618,6 +4622,8 @@ def api_voice_status():
 
 @app.route("/api/voice/speak", methods=["POST"])
 def api_voice_speak():
+    if not _rate_ok("voice", 60, 3600) or not _budget_ok("voice"):
+        return _gentle_429()
     """Return real human audio for the given text if a voice service is
     configured; otherwise tell the browser to use its best on-device voice."""
     data = request.get_json(force=True) or {}
@@ -4917,6 +4923,8 @@ def serve_audio(filename):
 
 @app.route("/api/checkin", methods=["POST"])
 def api_checkin():
+    if not _rate_ok("checkin", 40, 3600) or not _budget_ok("claude"):
+        return _gentle_429()
     init_db()
     data = request.get_json(force=True) or {}
     message = str(data.get("message", "")).strip()
@@ -5351,6 +5359,8 @@ _BIO_LOCK = threading.Lock()
 
 @app.route("/api/bio/ping", methods=["POST"])
 def bio_ping():
+    if not _rate_ok("bio", 1200, 3600):
+        return jsonify({"status": "ignored"}), 200
     data = request.get_json(silent=True) or {}
     sid = str(data.get("sid", ""))[:24]
     if not sid:
@@ -5394,6 +5404,88 @@ def admin_bio_live():
     return jsonify({"active": active, "count": len(active), "server_time": time.strftime("%H:%M:%S")})
 
 
+
+# ===========================================================================
+# ABUSE SHIELD — protects against bot farms and cost-collapse attacks.
+# Three defenses:
+#  (1) Per-IP sliding-window rate limits on every endpoint that costs money.
+#  (2) Global daily budget caps — even a distributed attack cannot exceed the
+#      day's spend ceiling; the service degrades gracefully instead of bleeding.
+#  (3) Bot traps: honeypot field + minimum-human-time checks on connect.
+# All blocks are counted and shown on the founder dashboard.
+# ===========================================================================
+from collections import deque as _deque
+_RATE = {}
+_RATE_LOCK = threading.Lock()
+_ABUSE = {"day": "", "blocked": 0}
+
+def _client_ip():
+    return (request.headers.get("X-Forwarded-For", request.remote_addr or "?").split(",")[0].strip())[:45]
+
+def _rate_ok(scope, limit, window_sec):
+    """Sliding-window per-IP limiter. Returns True if allowed."""
+    ip = _client_ip()
+    key = scope + "|" + ip
+    now = time.time()
+    with _RATE_LOCK:
+        q = _RATE.get(key)
+        if q is None:
+            q = _deque(); _RATE[key] = q
+        while q and now - q[0] > window_sec:
+            q.popleft()
+        if len(q) >= limit:
+            _abuse_mark()
+            return False
+        q.append(now)
+        # opportunistic cleanup
+        if len(_RATE) > 20000:
+            for k in list(_RATE.keys())[:5000]:
+                _RATE.pop(k, None)
+    return True
+
+_BUDGET = {"day": "", "counts": {}}
+_BUDGET_LOCK = threading.Lock()
+_BUDGET_CAPS = {
+    "claude":   int(os.environ.get("CAP_CLAUDE_PER_DAY",   "1500")),
+    "deepgram": int(os.environ.get("CAP_DEEPGRAM_PER_DAY", "300")),
+    "voice":    int(os.environ.get("CAP_VOICE_PER_DAY",    "600")),
+    "connect":  int(os.environ.get("CAP_CONNECT_PER_DAY",  "60")),
+    "memory":   int(os.environ.get("CAP_MEMORY_PER_DAY",   "300")),
+}
+
+def _budget_ok(kind):
+    """Global daily spend ceiling per costly service."""
+    day = time.strftime("%Y-%m-%d")
+    with _BUDGET_LOCK:
+        if _BUDGET["day"] != day:
+            _BUDGET["day"] = day; _BUDGET["counts"] = {}
+        c = _BUDGET["counts"].get(kind, 0)
+        if c >= _BUDGET_CAPS.get(kind, 10**9):
+            _abuse_mark()
+            return False
+        _BUDGET["counts"][kind] = c + 1
+    return True
+
+def _abuse_mark():
+    day = time.strftime("%Y-%m-%d")
+    if _ABUSE["day"] != day:
+        _ABUSE["day"] = day; _ABUSE["blocked"] = 0
+    _ABUSE["blocked"] += 1
+
+def _gentle_429():
+    return jsonify({"status": "busy",
+        "message": "InnerLight is very busy right now. Please wait a moment and try again — and if you need help now, call or text 988."}), 429
+
+@app.route("/api/admin/abuse")
+def admin_abuse():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    with _BUDGET_LOCK:
+        counts = dict(_BUDGET.get("counts", {}))
+    return jsonify({"blocked_today": _ABUSE.get("blocked", 0) if _ABUSE.get("day")==time.strftime("%Y-%m-%d") else 0,
+                    "budget_used": counts, "budget_caps": _BUDGET_CAPS})
+
+
 _MEMORY_FILE = os.environ.get("MEMORY_FILE", _DATA_DIR + "/innerlight_memory.json")
 _MEMORY_LOCK = threading.Lock()
 _CODE_WORDS = ["MOON","CALM","LEAF","WAVE","STAR","DAWN","FERN","TIDE","SAGE","GLOW","PINE","REST"]
@@ -5422,6 +5514,8 @@ def _code_key(code):
 
 @app.route("/api/memory/save", methods=["POST"])
 def memory_save():
+    if not _rate_ok("memsave", 6, 3600) or not _budget_ok("memory"):
+        return _gentle_429()
     """Opt-in: encrypt a session summary under a fresh return code."""
     data = request.get_json(silent=True) or {}
     summary = str(data.get("summary", ""))[:6000]
@@ -5447,6 +5541,8 @@ def memory_save():
 
 @app.route("/api/memory/resume", methods=["POST"])
 def memory_resume():
+    if not _rate_ok("memresume", 10, 3600):
+        return _gentle_429()  # also throttles code-guessing attacks
     """Return: decrypt a saved story from the person's code."""
     data = request.get_json(silent=True) or {}
     code = str(data.get("code", ""))[:40]
@@ -5490,6 +5586,8 @@ _LIVE_TOTAL = {"count": 0, "day": ""}
 
 @app.route("/api/metrics/event", methods=["POST"])
 def metrics_event():
+    if not _rate_ok("metrics", 900, 3600):
+        return jsonify({"status": "ignored"}), 200
     """Receive one anonymous counter event from the app."""
     data = request.get_json(silent=True) or {}
     etype = str(data.get("type", ""))[:40]
@@ -6257,6 +6355,8 @@ def _fb_save(d):
 
 @app.route("/api/feedback", methods=["POST"])
 def feedback_submit():
+    if not _rate_ok("feedback", 5, 3600):
+        return _gentle_429()
     data = request.get_json(silent=True) or {}
     helped = str(data.get("helped", ""))[:12]          # 'yes'/'somewhat'/'no'
     feeling = str(data.get("feeling", ""))[:12]         # 'calmer'/'same'/'worse'
@@ -6382,6 +6482,18 @@ _CONNECT_LOCK = threading.Lock()
 
 @app.route("/api/connect/request", methods=["POST"])
 def connect_request():
+    if not _rate_ok("connect", 3, 3600) or not _budget_ok("connect"):
+        return _gentle_429()
+    _cd = request.get_json(silent=True) or {}
+    # Bot traps: honeypot field must be empty; a real person spends real time
+    # before asking for a human (bots hit instantly).
+    if str(_cd.get("hp", "")):
+        _abuse_mark(); return jsonify({"status": "ok"})  # silently swallow bots
+    try:
+        if int(_cd.get("elapsed", 999999)) < 20000:
+            _abuse_mark(); return _gentle_429()
+    except Exception:
+        pass
     data = request.get_json(silent=True) or {}
     kind = "legal" if data.get("kind") == "legal" else "care"
     pro = _scrub(str(data.get("pro", ""))[:60])
