@@ -1408,6 +1408,40 @@ function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectF
 
 
 
+
+// ---- ANTI-SUBSTITUTION & OVER-RELIANCE GUARDRAILS (Vasan/Common Sense Media) ----
+// Watch, gently, for language that signals InnerLight is becoming a replacement
+// for human connection, and steer warmly toward real people. Never shaming.
+function checkSubstitutionSignals(text){
+  if (!text) return;
+  const t = ' ' + text.toLowerCase() + ' ';
+  const subPhrases = [
+    'only one who gets me','only one who understands','you are my only','my only friend',
+    'don\u2019t need anyone else','dont need anyone else','you understand me better than',
+    'better than my therapist','better than any therapist','you are all i have',
+    'i love you','are you real','be my friend','my best friend','talk to you every day',
+    'rather talk to you','instead of my'
+  ];
+  if (subPhrases.some(function(w){return t.indexOf(w)>=0;})){
+    gentlyRedirectFromSubstitution();
+  }
+}
+let _subRedirected = false;
+function gentlyRedirectFromSubstitution(){
+  if (_subRedirected) return; _subRedirected = true;
+  const thread = document.getElementById('conversation-thread');
+  if (!thread) return;
+  const div = document.createElement('div');
+  div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#2c4a3a;line-height:1.55;';
+  div.innerHTML = 'I am really glad being here helps, and I want to be honest with you because I care: '
+    + 'I am not a person, and I cannot be a substitute for real human connection. '
+    + 'What I can do is stay with you right now and help you reach people who can truly be there for you \u2014 '
+    + 'a counselor, someone you trust, a real voice. You deserve that, more than you deserve a screen. '
+    + 'Would you like me to help you reach a real person?';
+  thread.appendChild(div);
+  try { metric('substitution_redirect'); } catch(e){}
+}
+
 // ---- GENTLE COMPLETION (never a dead end, never a dependency) ----
 // Around 30 minutes, warmly encourage the bridge to a real person. Flexible if
 // they are pouring out. Never says no, never closes the door, never pushes hard.
@@ -2958,7 +2992,8 @@ async function doResume(){
   } catch(e){ if(msg) msg.textContent='Could not connect. Please try again.'; }
 }
 
-async function sendCheckin() {  startZenisys('greeting');
+async function sendCheckin() {
+  try { checkSubstitutionSignals((document.getElementById('message')||{}).value||''); } catch(e){}  startZenisys('greeting');
   const msgVal = (val('message') || '').trim();
   // Empty guard: if there's nothing to send, don't fake a response.
   if (!msgVal) {
@@ -5409,7 +5444,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue"}
+               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -5506,6 +5541,8 @@ def metrics_event():
                         sess["heart_last"] = bpm; sess["heart_tier"] = tier
             except Exception:
                 pass
+        elif etype == "substitution_redirect":
+            d["substitution_redirects"] = d.get("substitution_redirects", 0) + 1
         elif etype == "lowlight_rescue":
             d["lowlight_rescues"] = d.get("lowlight_rescues", 0) + 1
         elif etype == "bloom":
