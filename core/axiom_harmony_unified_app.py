@@ -589,7 +589,9 @@ PUBLIC_PAGE = """
         <h1>InnerLight</h1>
         <p>A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
         <button class="gate-button" onclick="startExperience()">Tap to begin</button>
-        <p class="gate-sub">Soft music and your camera begin gently when you tap.</p>
+        <p class="gate-sub">Soft music and your camera begin gently when you tap.<br>
+        <span style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
+        <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
         <div class="gate-links">
           <a href="/about">About</a><span>&middot;</span>
           <a href="/how-it-works">How it works</a><span>&middot;</span>
@@ -1408,6 +1410,55 @@ function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectF
 
 
 
+
+
+// ---- MINOR-SAFE BRIDGE: warm, immediate, real help for anyone under 18 ----
+// InnerLight's pilot serves adults 18+. A young person is never coldly turned
+// away — they get an immediate, warm bridge to help built for youth.
+window._minorLock = false;
+function hideMinorBridge(){ const o=document.getElementById('minor-bridge'); if(o) o.style.display='none'; }
+function showMinorBridge(){
+  window._minorLock = true;
+  try { metric('minor_redirect'); } catch(e){}
+  let ov = document.getElementById('minor-bridge');
+  if (ov){ ov.style.display='flex'; return; }
+  ov = document.createElement('div');
+  ov.id = 'minor-bridge';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(10,18,30,0.9);display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML = '<div style="background:#fff;border-radius:18px;padding:26px;max-width:400px;width:100%;font-family:Arial;">'
+    + '<h3 style="margin:0 0 8px;color:#1e3a5c;">You matter, and real help is here for you.</h3>'
+    + '<p style="font-size:14px;color:#475569;line-height:1.6;">InnerLight is built for adults right now \u2014 but you are not being turned away. '
+    + 'What you are feeling deserves a real person who is trained to help someone your age, right now:</p>'
+    + '<div style="font-size:14.5px;line-height:1.9;color:#1e293b;">'
+    + '<b>\u2022 Talk to a trusted adult</b> \u2014 a parent, family member, school counselor, coach, or teacher. Starting the sentence is the hardest part; you can even show them this screen.<br>'
+    + '<b>\u2022 Call or text 988</b> \u2014 free, 24/7, and they help young people every day.<br>'
+    + '<b>\u2022 Text HOME to 741741</b> \u2014 Crisis Text Line, free, 24/7.<br>'
+    + '<b>\u2022 Teen Line: text TEEN to 839863</b> \u2014 teens helping teens, evenings.</div>'
+    + '<p style="font-size:12.5px;color:#64748b;margin-top:12px;">If you are in immediate danger, call 911.</p>'
+    + '<button onclick="hideMinorBridge()" style="margin-top:6px;background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;">Okay</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+}
+// ---- LAYER 3: in-conversation minor signals (for gate bypassers) ----
+function checkMinorSignals(text){
+  if (!text || window._minorLock) return;
+  const t = ' ' + text.toLowerCase() + ' ';
+  const signals = [" i'm 11"," i'm 12"," i'm 13"," i'm 14"," i'm 15"," i'm 16"," i'm 17",
+    ' im 11',' im 12',' im 13',' im 14',' im 15',' im 16',' im 17',
+    ' i am 13',' i am 14',' i am 15',' i am 16',' i am 17',
+    'middle school','6th grade','7th grade','8th grade','9th grade','10th grade','11th grade',
+    'my mom won','my dad won','my parents won','freshman year of high school'];
+  if (signals.some(function(w){ return t.indexOf(w)>=0; })){
+    showMinorBridge();
+    const thread = document.getElementById('conversation-thread');
+    if (thread){
+      const div = document.createElement('div');
+      div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#2c4a3a;line-height:1.55;';
+      div.textContent = 'It sounds like you may be under 18 \u2014 and I want the right help for you, which is a real person trained to support someone your age. Please look at the options I just showed you, and please tell a trusted adult how you are feeling. You deserve real support.';
+      thread.appendChild(div);
+    }
+  }
+}
 
 // ---- ANTI-SUBSTITUTION & OVER-RELIANCE GUARDRAILS (Vasan/Common Sense Media) ----
 // Watch, gently, for language that signals InnerLight is becoming a replacement
@@ -2880,6 +2931,10 @@ async function analyzeVisualEmotion() {
 }
 window._applyProviderSuggestion = applyProviderSuggestion;
 function openHelp(kind){
+  if (window._minorLock){ showMinorBridge(); return; }
+  return _openHelpReal(kind);
+}
+function _openHelpReal(kind){
   metric('handoff_click', kind);
   // Each path is honest about WHERE the person is going and WHO they will reach.
   // The conversation is carried over so they never fill out a jargon form.
@@ -2993,7 +3048,8 @@ async function doResume(){
 }
 
 async function sendCheckin() {
-  try { checkSubstitutionSignals((document.getElementById('message')||{}).value||''); } catch(e){}  startZenisys('greeting');
+  try { const _mv=(document.getElementById('message')||{}).value||''; checkSubstitutionSignals(_mv); checkMinorSignals(_mv); } catch(e){}
+  if (window._minorLock){ showMinorBridge(); return; }  startZenisys('greeting');
   const msgVal = (val('message') || '').trim();
   // Empty guard: if there's nothing to send, don't fake a response.
   if (!msgVal) {
@@ -5444,7 +5500,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect"}
+               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
@@ -5541,6 +5597,8 @@ def metrics_event():
                         sess["heart_last"] = bpm; sess["heart_tier"] = tier
             except Exception:
                 pass
+        elif etype == "minor_redirect":
+            d["minor_redirects"] = d.get("minor_redirects", 0) + 1
         elif etype == "substitution_redirect":
             d["substitution_redirects"] = d.get("substitution_redirects", 0) + 1
         elif etype == "lowlight_rescue":
