@@ -77,3 +77,21 @@
   people," using InnerLight in place of human contact) and steer toward humans.
 - We do NOT claim to provide mental-health CARE (no AI system is FDA-cleared to).
   We provide a calm place to wait and a bridge to real human help.
+
+## 9. MINOR PROTECTION (strictest guardrails — hardened)
+- Minors are protected at ALL times with the STRICTEST guardrails in the product.
+- A minor is ALWAYS steered toward a SAFE ADULT (parent, guardian, trusted adult,
+  school counselor) — this steering must never be absent from a minor's session.
+- Conversation limitations are GREATER for minors: earlier and firmer bridges to
+  humans, stronger substitution guardrails, shorter comfortable session windows.
+- We must NOT assume someone is a minor, and NOT assume they are an adult:
+  age must be established with the greatest scrutiny available BEFORE any
+  provider handoff, so we neither (a) route an adult into minor-reserved
+  emergency handling, nor (b) treat a minor as an adult.
+- Once a person is established as a minor: PARENTAL PERMISSION is required before
+  connecting them to any therapist, lawyer, or doctor — or at minimum VERIFIED
+  parental notification. This cannot be minimized or softened.
+- Honest limitation, stated: absolute age verification in a browser without ID
+  infrastructure is not possible; we therefore implement strong age attestation,
+  minor-protective defaults, and a verified parent-confirmation step for any
+  minor handoff — and we document this posture openly for ethics review.
