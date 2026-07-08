@@ -95,3 +95,21 @@
   infrastructure is not possible; we therefore implement strong age attestation,
   minor-protective defaults, and a verified parent-confirmation step for any
   minor handoff — and we document this posture openly for ethics review.
+
+## 10. ADULTS-ONLY PILOT (minors restricted until the legal framework exists)
+- During the pilot phase, InnerLight serves ADULTS 18+ ONLY. Anonymity is
+  preserved for adults; but a minor cannot be served anonymously — and since we
+  cannot yet verify age or parental consent to a legal standard, minors are
+  respectfully restricted rather than unsafely served.
+- Minors who reach the gate are NEVER coldly turned away (Principle 1 — no dead
+  ends): they receive a warm, immediate bridge to real help built for youth —
+  a trusted adult, 988 (serves youth), Crisis Text Line, Teen Line.
+- We EXPECT minors to attempt to bypass the gate (children are the quickest to
+  find ways in). Defense-in-depth is required: age attestation at entry PLUS
+  in-conversation minor-signal detection that, when triggered, locks provider
+  handoff and switches to the minor-safe bridge.
+- Minors will be added ONLY when the full legal framework is built: COPPA
+  compliance, state-by-state minor-consent law mapping (e.g., California minor
+  consent provisions differ from other states), and verified parental
+  permission/notification infrastructure. We are not in the business of
+  violating state, local, or federal law — anywhere.
