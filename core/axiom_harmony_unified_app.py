@@ -587,9 +587,13 @@ PUBLIC_PAGE = """
       <div class="gate-inner">
         <div class="gate-mark" aria-hidden="true">&#9711;</div>
         <h1>InnerLight</h1>
-        <p>A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
+        <p>A quiet, private place to tell your story.<br>What you share is encrypted and is not shared with providers, organizations, or other people without your consent. <a href="/privacy" style="color:#3a8f74;">Your privacy</a>.</p>
+        <div class="camera-consent" style="background:rgba(255,255,255,.55);border:1px solid #d8e8e0;border-left:4px solid #7eb8a0;border-radius:0 12px 12px 0;padding:14px 16px;margin:0 0 22px;text-align:left;font-size:12.5px;line-height:1.55;color:#5a7d6d;">
+          <strong style="color:#3a6553;">About your camera (optional)</strong><br>
+          Your camera is optional. If you allow it, InnerLight estimates your heart rate and reads facial-movement signals to gently adapt the calming sound to how you're feeling. This analysis runs in your browser, on your own device &mdash; no video or images are recorded, stored, or sent anywhere. The heart estimate is experimental, can be inaccurate, and is <strong>not a medical measurement or a clinical monitor</strong>. If you decline the camera, everything else still works.
+        </div>
         <button class="gate-button" onclick="startExperience()">Tap to begin</button>
-        <p class="gate-sub">Soft music and your camera begin gently when you tap.<br>
+        <p class="gate-sub">Soft music begins gently when you tap. If you allow it, your browser will ask permission to use your camera.<br>
         <span style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
         <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
         <div class="gate-links">
@@ -4219,27 +4223,27 @@ def page_research():
 
     <h2>1. Calming sound &mdash; the Iso-Principle</h2>
     <p>InnerLight&rsquo;s use of sound is built on the <strong>Iso-Principle</strong> from music therapy: meet a person&rsquo;s current emotional state with matching music, then gradually shift the music toward calm to carry them with it. This is a long-standing clinical method with controlled experimental support.</p>
-    <p class="cite">Starcke K., Mayr J., von Georgi R. (2021). &ldquo;Emotion modulation through music after sadness induction &mdash; the Iso principle in a controlled experimental study.&rdquo; <em>International Journal of Environmental Research and Public Health</em>, 18(23).</p>
-    <p class="cite">Music with auditory beat stimulation RCT protocol (2025). <em>BMJ Open</em>, 15(6):e094784 &mdash; describes Iso-principle personalization against baseline Self-Assessment Manikin (SAM) scores.</p>
+    <p class="cite">Starcke, Mayr, &amp; von Georgi (2021) &mdash; controlled experimental support for the Iso-principle.</p>
+    <p class="cite">Ueberholz et al. (2025) &mdash; RCT protocol describing Iso-principle personalization against baseline Self-Assessment Manikin (SAM) scores.</p>
 
     <h2>2. Target tempo for relaxation (60&ndash;80 BPM)</h2>
-    <p>Research indicates that music in the <strong>60&ndash;80 beats-per-minute</strong> range supports relaxation by aligning neural oscillations (alpha-wave activity) with the musical rhythm, shifting arousal from tense toward calm. InnerLight prioritizes tracks and, in development, dynamic tempo shaping toward this range.</p>
-    <p class="cite">Xu R., Li J. (2025). &ldquo;AI-driven music intervention based on five-tone theory for anxiety: a preliminary pre-post feasibility study.&rdquo; <em>Frontiers in Psychology</em>, 16:1669029. (Real-time HRV-guided tempo modulation.)</p>
-    <p class="cite">Frontiers in Digital Health (2025), 7:1552396 &mdash; review of music therapy, entrainment, and AI-driven biofeedback.</p>
+    <p>Music in the <strong>60&ndash;80 beats-per-minute</strong> range has been associated with reduced arousal and increased self-reported relaxation in some studies, often linked to the alignment of neural and physiological rhythms with a slower musical pulse. For InnerLight this is <strong>a design direction being evaluated, not a guaranteed effect</strong>: we prioritize tracks in this range and, in development, gentle dynamic tempo shaping toward it.</p>
+    <p class="cite">Xu &amp; Li (2025); Jiao (2025) &mdash; real-time, physiology-guided tempo modulation and review of music therapy, entrainment, and AI-driven biofeedback.</p>
 
     <h2>3. Real-time, physiology-guided adaptation (in development)</h2>
     <p>The strongest current evidence favors adjusting <strong>musical parameters</strong> &mdash; tempo, volume, complexity &mdash; smoothly and in real time in response to physiological signals, rather than abruptly switching tracks. When tension rises, effective systems slow the tempo and simplify the music with <em>soft transitions</em>. This is the direction of InnerLight&rsquo;s ongoing sound development, using the person&rsquo;s heart signal as the primary, steadier feedback channel.</p>
-    <p class="cite">REMAST: Real-time Emotion-based Music Arrangement with Soft Transition (arXiv:2305.08029).</p>
-    <p class="cite">Williams et al. (2020); Jiao (2025) &mdash; adaptive functional music generation with real-time biofeedback, reviewed in <em>Frontiers in Psychology</em> (2026), 16:1741463.</p>
+    <p class="cite">Wang et al. (2023) &mdash; REMAST: real-time emotion-based music arrangement with soft transition.</p>
+    <p class="cite">Williams, Hodge, &amp; Wu (2020) &mdash; AI generation of functional music for mental health; reviewed in Wei &amp; He (2026), <em>Frontiers in Psychology</em>, 17:1741463.</p>
 
     <h2>4. Contactless heart reading &mdash; remote photoplethysmography (rPPG)</h2>
     <p>InnerLight reads heart rate from a standard webcam using <strong>remote photoplethysmography</strong>: detecting the tiny color changes in facial skin as blood pulses beneath it. We combine forehead and cheek skin regions (avoiding the eyes and mouth, which introduce motion noise), verify skin pixels, detect the beat period by autocorrelation, and apply physiology-informed smoothing so implausible jumps are rejected. In low light, the signal is automatically brightened (adaptive gamma correction) before analysis so people in dim conditions are not excluded.</p>
-    <p class="cite">Method basis: chrominance- and plane-based rPPG (POS/CHROM family); forehead and cheek regions of interest shown to carry strong pulsatile signal in systematic reviews of rPPG ROI selection.</p>
-    <p class="cite">Low-light handling follows gamma-correction and histogram-based enhancement approaches evaluated for rPPG under poor illumination.</p>
+    <div class="soft"><p style="margin:0;">This webcam heart reading is <strong>experimental and not intended as a medical measurement</strong>. Its accuracy varies with lighting, movement, and skin tone, and it can be wrong. It is a soft feedback signal for adapting sound &mdash; <strong>no clinical decision should ever rest on it</strong>.</p></div>
+    <p class="cite">de Haan &amp; Jeanne (2013) &mdash; chrominance-based rPPG (CHROM); Wang, den Brinker, Stuijk, &amp; de Haan (2017) &mdash; plane-orthogonal-to-skin (POS) algorithmic principles of remote PPG. Forehead and cheek regions of interest carry strong pulsatile signal.</p>
     <p><strong>Why webcam rPPG, and not a wearable or a specific product:</strong> a crisis tool must work for anyone, instantly, with no device to buy, pair, or install. Wearables and clinical pulse oximeters are more accurate but exclude anyone who doesn&rsquo;t own one in the moment. Deep-learning rPPG models are strong but require a server and heavy computation. Browser-based rPPG is the only approach that runs immediately for everyone on a phone or computer &mdash; so we use it, and we are transparent about its limits: it needs reasonable light and a mostly still face, and we label every reading by confidence (measured / estimated / baseline-held) rather than overstating precision.</p>
 
     <h2>5. Facial-signal reading &mdash; MediaPipe</h2>
     <p>For facial-expression signals InnerLight uses <strong>Google&rsquo;s MediaPipe Face Landmarker</strong>, which measures dozens of specific facial-movement values (blendshapes) rather than guessing a single emotion label. We chose MediaPipe because it is free, runs entirely in the browser (no images ever leave the person&rsquo;s device for this), is well-documented, and is widely used and maintained &mdash; important for a tool that must be reproducible by a research team.</p>
+    <p class="cite">Lugaresi et al. (2019) &mdash; MediaPipe: a framework for building perception pipelines.</p>
 
     <h2>6. Grounding through real imagery</h2>
     <p>InnerLight uses real photographs, not animation, as grounding scenes. Realism is used deliberately: concrete sensory grounding is a recognized technique for interrupting distress and dissociation and returning attention to the present.</p>
@@ -4258,7 +4262,20 @@ def page_research():
 
     <div class="soft"><p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a companion for the wait and a bridge to human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p></div>
 
-    <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
+    <h2>References</h2>
+    <p style="font-size:13.5px;color:#5f7d8c;">The references below support the <em>principles</em> InnerLight draws on. They do <strong>not</strong> constitute evidence that InnerLight itself is effective; that evaluation is ongoing.</p>
+    <div style="font-size:13px;color:#4c6b60;line-height:1.55;">
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">de Haan, G., &amp; Jeanne, V. (2013). Robust pulse rate from chrominance-based rPPG. <em>IEEE Transactions on Biomedical Engineering, 60</em>(10), 2878&ndash;2886. <a href="https://doi.org/10.1109/TBME.2013.2266196">https://doi.org/10.1109/TBME.2013.2266196</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Jiao, D. (2025). Advancing personalized digital therapeutics: Integrating music therapy, brainwave entrainment methods, and AI-driven biofeedback. <em>Frontiers in Digital Health, 7</em>, 1552396. <a href="https://doi.org/10.3389/fdgth.2025.1552396">https://doi.org/10.3389/fdgth.2025.1552396</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Lugaresi, C., et al. (2019). MediaPipe: A framework for building perception pipelines. <em>arXiv</em>. <a href="https://arxiv.org/abs/1906.08172">https://arxiv.org/abs/1906.08172</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Starcke, K., Mayr, J., &amp; von Georgi, R. (2021). Emotion modulation through music after sadness induction&mdash;The iso principle in a controlled experimental study. <em>International Journal of Environmental Research and Public Health, 18</em>(23), 12486. <a href="https://doi.org/10.3390/ijerph182312486">https://doi.org/10.3390/ijerph182312486</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Ueberholz, R., Glassman, H., Mallik, A., &amp; Russo, F. A. (2025). Effectiveness of music with auditory beat stimulation in reducing state anxiety in Canadian students with trait anxiety: Protocol for a randomised controlled trial. <em>BMJ Open, 15</em>(6), e094784. <a href="https://doi.org/10.1136/bmjopen-2024-094784">https://doi.org/10.1136/bmjopen-2024-094784</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Wang, W., den Brinker, A. C., Stuijk, S., &amp; de Haan, G. (2017). Algorithmic principles of remote PPG. <em>IEEE Transactions on Biomedical Engineering, 64</em>(7), 1479&ndash;1491. <a href="https://doi.org/10.1109/TBME.2016.2609282">https://doi.org/10.1109/TBME.2016.2609282</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Wang, Z., et al. (2023). REMAST: Real-time emotion-based music arrangement with soft transition. <em>arXiv</em>. <a href="https://arxiv.org/abs/2305.08029">https://arxiv.org/abs/2305.08029</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Wei, Q., &amp; He, W. (2026). The application of AI-assisted music therapy tools in mental health interventions. <em>Frontiers in Psychology, 17</em>, 1741463. <a href="https://doi.org/10.3389/fpsyg.2026.1741463">https://doi.org/10.3389/fpsyg.2026.1741463</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Williams, D., Hodge, V. J., &amp; Wu, C.-Y. (2020). On the use of AI for generation of functional music to improve mental health. <em>Frontiers in Artificial Intelligence, 3</em>, 497864. <a href="https://doi.org/10.3389/frai.2020.497864">https://doi.org/10.3389/frai.2020.497864</a></p>
+      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Xu, R., &amp; Li, J. (2025). AI-driven music intervention based on five-tone theory for anxiety: A preliminary pre-post feasibility study. <em>Frontiers in Psychology, 16</em>, 1669029. <a href="https://doi.org/10.3389/fpsyg.2025.1669029">https://doi.org/10.3389/fpsyg.2025.1669029</a></p>
+    </div>
     """
     return _info_page("Research &amp; Methods", inner)
 
@@ -4320,8 +4337,63 @@ def page_privacy():
     it does not replace professional care or licensed legal counsel. In an emergency, please reach real human help
     right away &mdash; call or text 988, or call 911.</p>
 
+    <h1 style="margin-top:44px;">Privacy Policy</h1>
+    <p>This policy explains, plainly, what InnerLight (operated by God's Love For Us LLC) collects, how it is handled,
+    and the choices you have.</p>
+
+    <h2>What we collect</h2>
+    <ul>
+      <li><strong>The words you share are processed in the moment.</strong> They are used to understand and respond to you during your session; the raw content is <strong>not retained by default</strong> after the session.</li>
+      <li><strong>Personal identifiers are automatically scrubbed.</strong> Before anything is stored for research, identifying details (such as emails, phone numbers, handles, and long digit strings) are automatically removed.</li>
+      <li><strong>Camera analysis happens on your device.</strong> If you allow the camera, heart-rate and facial-movement analysis runs in your browser. <strong>No video or images are recorded, stored, or sent</strong> anywhere.</li>
+      <li><strong>Anonymous, aggregate metrics.</strong> We keep de-identified, aggregate measures (such as engagement and self-reported calm) to understand whether the approach helps &mdash; never tied to your identity.</li>
+      <li><strong>Optional saved memory is encrypted.</strong> If you choose to save a memory for a future visit, it is encrypted with a key derived from your own return code and is <strong>unreadable without that code</strong> &mdash; not by us, not by anyone with server access.</li>
+    </ul>
+
+    <h2>Cookies</h2>
+    <p>InnerLight uses <strong>no advertising trackers and no third-party analytics</strong>. Only technically necessary
+    items required to keep a session working are used.</p>
+
+    <h2>Third-party processors</h2>
+    <p>To run the service, InnerLight relies on a small number of vendors, each doing <strong>one specific job</strong>:</p>
+    <ul>
+      <li><strong>Anthropic (Claude)</strong> &mdash; powering the conversation.</li>
+      <li><strong>Deepgram</strong> &mdash; speech-to-text (turning spoken words into text).</li>
+      <li><strong>ElevenLabs</strong> &mdash; voice (spoken responses).</li>
+      <li><strong>Daily.co</strong> &mdash; video rooms for a human handoff.</li>
+      <li><strong>Render</strong> &mdash; hosting the application (United States).</li>
+    </ul>
+    <p>Data handled by these processors is <strong>encrypted in transit and at rest</strong>, but it is <strong>not
+    end-to-end encrypted</strong> &mdash; a processor performing its job can technically access the data it processes for
+    that purpose. Your information is <strong>never sold, and never shared for marketing</strong>.</p>
+
+    <h2>Storage and retention</h2>
+    <ul>
+      <li>Data is held on <strong>encrypted disk</strong> at our host.</li>
+      <li>De-identified research records are kept <strong>as long as needed</strong> for the research purpose.</li>
+      <li>Optional saved memory is kept <strong>until you delete it</strong>.</li>
+    </ul>
+
+    <h2>Deleting your data</h2>
+    <p>You can request deletion of your data at any time by emailing
+    <a href="mailto:masterzeigler@gmail.com">masterzeigler@gmail.com</a>.</p>
+
+    <h2>If something goes wrong</h2>
+    <p>If a security incident ever affects your information, we will <strong>disclose it honestly and promptly</strong>
+    to those affected.</p>
+
+    <h2>What InnerLight is not</h2>
+    <p>InnerLight is <strong>not a healthcare provider and not a HIPAA covered entity</strong>. It does not create medical
+    records. It is a companion for the wait and a bridge to human help &mdash; never a replacement for professional care.</p>
+
+    <h2>Research use</h2>
+    <p>Any research use of data is <strong>anonymous and aggregate</strong>. A summary of your conversation is shared with
+    a provider or resource <strong>only with your explicit consent</strong>. During this pilot, InnerLight serves
+    <strong>adults 18 and older</strong>.</p>
+
     <div class="soft">
-      <p style="margin:0;">If you have questions about privacy, you can reach God's Love For Us LLC through the
+      <p style="margin:0;">Questions about privacy, or a request to delete your data? Email
+      <a href="mailto:masterzeigler@gmail.com">masterzeigler@gmail.com</a>, or reach God's Love For Us LLC through the
       <a href="/contact">contact page</a>.</p>
     </div>
     """
@@ -4341,12 +4413,8 @@ def page_contact():
     <div class="soft">
       <p style="margin:0 0 6px;"><strong>God's Love For Us LLC</strong></p>
       <p style="margin:0 0 6px;">Founder: Toshay S. Zeigler</p>
-      <p style="margin:0;">Email: <a href="mailto:[your email]">[your email]</a><br>
-      Phone: [your phone]</p>
+      <p style="margin:0;">Email: <a href="mailto:masterzeigler@gmail.com">masterzeigler@gmail.com</a></p>
     </div>
-
-    <p style="font-size:14px;color:#7d9f91;">You can add your real email and phone here whenever you're ready &mdash;
-    right now these are placeholders so the page is live and ready.</p>
 
     <div class="soft">
       <p style="margin:0;"><strong>If this is an emergency</strong> and you or someone else may be in danger, please
