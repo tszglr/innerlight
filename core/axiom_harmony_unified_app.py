@@ -1404,8 +1404,6 @@ let faceInterval = null;
 // Detect the face often — subtle emotion flickers across a face in fractions
 // of a second, so we look ~every 0.6s to catch the ticks. The SOUND still
 // responds gently (frequent detection + smoothed response = sensitive but not jittery).
-setInterval(maybeOfferSave, 15000);
-  setTimeout(offerFeedback, 6*60*1000);
 function startFaceLoop() { if (!faceInterval) faceInterval = setInterval(detectFaceEmotion, 600); }
 
 // Heart needs FAST, steady sampling (~15/sec) to catch the pulse waveform —
@@ -1525,7 +1523,6 @@ function showGentleBridge(message){
 }
 function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} closeGentleBridge(); }
 function closeGentleBridge(){ const b=document.getElementById('gentle-bridge'); if(b) b.remove(); }
-setInterval(gentleCompletionCheck, 60000);
 
 // ---- GENTLE PROVIDER GUIDANCE (navigation, not diagnosis) ----
 // Reads ONLY the person's own explicit words about what they need, and gently
@@ -1763,7 +1760,7 @@ function stopAdaptiveLoop() {
 // activated person; eased off as they settle.
 // ---------------------------------------------------------------------------
 let entrainCtx = null, entrainOscL = null, entrainOscR = null, entrainGain = null;
-let entrainPanL = null, entrainPanR = null, entrainOn = false;
+entrainPanL = null; entrainPanR = null; /* entrainOn hoisted */
 const ENTRAIN_CARRIER = 120;   // low, warm carrier tone (Hz) — felt, not piercing
 let entrainBeatHz = 4.5;       // slower, deeper pulse (lowered per Toshay)
 const ENTRAIN_VOL = 0.018;     // barely-there — felt more than heard (lowered per Toshay)
@@ -1834,7 +1831,7 @@ function toggleEntrainment() {
 
 // ---- MUSIC DUCKING FOR VOICE (first user feedback): music must fully stop
 // while the person speaks, wait 2s after they finish, then FADE gently back. ----
-let _duckActive = false, _duckRestoreTimer = null, _duckFadeTimer = null;
+/* _duckActive, _duckRestoreTimer, _duckFadeTimer hoisted */
 function duckMusicForVoice(){
   _duckActive = true;
   if (_duckRestoreTimer){ clearTimeout(_duckRestoreTimer); _duckRestoreTimer = null; }
@@ -2150,6 +2147,9 @@ let ambientIndex = 0;
 const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
+// --- Hoisted audio-state declarations (must exist before any function uses them) ---
+let entrainOn = false, entrainPanL = null, entrainPanR = null;
+let _duckActive = false, _duckRestoreTimer = null, _duckFadeTimer = null;
 // ---- Volume control: mute + slider. Slider 40 = the safe default. ----
 let userMuted = false;
 function currentTarget(){ return userMuted ? 0 : TARGET_VOL; }
@@ -6331,7 +6331,15 @@ async function runStudy(){
   wait.style.display='none'; out.style.display='block';
   if (typeof loadShelf==='function') loadShelf();
 }
-</script></body></html>""")
+</script>
+<script>
+window.addEventListener('load', function(){
+  try { if (typeof maybeOfferSave==='function') setInterval(maybeOfferSave, 15000); } catch(e){}
+  try { if (typeof offerFeedback==='function') setTimeout(offerFeedback, 6*60*1000); } catch(e){}
+  try { if (typeof gentleCompletionCheck==='function') setInterval(gentleCompletionCheck, 60000); } catch(e){}
+}, {once:true});
+</script>
+</body></html>""")
 
 
 # ===========================================================================
