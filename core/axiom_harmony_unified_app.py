@@ -4391,8 +4391,9 @@ def page_privacy():
     <ul>
       <li>Data is held on <strong>encrypted disk</strong> at our host.</li>
       <li>De-identified research records are kept <strong>as long as needed</strong> for the research purpose.</li>
-      <li>Optional saved memory is kept <strong>until you delete it</strong>.</li>
+      <li>Optional saved memory is kept <strong>until you delete it</strong>. It is encrypted under a key derived from your own return code (our Axiom Harmony Protocol), so it cannot be read without that code.</li>
     </ul>
+    <p><strong>Honest limitation:</strong> the encryption we use (AES-256-GCM) is strong, modern encryption, but it is <strong>not post-quantum</strong> &mdash; a future quantum-resistant design would add a reviewed key-encapsulation mechanism such as ML-KEM. And as noted above, data handled by third-party processors is encrypted in transit and at rest but is <strong>not end-to-end encrypted</strong>. We state both plainly rather than overclaim. (More detail is on our <a href="/research">Research &amp; Methods</a> page.)</p>
 
     <h2>Deleting your data</h2>
     <p>You can request deletion of your data at any time by emailing
