@@ -2,3 +2,4 @@ flask>=3.0
 gunicorn>=21.2
 numpy>=1.26
 cryptography>=42.0
+kyber-py>=1.2  # pure-Python ML-KEM (FIPS 203) for the AHP post-quantum hybrid; optional at runtime
