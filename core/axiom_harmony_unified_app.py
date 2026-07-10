@@ -590,6 +590,10 @@ PUBLIC_PAGE = """
         <p>A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
         <button class="gate-button" onclick="startExperience()">Tap to begin</button>
         <p class="gate-sub">Soft music and your camera begin gently when you tap.<br>
+        <span style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
+        <b style="color:#5a7d6d;">About your camera:</b> your video is analyzed <b>on your own device</b> &mdash;
+        for gentle expression and heart signals only. The video itself is <b>never sent to us or stored anywhere</b>.
+        Nothing leaves your device. You can decline the camera and still use everything else.</span><br>
         <span style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
         <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
         <div class="gate-links">
