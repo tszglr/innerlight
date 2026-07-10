@@ -724,6 +724,7 @@ const SCENE_PHOTOS = {
 const SCENE_ORDER = ['garden','lettuce','pepper','redpepper','sunflower','sunflowers','sunset','horizon','wave','moon','daymoon','moonleaf'];
 let sceneAutoTimer = null, sceneUserChose = false;
 let currentScene = 'garden';
+let sceneEmotionIdx = 0;
 let canvasAnim = null;
 
 function setScene(scene, byUser=true) {
@@ -1164,7 +1165,7 @@ function mpTick(){
     // ADAPTIVE PATCHES: when the face is small (person far), enlarge the skin
     // patches relative to the face so we still gather enough skin pixels.
     // scale 1.0 at comfortable distance, up to ~1.8 when far.
-    const grow = faceFrac > 0 ? Math.max(1, Math.min(1.8, 0.32 / faceFrac)) : 1;
+    const grow = faceFrac > 0 ? Math.max(1, Math.min(2.6, 0.34 / faceFrac)) : 1;
     window._patchGrow = grow;
     const P = (i, sx, sy, sw, sh) => lm[i] ? { x: lm[i].x*W - W*sw*grow/2 + sx*W, y: lm[i].y*H - H*sh*grow/2 + sy*H, w: W*sw*grow, h: H*sh*grow } : null;
     window._heartRegions = {
@@ -1184,7 +1185,7 @@ function mpTick(){
     // gently ask the person to come closer. Works on phone and computer.
     (function distanceNudge(){
       let tip = document.getElementById('hr-distance-tip');
-      const tooFar = faceFrac > 0 && faceFrac < 0.20;
+      const tooFar = faceFrac > 0 && faceFrac < 0.13;
       if (tooFar){
         if (!tip){
           tip = document.createElement('div');
@@ -1192,7 +1193,7 @@ function mpTick(){
           tip.style.cssText = 'position:fixed;bottom:120px;right:22px;z-index:56;max-width:210px;'
             + 'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;'
             + 'padding:11px 15px;border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);';
-          tip.textContent = 'Lean in a little \u2014 move closer to your camera so I can read your heart clearly.';
+          tip.textContent = 'If it is easy, coming a little closer helps me read your heart \u2014 but no need to lean in; it is okay either way.';
           document.body.appendChild(tip);
         }
       } else if (tip){ tip.remove(); }
@@ -2284,11 +2285,27 @@ let TAP_MS = Date.now();
   document.addEventListener('claude-message-sent', function(){ deepest = 0; });
 })();
 
+// Some browsers (notably Safari/iOS) block audio that starts a moment after the
+// tap. This safety net retries the music on the very next interaction so sound
+// is never silently stuck off.
+function armAudioUnlock() {
+  if (window._audioUnlockArmed) return; window._audioUnlockArmed = true;
+  const retry = () => {
+    try {
+      const deck = (typeof getActiveDeck === 'function') ? getActiveDeck() : null;
+      if (deck && deck.paused && ambientTracks.length) { deck.volume = deck.volume || (TARGET_VOL*0.5); deck.play().catch(()=>{}); }
+      if (window._warmCtx && window._warmCtx.state === 'suspended') { window._warmCtx.resume().catch(()=>{}); }
+    } catch(e){}
+  };
+  ['pointerdown','touchstart','keydown','click'].forEach(ev =>
+    document.addEventListener(ev, retry, {passive:true}));
+}
 async function startExperience() {
   TAP_MS = Date.now();
   // Warm the sound engine at the tap so the sound box answers instantly later.
   try { if (typeof ensureZenisysContext === 'function') ensureZenisysContext(); } catch(e){}
   try { const ac = new (window.AudioContext||window.webkitAudioContext)(); if (ac.state==='suspended') ac.resume(); window._warmCtx = ac; } catch(e){}
+  armAudioUnlock();
   setTimeout(()=>showCalmScale('arrival'), 9000);      // after the music has risen
   setTimeout(()=>showCalmScale('later'), 4*60*1000);   // the change measurement
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
@@ -2585,11 +2602,14 @@ async function startVoiceCapture() {
   // every browser and phone. Falls back to the browser's built-in speech-to-text
   // only if Deepgram isn't configured. The MIC itself already works regardless.
   let usingDeepgram = false;
+  let dgReason = '';
   try {
     const tk = await fetch('/api/transcribe/token').then(r => r.json());
     if (tk && tk.ok && tk.token) {
       usingDeepgram = true;
       startDeepgramStream(tk.token);
+    } else if (tk) {
+      dgReason = tk.reason || '';
     }
   } catch (e) { /* fall through to browser STT */ }
 
@@ -2633,7 +2653,11 @@ async function startVoiceCapture() {
     }
     try { voiceRecognizer.start(); } catch (e) {}
   } else {
-    if (lbl) lbl.textContent = 'Listening\u2026 (your words will not auto-type in this browser, but the mic is working \u2014 you can type too)';
+    if (lbl) {
+      lbl.textContent = (dgReason === 'no_key')
+        ? 'Your mic is on, but live transcription is not set up yet, and this browser cannot turn speech into text on its own. You can still type \u2014 or use a browser like Chrome.'
+        : 'Listening\u2026 (your words will not auto-type in this browser, but the mic is working \u2014 you can type too)';
+    }
   }
 }
 
@@ -2834,23 +2858,37 @@ document.addEventListener('keydown', function(){ window._lastTypedAt = performan
   window.addEventListener('scroll', onScroll, {passive:true});
 })();
 
+// One voice at a time. Any new speak() immediately silences whatever is
+// currently talking (both real human audio and the browser voice), so the
+// reply and, say, a handoff line can never play over each other.
+let _currentSpeechAudio = null;
+let _speechGen = 0;
+function stopAllSpeech() {
+  try { if (_currentSpeechAudio) { _currentSpeechAudio.pause(); _currentSpeechAudio.currentTime = 0; _currentSpeechAudio = null; } } catch(e){}
+  try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e){}
+}
 function speak(text) {
   if (!voiceEnabled || !text) return;
+  stopAllSpeech();                 // interrupt anything already speaking
+  const myGen = ++_speechGen;      // guard the async race between overlapping calls
   // Try REAL human audio from the server first. If no voice service is
   // configured, it tells us to use the browser's best neural voice instead.
   fetch('/api/voice/speak', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({text: text, voice_id: selectedVoiceId || ''})
   }).then(r => r.json()).then(d => {
+    if (myGen !== _speechGen) return;   // a newer speak() has superseded this one
     if (d && d.audio_b64) {
       // genuine human voice
+      stopAllSpeech();
       const audio = new Audio('data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio_b64);
+      _currentSpeechAudio = audio;
       audio.volume = 0.95;
       audio.play().catch(() => speakBrowser(text));
     } else {
       speakBrowser(text);
     }
-  }).catch(() => speakBrowser(text));
+  }).catch(() => { if (myGen === _speechGen) speakBrowser(text); });
 }
 
 function speakBrowser(text) {
@@ -2939,6 +2977,10 @@ function openHelp(kind){
   return _openHelpReal(kind);
 }
 function _openHelpReal(kind){
+  // The person chose to reach for help themselves — this is an explicit request,
+  // so an in-conversation provider handoff is allowed to appear before the
+  // ten-exchange threshold.
+  window._userAskedProvider = true;
   metric('handoff_click', kind);
   // Each path is honest about WHERE the person is going and WHO they will reach.
   // The conversation is carried over so they never fill out a jargon form.
@@ -3149,8 +3191,17 @@ function appendHandoff(thread, handoff, data) {
   // urgent safety situation, which should always surface immediately.
   const userTurns = (typeof conversationLog !== 'undefined')
     ? conversationLog.filter(t => t.role === 'user').length : 0;
-  const urgent = (data && (data.risk === 'critical' || data.risk === 'high')) || handoff.type === 'crisis';
-  if (!urgent && userTurns < 4) return;
+  // A genuine CRISIS always surfaces help immediately (safety first). Otherwise
+  // we NEVER push a provider early: the person must be heard across at least ten
+  // qualifying exchanges (we ask, they answer, we follow up on THAT answer)
+  // before we ever build toward a handoff — UNLESS they explicitly ask to talk
+  // to a provider themselves.
+  const crisis = handoff.type === 'crisis' || (data && data.risk === 'critical');
+  const userAsked = !!window._userAskedProvider
+    || (data && data.provider_requested)
+    || (typeof chk === 'function' && chk('telehealth_requested'));
+  const MIN_QUALIFYING_TURNS = 10;
+  if (!crisis && !userAsked && userTurns < MIN_QUALIFYING_TURNS) return;
   // Don't show the same handoff twice in a row.
   if (thread.querySelector('.handoff-card')) { const old = thread.querySelector('.handoff-card'); if (old) old.remove(); }
   const el = document.createElement('div');
@@ -3332,6 +3383,20 @@ async function updateMusicForEmotion(data) {
   const faceEmo = currentFaceEmotion || '';
   const emotionToUse = (faceEmo && faceEmo !== 'neutral' && faceEmo !== textEmotion) ? faceEmo : textEmotion;
   const risk = (data.risk || '') ;
+  // The grounding SCENE follows the emotional read too — until the person picks
+  // a scene themselves, in which case their choice always wins.
+  try {
+    if (!sceneUserChose && typeof setScene === 'function') {
+      const blend = (emotionToUse + ' ' + risk).toLowerCase();
+      const agit = /(anx|ang|panic|fear|rage|upset|tense|frustrat|stress|critical|high)/.test(blend);
+      const low  = /(sad|depress|hopeless|empty|numb|flat|down|lonely|grief|tired|exhaust)/.test(blend);
+      const want = agit ? ['moon','wave','moonleaf','daymoon']
+                 : low  ? ['sunflower','sunflowers','horizon','sunset']
+                        : ['garden','lettuce','pepper','horizon'];
+      const pick = want[(sceneEmotionIdx++) % want.length];
+      if (pick && pick !== currentScene) setScene(pick, false);
+    }
+  } catch(e){}
   // Crossfade to the lane that MEETS this person: deep-calm to bring an
   // agitated person down, lifting to bring a flat/depressed person up, then
   // gently ease toward spa. The person picks the door by how they are.
