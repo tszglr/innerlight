@@ -587,13 +587,9 @@ PUBLIC_PAGE = """
       <div class="gate-inner">
         <div class="gate-mark" aria-hidden="true">&#9711;</div>
         <h1>InnerLight</h1>
-        <p>A quiet, private place to tell your story.<br>What you share is encrypted and is not shared with providers, organizations, or other people without your consent. <a href="/privacy" style="color:#3a8f74;">Your privacy</a>.</p>
-        <div class="camera-consent" style="background:rgba(255,255,255,.55);border:1px solid #d8e8e0;border-left:4px solid #7eb8a0;border-radius:0 12px 12px 0;padding:14px 16px;margin:0 0 22px;text-align:left;font-size:12.5px;line-height:1.55;color:#5a7d6d;">
-          <strong style="color:#3a6553;">About your camera (optional)</strong><br>
-          Your camera is optional. If you allow it, InnerLight estimates your heart rate and reads facial-movement signals to gently adapt the calming sound to how you're feeling. This analysis runs in your browser, on your own device &mdash; no video or images are recorded, stored, or sent anywhere. The heart estimate is experimental, can be inaccurate, and is <strong>not a medical measurement or a clinical monitor</strong>. If you decline the camera, everything else still works.
-        </div>
+        <p>A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
         <button class="gate-button" onclick="startExperience()">Tap to begin</button>
-        <p class="gate-sub">Soft music begins gently when you tap. If you allow it, your browser will ask permission to use your camera.<br>
+        <p class="gate-sub">Soft music and your camera begin gently when you tap.<br>
         <span style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
         <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
         <div class="gate-links">
@@ -724,7 +720,6 @@ const SCENE_PHOTOS = {
 const SCENE_ORDER = ['garden','lettuce','pepper','redpepper','sunflower','sunflowers','sunset','horizon','wave','moon','daymoon','moonleaf'];
 let sceneAutoTimer = null, sceneUserChose = false;
 let currentScene = 'garden';
-let sceneEmotionIdx = 0;
 let canvasAnim = null;
 
 function setScene(scene, byUser=true) {
@@ -1165,7 +1160,7 @@ function mpTick(){
     // ADAPTIVE PATCHES: when the face is small (person far), enlarge the skin
     // patches relative to the face so we still gather enough skin pixels.
     // scale 1.0 at comfortable distance, up to ~1.8 when far.
-    const grow = faceFrac > 0 ? Math.max(1, Math.min(2.6, 0.34 / faceFrac)) : 1;
+    const grow = faceFrac > 0 ? Math.max(1, Math.min(1.8, 0.32 / faceFrac)) : 1;
     window._patchGrow = grow;
     const P = (i, sx, sy, sw, sh) => lm[i] ? { x: lm[i].x*W - W*sw*grow/2 + sx*W, y: lm[i].y*H - H*sh*grow/2 + sy*H, w: W*sw*grow, h: H*sh*grow } : null;
     window._heartRegions = {
@@ -1185,7 +1180,7 @@ function mpTick(){
     // gently ask the person to come closer. Works on phone and computer.
     (function distanceNudge(){
       let tip = document.getElementById('hr-distance-tip');
-      const tooFar = faceFrac > 0 && faceFrac < 0.13;
+      const tooFar = faceFrac > 0 && faceFrac < 0.20;
       if (tooFar){
         if (!tip){
           tip = document.createElement('div');
@@ -1193,7 +1188,7 @@ function mpTick(){
           tip.style.cssText = 'position:fixed;bottom:120px;right:22px;z-index:56;max-width:210px;'
             + 'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;'
             + 'padding:11px 15px;border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);';
-          tip.textContent = 'If it is easy, coming a little closer helps me read your heart \u2014 but no need to lean in; it is okay either way.';
+          tip.textContent = 'Lean in a little \u2014 move closer to your camera so I can read your heart clearly.';
           document.body.appendChild(tip);
         }
       } else if (tip){ tip.remove(); }
@@ -2285,27 +2280,11 @@ let TAP_MS = Date.now();
   document.addEventListener('claude-message-sent', function(){ deepest = 0; });
 })();
 
-// Some browsers (notably Safari/iOS) block audio that starts a moment after the
-// tap. This safety net retries the music on the very next interaction so sound
-// is never silently stuck off.
-function armAudioUnlock() {
-  if (window._audioUnlockArmed) return; window._audioUnlockArmed = true;
-  const retry = () => {
-    try {
-      const deck = (typeof getActiveDeck === 'function') ? getActiveDeck() : null;
-      if (deck && deck.paused && ambientTracks.length) { deck.volume = deck.volume || (TARGET_VOL*0.5); deck.play().catch(()=>{}); }
-      if (window._warmCtx && window._warmCtx.state === 'suspended') { window._warmCtx.resume().catch(()=>{}); }
-    } catch(e){}
-  };
-  ['pointerdown','touchstart','keydown','click'].forEach(ev =>
-    document.addEventListener(ev, retry, {passive:true}));
-}
 async function startExperience() {
   TAP_MS = Date.now();
   // Warm the sound engine at the tap so the sound box answers instantly later.
   try { if (typeof ensureZenisysContext === 'function') ensureZenisysContext(); } catch(e){}
   try { const ac = new (window.AudioContext||window.webkitAudioContext)(); if (ac.state==='suspended') ac.resume(); window._warmCtx = ac; } catch(e){}
-  armAudioUnlock();
   setTimeout(()=>showCalmScale('arrival'), 9000);      // after the music has risen
   setTimeout(()=>showCalmScale('later'), 4*60*1000);   // the change measurement
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
@@ -2602,14 +2581,11 @@ async function startVoiceCapture() {
   // every browser and phone. Falls back to the browser's built-in speech-to-text
   // only if Deepgram isn't configured. The MIC itself already works regardless.
   let usingDeepgram = false;
-  let dgReason = '';
   try {
     const tk = await fetch('/api/transcribe/token').then(r => r.json());
     if (tk && tk.ok && tk.token) {
       usingDeepgram = true;
       startDeepgramStream(tk.token);
-    } else if (tk) {
-      dgReason = tk.reason || '';
     }
   } catch (e) { /* fall through to browser STT */ }
 
@@ -2653,11 +2629,7 @@ async function startVoiceCapture() {
     }
     try { voiceRecognizer.start(); } catch (e) {}
   } else {
-    if (lbl) {
-      lbl.textContent = (dgReason === 'no_key')
-        ? 'Your mic is on, but live transcription is not set up yet, and this browser cannot turn speech into text on its own. You can still type \u2014 or use a browser like Chrome.'
-        : 'Listening\u2026 (your words will not auto-type in this browser, but the mic is working \u2014 you can type too)';
-    }
+    if (lbl) lbl.textContent = 'Listening\u2026 (your words will not auto-type in this browser, but the mic is working \u2014 you can type too)';
   }
 }
 
@@ -2858,37 +2830,23 @@ document.addEventListener('keydown', function(){ window._lastTypedAt = performan
   window.addEventListener('scroll', onScroll, {passive:true});
 })();
 
-// One voice at a time. Any new speak() immediately silences whatever is
-// currently talking (both real human audio and the browser voice), so the
-// reply and, say, a handoff line can never play over each other.
-let _currentSpeechAudio = null;
-let _speechGen = 0;
-function stopAllSpeech() {
-  try { if (_currentSpeechAudio) { _currentSpeechAudio.pause(); _currentSpeechAudio.currentTime = 0; _currentSpeechAudio = null; } } catch(e){}
-  try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e){}
-}
 function speak(text) {
   if (!voiceEnabled || !text) return;
-  stopAllSpeech();                 // interrupt anything already speaking
-  const myGen = ++_speechGen;      // guard the async race between overlapping calls
   // Try REAL human audio from the server first. If no voice service is
   // configured, it tells us to use the browser's best neural voice instead.
   fetch('/api/voice/speak', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({text: text, voice_id: selectedVoiceId || ''})
   }).then(r => r.json()).then(d => {
-    if (myGen !== _speechGen) return;   // a newer speak() has superseded this one
     if (d && d.audio_b64) {
       // genuine human voice
-      stopAllSpeech();
       const audio = new Audio('data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio_b64);
-      _currentSpeechAudio = audio;
       audio.volume = 0.95;
       audio.play().catch(() => speakBrowser(text));
     } else {
       speakBrowser(text);
     }
-  }).catch(() => { if (myGen === _speechGen) speakBrowser(text); });
+  }).catch(() => speakBrowser(text));
 }
 
 function speakBrowser(text) {
@@ -2977,10 +2935,6 @@ function openHelp(kind){
   return _openHelpReal(kind);
 }
 function _openHelpReal(kind){
-  // The person chose to reach for help themselves — this is an explicit request,
-  // so an in-conversation provider handoff is allowed to appear before the
-  // ten-exchange threshold.
-  window._userAskedProvider = true;
   metric('handoff_click', kind);
   // Each path is honest about WHERE the person is going and WHO they will reach.
   // The conversation is carried over so they never fill out a jargon form.
@@ -3191,17 +3145,8 @@ function appendHandoff(thread, handoff, data) {
   // urgent safety situation, which should always surface immediately.
   const userTurns = (typeof conversationLog !== 'undefined')
     ? conversationLog.filter(t => t.role === 'user').length : 0;
-  // A genuine CRISIS always surfaces help immediately (safety first). Otherwise
-  // we NEVER push a provider early: the person must be heard across at least ten
-  // qualifying exchanges (we ask, they answer, we follow up on THAT answer)
-  // before we ever build toward a handoff — UNLESS they explicitly ask to talk
-  // to a provider themselves.
-  const crisis = handoff.type === 'crisis' || (data && data.risk === 'critical');
-  const userAsked = !!window._userAskedProvider
-    || (data && data.provider_requested)
-    || (typeof chk === 'function' && chk('telehealth_requested'));
-  const MIN_QUALIFYING_TURNS = 10;
-  if (!crisis && !userAsked && userTurns < MIN_QUALIFYING_TURNS) return;
+  const urgent = (data && (data.risk === 'critical' || data.risk === 'high')) || handoff.type === 'crisis';
+  if (!urgent && userTurns < 4) return;
   // Don't show the same handoff twice in a row.
   if (thread.querySelector('.handoff-card')) { const old = thread.querySelector('.handoff-card'); if (old) old.remove(); }
   const el = document.createElement('div');
@@ -3383,20 +3328,6 @@ async function updateMusicForEmotion(data) {
   const faceEmo = currentFaceEmotion || '';
   const emotionToUse = (faceEmo && faceEmo !== 'neutral' && faceEmo !== textEmotion) ? faceEmo : textEmotion;
   const risk = (data.risk || '') ;
-  // The grounding SCENE follows the emotional read too — until the person picks
-  // a scene themselves, in which case their choice always wins.
-  try {
-    if (!sceneUserChose && typeof setScene === 'function') {
-      const blend = (emotionToUse + ' ' + risk).toLowerCase();
-      const agit = /(anx|ang|panic|fear|rage|upset|tense|frustrat|stress|critical|high)/.test(blend);
-      const low  = /(sad|depress|hopeless|empty|numb|flat|down|lonely|grief|tired|exhaust)/.test(blend);
-      const want = agit ? ['moon','wave','moonleaf','daymoon']
-                 : low  ? ['sunflower','sunflowers','horizon','sunset']
-                        : ['garden','lettuce','pepper','horizon'];
-      const pick = want[(sceneEmotionIdx++) % want.length];
-      if (pick && pick !== currentScene) setScene(pick, false);
-    }
-  } catch(e){}
   // Crossfade to the lane that MEETS this person: deep-calm to bring an
   // agitated person down, lifting to bring a flat/depressed person up, then
   // gently ease toward spa. The person picks the door by how they are.
@@ -4288,27 +4219,27 @@ def page_research():
 
     <h2>1. Calming sound &mdash; the Iso-Principle</h2>
     <p>InnerLight&rsquo;s use of sound is built on the <strong>Iso-Principle</strong> from music therapy: meet a person&rsquo;s current emotional state with matching music, then gradually shift the music toward calm to carry them with it. This is a long-standing clinical method with controlled experimental support.</p>
-    <p class="cite">Starcke, Mayr, &amp; von Georgi (2021) &mdash; controlled experimental support for the Iso-principle.</p>
-    <p class="cite">Ueberholz et al. (2025) &mdash; RCT protocol describing Iso-principle personalization against baseline Self-Assessment Manikin (SAM) scores.</p>
+    <p class="cite">Starcke K., Mayr J., von Georgi R. (2021). &ldquo;Emotion modulation through music after sadness induction &mdash; the Iso principle in a controlled experimental study.&rdquo; <em>International Journal of Environmental Research and Public Health</em>, 18(23).</p>
+    <p class="cite">Music with auditory beat stimulation RCT protocol (2025). <em>BMJ Open</em>, 15(6):e094784 &mdash; describes Iso-principle personalization against baseline Self-Assessment Manikin (SAM) scores.</p>
 
     <h2>2. Target tempo for relaxation (60&ndash;80 BPM)</h2>
-    <p>Music in the <strong>60&ndash;80 beats-per-minute</strong> range has been associated with reduced arousal and increased self-reported relaxation in some studies, often linked to the alignment of neural and physiological rhythms with a slower musical pulse. For InnerLight this is <strong>a design direction being evaluated, not a guaranteed effect</strong>: we prioritize tracks in this range and, in development, gentle dynamic tempo shaping toward it.</p>
-    <p class="cite">Xu &amp; Li (2025); Jiao (2025) &mdash; real-time, physiology-guided tempo modulation and review of music therapy, entrainment, and AI-driven biofeedback.</p>
+    <p>Research indicates that music in the <strong>60&ndash;80 beats-per-minute</strong> range supports relaxation by aligning neural oscillations (alpha-wave activity) with the musical rhythm, shifting arousal from tense toward calm. InnerLight prioritizes tracks and, in development, dynamic tempo shaping toward this range.</p>
+    <p class="cite">Xu R., Li J. (2025). &ldquo;AI-driven music intervention based on five-tone theory for anxiety: a preliminary pre-post feasibility study.&rdquo; <em>Frontiers in Psychology</em>, 16:1669029. (Real-time HRV-guided tempo modulation.)</p>
+    <p class="cite">Frontiers in Digital Health (2025), 7:1552396 &mdash; review of music therapy, entrainment, and AI-driven biofeedback.</p>
 
     <h2>3. Real-time, physiology-guided adaptation (in development)</h2>
     <p>The strongest current evidence favors adjusting <strong>musical parameters</strong> &mdash; tempo, volume, complexity &mdash; smoothly and in real time in response to physiological signals, rather than abruptly switching tracks. When tension rises, effective systems slow the tempo and simplify the music with <em>soft transitions</em>. This is the direction of InnerLight&rsquo;s ongoing sound development, using the person&rsquo;s heart signal as the primary, steadier feedback channel.</p>
-    <p class="cite">Wang et al. (2023) &mdash; REMAST: real-time emotion-based music arrangement with soft transition.</p>
-    <p class="cite">Williams, Hodge, &amp; Wu (2020) &mdash; AI generation of functional music for mental health; reviewed in Wei &amp; He (2026), <em>Frontiers in Psychology</em>, 17:1741463.</p>
+    <p class="cite">REMAST: Real-time Emotion-based Music Arrangement with Soft Transition (arXiv:2305.08029).</p>
+    <p class="cite">Williams et al. (2020); Jiao (2025) &mdash; adaptive functional music generation with real-time biofeedback, reviewed in <em>Frontiers in Psychology</em> (2026), 16:1741463.</p>
 
     <h2>4. Contactless heart reading &mdash; remote photoplethysmography (rPPG)</h2>
     <p>InnerLight reads heart rate from a standard webcam using <strong>remote photoplethysmography</strong>: detecting the tiny color changes in facial skin as blood pulses beneath it. We combine forehead and cheek skin regions (avoiding the eyes and mouth, which introduce motion noise), verify skin pixels, detect the beat period by autocorrelation, and apply physiology-informed smoothing so implausible jumps are rejected. In low light, the signal is automatically brightened (adaptive gamma correction) before analysis so people in dim conditions are not excluded.</p>
-    <div class="soft"><p style="margin:0;">This webcam heart reading is <strong>experimental and not intended as a medical measurement</strong>. Its accuracy varies with lighting, movement, and skin tone, and it can be wrong. It is a soft feedback signal for adapting sound &mdash; <strong>no clinical decision should ever rest on it</strong>.</p></div>
-    <p class="cite">de Haan &amp; Jeanne (2013) &mdash; chrominance-based rPPG (CHROM); Wang, den Brinker, Stuijk, &amp; de Haan (2017) &mdash; plane-orthogonal-to-skin (POS) algorithmic principles of remote PPG. Forehead and cheek regions of interest carry strong pulsatile signal.</p>
+    <p class="cite">Method basis: chrominance- and plane-based rPPG (POS/CHROM family); forehead and cheek regions of interest shown to carry strong pulsatile signal in systematic reviews of rPPG ROI selection.</p>
+    <p class="cite">Low-light handling follows gamma-correction and histogram-based enhancement approaches evaluated for rPPG under poor illumination.</p>
     <p><strong>Why webcam rPPG, and not a wearable or a specific product:</strong> a crisis tool must work for anyone, instantly, with no device to buy, pair, or install. Wearables and clinical pulse oximeters are more accurate but exclude anyone who doesn&rsquo;t own one in the moment. Deep-learning rPPG models are strong but require a server and heavy computation. Browser-based rPPG is the only approach that runs immediately for everyone on a phone or computer &mdash; so we use it, and we are transparent about its limits: it needs reasonable light and a mostly still face, and we label every reading by confidence (measured / estimated / baseline-held) rather than overstating precision.</p>
 
     <h2>5. Facial-signal reading &mdash; MediaPipe</h2>
     <p>For facial-expression signals InnerLight uses <strong>Google&rsquo;s MediaPipe Face Landmarker</strong>, which measures dozens of specific facial-movement values (blendshapes) rather than guessing a single emotion label. We chose MediaPipe because it is free, runs entirely in the browser (no images ever leave the person&rsquo;s device for this), is well-documented, and is widely used and maintained &mdash; important for a tool that must be reproducible by a research team.</p>
-    <p class="cite">Lugaresi et al. (2019) &mdash; MediaPipe: a framework for building perception pipelines.</p>
 
     <h2>6. Grounding through real imagery</h2>
     <p>InnerLight uses real photographs, not animation, as grounding scenes. Realism is used deliberately: concrete sensory grounding is a recognized technique for interrupting distress and dissociation and returning attention to the present.</p>
@@ -4322,45 +4253,12 @@ def page_research():
       <li><strong>Facial analysis runs on-device.</strong> The person&rsquo;s video is analyzed in their own browser for heart and expression signals; the raw video is not transmitted for that analysis.</li>
     </ul>
 
-    <h2>8. The Axiom Harmony Protocol (AHP) &mdash; privacy &amp; identity architecture in detail</h2>
-    <p>The <strong>Axiom Harmony Protocol</strong> is InnerLight&rsquo;s privacy and identity layer. It exists to answer one question: <em>how can a system offer returning-user memory, and learn in aggregate, without linking a person&rsquo;s identity to the private words they shared?</em> AHP treats privacy as part of the data flow itself, not something added afterward.</p>
-
-    <p><strong>The core idea.</strong> Rather than putting a person&rsquo;s real-world identity at the center, AHP derives a cryptographic anchor that is independent of who they are. That anchor is <em>time-based</em>: where a person chooses to offer it, their exact time of birth can seed the cryptography; when that is unavailable, the exact account-creation timestamp is used instead. Birth time is <strong>always optional and never required</strong> &mdash; it is only a source of uniqueness, not an identifier we need. Combined with random cryptographic entropy, the seed produces an anchor that cannot be reverse-engineered back into personal information.</p>
-
-    <p><strong>How it works, step by step:</strong></p>
-    <ul>
-      <li><strong>1. Identity creation.</strong> On first use, a unique encrypted identity is generated from the optional temporal anchor plus fresh cryptographic randomness. The result is an identifier that stands in for the person without exposing anything about them.</li>
-      <li><strong>2. Data separation.</strong> Account and identifying information is kept separate from conversation content, so that neither, on its own, is enough to identify a person. Only the protocol holds the relationship needed to associate the two, and only when the person themselves authorizes it.</li>
-      <li><strong>3. Sanitized learning.</strong> When the system learns in aggregate, it never touches identity &mdash; it sees only de-identified conversation patterns with names, contacts, and other identifiers removed first. It learns from ideas, emotional and reasoning patterns, and generalized knowledge, not from individuals.</li>
-      <li><strong>4. Secure retrieval.</strong> When a person returns, their own key &mdash; the return code they saved &mdash; reconnects them to their own history. To everyone else, and to the learning system, that history stays anonymous.</li>
-    </ul>
-
-    <p><strong>The cryptography, stated plainly for reviewers.</strong> Saved memory is protected with <strong>AES-256-GCM</strong> authenticated encryption. The data key is derived from the person&rsquo;s own secret (the temporal anchor / return code) using <strong>PBKDF2-HMAC-SHA256 at 390,000 iterations</strong>, with a fresh random salt and nonce for every record. New records add a <strong>post-quantum hybrid</strong> layer: an <strong>ML-KEM-768</strong> (NIST FIPS&nbsp;203) key-encapsulation shared secret is combined with the password-derived key through <strong>HKDF-SHA256</strong> to form the AES-256-GCM key, and the ML-KEM decapsulation key is itself wrapped under the person&rsquo;s key. The construction is designed to be <em>never weaker</em> than the classical scheme &mdash; the data key always depends on the person&rsquo;s secret &mdash; while binding a standardized post-quantum secret into key derivation. Because the key still derives from a secret only the person holds, the stored text cannot be read without it &mdash; not by us, not by anyone with server access &mdash; and if the code is lost, the data is unrecoverable by design. Records written before this layer remain readable through the original AES-256-GCM path.</p>
-    <div class="soft"><p style="margin:0;"><strong>Honest cryptographic notes:</strong> ML-KEM-768 is a NIST-standardized KEM (FIPS&nbsp;203), but our current build uses a readable reference implementation rather than a side-channel-hardened, formally audited one &mdash; a reasonable choice for encryption at rest, and something we would harden before calling it high-assurance. The post-quantum layer strengthens key derivation; the person&rsquo;s own secret still gates all access. And data handled by third-party processors (see the Privacy Policy) is encrypted in transit and at rest but is <strong>not end-to-end encrypted</strong>. We state these openly rather than overclaim.</p></div>
-
-    <p><strong>Why a birth-time anchor?</strong> Every life begins at a unique moment. Using that moment as part of the key adds uniqueness without relying on Social Security numbers or government identification. When it is unavailable, the account-creation timestamp works equally well; the protocol functions the same either way. The anchor is there to strengthen uniqueness, never to require personal information.</p>
-
-    <p><strong>What this buys, and what it does not.</strong> The design keeps identity separate from conversation, enables personalized long-term memory without compromising anonymity, and limits the damage of any single-store breach because no one store can reconstruct a person. It is our applied architecture and a direction we continue to develop and harden &mdash; not an externally certified standard, and not a claim that any system is unbreakable. Privacy here is treated as the foundation that makes a trustworthy tool possible, not a limitation bolted on at the end.</p>
-
-    <h2>9. What we measure, and how we stay honest</h2>
+    <h2>8. What we measure, and how we stay honest</h2>
     <p>InnerLight records anonymous, aggregate research metrics designed around recognized digital-health frameworks: uptake, engagement, session duration, adherence, and completion, alongside expression shifts, sound responses, self-reported calm (a wordless Self-Assessment Manikin scale), and heart-rate trends measured against each person&rsquo;s own baseline. Every heart reading carries a confidence tier so coverage is complete without overstating precision. We follow the scientific method explicitly: a falsifiable hypothesis, stated predictions, an instrument that gathers the data, and a commitment to replication and peer review.</p>
 
     <div class="soft"><p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a companion for the wait and a bridge to human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p></div>
 
-    <h2>References</h2>
-    <p style="font-size:13.5px;color:#5f7d8c;">The references below support the <em>principles</em> InnerLight draws on. They do <strong>not</strong> constitute evidence that InnerLight itself is effective; that evaluation is ongoing.</p>
-    <div style="font-size:13px;color:#4c6b60;line-height:1.55;">
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">de Haan, G., &amp; Jeanne, V. (2013). Robust pulse rate from chrominance-based rPPG. <em>IEEE Transactions on Biomedical Engineering, 60</em>(10), 2878&ndash;2886. <a href="https://doi.org/10.1109/TBME.2013.2266196">https://doi.org/10.1109/TBME.2013.2266196</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Jiao, D. (2025). Advancing personalized digital therapeutics: Integrating music therapy, brainwave entrainment methods, and AI-driven biofeedback. <em>Frontiers in Digital Health, 7</em>, 1552396. <a href="https://doi.org/10.3389/fdgth.2025.1552396">https://doi.org/10.3389/fdgth.2025.1552396</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Lugaresi, C., et al. (2019). MediaPipe: A framework for building perception pipelines. <em>arXiv</em>. <a href="https://arxiv.org/abs/1906.08172">https://arxiv.org/abs/1906.08172</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Starcke, K., Mayr, J., &amp; von Georgi, R. (2021). Emotion modulation through music after sadness induction&mdash;The iso principle in a controlled experimental study. <em>International Journal of Environmental Research and Public Health, 18</em>(23), 12486. <a href="https://doi.org/10.3390/ijerph182312486">https://doi.org/10.3390/ijerph182312486</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Ueberholz, R., Glassman, H., Mallik, A., &amp; Russo, F. A. (2025). Effectiveness of music with auditory beat stimulation in reducing state anxiety in Canadian students with trait anxiety: Protocol for a randomised controlled trial. <em>BMJ Open, 15</em>(6), e094784. <a href="https://doi.org/10.1136/bmjopen-2024-094784">https://doi.org/10.1136/bmjopen-2024-094784</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Wang, W., den Brinker, A. C., Stuijk, S., &amp; de Haan, G. (2017). Algorithmic principles of remote PPG. <em>IEEE Transactions on Biomedical Engineering, 64</em>(7), 1479&ndash;1491. <a href="https://doi.org/10.1109/TBME.2016.2609282">https://doi.org/10.1109/TBME.2016.2609282</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Wang, Z., et al. (2023). REMAST: Real-time emotion-based music arrangement with soft transition. <em>arXiv</em>. <a href="https://arxiv.org/abs/2305.08029">https://arxiv.org/abs/2305.08029</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Wei, Q., &amp; He, W. (2026). The application of AI-assisted music therapy tools in mental health interventions. <em>Frontiers in Psychology, 17</em>, 1741463. <a href="https://doi.org/10.3389/fpsyg.2026.1741463">https://doi.org/10.3389/fpsyg.2026.1741463</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Williams, D., Hodge, V. J., &amp; Wu, C.-Y. (2020). On the use of AI for generation of functional music to improve mental health. <em>Frontiers in Artificial Intelligence, 3</em>, 497864. <a href="https://doi.org/10.3389/frai.2020.497864">https://doi.org/10.3389/frai.2020.497864</a></p>
-      <p style="padding-left:26px;text-indent:-26px;margin:0 0 12px;">Xu, R., &amp; Li, J. (2025). AI-driven music intervention based on five-tone theory for anxiety: A preliminary pre-post feasibility study. <em>Frontiers in Psychology, 16</em>, 1669029. <a href="https://doi.org/10.3389/fpsyg.2025.1669029">https://doi.org/10.3389/fpsyg.2025.1669029</a></p>
-    </div>
+    <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
     """
     return _info_page("Research &amp; Methods", inner)
 
@@ -4422,64 +4320,8 @@ def page_privacy():
     it does not replace professional care or licensed legal counsel. In an emergency, please reach real human help
     right away &mdash; call or text 988, or call 911.</p>
 
-    <h1 style="margin-top:44px;">Privacy Policy</h1>
-    <p>This policy explains, plainly, what InnerLight (operated by God's Love For Us LLC) collects, how it is handled,
-    and the choices you have.</p>
-
-    <h2>What we collect</h2>
-    <ul>
-      <li><strong>The words you share are processed in the moment.</strong> They are used to understand and respond to you during your session; the raw content is <strong>not retained by default</strong> after the session.</li>
-      <li><strong>Personal identifiers are automatically scrubbed.</strong> Before anything is stored for research, identifying details (such as emails, phone numbers, handles, and long digit strings) are automatically removed.</li>
-      <li><strong>Camera analysis happens on your device.</strong> If you allow the camera, heart-rate and facial-movement analysis runs in your browser. <strong>No video or images are recorded, stored, or sent</strong> anywhere.</li>
-      <li><strong>Anonymous, aggregate metrics.</strong> We keep de-identified, aggregate measures (such as engagement and self-reported calm) to understand whether the approach helps &mdash; never tied to your identity.</li>
-      <li><strong>Optional saved memory is encrypted.</strong> If you choose to save a memory for a future visit, it is encrypted with a key derived from your own return code and is <strong>unreadable without that code</strong> &mdash; not by us, not by anyone with server access.</li>
-    </ul>
-
-    <h2>Cookies</h2>
-    <p>InnerLight uses <strong>no advertising trackers and no third-party analytics</strong>. Only technically necessary
-    items required to keep a session working are used.</p>
-
-    <h2>Third-party processors</h2>
-    <p>To run the service, InnerLight relies on a small number of vendors, each doing <strong>one specific job</strong>:</p>
-    <ul>
-      <li><strong>Anthropic (Claude)</strong> &mdash; powering the conversation.</li>
-      <li><strong>Deepgram</strong> &mdash; speech-to-text (turning spoken words into text).</li>
-      <li><strong>ElevenLabs</strong> &mdash; voice (spoken responses).</li>
-      <li><strong>Daily.co</strong> &mdash; video rooms for a human handoff.</li>
-      <li><strong>Render</strong> &mdash; hosting the application (United States).</li>
-    </ul>
-    <p>Data handled by these processors is <strong>encrypted in transit and at rest</strong>, but it is <strong>not
-    end-to-end encrypted</strong> &mdash; a processor performing its job can technically access the data it processes for
-    that purpose. Your information is <strong>never sold, and never shared for marketing</strong>.</p>
-
-    <h2>Storage and retention</h2>
-    <ul>
-      <li>Data is held on <strong>encrypted disk</strong> at our host.</li>
-      <li>De-identified research records are kept <strong>as long as needed</strong> for the research purpose.</li>
-      <li>Optional saved memory is kept <strong>until you delete it</strong>. It is encrypted under a key derived from your own return code (our Axiom Harmony Protocol), so it cannot be read without that code.</li>
-    </ul>
-    <p><strong>Honest limitation:</strong> saved memory uses AES-256-GCM with a post-quantum hybrid key derivation that adds an ML-KEM-768 (FIPS&nbsp;203) shared secret &mdash; designed to be no weaker than strong classical encryption while adding a standardized post-quantum layer. Our current post-quantum implementation uses a reference library rather than a hardened, audited build. And data handled by third-party processors is encrypted in transit and at rest but is <strong>not end-to-end encrypted</strong>. We state these plainly rather than overclaim. (More detail is on our <a href="/research">Research &amp; Methods</a> page.)</p>
-
-    <h2>Deleting your data</h2>
-    <p>You can request deletion of your data at any time by emailing
-    <a href="mailto:masterzeigler@gmail.com">masterzeigler@gmail.com</a>.</p>
-
-    <h2>If something goes wrong</h2>
-    <p>If a security incident ever affects your information, we will <strong>disclose it honestly and promptly</strong>
-    to those affected.</p>
-
-    <h2>What InnerLight is not</h2>
-    <p>InnerLight is <strong>not a healthcare provider and not a HIPAA covered entity</strong>. It does not create medical
-    records. It is a companion for the wait and a bridge to human help &mdash; never a replacement for professional care.</p>
-
-    <h2>Research use</h2>
-    <p>Any research use of data is <strong>anonymous and aggregate</strong>. A summary of your conversation is shared with
-    a provider or resource <strong>only with your explicit consent</strong>. During this pilot, InnerLight serves
-    <strong>adults 18 and older</strong>.</p>
-
     <div class="soft">
-      <p style="margin:0;">Questions about privacy, or a request to delete your data? Email
-      <a href="mailto:masterzeigler@gmail.com">masterzeigler@gmail.com</a>, or reach God's Love For Us LLC through the
+      <p style="margin:0;">If you have questions about privacy, you can reach God's Love For Us LLC through the
       <a href="/contact">contact page</a>.</p>
     </div>
     """
@@ -4499,8 +4341,12 @@ def page_contact():
     <div class="soft">
       <p style="margin:0 0 6px;"><strong>God's Love For Us LLC</strong></p>
       <p style="margin:0 0 6px;">Founder: Toshay S. Zeigler</p>
-      <p style="margin:0;">Email: <a href="mailto:masterzeigler@gmail.com">masterzeigler@gmail.com</a></p>
+      <p style="margin:0;">Email: <a href="mailto:[your email]">[your email]</a><br>
+      Phone: [your phone]</p>
     </div>
+
+    <p style="font-size:14px;color:#7d9f91;">You can add your real email and phone here whenever you're ready &mdash;
+    right now these are placeholders so the page is live and ready.</p>
 
     <div class="soft">
       <p style="margin:0;"><strong>If this is an emergency</strong> and you or someone else may be in danger, please
