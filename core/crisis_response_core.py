@@ -69,6 +69,35 @@ class CrisisResponseCore:
         r"\bi can'?t do this anymore\b",
         r"\bi cannot do this anymore\b",
         r"\bi give up on life\b",
+        # --- Sideways phrasings (people in crisis rarely use the textbook words;
+        # --- these were added after testing showed real disclosures slipping past) ---
+        r"\b(?:do not|don'?t) want to (?:be alive|exist|wake up)\b",
+        r"\bwant to be dead\b",
+        r"\bbetter off dead\b",
+        r"\bbetter off without me\b",
+        r"\btak(?:e|ing) my (?:own )?life\b",
+        r"\bend(?:ing)? it (?:all|tonight|today|soon)\b",
+        r"\bthinking (?:about|of) ending (?:it|things|everything|my life)\b",
+        r"\b(?:hope|wish) i (?:die|don'?t wake up|do not wake up|never wake up)\b",
+        r"\bnever want to wake up\b",
+        r"\bgo to sleep and (?:not|never) wake up\b",
+        r"\bunalive\b",
+        r"\bno point in living\b",
+        r"\bno point (?:in )?going on\b",
+        r"\bdone with life\b",
+        r"\bdone living\b",
+        r"\bsay(?:ing)? my goodbyes\b",
+        r"\bwish i wasn'?t here\b",
+        r"\bwish i wasn'?t alive\b",
+        r"\bwish i(?:'?d| had)? never been born\b",
+        r"\b(?:want|wanna|going|gonna|thinking about|thought about|urge) (?:to )?hurt(?:ing)? myself\b",
+        r"\b(?:been )?cutting myself\b",
+        r"\bwant to cut myself\b",
+        r"\bhang myself\b",
+        r"\bshoot myself\b",
+        r"\boverdose\b",
+        r"\bsucide\b",
+        r"\bsuiside\b",
     ]
 
     HIGH_PATTERNS = [
@@ -84,6 +113,11 @@ class CrisisResponseCore:
         r"\bi need help\b",
         r"\bhelp me\b",
         r"\bi hate everything\b",
+        r"\bwant (?:it|everything) to (?:end|stop|be over)\b",
+        r"\bwant the pain to (?:end|stop)\b",
+        r"\bcan'?t keep going\b",
+        r"\bcannot keep going\b",
+        r"\bwhat'?s the point\b",
     ]
 
     MODERATE_PATTERNS = [

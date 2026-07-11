@@ -595,12 +595,17 @@ PUBLIC_PAGE = """
         <b style="color:#5a7d6d;">About your camera:</b> your video is analyzed <b>on your own device</b> &mdash;
         for gentle expression and heart signals only. The video itself is <b>never sent to us or stored anywhere</b>.
         Nothing leaves your device. You can decline the camera and still use everything else.</span><br>
+        <span style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
+        <b style="color:#5a7d6d;">Please know:</b> InnerLight is an <b>artificial-intelligence program</b> &mdash; a computer,
+        not a human being. It is not a therapist, doctor, or lawyer, and it may not be suitable for some minors.
+        In an emergency, call or text <b>988</b> or call <b>911</b>. <a href="/safety" style="color:#2e6e8e;">How we respond in a crisis</a></span><br>
         <span style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
         <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
         <div class="gate-links">
           <a href="/about">About</a><span>&middot;</span>
           <a href="/how-it-works">How it works</a><span>&middot;</span>
           <a href="/research">Research</a><span>&middot;</span>
+          <a href="/safety">Safety</a><span>&middot;</span>
           <a href="/privacy">Your privacy</a><span>&middot;</span>
           <a href="/contact">Contact</a>
         </div>
@@ -634,6 +639,7 @@ PUBLIC_PAGE = """
       <div class="story-wrap">
         <h2 class="story-title">Tell me your story.</h2>
         <p class="story-sub">Take your time. Say whatever feels true. I am listening. &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;">Been here before? Continue your story</a></p>
+        <p style="font-size:11.5px;color:#8aa39a;margin:-6px 0 10px;">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer. <a href="/safety" style="color:#7d9c92;">Safety &amp; crisis protocol</a></p>
         <textarea id="message" class="story-input" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
           <button class="story-send" onclick="sendCheckin()">Send</button>
@@ -4425,6 +4431,7 @@ def _info_page(title, inner):
       <a href="/about">About</a>&middot;
       <a href="/how-it-works">How it works</a>&middot;
       <a href="/research">Research</a>&middot;
+      <a href="/safety">Safety &amp; crisis protocol</a>&middot;
       <a href="/privacy">Your privacy</a>&middot;
       <a href="/contact">Contact</a>
       <div style="margin-top:10px;">&copy; 2026 God's Love For Us LLC &middot; Created by Toshay S. Zeigler</div>
@@ -4743,6 +4750,60 @@ def page_contact():
     </div>
     """
     return _info_page("Contact", inner)
+
+
+@app.route("/safety")
+def page_safety():
+    """Published crisis-response protocol. Written to satisfy California
+    SB 243's documentation expectations and, more importantly, to tell people
+    the truth about what this tool is and does. Immutable Principle 11."""
+    inner = """
+    <h1>Safety &amp; crisis protocol</h1>
+    <p class="lead">What InnerLight is, what it does when someone may be in danger, and where its limits are &mdash; in plain words.</p>
+
+    <h2>First, what InnerLight is</h2>
+    <p>InnerLight is an <strong>artificial-intelligence program</strong> &mdash; a computer program, not a human being.
+    It is not a therapist, a doctor, or a lawyer, and it does not diagnose, treat, or give medical or legal advice.
+    It is a calm place to get through a hard stretch, and a bridge to real human help. It is built for adults 18 and
+    older, and it may not be suitable for some minors.</p>
+
+    <h2>What happens if you may be in crisis</h2>
+    <p>InnerLight watches for signs in a conversation that someone may be thinking about suicide or self-harm, or may
+    be in immediate danger. When it recognizes those signs, it follows one protocol, every time:</p>
+    <p><strong>1. It stops its questions.</strong> The moment danger signs appear, InnerLight sets aside whatever else
+    was happening in the conversation.</p>
+    <p><strong>2. It puts real human help first.</strong> It tells you, clearly and immediately, about the
+    <strong>988 Suicide &amp; Crisis Lifeline</strong> (call or text 988, free, 24/7) &mdash; and it stays present with
+    you while you reach out. The 988 button is also always visible on the screen, in every session, for every person.</p>
+    <p><strong>3. It never blocks, argues, or dead-ends.</strong> InnerLight never says "no" to a person in pain, never
+    lectures, and never ends the conversation on someone in distress. If you decline the crisis line, it stays with
+    you and gently offers again.</p>
+    <p><strong>4. With your consent, it helps you connect.</strong> If you choose, InnerLight can prepare a summary of
+    what you shared &mdash; which you see and approve first &mdash; so you do not have to start from zero with a
+    professional.</p>
+    <p><strong>5. For anyone under 18</strong>, InnerLight redirects to help built for young people &mdash; a trusted
+    adult, 988, Crisis Text Line (text HOME to 741741), and Teen Line &mdash; and does not connect minors to providers.</p>
+
+    <h2>Honest limits</h2>
+    <p>No automated system recognizes every crisis, every time. InnerLight's recognition is built carefully and improved
+    continually, but it can miss signs and it can be wrong. That is one reason it exists to hand you to humans quickly
+    &mdash; not to be the help itself. <strong>If you are in danger right now, do not wait for any website:
+    call or text 988, or call 911.</strong></p>
+
+    <h2>Our accountability</h2>
+    <p>InnerLight counts how often its crisis protocol activates &mdash; counts only, never the content of what anyone
+    shared &mdash; so its safety behavior can be reviewed and reported responsibly, including to the State of
+    California's Office of Suicide Prevention as required by law. InnerLight is operated by God's Love For Us LLC and
+    is designed to comply with the laws that govern tools like it, including California's companion-chatbot law
+    (Senate Bill 243). Questions about this protocol are welcome through the <a href="/contact">contact page</a>.</p>
+
+    <div class="soft">
+      <p style="margin:0;"><strong>The short version:</strong> InnerLight is a program, not a person. When it sees
+      danger, it points to real people fast &mdash; 988, every time, without delay &mdash; and it never stands between
+      you and human help.</p>
+    </div>
+    """
+    return _info_page("Safety & crisis protocol", inner)
 
 
 @app.route("/console")
@@ -5456,6 +5517,11 @@ def api_checkin():
             print(f"[persist] background save failed: {e}")
 
     threading.Thread(target=_persist_in_background, daemon=True).start()
+
+    # SB 243 accountability: when the crisis protocol activates (the 988
+    # referral is about to be shown), count it — count only, never content.
+    if crisis.needs_immediate_support:
+        record_crisis_referral()
 
     return jsonify({
         "status": "secured",
@@ -6385,6 +6451,27 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   load();
 })();
 </script>
+<h2>Crisis referrals &mdash; the count for the state report</h2>
+<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
+<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Each time the crisis protocol activates and 988 is put in front of a person, it is counted here &mdash; counts only, never content. This is the number California's Office of Suicide Prevention report (due each July starting 2027) will be built from.</div>
+<div id="crisis-referrals"><i style="color:#94a3b8;">Loading&hellip;</i></div>
+</div>
+<script>
+(async function(){
+  try{
+    var r = await fetch('/api/admin/crisisreferrals'); if(!r.ok) return;
+    var d = await r.json();
+    var el = document.getElementById('crisis-referrals'); if(!el) return;
+    var months = Object.keys(d.by_month || {}).sort().reverse();
+    if(!months.length){ el.innerHTML = '<i style="color:#94a3b8;">No crisis-protocol activations recorded yet. Counting began with this deploy.</i>'; return; }
+    var html = '<div style="font-weight:700;margin-bottom:8px;">' + d.total + ' total activation' + (d.total===1?'':'s') + ' since counting began</div>';
+    for (var i=0; i<months.length; i++){
+      html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eef2f8;"><span>' + months[i] + '</span><b style="color:#2e6e8e;">' + d.by_month[months[i]] + '</b></div>';
+    }
+    el.innerHTML = html;
+  }catch(e){}
+})();
+</script>
 <h2>Music control &mdash; listen to any track, switch any track off</h2>
 <div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
 <div style="font-size:12px;color:#64748b;margin-bottom:6px;">Press <b>Listen</b> to hear any track right here. Press <b>Turn off</b> and that exact song stops being offered &mdash; no redeploy needed, and you can turn it back on any time. Honest note: someone already listening may still hear their current list until their music next shifts; every new playlist skips it.</div>
@@ -6706,6 +6793,43 @@ def _study_save_entry(entry):
         except Exception:
             pass
 
+
+
+# ---- CRISIS-REFERRAL COUNTING (SB 243 accountability — counts ONLY, never content) ----
+# Every time the crisis protocol activates (needs_immediate_support -> the 988
+# referral is shown), we count it: one number per month, on the persistent disk.
+# This makes the July 2027 annual report to California's Office of Suicide
+# Prevention a printout, not a scramble. Immutable Principle 11.
+_CRISIS_REFERRALS_FILE = os.environ.get("CRISIS_REFERRALS_FILE", _DATA_DIR + "/innerlight_crisis_referrals.json")
+_CRISIS_REFERRALS_LOCK = threading.Lock()
+
+def record_crisis_referral():
+    try:
+        month = time.strftime("%Y-%m")
+        with _CRISIS_REFERRALS_LOCK:
+            try:
+                with open(_CRISIS_REFERRALS_FILE) as f:
+                    counts = json.load(f)
+            except Exception:
+                counts = {}
+            counts[month] = int(counts.get(month, 0)) + 1
+            with open(_CRISIS_REFERRALS_FILE, "w") as f:
+                json.dump(counts, f)
+    except Exception as e:
+        print("[InnerLight] crisis referral count failed:", e)
+
+@app.route("/api/admin/crisisreferrals")
+def admin_crisis_referrals():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    try:
+        with _CRISIS_REFERRALS_LOCK:
+            with open(_CRISIS_REFERRALS_FILE) as f:
+                counts = json.load(f)
+    except Exception:
+        counts = {}
+    return jsonify({"status": "ok", "by_month": counts,
+                    "total": sum(counts.values())})
 
 
 # ---- SONG PLAY TRACKING (founder visibility + control over randomization) ----

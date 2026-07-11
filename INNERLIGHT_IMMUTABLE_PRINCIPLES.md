@@ -113,3 +113,23 @@
   consent provisions differ from other states), and verified parental
   permission/notification infrastructure. We are not in the business of
   violating state, local, or federal law — anywhere.
+
+## 11. ALWAYS WITHIN THE LAW — UP TO THE LINE, NEVER OVER IT (set by the founder, July 2026)
+- InnerLight operates WITHIN the law at all times — federal, state, and local,
+  in every jurisdiction we serve. This is not a compliance posture; it is a
+  founding value equal in weight to every principle above.
+- We may come UP TO the line — and many times we MUST come up to the line,
+  because the people we serve live at the line: the eviction notice, the
+  medication gap, the night arrest. Serving them fully requires operating at
+  the very edge of what a non-clinical, non-legal companion may do.
+  But we NEVER cross it. Not for growth, not for compassion, not for anyone.
+- When a new law arrives that touches InnerLight (example: California SB 243,
+  the companion-chatbot law, effective January 1, 2026), we do not wait to be
+  told. We study it, we implement what it asks, we document what we already do,
+  and we exceed the minimum where the user's safety is served by exceeding it.
+- Where the law is LOOSER than our principles, our principles govern.
+  Where the law is STRICTER than our principles, the law governs.
+  The user never inherits the gap between the two.
+- Legal review is part of shipping, not an afterthought: significant features
+  that touch care, minors, providers, money, or data get checked against the
+  current legal landscape before they go live.
