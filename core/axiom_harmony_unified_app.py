@@ -4221,6 +4221,22 @@ LEGAL_HANDOFF_PAGE = r"""
     </section>
 
     <section class="panel who">
+      <h2>Law-school legal knowledge &amp; clinics &mdash; authoritative and free</h2>
+      <p>Law schools publish some of the clearest legal explanations available, and many run <b>free legal clinics</b> that represent low-income people directly. These broaden and cross-check the understanding of your rights &mdash; different schools sometimes explain or expand the same issue in ways that help.</p>
+      <div class="reslib">
+        <a class="res" href="https://law.stanford.edu/mills-legal-clinic/" target="_blank" rel="noopener"><b>Stanford Law &mdash; Mills Legal Clinic</b><span>Free clinics incl. eviction defense, disability benefits, and reentry after incarceration (Bay Area).</span></a>
+        <a class="res" href="https://law.stanford.edu/community-law-clinic/" target="_blank" rel="noopener"><b>Stanford Community Law Clinic</b><span>Free civil legal services for low-income residents &mdash; housing, disability, post-conviction.</span></a>
+        <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Free, plain-language legal encyclopedia from Cornell Law School.</span></a>
+        <a class="res" href="https://cardozo.yu.edu/clinics" target="_blank" rel="noopener"><b>Cardozo Law Clinics (NYC)</b><span>Free clinics incl. the Bet Tzedek civil litigation clinic &mdash; consumer, civil rights, eviction, seniors.</span></a>
+        <a class="res" href="https://www.law.nyu.edu/academics/clinics/clinics-by-topic" target="_blank" rel="noopener"><b>NYU Law Clinics</b><span>Eviction defense, veterans&rsquo; rights, immigrant defense, civil rights, and more.</span></a>
+        <a class="res" href="https://www.nyls.edu/academics/specialty-areas/clinics-and-experiential-learning/clinics/" target="_blank" rel="noopener"><b>New York Law School Clinics</b><span>Student clinics partnered with nonprofits and government agencies.</span></a>
+        <a class="res" href="https://www.law.georgetown.edu/experiential-learning/clinics/" target="_blank" rel="noopener"><b>Georgetown Law Clinics</b><span>One of the largest clinical programs &mdash; broad free legal representation.</span></a>
+        <a class="res" href="https://www.law.harvard.edu/clinics/" target="_blank" rel="noopener"><b>Harvard Law Clinics</b><span>Legal Services Center and many clinics offering free help and public legal guides.</span></a>
+      </div>
+      <p style="font-size:12.5px;color:#8a929a;">Clinics accept clients by their own eligibility rules (often income-based and by region). Even when a clinic can't take your case, its public guides and Know-Your-Rights materials are free to read.</p>
+    </section>
+
+    <section class="panel who">
       <h2>Choose who you want to reach</h2>
       <p>When you're ready for a person, you pick. Your summary goes only where you choose, only when you press send.</p>
     </section>
