@@ -1556,6 +1556,23 @@ async function detectFaceEmotion() {
       window._faceLostRun = (window._faceLostRun||0) + 1;
       if (window._faceLostRun === 3) metric('distraction'); // ~2s of looking away
     }
+    // FALLBACK HEART REGIONS: when MediaPipe isn't available, derive skin
+    // patches from face-api's face box so the heart reading STILL works (this is
+    // why the founder saw no heart data — MediaPipe wasn't loading). Forehead +
+    // both cheeks + nose bridge give enough clean skin for the rPPG estimate.
+    if (det && det.detection && det.detection.box) {
+      const bx = det.detection.box.x, by = det.detection.box.y,
+            bw = det.detection.box.width, bh = det.detection.box.height;
+      window._heartRegions = {
+        forehead:   { x: bx + bw*0.30, y: by + bh*0.08, w: bw*0.40, h: bh*0.12 },
+        cheekLeft:  { x: bx + bw*0.12, y: by + bh*0.55, w: bw*0.22, h: bh*0.15 },
+        cheekRight: { x: bx + bw*0.66, y: by + bh*0.55, w: bw*0.22, h: bh*0.15 },
+        noseBridge: { x: bx + bw*0.42, y: by + bh*0.40, w: bw*0.16, h: bh*0.12 },
+        underEyeL:null, underEyeR:null, mouthSideL:null, mouthSideR:null, wholeFace:null
+      };
+      window._heartFaceBox = window._heartRegions.forehead;
+      window._faceFrac = bw / (video.videoWidth || 1);
+    }
     if (det && det.expressions) {
       faceEmotionScores = det.expressions;
       let top = 'neutral', topVal = 0;
@@ -1931,17 +1948,19 @@ function startBioPing(){
   if (_bioPingInt) return;
   _bioPingInt = setInterval(()=>{
     try {
-      const bpm = window._heartBPM ? Math.round(window._heartBPM) : 0;
-      if (!bpm) return;
-      const base = window._heartBaseline ? Math.round(window._heartBaseline) : bpm;
-      // simple state: above baseline+8 = rising/agitated; below-6 = settling; else steady
+      // Ping EVERY interval while the session is live, even before a heart
+      // reading exists, so the founder's live monitor shows the session right
+      // away with an honest status (camera on / acquiring / measured).
+      const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 12000);
+      const bpm = (fresh && window._heartBPM) ? Math.round(window._heartBPM) : 0;
+      const base = window._heartBaseline ? Math.round(window._heartBaseline) : (bpm || 0);
       let state = 'steady';
-      if (bpm >= base + 8) state = 'rising';
-      else if (bpm <= base - 6) state = 'settling';
+      if (bpm) { if (bpm >= base + 8) state = 'rising'; else if (bpm <= base - 6) state = 'settling'; }
       const face = (window.currentFaceEmotion || '');
+      const cam = window._camOn ? 1 : 0;
       fetch('/api/bio/ping', {method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({sid: sessionId, bpm: bpm, tier: (window._heartTier||'measured'),
-          base: base, state: state, face: face})}).catch(()=>{});
+        body: JSON.stringify({sid: sessionId, bpm: bpm, tier: (window._heartTier||''),
+          base: base, state: state, face: face, cam: cam, hasheart: bpm ? 1 : 0})}).catch(()=>{});
     } catch(e){}
   }, 4000);
 }
@@ -2701,6 +2720,10 @@ async function startExperience() {
   const screen = $('story-screen'); if (screen) screen.style.display = 'flex';
   const msg = $('message'); if (msg) msg.focus({preventScroll:true});
   metric('session_start');
+  // Begin the live-monitor heartbeat IMMEDIATELY, independent of the camera or
+  // face models, so an active session always shows up for the founder (even a
+  // text-only, camera-off session). It's a no-op if it can't reach the server.
+  try { startBioPing(); } catch(e){}
   // Start on a real photograph (the founder's garden) and rotate slowly
   setScene('garden', false);
   startSceneRotation();
@@ -3360,8 +3383,10 @@ async function startVisualCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
     const video = $('visual-preview');
     video.srcObject = stream;
+    window._camOn = true;   // the live monitor uses this to show camera state
     $('emotion-status').textContent = 'Camera ready. Click analyze visual emotion when the person is visible.';
   } catch (error) {
+    window._camOn = false;
     $('emotion-status').textContent = `Camera access issue: ${error.message || error}.`;
   }
 }
@@ -6251,16 +6276,24 @@ def bio_ping():
         bpm = int(data.get("bpm", 0))
     except Exception:
         bpm = 0
-    if not (30 <= bpm <= 220):
-        return jsonify({"status": "ignored"}), 200
+    # A valid heart reading is 30-220; anything else means "no reading yet" (0),
+    # but we STILL record the session as live so the founder sees it with status.
+    if bpm and not (30 <= bpm <= 220):
+        bpm = 0
     now = time.time()
     with _BIO_LOCK:
         rec = _BIO_LIVE.get(sid) or {"history": []}
-        rec.update({"bpm": bpm, "tier": str(data.get("tier",""))[:14],
-                    "base": int(data.get("base", bpm)), "state": str(data.get("state",""))[:12],
+        try:
+            cam = 1 if int(data.get("cam", 0)) else 0
+        except Exception:
+            cam = 0
+        rec.update({"bpm": bpm, "hasheart": 1 if bpm else 0, "cam": cam,
+                    "tier": str(data.get("tier",""))[:14],
+                    "base": int(data.get("base", bpm) or bpm), "state": str(data.get("state",""))[:12],
                     "face": str(data.get("face",""))[:16], "last": now})
-        rec["history"].append({"t": time.strftime("%H:%M:%S"), "bpm": bpm})
-        rec["history"] = rec["history"][-40:]   # last ~40 readings
+        if bpm:
+            rec["history"].append({"t": time.strftime("%H:%M:%S"), "bpm": bpm})
+            rec["history"] = rec["history"][-40:]   # last ~40 readings
         _BIO_LIVE[sid] = rec
         # expire anything older than 90s
         for k in [k for k,v in _BIO_LIVE.items() if now - v.get("last",0) > 90]:
@@ -6280,6 +6313,7 @@ def admin_bio_live():
                 "who": "Person " + str(i+1),
                 "bpm": v.get("bpm"), "base": v.get("base"), "state": v.get("state"),
                 "tier": v.get("tier"), "face": v.get("face"),
+                "cam": v.get("cam", 0), "hasheart": v.get("hasheart", 0),
                 "ago": int(now - v.get("last",0)),
                 "spark": [h["bpm"] for h in v.get("history", [])][-24:]
             })
@@ -7011,15 +7045,29 @@ loadPlays();
       const d=await r.json();
       var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
       var el=document.getElementById('bio-live-list'); if(!el) return;
-      if(!d.active||!d.active.length){ el.innerHTML='<i style="color:#7d97b0;">No live sessions right now. When someone uses InnerLight with their camera, they appear here live.</i>'; return; }
+      if(!d.active||!d.active.length){ el.innerHTML='<i style="color:#7d97b0;">No live sessions right now. When someone is using InnerLight, they appear here live \u2014 with or without a heart reading.</i>'; return; }
       el.innerHTML=d.active.map(function(p){
+        var left = '<div style="min-width:80px;"><b>'+p.who+'</b><div style="font-size:11px;color:#7d97b0;">'+p.ago+'s ago</div></div>';
+        if (p.bpm && p.hasheart){
+          // Full heart reading available
+          return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">'
+            + left
+            +'<div style="text-align:center;"><span style="font-size:26px;font-weight:800;">'+p.bpm+'</span> <span style="font-size:12px;color:#9db8cf;">bpm</span>'
+            +'<div style="font-size:11px;color:#7d97b0;">baseline '+(p.base||p.bpm)+'</div></div>'
+            +'<div style="text-align:center;color:'+stateColor(p.state)+';font-size:13px;font-weight:700;min-width:120px;">'+stateWord(p.state)
+            +'<div style="font-size:10.5px;color:#7d97b0;font-weight:400;">'+(p.tier||'')+(p.face?' \u00b7 '+p.face:'')+'</div></div>'
+            +'<div>'+spark(p.spark)+'</div>'
+            +'</div>';
+        }
+        // Live session but no heart reading yet \u2014 show honest status.
+        var status = p.cam ? 'camera on \u2014 acquiring heart signal\u2026' : 'text-only session (camera off)';
+        var scolor = p.cam ? '#f0a868' : '#9db8cf';
         return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">'
-          +'<div style="min-width:80px;"><b>'+p.who+'</b><div style="font-size:11px;color:#7d97b0;">'+p.ago+'s ago</div></div>'
-          +'<div style="text-align:center;"><span style="font-size:26px;font-weight:800;">'+p.bpm+'</span> <span style="font-size:12px;color:#9db8cf;">bpm</span>'
-          +'<div style="font-size:11px;color:#7d97b0;">baseline '+p.base+'</div></div>'
-          +'<div style="text-align:center;color:'+stateColor(p.state)+';font-size:13px;font-weight:700;min-width:120px;">'+stateWord(p.state)
-          +'<div style="font-size:10.5px;color:#7d97b0;font-weight:400;">'+(p.tier||'')+(p.face?' \u00b7 '+p.face:'')+'</div></div>'
-          +'<div>'+spark(p.spark)+'</div>'
+          + left
+          +'<div style="text-align:center;flex:1;color:'+scolor+';font-size:13px;font-weight:700;">'+status
+          + (p.face?'<div style="font-size:10.5px;color:#7d97b0;font-weight:400;">expression: '+p.face+'</div>':'')
+          +'</div>'
+          +'<div style="min-width:60px;text-align:right;color:#7d97b0;font-size:12px;">live</div>'
           +'</div>';
       }).join('');
     }catch(e){}
