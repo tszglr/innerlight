@@ -4774,6 +4774,17 @@ def zenisys_ambient():
             except (IndexError, ValueError):
                 return 0
         files = [p.name for p in audio_dir.glob(f"{prefix}_*.mp3")]
+        # FOUNDER MUSIC CONTROL: skip any track the founder has switched off
+        # on the operations page. If everything in the lane is off, keep the
+        # lane alive rather than going silent (music must never stop).
+        try:
+            _off = _tracks_off_load()
+            if _off:
+                kept = [n for n in files if n not in _off]
+                if kept:
+                    files = kept
+        except Exception:
+            pass
         # FULLY RANDOM at arrival — every track has an EQUAL chance to be first
         # and to appear anywhere in the order. No track is ever privileged as
         # "the calmest one that always starts." (Founder rule: entry is totally
@@ -6306,6 +6317,77 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   load();
 })();
 </script>
+<h2>Music control &mdash; listen to any track, switch any track off</h2>
+<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
+<div style="font-size:12px;color:#64748b;margin-bottom:6px;">Press <b>Listen</b> to hear any track right here. Press <b>Turn off</b> and that exact song stops being offered &mdash; no redeploy needed, and you can turn it back on any time. Honest note: someone already listening may still hear their current list until their music next shifts; every new playlist skips it.</div>
+<div id="tc-status" style="font-size:12px;color:#c0564e;font-weight:700;margin-bottom:6px;"></div>
+<div id="track-control"><i style="color:#94a3b8;">Loading tracks&hellip;</i></div>
+<audio id="tc-audio" preload="none"></audio>
+</div>
+<script>
+(function(){
+  var LANE_NAMES = {calm:'Calm (gentle arrival)', deepcalm:'Deep calm (settles agitation)', lifting:'Lifting (raises low mood)'};
+  var playingFile = null;
+  function esc(s){ return String(s).replace(/</g,'&lt;'); }
+  async function loadTracks(){
+    try{
+      var r = await fetch('/api/admin/tracks'); if(!r.ok) return;
+      var d = await r.json();
+      var el = document.getElementById('track-control'); if(!el) return;
+      var lanes = d.lanes || {};
+      var html = '';
+      Object.keys(lanes).sort().forEach(function(lane){
+        html += '<div style="font-weight:700;color:#2e6e8e;margin:10px 0 4px;">' + esc(LANE_NAMES[lane] || lane) + '</div>';
+        lanes[lane].forEach(function(t){
+          var rowStyle = t.enabled ? '' : 'opacity:0.5;';
+          var btnBg = t.enabled ? '#c0564e' : '#16a34a';
+          var btnLabel = t.enabled ? 'Turn off' : 'Turn on';
+          html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eef2f8;' + rowStyle + '">'
+            + '<button data-listen="' + esc(t.file) + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:66px;">Listen</button>'
+            + '<span style="flex:1;">' + esc(t.file) + (t.enabled ? '' : ' <b style="color:#c0564e;">(off)</b>') + '</span>'
+            + '<span style="color:#94a3b8;font-size:12px;">' + (t.plays||0) + ' plays</span>'
+            + '<button data-toggle="' + esc(t.file) + '" data-en="' + (t.enabled ? '1' : '0') + '" style="background:' + btnBg + ';color:#fff;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:76px;">' + btnLabel + '</button>'
+            + '</div>';
+        });
+      });
+      el.innerHTML = html || '<i style="color:#94a3b8;">No tracks found.</i>';
+    }catch(e){}
+  }
+  var tcAudio = document.getElementById('tc-audio');
+  function resetListenButtons(){
+    var all = document.querySelectorAll('[data-listen]');
+    for (var i=0; i<all.length; i++){ all[i].textContent = 'Listen'; }
+  }
+  if (tcAudio) tcAudio.addEventListener('ended', function(){ playingFile = null; resetListenButtons(); });
+  document.addEventListener('click', async function(ev){
+    var b = ev.target;
+    if (!b || !b.getAttribute) return;
+    var listen = b.getAttribute('data-listen');
+    var toggle = b.getAttribute('data-toggle');
+    if (listen && tcAudio){
+      if (playingFile === listen){ tcAudio.pause(); playingFile = null; b.textContent = 'Listen'; return; }
+      resetListenButtons();
+      tcAudio.src = '/audio/' + listen;
+      tcAudio.currentTime = 0;
+      tcAudio.play().catch(function(){});
+      playingFile = listen;
+      b.textContent = 'Stop';
+    }
+    if (toggle){
+      var makeEnabled = b.getAttribute('data-en') !== '1';
+      b.disabled = true;
+      var status = document.getElementById('tc-status');
+      try{
+        var r = await fetch('/api/admin/tracks/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file: toggle, enabled: makeEnabled})});
+        var d = await r.json();
+        if (status) status.textContent = (d && d.status === 'refused') ? (d.reason || '') : '';
+      }catch(e){}
+      loadTracks();
+    }
+  });
+  loadTracks();
+})();
+</script>
 <h2>Song play log &mdash; every track, every timestamp</h2>
 <div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
 <div style="font-size:12px;color:#64748b;margin-bottom:10px;">Exactly what played and when. Every play is stamped to the second, so you can see if a track repeats within an hour. Use this to spot any song that plays too often. <button onclick="loadPlays()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:8px;">Refresh</button></div>
@@ -6612,6 +6694,80 @@ def admin_plays():
     return jsonify({"status": "ok", "total_plays": len(plays),
                     "by_track": [{"file": k, "count": v} for k, v in ranked],
                     "recent": recent})
+
+
+# ---- FOUNDER MUSIC CONTROL: switch individual tracks on/off, no redeploy ----
+# The founder can silence one exact track (e.g. a song that keeps resurfacing)
+# from the operations page. The off-list lives on the persistent disk, so it
+# survives deploys. The ambient endpoint (lane()) skips off tracks for every
+# new playlist it hands out.
+_TRACKS_OFF_FILE = os.environ.get("TRACKS_OFF_FILE", _DATA_DIR + "/innerlight_tracks_off.json")
+_TRACKS_OFF_LOCK = threading.Lock()
+
+def _tracks_off_load():
+    try:
+        with open(_TRACKS_OFF_FILE) as f:
+            return set(json.load(f))
+    except Exception:
+        return set()
+
+def _tracks_off_save(off):
+    try:
+        with open(_TRACKS_OFF_FILE, "w") as f:
+            json.dump(sorted(off), f)
+    except Exception as e:
+        print("[InnerLight] tracks-off save failed:", e)
+
+@app.route("/api/admin/tracks")
+def admin_tracks():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    audio_dir = Path(__file__).resolve().parent.parent / "audio"
+    off = _tracks_off_load()
+    with _PLAYS_LOCK:
+        plays = _plays_load()
+    counts = {}
+    for r in plays:
+        f = r.get("file", "?")
+        counts[f] = counts.get(f, 0) + 1
+    lanes = {}
+    if audio_dir.exists():
+        for p in sorted(audio_dir.glob("*.mp3")):
+            prefix = p.name.split("_", 1)[0]
+            lanes.setdefault(prefix, []).append({
+                "file": p.name, "enabled": p.name not in off,
+                "plays": counts.get(p.name, 0)})
+    return jsonify({"status": "ok", "lanes": lanes,
+                    "disabled": sorted(off)})
+
+@app.route("/api/admin/tracks/toggle", methods=["POST"])
+def admin_tracks_toggle():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    file = str(data.get("file", ""))[:80]
+    enabled = bool(data.get("enabled", True))
+    audio_dir = Path(__file__).resolve().parent.parent / "audio"
+    if not file or "/" in file or ".." in file or not (audio_dir / file).exists():
+        return jsonify({"error": "unknown file"}), 400
+    with _TRACKS_OFF_LOCK:
+        off = _tracks_off_load()
+        if enabled:
+            off.discard(file)
+        else:
+            off.add(file)
+            # Safety: never let a whole lane go silent. If this was the last
+            # track still on in its lane, refuse and explain in plain words.
+            prefix = file.split("_", 1)[0]
+            lane_files = [p.name for p in audio_dir.glob(prefix + "_*.mp3")]
+            if lane_files and all(n in off for n in lane_files):
+                off.discard(file)
+                return jsonify({"status": "refused",
+                                "reason": "That is the last song still on in its lane. "
+                                          "Turning it off would leave that lane silent. "
+                                          "Turn another song on first."}), 200
+        _tracks_off_save(off)
+    return jsonify({"status": "ok", "file": file, "enabled": file not in off})
 
 
 @app.route("/api/admin/policy/patterns")
