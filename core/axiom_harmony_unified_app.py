@@ -547,8 +547,9 @@ PUBLIC_PAGE = """
       /* Scene picker sits ABOVE the help bar, never overlapping it */
       .scene-picker { bottom:76px !important; right:10px !important; z-index:40 !important;
         background:rgba(255,255,255,0.85); border-radius:999px; padding:4px 8px; }
-      /* Heart chip also lifts above the help bar */
-      #heart-chip { bottom:80px !important; }
+      /* Heart chip also lifts above the help bar (bottom-left, scenes stay
+         bottom-right — they never overlap) */
+      #heart-chip { bottom:80px !important; left:10px !important; }
       /* Give the whole page room so nothing hides behind the fixed help bar */
       .story-screen { padding-bottom:150px; }
       body { padding-bottom:70px; }
@@ -1358,7 +1359,9 @@ function heartReport(){
 (function heartChip(){
   const chip = document.createElement('div');
   chip.id='heart-chip';
-  chip.style.cssText='position:fixed;bottom:22px;right:22px;z-index:55;display:none;'
+  // Bottom-LEFT corner: the scene buttons live at bottom-right, and the chip
+  // was sitting on top of them, hiding all but three. Left side is clear.
+  chip.style.cssText='position:fixed;bottom:22px;left:22px;z-index:55;display:none;'
     +'background:rgba(255,255,255,0.92);border-radius:999px;padding:12px 22px;'
     +'font-family:Arial;font-size:22px;color:#8a4653;box-shadow:0 8px 26px rgba(40,20,30,0.2);';
   chip.innerHTML='<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> '
@@ -1849,6 +1852,8 @@ function textWeightNow(){
 }
 
 let adaptiveArousal = 0.5;   // 0 = very calm/flat, 1 = very activated. Smoothed.
+let adaptiveDownSm = 0;      // smoothed "down/flat" reading — one flicker of a
+                             // sad detection must never flip the music.
 let adaptiveLaneNow = 'calm'; // which lane the adaptive loop currently favors
 let adaptiveLastSwitch = 0;
 
@@ -1868,20 +1873,31 @@ function readArousalSignal() {
   }
 
   // (2) HEART/VIDEO — the body's testimony. Above baseline = activation.
+  // A heart WELL ABOVE baseline is loud evidence. A heart resting AT baseline
+  // is quiet evidence — it must not shout down what the face is showing.
+  // (Bug fixed: the old fixed 0.30 weight sat in the divisor even when the
+  // heart said nothing, so a calm heartbeat mathematically vetoed the face
+  // and a sad or angry face could NEVER move the music. Now the heart's
+  // weight grows with how much it is actually saying.)
   if (window._heartBPM && window._heartBaseline){
     const hp = Math.max(0, Math.min(1, (window._heartBPM - window._heartBaseline) / 35));
-    up   += hp * 0.30;
-    wSum += 0.30;
+    const heartW = 0.30 * (0.4 + 0.6 * hp);
+    up   += hp * heartW;
+    wSum += heartW;
   }
 
-  // (3) FACE — secondary confirmation (fires weakly, so weighted low).
+  // (3) FACE — with recent text, the face confirms (low weight, per the
+  // research: text leads). With NO recent text, the face LEADS — it is the
+  // clearest thing the person is giving us, so it carries real weight.
   const s = faceEmotionScores || {};
   const faceUp = (s.angry||0)*1.0 + (s.fearful||0)*0.9 + (s.disgusted||0)*0.6 + (s.surprised||0)*0.4;
   const faceDown = (s.sad||0)*1.0;
-  if (faceUp > 0.05 || faceDown > 0.05){
-    up   += Math.min(1, faceUp)  * 0.15;
-    down += Math.min(1, faceDown)* 0.15;
-    wSum += 0.15;
+  const faceW = (tw > 0.3) ? 0.15 : 0.35;
+  const facePresent = (faceUp > 0.05 || faceDown > 0.05);
+  if (facePresent){
+    up   += Math.min(1, faceUp)  * faceW;
+    down += Math.min(1, faceDown)* faceW;
+    wSum += faceW;
   }
 
   // (4) VOICE — tone/energy confirmation.
@@ -1892,9 +1908,12 @@ function readArousalSignal() {
     wSum += 0.10;
   }
 
-  // Normalize by the weight actually present (so missing signals don't drag it).
-  const activation = wSum > 0 ? Math.min(1, up / Math.max(0.3, wSum)) : 0.5;
-  window._adaptiveDown = wSum > 0 ? Math.min(1, down / Math.max(0.3, wSum)) : 0;
+  // Normalize each direction by the signals that can actually SPEAK in that
+  // direction. Heart and voice only measure activation — they know nothing
+  // about sadness, so they must not dilute the sadness reading.
+  const downW = (tw > 0 && window._textEmotion ? 0.45 * tw : 0) + (facePresent ? faceW : 0);
+  const activation = wSum > 0 ? Math.min(1, up / Math.max(0.28, wSum)) : 0.5;
+  window._adaptiveDown = downW > 0 ? Math.min(1, down / Math.max(0.22, downW)) : 0;
   window._fusionParts = { text: (window._textEmotion&&tw>0)?1:0, heart: (window._heartBPM?1:0),
                           face: (faceUp>0.05||faceDown>0.05)?1:0, voice: (v&&v.energy!=null)?1:0 };
   return activation;
@@ -1903,9 +1922,11 @@ function readArousalSignal() {
 function adaptiveTick() {
   if (!ambientTracks.length) return;
   const inst = readArousalSignal();
-  // Smooth heavily so the sound never lurches — gentle, like quiet authority.
-  adaptiveArousal = adaptiveArousal*0.85 + inst*0.15;
-  const down = (window._adaptiveDown || 0);
+  // Smooth so the sound never lurches — gentle, like quiet authority — but
+  // alive enough that a held expression is answered within ~15 seconds.
+  adaptiveArousal = adaptiveArousal*0.8 + inst*0.2;
+  adaptiveDownSm = adaptiveDownSm*0.8 + (window._adaptiveDown || 0)*0.2;
+  const down = adaptiveDownSm;
 
   // 1) Continuously nudge VOLUME within a gentle band. More activated -> a touch
   //    softer and steadier (don't add to their noise). Calm -> normal presence.
