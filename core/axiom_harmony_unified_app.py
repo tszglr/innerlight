@@ -7104,6 +7104,78 @@ _STUDY_SYSTEM = (
     "not legal or medical advice.'"
 )
 
+# ---------------------------------------------------------------------------
+# THREE INDEPENDENT STUDY LENSES. The same scenario is examined SEPARATELY
+# through a legal, a legislative, and a medical lens. Each produces its OWN
+# analysis and its OWN conclusion — they must never mirror one another — and
+# each opens with an honest significance verdict, so a scenario that does not
+# truly reach (say) a legislative level says so plainly and professionally.
+# ---------------------------------------------------------------------------
+_STUDY_PREAMBLE = (
+    "You are the private study tutor for the founder of InnerLight, a crisis-support "
+    "product. The founder is a Political Science student preparing for law school. "
+    "Everything you produce is an EDUCATIONAL SIMULATION for the founder's own learning. "
+    "It is never given to end users and is not legal or medical advice. Plain language "
+    "first; define every term of legalese or medical terminology in parentheses the first "
+    "time it appears; spell out every acronym. Be CONCISE — under 600 words, depth over "
+    "sprawl. Begin every response with the line: 'FOUNDER STUDY — educational simulation, "
+    "not legal or medical advice.'\n\n"
+    "CRITICAL: Examine ONLY the {LENS} dimension of the scenario. Do NOT write a generic "
+    "overview. Your analysis and your conclusion must be specific to THIS lens and must "
+    "differ from what a legal, a legislative, or a medical study of the same scenario "
+    "would say — they are three separate studies with three separate conclusions. If the "
+    "scenario does not genuinely reach a meaningful {LENS} level, say so plainly and "
+    "professionally in the significance section, explain why, and keep the rest brief.\n\n"
+)
+
+_STUDY_LENSES = {
+    "legal": _STUDY_PREAMBLE.replace("{LENS}", "LEGAL (this individual person's own rights and remedies)") + (
+        "Use exactly these headings:\n"
+        "1. LEGAL SIGNIFICANCE — a one-line verdict (none / limited / moderate / significant) on "
+        "whether this reaches a legal level for the individual, and why.\n"
+        "2. THE LEGAL ISSUES — the specific rights, claims, or defenses in play for THIS person.\n"
+        "3. WHO HANDLES IT & THE PROCESS — the right professional, the steps they take, and any deadlines.\n"
+        "4. THE PAPERWORK — the filings/forms/documents by government level (local/state/federal), "
+        "named, and what each is for.\n"
+        "5. TWO MOCK OUTCOMES — two clearly-hypothetical endings and why each might happen.\n"
+        "6. ROUTING LESSON — what words in a person's story would tell InnerLight this legal handoff fits.\n"
+        "7. LEGAL CONCLUSION — your distinct closing conclusion for the legal dimension only."
+    ),
+    "legislative": _STUDY_PREAMBLE.replace("{LENS}", "LEGISLATIVE / POLICY (the SYSTEMIC angle — NOT this one person's dispute)") + (
+        "This lens is about whether the case reveals a systemic gap that a change in law or policy "
+        "could address. It is NOT about winning this individual's case. Use exactly these headings:\n"
+        "1. LEGISLATIVE SIGNIFICANCE — a one-line verdict (none / limited / moderate / significant) on "
+        "whether this reveals a systemic gap worth a policy or law change, and why. If it is purely an "
+        "individual matter already covered adequately by existing law, say so plainly.\n"
+        "2. THE SYSTEMIC PATTERN — the broader problem this individual case is one example of.\n"
+        "3. EXISTING LAW & THE GAP — what current statutes or regulations already do here, and exactly "
+        "where they fall short.\n"
+        "4. POSSIBLE ACTION — what a new bill, local ordinance, or agency rule could do, at which level "
+        "(local/state/federal), and who holds the authority to enact it.\n"
+        "5. ADVOCACY PATHWAY — concretely how a citizen or advocate pursues this (petition, public "
+        "testimony, model legislation, agency rulemaking, coalition-building).\n"
+        "6. STAKEHOLDERS & TRADE-OFFS — who is affected, how businesses and organizations could be helped "
+        "to act fairly, and the honest costs of the change.\n"
+        "7. LEGISLATIVE CONCLUSION — your distinct closing conclusion for the legislative dimension only."
+    ),
+    "medical": _STUDY_PREAMBLE.replace("{LENS}", "MEDICAL / CLINICAL (underlying health considerations)") + (
+        "You NEVER diagnose and NEVER claim to provide care; this is educational classification only. "
+        "Use exactly these headings:\n"
+        "1. MEDICAL SIGNIFICANCE — a one-line verdict (none / limited / moderate / significant) on whether "
+        "this reaches a medical or clinical level, and why. If nothing in the statement suggests a health "
+        "dimension, say so plainly.\n"
+        "2. POSSIBLE HEALTH DIMENSIONS — the physical or mental-health considerations the statement MAY "
+        "implicate, framed as education, never as a diagnosis of anyone.\n"
+        "3. WHO HANDLES IT — the kind of clinician and why that specialty fits.\n"
+        "4. THE CARE PATHWAY — how care typically proceeds, plus any urgency or red-flag signs that would "
+        "mean 'get help now.'\n"
+        "5. TERMINOLOGY — the relevant medical terms, each translated to plain words.\n"
+        "6. ROUTING LESSON — what words in a person's story would tell InnerLight this clinical handoff fits.\n"
+        "7. MEDICAL CONCLUSION — your distinct closing conclusion for the medical dimension only, restating "
+        "that InnerLight never diagnoses and never replaces a clinician."
+    ),
+}
+
 @app.route("/api/admin/study", methods=["POST"])
 def admin_study_api():
     if not session.get("founder_ok"):
@@ -7114,15 +7186,20 @@ def admin_study_api():
                         "text": "The comprehension key is not set on the server."}), 200
     data = request.get_json(silent=True) or {}
     scenario = str(data.get("scenario", ""))[:4000].strip()
-    focus = str(data.get("focus", "legal"))[:20]
+    focus = str(data.get("focus", "legal"))[:20].lower()
     if not scenario:
         return jsonify({"status": "error", "text": "Describe a scenario first."}), 200
-    prompt = (f"Study focus: {focus}. Scenario to study (hypothetical, for founder "
-              f"education only): {scenario}")
+    # Pick the INDEPENDENT lens for this focus so legal / legislative / medical
+    # each produce their own distinct analysis and conclusion, never a shared
+    # overview. Unknown focuses fall back to the general study tutor.
+    system_prompt = _STUDY_LENSES.get(focus, _STUDY_SYSTEM)
+    prompt = (f"Examine ONLY the {focus} dimension of this scenario, as its own independent "
+              f"study with its own conclusion. Scenario (hypothetical, for founder education "
+              f"only): {scenario}")
     body = json.dumps({
         "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
         "max_tokens": 950,
-        "system": _STUDY_SYSTEM,
+        "system": system_prompt,
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
     import urllib.request
@@ -7492,8 +7569,10 @@ Nothing here is ever shown to users. Nothing here is legal or medical advice.</d
     <option value="medical">Medical/telehealth — care pathway, terminology</option>
     <option value="legislative">Legislative — how a bill/policy change would work</option>
   </select>
-  <button onclick="runStudy()">Study it</button>
+  <button onclick="runStudy()">Study this one lens</button>
+  <button onclick="runAllLenses()" style="margin-left:6px;background:linear-gradient(90deg,#1d4ed8,#6d28d9);">Study all three: legal &bull; legislative &bull; medical</button>
  </div>
+ <div style="font-size:12px;color:#64748b;margin-top:8px;">Each lens is a separate, independent study with its own conclusion. A scenario may reach one, two, or all three levels &mdash; and if it doesn't truly reach a level, that study says so plainly.</div>
  <div class="wait" id="wait">Preparing your study material&hellip; (this uses your comprehension credit, so it only runs when you press the button)</div>
 </div>
 <div class="card"><div class="stamp">FOUNDER STUDY &mdash; EDUCATIONAL SIMULATION &mdash; NOT LEGAL OR MEDICAL ADVICE</div>
@@ -7621,6 +7700,40 @@ async function runStudy(){
     out.textContent = (d && d.text) ? d.text : 'No response.';
   }catch(e){ out.textContent = 'Could not reach the study engine. Check the connection and press "Study it" again.'; }
   wait.style.display='none'; out.style.display='block';
+  if (typeof loadShelf==='function') loadShelf();
+}
+
+// Run all THREE independent lenses on the same scenario and show them as three
+// clearly-separated studies, each with its own conclusion.
+async function runAllLenses(){
+  const out = document.getElementById('out'), wait = document.getElementById('wait');
+  const scenario = (document.getElementById('scenario')||{}).value || '';
+  if (scenario.trim().length < 10){ out.style.display='block'; out.textContent = 'Describe a scenario first.'; return; }
+  const origWait = wait.textContent;
+  out.style.display='none'; wait.style.display='block';
+  const lenses = [
+    ['legal', 'LEGAL — this person’s own rights and remedies', '#1d4ed8'],
+    ['legislative', 'LEGISLATIVE — the systemic policy angle', '#6d28d9'],
+    ['medical', 'MEDICAL — underlying health considerations', '#0f766e']
+  ];
+  let html = '';
+  for (let i=0;i<lenses.length;i++){
+    const L = lenses[i];
+    wait.textContent = 'Studying the ' + L[0] + ' lens… (' + (i+1) + ' of 3)';
+    let text = '';
+    try{
+      const r = await fetch('/api/admin/study',{method:'POST',headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({scenario: scenario, focus: L[0]})});
+      const raw = await r.text();
+      try { const d = JSON.parse(raw); text = (d && d.text) ? d.text : 'No response.'; }
+      catch(pe){ text = 'This lens took longer than the server allowed and was cut off. Run it alone with the dropdown to retry.'; }
+    }catch(e){ text = 'Could not reach the study engine for the ' + L[0] + ' lens.'; }
+    html += '<div style="margin:0 0 20px;border-left:5px solid ' + L[2] + ';padding:6px 0 6px 16px;">'
+      + '<div style="font-weight:800;color:' + L[2] + ';font-size:15px;margin-bottom:8px;">' + L[1] + '</div>'
+      + '<div style="white-space:pre-wrap;line-height:1.65;">' + text.replace(/</g,'&lt;') + '</div></div>';
+  }
+  wait.style.display='none'; wait.textContent = origWait;
+  out.innerHTML = html; out.style.display='block';
   if (typeof loadShelf==='function') loadShelf();
 }
 </script>
