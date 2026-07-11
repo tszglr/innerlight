@@ -1549,22 +1549,38 @@ function closeGentleBridge(){ const b=document.getElementById('gentle-bridge'); 
 function suggestProviderFrom(text){
   if (!text) return null;
   const t = ' ' + text.toLowerCase() + ' ';
-  // Signals the person themselves raises about MEDICATION / medical management
-  const medWords = ['medication','meds','prescription','prescribe','pill','dosage','dose',
-    'psychiatrist','side effect','refill','antidepressant','my meds','off my medication'];
-  // Signals about ongoing TALK therapy
-  const talkWords = ['therapist','therapy','counseling','someone to talk to','talk it through',
-    'process this','coping','cope','work through'];
-  // Signals of acute crisis handled by crisis-trained support
-  const crisisWords = ['can\u2019t go on','end it','hurt myself','harm myself','suicid','not safe',
-    'crisis','right now i need','emergency'];
   const has = (arr)=>arr.some(w=>t.indexOf(w)>=0);
-  if (has(crisisWords)) return {pro:'Crisis-trained counselor',
-    why:'It sounds like you need support right now, this moment. A crisis-trained counselor is here for exactly that.'};
-  if (has(medWords)) return {pro:'Psychiatrist',
-    why:'From what you\u2019re describing about medication, a psychiatrist \u2014 a medical doctor who can evaluate this and manage medication \u2014 may be the right person to help.'};
-  if (has(talkWords)) return {pro:'Therapist / licensed counselor',
-    why:'It sounds like ongoing talk-based support could help. A therapist or licensed counselor works with people on exactly this.'};
+
+  // ===== LEGAL NEEDS (mirrors the legal engine's 14 categories) =====
+  // Any of these should surface the LEGAL path, not emotional-only support.
+  const legalMap = [
+    { words:['evict','eviction','kicked out','landlord','lease','put me out','belongings outside','rent increase','no heat','no water','mold','section 8','housing authority','put out of'], label:'housing / eviction', why:'It sounds like you are facing a housing or eviction issue. This is a legal matter with real deadlines \u2014 legal help can protect your rights, often for free.' },
+    { words:['homeless','shelter','living in my car','on the street','nowhere to go','couch surfing'], label:'emergency housing', why:'It sounds like you need emergency housing. There are legal-aid and housing resources that can help right now.' },
+    { words:['fired','terminated','laid off','wrongful termination','unpaid wages','overtime','harassment at work','hostile work','workers comp','discriminat','retaliation'], label:'employment', why:'What you are describing sounds like an employment-rights issue. An employment attorney or legal aid can help you understand your options.' },
+    { words:['custody','visitation','child support','alimony','divorce','took my kid','won\u2019t let me see','parental rights','guardianship'], label:'family / custody', why:'This sounds like a family-law matter. A family-law attorney or legal aid can help protect your rights and your children.' },
+    { words:['hit me','beat me','abused','domestic violence','restraining order','order of protection','stalking','threatening me','afraid of him','afraid of her'], label:'domestic violence / protection', why:'Your safety comes first. There are legal protections (like restraining orders) and advocates who can help you immediately.' },
+    { words:['arrested','charged','arraign','bail','bond','public defender','probation','parole','criminal record','expunge','felony','misdemeanor','warrant'], label:'criminal defense', why:'This sounds like a criminal-defense matter. You have the right to an attorney \u2014 a public defender is available if you cannot afford one.' },
+    { words:['deport','deportation','immigration','ice','visa','asylum','daca','undocumented','green card','citizenship','detained'], label:'immigration', why:'This sounds like an immigration matter. An immigration attorney or nonprofit can explain your rights and options.' },
+    { words:['expelled','suspended','iep','504 plan','special education','school discipline','title ix','denied enrollment'], label:'education rights', why:'This sounds like an education-rights issue. There are advocates and legal aid who handle school matters.' },
+    { words:['denied treatment','denied coverage','denied insurance','medical malpractice','patient rights','involuntary commit','5150','forced medication','held against'], label:'patient rights', why:'This sounds like a patient-rights or healthcare-access matter. Legal aid and patient advocates can help.' },
+    { words:['ada','disability accommodation','denied accommodation','ssi','ssdi','disability benefits','denied disability'], label:'disability rights', why:'This sounds like a disability-rights matter. There are advocates and legal aid who handle accommodations and benefits.' },
+    { words:['debt collector','collection agency','sued for debt','garnish','repossess','bankruptcy','foreclosure','predatory','scammed','scam'], label:'consumer / debt', why:'This sounds like a consumer or debt matter. There are legal protections and free legal aid for exactly this.' },
+    { words:['racial profiling','police brutality','excessive force','civil rights','hate crime','profiling','discriminated against'], label:'civil rights', why:'This sounds like a civil-rights matter. Civil-rights organizations and attorneys can help you.' }
+  ];
+  for (const cat of legalMap){
+    if (has(cat.words)) return { pro:'Legal help', legal:true, category:cat.label, why:cat.why };
+  }
+
+  // ===== SUPPORT / CLINICAL NEEDS (routing, never diagnosis) =====
+  const crisisWords = ['can\u2019t go on','cant go on','end it','hurt myself','harm myself','suicid','not safe','kill myself','want to die','right now i need','emergency'];
+  const medWords = ['medication','meds','prescription','prescribe','pill','dosage','dose','psychiatrist','side effect','refill','antidepressant','off my medication','need meds'];
+  const substanceWords = ['drinking','alcohol','relapse','sober','withdrawal','using again','overdose','addicted','addiction','detox','high','can\u2019t stop using'];
+  const talkWords = ['therapist','therapy','counseling','someone to talk to','talk it through','process this','coping','cope','work through','grief','trauma'];
+
+  if (has(crisisWords)) return {pro:'Crisis-trained counselor', why:'It sounds like you need support right now, this moment. A crisis-trained counselor is here for exactly that.'};
+  if (has(substanceWords)) return {pro:'Substance-use counselor', why:'It sounds like substance use may be part of what you are carrying. A substance-use counselor or program can help without judgment.'};
+  if (has(medWords)) return {pro:'Psychiatrist', why:'From what you\u2019re describing about medication, a psychiatrist \u2014 a medical doctor who can evaluate this and manage medication \u2014 may be the right person to help.'};
+  if (has(talkWords)) return {pro:'Therapist / licensed counselor', why:'It sounds like ongoing talk-based support could help. A therapist or licensed counselor works with people on exactly this.'};
   return null;
 }
 // When we show the care page, pre-highlight the suggested provider (still the
@@ -1580,6 +1596,18 @@ function applyProviderSuggestion(){
     document.querySelectorAll('.pro-btn').forEach(function(b){
       if (b.getAttribute('data-pro') === s.pro){ b.classList.add('suggested'); }
     });
+    // If the need is legal, surface the legal path PROMINENTLY in the thread.
+    if (s.legal === true){
+      const thread = document.getElementById('conversation-thread');
+      if (thread && !document.getElementById('legal-nudge')){
+        const div = document.createElement('div');
+        div.id = 'legal-nudge';
+        div.style.cssText = 'background:#f5f0fa;border:1px solid #a78bfa;border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#4a3570;line-height:1.55;';
+        div.innerHTML = s.why + '<br><button onclick="openLegalHelp()" style="margin-top:10px;background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;">See legal help options</button>';
+        thread.appendChild(div);
+        try { metric('legal_surfaced', s.category || ''); } catch(e){}
+      }
+    }
   } catch(e){}
 }
 
@@ -3072,6 +3100,7 @@ async function analyzeVisualEmotion() {
   if ((data.zenisys_mode_hint || '') && zenisysCtx) adaptZenisys(data.zenisys_mode_hint);
 }
 window._applyProviderSuggestion = applyProviderSuggestion;
+function openLegalHelp(){ try{ openHelp('legal'); }catch(e){} }
 function openHelp(kind){
   if (window._minorLock){ showMinorBridge(); return; }
   return _openHelpReal(kind);
@@ -3190,7 +3219,7 @@ async function doResume(){
 }
 
 async function sendCheckin() {
-  try { const _mv=(document.getElementById('message')||{}).value||''; checkSubstitutionSignals(_mv); checkMinorSignals(_mv); analyzeText(_mv); } catch(e){}
+  try { const _mv=(document.getElementById('message')||{}).value||''; checkSubstitutionSignals(_mv); checkMinorSignals(_mv); analyzeText(_mv); if (typeof applyProviderSuggestion==='function') applyProviderSuggestion(); } catch(e){}
   if (window._minorLock){ showMinorBridge(); return; }  startZenisys('greeting');
   const msgVal = (val('message') || '').trim();
   // Empty guard: if there's nothing to send, don't fake a response.
@@ -5804,7 +5833,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect", "lane_switch", "face_shift", "facilities_search"}
+               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect", "lane_switch", "face_shift", "facilities_search", "legal_surfaced"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
