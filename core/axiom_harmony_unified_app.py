@@ -4540,12 +4540,9 @@ def page_contact():
     <div class="soft">
       <p style="margin:0 0 6px;"><strong>God's Love For Us LLC</strong></p>
       <p style="margin:0 0 6px;">Founder: Toshay S. Zeigler</p>
-      <p style="margin:0;">Email: <a href="mailto:[your email]">[your email]</a><br>
-      Phone: [your phone]</p>
+      <p style="margin:0;">Email: <a href="mailto:masterzeigler@gmail.com">masterzeigler@gmail.com</a><br>
+      Phone: <a href="tel:+14083349984">(408) 334-9984</a></p>
     </div>
-
-    <p style="font-size:14px;color:#7d9f91;">You can add your real email and phone here whenever you're ready &mdash;
-    right now these are placeholders so the page is live and ready.</p>
 
     <div class="soft">
       <p style="margin:0;"><strong>If this is an emergency</strong> and you or someone else may be in danger, please
