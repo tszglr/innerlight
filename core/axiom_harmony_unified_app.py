@@ -586,20 +586,25 @@ PUBLIC_PAGE = """
     <!-- TAP TO BEGIN -->
     <div id="welcome-gate">
       <div class="gate-inner">
+        <div id="lang-toggle" style="text-align:right;margin-bottom:4px;font-size:12px;">
+          <a href="#" onclick="setLang('en');return false;" data-langbtn="en" style="color:#2e6e8e;text-decoration:none;">English</a>
+          <span style="color:#c8ddd2;">&middot;</span>
+          <a href="#" onclick="setLang('es');return false;" data-langbtn="es" style="color:#2e6e8e;text-decoration:none;">Espa&ntilde;ol</a>
+        </div>
         <div class="gate-mark" aria-hidden="true">&#9711;</div>
         <h1>InnerLight</h1>
-        <p>A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
-        <button class="gate-button" onclick="startExperience()">Tap to begin</button>
-        <p class="gate-sub">Soft music and your camera begin gently when you tap.<br>
-        <span style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
+        <p data-i18n="gate.tagline">A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
+        <button class="gate-button" onclick="startExperience()" data-i18n="gate.begin">Tap to begin</button>
+        <p class="gate-sub"><span data-i18n="gate.startnote">Soft music and your camera begin gently when you tap.</span><br>
+        <span data-i18n="gate.camera" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
         <b style="color:#5a7d6d;">About your camera:</b> your video is analyzed <b>on your own device</b> &mdash;
         for gentle expression and heart signals only. The video itself is <b>never sent to us or stored anywhere</b>.
         Nothing leaves your device. You can decline the camera and still use everything else.</span><br>
-        <span style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
+        <span data-i18n="gate.ainotice" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
         <b style="color:#5a7d6d;">Please know:</b> InnerLight is an <b>artificial-intelligence program</b> &mdash; a computer,
         not a human being. It is not a therapist, doctor, or lawyer, and it may not be suitable for some minors.
         In an emergency, call or text <b>988</b> or call <b>911</b>. <a href="/safety" style="color:#2e6e8e;">How we respond in a crisis</a></span><br>
-        <span style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
+        <span data-i18n="gate.adult" style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
         <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
         <div class="gate-links">
           <a href="/about">About</a><span>&middot;</span>
@@ -611,6 +616,80 @@ PUBLIC_PAGE = """
         </div>
       </div>
     </div>
+
+    <script>
+    // ===================== LANGUAGE / i18n LAYER =====================
+    // English is the source and the always-safe fallback: any element with a
+    // data-i18n key keeps its English text if a translation is missing, so the
+    // page can never go blank. Adding a language later = add one more block to
+    // I18N. Choice is remembered on the person's own device.
+    var I18N = {
+      es: {
+        "gate.tagline": "Un lugar tranquilo y privado para contar tu historia.<br>Nada de lo que compartas se muestra a nadie &mdash; est&aacute; cifrado.",
+        "gate.begin": "Toca para comenzar",
+        "gate.startnote": "La m&uacute;sica suave y tu c&aacute;mara comienzan con calma cuando tocas.",
+        "gate.camera": "<b style=\"color:#5a7d6d;\">Sobre tu c&aacute;mara:</b> tu video se analiza <b>en tu propio dispositivo</b> &mdash; solo para leer con suavidad tu expresi&oacute;n y tu ritmo card&iacute;aco. El video en s&iacute; <b>nunca se nos env&iacute;a ni se guarda en ning&uacute;n lugar</b>. Nada sale de tu dispositivo. Puedes rechazar la c&aacute;mara y usar todo lo dem&aacute;s.",
+        "gate.ainotice": "<b style=\"color:#5a7d6d;\">Ten en cuenta:</b> InnerLight es un <b>programa de inteligencia artificial</b> &mdash; una computadora, no una persona. No es un terapeuta, m&eacute;dico ni abogado, y puede no ser apropiado para algunos menores. En una emergencia, llama o env&iacute;a un mensaje al <b>988</b>, o llama al <b>911</b>. <a href=\"/safety\" style=\"color:#2e6e8e;\">C&oacute;mo respondemos en una crisis</a>",
+        "gate.adult": "Al continuar, confirmas que tienes 18 a&ntilde;os o m&aacute;s. <a href=\"#\" onclick=\"showMinorBridge();return false;\" style=\"color:#2e6e8e;\">&iquest;Menor de 18? Tambi&eacute;n tenemos ayuda real para ti.</a>",
+        "story.title": "Cu&eacute;ntame tu historia.",
+        "story.sub": "T&oacute;mate tu tiempo. Di lo que sientas verdadero. Te escucho.",
+        "story.resume": "&iquest;Ya estuviste aqu&iacute;? Contin&uacute;a tu historia",
+        "story.ainote": "InnerLight es un programa de inteligencia artificial &mdash; no una persona, y no un terapeuta, m&eacute;dico ni abogado.",
+        "story.safetylink": "Seguridad y protocolo de crisis",
+        "story.placeholder": "Empieza por donde quieras... (presiona Enter para enviar)",
+        "story.send": "Enviar",
+        "story.speak": "&#127908; Hablar",
+        "music.now": "&#9834; m&uacute;sica suave sonando",
+        "music.change": "Cambiar m&uacute;sica",
+        "music.pulseon": "&#10041; Pulso de calma: activado",
+        "music.voiceoff": "&#128263; Voz hablada: desactivada",
+        "rail.provider": "Proveedor",
+        "rail.legal": "Ayuda legal",
+        "rail.nearby": "Ayuda cercana",
+        "rail.activities": "Actividades",
+        "rail.testmic": "Probar micr&oacute;fono"
+      }
+    };
+    function applyLang(code){
+      try {
+        var dict = I18N[code] || null;   // null => English source stays
+        var nodes = document.querySelectorAll('[data-i18n]');
+        for (var i=0;i<nodes.length;i++){
+          var key = nodes[i].getAttribute('data-i18n');
+          if (dict && dict[key] != null){
+            if (!nodes[i].getAttribute('data-en')) nodes[i].setAttribute('data-en', nodes[i].innerHTML);
+            nodes[i].innerHTML = dict[key];
+          } else if (nodes[i].getAttribute('data-en')){
+            nodes[i].innerHTML = nodes[i].getAttribute('data-en');  // restore English
+          }
+        }
+        var phs = document.querySelectorAll('[data-i18n-ph]');
+        for (var j=0;j<phs.length;j++){
+          var pk = phs[j].getAttribute('data-i18n-ph');
+          if (dict && dict[pk] != null){
+            if (!phs[j].getAttribute('data-en-ph')) phs[j].setAttribute('data-en-ph', phs[j].getAttribute('placeholder')||'');
+            phs[j].setAttribute('placeholder', dict[pk]);
+          } else if (phs[j].getAttribute('data-en-ph') != null){
+            phs[j].setAttribute('placeholder', phs[j].getAttribute('data-en-ph'));
+          }
+        }
+        try { document.documentElement.lang = code; } catch(e){}
+        var btns = document.querySelectorAll('[data-langbtn]');
+        for (var k=0;k<btns.length;k++){
+          btns[k].style.fontWeight = (btns[k].getAttribute('data-langbtn')===code) ? '700' : '400';
+        }
+      } catch(e){}
+    }
+    function setLang(code){
+      try { localStorage.setItem('il_lang', code); } catch(e){}
+      applyLang(code);
+    }
+    (function(){
+      var saved = 'en';
+      try { saved = localStorage.getItem('il_lang') || 'en'; } catch(e){}
+      applyLang(saved);
+    })();
+    </script>
 
     <!-- CALM STORY SCREEN -->
     <section id="story-screen" class="story-screen" style="display:none;">
@@ -637,19 +716,19 @@ PUBLIC_PAGE = """
         <video id="visual-preview" class="story-video" autoplay muted playsinline></video>
               </div>
       <div class="story-wrap">
-        <h2 class="story-title">Tell me your story.</h2>
-        <p class="story-sub">Take your time. Say whatever feels true. I am listening. &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;">Been here before? Continue your story</a></p>
-        <p style="font-size:11.5px;color:#8aa39a;margin:-6px 0 10px;">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer. <a href="/safety" style="color:#7d9c92;">Safety &amp; crisis protocol</a></p>
-        <textarea id="message" class="story-input" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
+        <h2 class="story-title" data-i18n="story.title">Tell me your story.</h2>
+        <p class="story-sub"><span data-i18n="story.sub">Take your time. Say whatever feels true. I am listening.</span> &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;" data-i18n="story.resume">Been here before? Continue your story</a></p>
+        <p style="font-size:11.5px;color:#8aa39a;margin:-6px 0 10px;"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#7d9c92;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
+        <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
-          <button class="story-send" onclick="sendCheckin()">Send</button>
-          <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing">&#127908; Speak</button>
+          <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
+          <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
         </div>
         <div class="music-bar">
-          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #c8ddd2;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now">&#9834; soft music playing</span>
-          <button class="music-change" type="button" onclick="changeMusic()">Change music</button>
-          <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()">&#10041; Calm pulse: on</button>
-          <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()">&#128263; Spoken voice: Off</button>
+          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #c8ddd2;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
+          <button class="music-change" type="button" onclick="changeMusic()" data-i18n="music.change">Change music</button>
+          <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()" data-i18n="music.pulseon">&#10041; Calm pulse: on</button>
+          <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()" data-i18n="music.voiceoff">&#128263; Spoken voice: Off</button>
           <select id="voice-picker" onchange="selectVoice(this.value)" style="display:none;"><option value="">Voice: default</option></select>
         </div>
         <div id="calm-player" style="display:none; margin:18px auto 6px; max-width:560px; background:rgba(20,30,48,0.92); border-radius:20px; padding:14px 14px 12px; box-shadow:0 8px 30px rgba(0,0,0,0.22); transition:max-width 0.5s ease;">
@@ -668,11 +747,11 @@ PUBLIC_PAGE = """
         <div id="conversation-thread" style="margin-top:22px;"></div>
         <div id="help-rail">
           <a href="tel:988" class="rail-btn rail-988" title="Call 988 now">&#128222; 988</a>
-          <button type="button" class="rail-btn" onclick="openHelp('telehealth')" title="Talk to a provider">Provider</button>
-          <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help">Legal</button>
-          <button type="button" class="rail-btn" onclick="openFacilities()" title="Find nearby help">Nearby help</button>
-          <button type="button" class="rail-btn" onclick="openActivities()" title="Calming activities">Activities</button>
-          <button type="button" class="rail-btn" onclick="testMic()" title="Test my microphone">Test mic</button>
+          <button type="button" class="rail-btn" onclick="openHelp('telehealth')" title="Talk to a provider" data-i18n="rail.provider">Provider</button>
+          <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help" data-i18n="rail.legal">Legal</button>
+          <button type="button" class="rail-btn" onclick="openFacilities()" title="Find nearby help" data-i18n="rail.nearby">Nearby help</button>
+          <button type="button" class="rail-btn" onclick="openActivities()" title="Calming activities" data-i18n="rail.activities">Activities</button>
+          <button type="button" class="rail-btn" onclick="testMic()" title="Test my microphone" data-i18n="rail.testmic">Test mic</button>
         </div>
         <div id="urgent-help" style="display:none;margin:6px auto;max-width:560px;text-align:center;padding:12px;background:rgba(232,83,78,0.1);border:1px solid rgba(232,83,78,0.4);border-radius:14px;color:#b3322e;font-weight:600;"></div>
         <div id="live-transcript" style="display:none;margin-top:14px;padding:14px 16px;background:rgba(111,179,212,0.12);border:1px solid rgba(111,179,212,0.4);border-radius:14px;">
