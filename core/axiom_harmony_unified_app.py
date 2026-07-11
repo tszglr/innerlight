@@ -2161,6 +2161,18 @@ async function playNextTrackBlended() {
   activeDeck = activeDeck === 'A' ? 'B' : 'A';
   const now = document.getElementById('music-now');
   if (now) now.textContent = '\u266a ' + (next.name || 'music');
+  reportTrackPlay(next);   // record this play with a timestamp
+}
+
+// Report every track play (file + lane + timestamp) so the founder page can
+// show exactly what played, when, and how often. Founder visibility + control.
+function reportTrackPlay(track){
+  try {
+    if (!track || !track.url) return;
+    const file = track.url.split('/').pop();
+    fetch('/api/track/play', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({file: file, lane: track.name || '', at: Date.now()})}).catch(()=>{});
+  } catch(e){}
 }
 
 // =====================================================================
@@ -2561,6 +2573,7 @@ async function startExperience() {
           requestAnimationFrame(step);
         })();
         const now = $('music-now'); if (now) now.textContent = '\u266a ' + (ambientTracks[0].name || 'soft music');
+        try { reportTrackPlay(ambientTracks[0]); } catch(e){}   // track the arrival song
         // If this arrival started on the SYMPHONY lane (person very upset),
         // ease down into SPA after the proven ~3-minute attention window.
         if (data.lane === 'symphony_to_spa' && data.then && data.then.length) {
@@ -4761,23 +4774,14 @@ def zenisys_ambient():
             except (IndexError, ValueError):
                 return 0
         files = [p.name for p in audio_dir.glob(f"{prefix}_*.mp3")]
-        if calmest_first is not None and _FINGERPRINTS:
-            def calm_of(n):
-                fp = _FINGERPRINTS.get(n, {})
-                return fp.get("calm_score", 0.5)
-            files.sort(key=calm_of, reverse=calmest_first)  # True: calmest first
-            # Keep the calmest as the gentle lead, but SHUFFLE the rest so the
-            # rotation is never identical twice (founder: songs must never play
-            # in the same order).
-            import random as _rnd
-            if len(files) > 2:
-                lead = files[0]; rest = files[1:]; _rnd.shuffle(rest)
-                files = [lead] + rest
-        elif len(files) > 1:
-            import random as _rnd
-            _rnd.shuffle(files)
-        else:
-            files.sort(key=track_number)
+        # FULLY RANDOM at arrival — every track has an EQUAL chance to be first
+        # and to appear anywhere in the order. No track is ever privileged as
+        # "the calmest one that always starts." (Founder rule: entry is totally
+        # random and every track is treated equally.) The emotion-targeting that
+        # leans toward calmer music happens later, once the user is engaged, in
+        # the adaptive loop — NOT here at the entry point.
+        import random as _rnd
+        _rnd.shuffle(files)
         return [{"url": f"/audio/{n}", "name": label,
                  "fp": _FINGERPRINTS.get(n, {})} for n in files]
 
@@ -6302,6 +6306,37 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   load();
 })();
 </script>
+<h2>Song play log &mdash; every track, every timestamp</h2>
+<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
+<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Exactly what played and when. Every play is stamped to the second, so you can see if a track repeats within an hour. Use this to spot any song that plays too often. <button onclick="loadPlays()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:8px;">Refresh</button></div>
+<div id="plays-report"><i style="color:#94a3b8;">Loading play log\u2026</i></div>
+</div>
+<script>
+async function loadPlays(){
+  try{
+    var r = await fetch('/api/admin/plays'); if(!r.ok) return;
+    var d = await r.json();
+    var el = document.getElementById('plays-report'); if(!el) return;
+    if(!d.total_plays){ el.innerHTML='<i style="color:#94a3b8;">No plays recorded yet. As sessions run, every song play appears here with its timestamp.</i>'; return; }
+    var html = '<div style="font-weight:700;margin-bottom:8px;">' + d.total_plays + ' total plays recorded</div>';
+    // per-track totals
+    html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
+    html += '<div style="flex:1;min-width:240px;"><div style="font-weight:700;color:#2e6e8e;margin-bottom:4px;">Plays per track (most played first)</div>'
+      + d.by_track.map(function(t){
+          var heavy = t.count >= 5 ? 'color:#c0564e;font-weight:800;' : 'color:#2e6e8e;';
+          return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eef2f8;"><span>' + t.file + '</span><b style="' + heavy + '">' + t.count + '</b></div>';
+        }).join('') + '</div>';
+    // full timestamp list
+    html += '<div style="flex:1;min-width:240px;max-height:340px;overflow:auto;"><div style="font-weight:700;color:#334155;margin-bottom:4px;">Every play, newest first (with timestamp)</div>'
+      + d.recent.map(function(r){
+          return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:13px;"><span style="color:#475569;">' + r.file + '</span><span style="color:#94a3b8;font-variant-numeric:tabular-nums;">' + (r.ts||'') + '</span></div>';
+        }).join('') + '</div>';
+    html += '</div>';
+    el.innerHTML = html;
+  }catch(e){}
+}
+loadPlays();
+</script>
 <h2>Live sessions &mdash; real-time biometric monitor</h2>
 <div class="card-like" style="background:#0f2447;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.2);margin-bottom:14px;color:#e6f1fa;">
 <div style="font-size:12px;color:#9db8cf;margin-bottom:10px;">Anonymous, live. Each person currently using InnerLight with their camera on appears here \u2014 heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the biometric signal. <span id="bio-clock" style="float:right;"></span></div>
@@ -6520,6 +6555,63 @@ def _study_save_entry(entry):
                 json.dump(log, f)
         except Exception:
             pass
+
+
+
+# ---- SONG PLAY TRACKING (founder visibility + control over randomization) ----
+# Records EVERY track play with a timestamp so the founder can see exactly what
+# played, when, and how often — including multiple plays within the same hour.
+_PLAYS_FILE = os.environ.get("PLAYS_FILE", _DATA_DIR + "/innerlight_plays.json")
+_PLAYS_LOCK = threading.Lock()
+
+def _plays_load():
+    try:
+        with open(_PLAYS_FILE) as f: return json.load(f)
+    except Exception: return []
+
+def _plays_save(d):
+    try:
+        with open(_PLAYS_FILE, "w") as f: json.dump(d, f)
+    except Exception as e: print("[InnerLight] plays save failed:", e)
+
+@app.route("/api/track/play", methods=["POST"])
+def track_play():
+    if not _rate_ok("trackplay", 600, 3600):
+        return jsonify({"status": "ignored"}), 200
+    data = request.get_json(silent=True) or {}
+    file = str(data.get("file", ""))[:60]
+    lane = str(data.get("lane", ""))[:20]
+    if not file:
+        return jsonify({"status": "empty"}), 200
+    rec = {"file": file, "lane": lane,
+           "ts": time.strftime("%Y-%m-%d %H:%M:%S"), "epoch": int(time.time())}
+    with _PLAYS_LOCK:
+        plays = _plays_load()
+        plays.append(rec)
+        plays = plays[-5000:]   # keep the most recent 5000 plays
+        _plays_save(plays)
+    return jsonify({"status": "ok"})
+
+@app.route("/api/admin/plays")
+def admin_plays():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    with _PLAYS_LOCK:
+        plays = _plays_load()
+    # per-file totals + per-hour counts + full timestamp list (most recent first)
+    totals = {}
+    per_hour = {}
+    for r in plays:
+        f = r.get("file","?")
+        totals[f] = totals.get(f, 0) + 1
+        hour = (r.get("ts","")[:13])  # YYYY-MM-DD HH
+        per_hour.setdefault(hour, {})
+        per_hour[hour][f] = per_hour[hour].get(f, 0) + 1
+    ranked = sorted(totals.items(), key=lambda kv: kv[1], reverse=True)
+    recent = list(reversed(plays))[:300]
+    return jsonify({"status": "ok", "total_plays": len(plays),
+                    "by_track": [{"file": k, "count": v} for k, v in ranked],
+                    "recent": recent})
 
 
 @app.route("/api/admin/policy/patterns")
