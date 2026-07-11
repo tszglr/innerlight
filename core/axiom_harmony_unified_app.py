@@ -5565,6 +5565,28 @@ def serve_audio(filename):
 
 
 
+# Clarifying LEGAL questions — asked when the conversation is clearly legal and
+# shows no distress, so we engage the legal matter instead of doing a feelings
+# check. Open questions (room to answer), never counselor-flavored.
+_LEGAL_CLARIFY = {
+    "housing": "To point you to the right legal help — have you gotten anything in writing yet, like a notice or a letter, and does it show a date or deadline?",
+    "homelessness": "So I can find the right resources — do you need somewhere to stay tonight, or are you trying to plan for the days ahead?",
+    "employment": "To match you with the right help — is this mainly about pay you're owed, being let go, or how you're being treated at work?",
+    "employment_discrimination": "So the right person can help — do you think this happened because of something like your race, gender, age, disability, or pregnancy?",
+    "family": "So I connect you correctly — is this mostly about custody, child support, a divorce, or a protective order?",
+    "custody": "To get this right — is there a court order in place now, or is this happening without one?",
+    "domestic_violence": "Your safety comes first — are you safe where you are right now? And is this something you'd want legal protection for, like a restraining order?",
+    "criminal": "So I point you the right way — has an arrest or charge already happened, and is there a court date or bail set?",
+    "immigration": "To find the right help — is someone detained right now, or is this about status, a hearing, or paperwork?",
+    "education": "To get you the right advocate — is this about discipline like a suspension, or about services like an IEP or 504 plan?",
+    "healthcare": "So I point you correctly — was something denied, like treatment, coverage, or medication, or is this about a rights or consent issue?",
+    "disability": "To match the right help — is this about an accommodation being denied, or about benefits like SSI or SSDI?",
+    "consumer": "To point you the right way — is this about a debt or collector, a repossession or foreclosure, or a scam?",
+    "civil_rights": "So the right advocate can help — can you tell me what happened, and who was involved?",
+    "_default": "So I can connect you with the right legal help — can you tell me a little more about what's happening, and any deadlines you're facing?",
+}
+
+
 @app.route("/api/checkin", methods=["POST"])
 def api_checkin():
     if not _rate_ok("checkin", 40, 3600) or not _budget_ok("claude"):
@@ -5661,25 +5683,63 @@ def api_checkin():
     conv_questions = [get_cultural_engine().shape_response(
         initial_conv["question"], cultural["register"]
     )]
-    # --- PRINCIPLE 12: NO INVESTIGATION, NO RIGHT TO SPEAK ---
-    # If the person used ambiguous shorthand that COULD carry something serious
-    # ("hurt myself at the gym", "landlord is ending my lease"), we do not
-    # dismiss it and we do not red-flag it. We LEAD with a specific, caring
-    # question that opens the door — and we never let it be treated as benign.
-    # Applies whenever we are investigating and there is NO explicit crisis
-    # phrase (needs_immediate_support). If a true crisis phrase was present,
-    # the crisis flow leads instead — investigation never overrides an active
-    # crisis. Otherwise the caring door-opener leads, even if the deeper reader
-    # raised the care level, so we investigate before any verdict.
-    if getattr(crisis, "needs_investigation", False) and not crisis.needs_immediate_support:
+    legal_issues = detect_legal_issues(message)
+    # --- DOMAIN GATE: match the KIND of help to what the person came for. ---
+    # Founder rule: listen first, answer once. If someone is here for a LEGAL
+    # matter and shows no emotional distress, we engage the LEGAL matter and do
+    # NOT offer mental-health help. We never invent an emotional issue where
+    # none exists. Only genuine distress signals open the clinical path.
+    _mlow = message.lower()
+    # A legal problem is distressing, but distress alone is NOT a mental-health
+    # signal — we must not invent one. Only a genuine crisis or explicit
+    # emotional/clinical language opens the clinical path. (We deliberately do
+    # NOT use the general distress score or generic risk here, because those
+    # fire on hard legal situations too.)
+    _clinical_signal = bool(
+        crisis.needs_immediate_support
+        or cr.get("level") == "crisis"
+        or re.search(r"\b(?:depress|anxious|anxiety|panic|suicid|therap|counsel|clinician|"
+                     r"lonely|hopeless|worthless|grief|grieving|trauma|overwhelmed|numbness|"
+                     r"mental health|emotional support|breaking down|can.?t sleep|cannot sleep|"
+                     r"feel(?:ing|s)? (?:sad|down|awful|empty|alone|scared|hopeless|numb))", _mlow)
+    )
+    _has_legal = bool(legal_issues)
+    if _has_legal and not _clinical_signal:
+        domain = "legal"
+    elif _has_legal and _clinical_signal:
+        domain = "both"
+    elif _clinical_signal:
+        domain = "clinical"
+    else:
+        domain = "general"
+
+    if domain == "legal":
+        # Engage the legal matter with a clarifying LEGAL question — never a
+        # feelings check, never a counselor offer. This also suppresses the
+        # emotional investigation below.
+        _code = legal_issues[0].get("code", "")
+        _label = legal_issues[0].get("label", "a legal matter")
+        _q = _LEGAL_CLARIFY.get(_code, _LEGAL_CLARIFY["_default"])
+        conv_questions = [get_cultural_engine().shape_response(_q, cultural["register"])]
+        # If the local fallback engine was used (no model), its reply is written
+        # for emotional topics. Replace it with a legal-forward acknowledgment so
+        # a legal conversation never opens with a mental-health frame.
+        if not smart:
+            conv_response = get_cultural_engine().shape_response(
+                "Thank you for telling me — this sounds like " + _label + ", and I can help you "
+                "get to the right legal support. Let me understand it a little better first.",
+                cultural["register"])
+    elif getattr(crisis, "needs_investigation", False) and not crisis.needs_immediate_support:
+        # --- PRINCIPLE 12: NO INVESTIGATION, NO RIGHT TO SPEAK ---
+        # Ambiguous NON-legal shorthand ("hurt myself at the gym") is neither
+        # dismissed nor red-flagged. We LEAD with a caring door-opening question.
+        # A true crisis phrase (needs_immediate_support) makes the crisis flow
+        # lead instead — investigation never overrides an active crisis.
         probe = get_cultural_engine().shape_response(
             crisis.investigation_prompt, cultural["register"])
-        # The investigative question leads; keep any engine question behind it.
         conv_questions = [probe] + [q for q in conv_questions if q and q != probe]
-        # Not dismissed: an ambiguous serious signal is never "steady/low".
         if risk == "low":
             risk = "moderate"
-    legal_issues = detect_legal_issues(message)
     legal_guidance = generate_legal_guidance(legal_issues)
     legal_code = legal_guidance.get("issue_code") if legal_guidance else None
     # If the layered reader sees crisis, force the crisis handoff regardless of phrasing
@@ -5768,6 +5828,7 @@ def api_checkin():
         "learning_state": learning_state,
         "needs_immediate_support": crisis.needs_immediate_support,
         "needs_investigation": getattr(crisis, "needs_investigation", False),
+        "domain": domain,
         "human_help": human_help,
         "zenisys_music": get_zenisys_engine().detect_and_fetch(message),
         "sound_mode": innerlight_result["zenisys"]["mode"],
