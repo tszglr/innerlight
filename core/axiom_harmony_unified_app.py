@@ -521,8 +521,13 @@ PUBLIC_PAGE = """
       border-width:3px; margin:0; box-shadow:0 6px 22px rgba(0,0,0,0.28); }
     @media (max-width:640px){ .story-video-bar.floating .story-video { width:78px; height:78px; }
       .story-video-bar.floating { top:70px; right:12px; } }
-    .story-title { font-size:26px; font-weight:600; margin:0 0 6px; color:#2d4a3e; }
-    .story-sub { color:#6d8f80; font-size:14px; margin:0 0 22px; }
+    /* Readable over ANY background scene: strong color + a white legibility
+       halo so the text is clear on dark moons and bright gardens alike. */
+    .story-title { font-size:26px; font-weight:700; margin:0 0 6px; color:#183028;
+      text-shadow:0 1px 2px rgba(255,255,255,0.95), 0 2px 12px rgba(255,255,255,0.7), 0 0 2px rgba(255,255,255,0.9); }
+    .story-sub { color:#20423a; font-size:14.5px; font-weight:600; margin:0 0 22px;
+      text-shadow:0 1px 2px rgba(255,255,255,0.95), 0 1px 8px rgba(255,255,255,0.65); }
+    .story-sub a { color:#1d5f7e; }
     .story-input { width:100%; min-height:130px; box-sizing:border-box; padding:18px; border-radius:16px;
       border:1px solid #c8ddd2; background:#ffffff; color:#2d4a3e; font-size:16px; line-height:1.6; resize:vertical;
       font-family:inherit; }
@@ -718,7 +723,7 @@ PUBLIC_PAGE = """
       <div class="story-wrap">
         <h2 class="story-title" data-i18n="story.title">Tell me your story.</h2>
         <p class="story-sub"><span data-i18n="story.sub">Take your time. Say whatever feels true. I am listening.</span> &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;" data-i18n="story.resume">Been here before? Continue your story</a></p>
-        <p style="font-size:11.5px;color:#8aa39a;margin:-6px 0 10px;"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#7d9c92;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
+        <p style="font-size:12px;color:#3a5b4f;font-weight:500;margin:-6px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
         <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
           <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
@@ -3356,8 +3361,12 @@ function _openHelpReal(kind){
   // Each path is honest about WHERE the person is going and WHO they will reach.
   // The conversation is carried over so they never fill out a jargon form.
   try { sessionStorage.setItem('innerlight_convo', JSON.stringify(conversationLog)); } catch(e){}
-  if(kind === 'attorney' || kind === 'legal'){ window.open('/handoff/legal','_blank'); }
-  else { window.open('/handoff/clinical','_blank'); }
+  // Navigate in the SAME tab. window.open('_blank') is silently blocked by many
+  // mobile browsers, in-app webviews, and popup blockers — which made the
+  // buttons look dead / froze the page. The conversation is saved above and the
+  // handoff page reads it, so same-tab is reliable everywhere and never freezes.
+  var dest = (kind === 'attorney' || kind === 'legal') ? '/handoff/legal' : '/handoff/clinical';
+  try { window.location.assign(dest); } catch(e){ window.location.href = dest; }
 }
 function revealUrgentHelp(data){
   // When distress is detected, surface clear, immediate options.
@@ -4261,7 +4270,7 @@ CLINICAL_HANDOFF_PAGE = r"""
       <p>When you send this, InnerLight notifies the care side and prepares your approved summary so the professional can read it <i>before</i> they speak with you &mdash; so you don't have to start from the beginning.</p>
       <p id="status" style="font-weight:700;color:var(--green);"></p>
       <button id="send-btn" onclick="sendToCare()">Send my summary &amp; connect me</button>
-      <a class="button secondary" href="/#private-step" onclick="window.close();return false;">Go back</a>
+      <a class="button secondary" href="/" onclick="if(history.length>1){history.back();return false;}">Go back</a>
     </section>
 
     <p class="disclaimer">
@@ -4450,7 +4459,7 @@ LEGAL_HANDOFF_PAGE = r"""
       <p>When you send this, InnerLight prepares your approved summary so the legal professional can review it before speaking with you.</p>
       <p id="status" style="font-weight:700;color:var(--legal);"></p>
       <button onclick="sendToLegal()">Send my summary &amp; connect me to legal help</button>
-      <a class="button secondary" href="/#private-step" onclick="window.close();return false;">Go back</a>
+      <a class="button secondary" href="/" onclick="if(history.length>1){history.back();return false;}">Go back</a>
     </section>
 
     <p class="disclaimer">
