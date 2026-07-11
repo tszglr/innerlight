@@ -663,6 +663,7 @@ PUBLIC_PAGE = """
           <a href="tel:988" class="rail-btn rail-988" title="Call 988 now">&#128222; 988</a>
           <button type="button" class="rail-btn" onclick="openHelp('telehealth')" title="Talk to a provider">Provider</button>
           <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help">Legal</button>
+          <button type="button" class="rail-btn" onclick="openFacilities()" title="Find nearby help">Nearby help</button>
           <button type="button" class="rail-btn" onclick="openActivities()" title="Calming activities">Activities</button>
           <button type="button" class="rail-btn" onclick="testMic()" title="Test my microphone">Test mic</button>
         </div>
@@ -1580,6 +1581,55 @@ function applyProviderSuggestion(){
       if (b.getAttribute('data-pro') === s.pro){ b.classList.add('suggested'); }
     });
   } catch(e){}
+}
+
+
+// ---- LOCAL FACILITIES FINDER (non-crisis self-referral) ----
+function openFacilities(){
+  let ov = document.getElementById('facilities-overlay');
+  if (ov){ ov.style.display='flex'; return; }
+  ov = document.createElement('div');
+  ov.id='facilities-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:88;background:rgba(10,18,30,0.9);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+  ov.innerHTML = '<div style="background:#fff;border-radius:18px;padding:24px;max-width:440px;width:100%;font-family:Arial;max-height:86vh;overflow-y:auto;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+    + '<h3 style="margin:0;color:#1e3a5c;">Find help near you</h3>'
+    + '<button onclick="closeFacilities()" style="background:rgba(0,0,0,0.06);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;">Close</button></div>'
+    + '<p style="font-size:13px;color:#6d8f80;line-height:1.5;">If you are not in immediate crisis and feel able to reach out yourself, enter your city or ZIP and we will look for mental-health places near you that you can contact on your own time.</p>'
+    + '<div style="display:flex;gap:8px;">'
+    + '<input id="fac-place" placeholder="City or ZIP (e.g. San Jose, CA)" style="flex:1;padding:11px;border:1px solid #c8ddd2;border-radius:10px;font-size:15px;">'
+    + '<button onclick="doFacilities()" style="background:#2e6e8e;color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer;">Search</button></div>'
+    + '<div id="fac-results" style="margin-top:14px;"></div>'
+    + '<p style="font-size:12px;color:#94a3b8;margin-top:14px;border-top:1px solid #eef2f8;padding-top:10px;">If you are in immediate danger or crisis, call or text <b>988</b>, or call <b>911</b>. This list is for planning your own next step, not for emergencies.</p>'
+    + '</div>';
+  document.body.appendChild(ov);
+  setTimeout(()=>{ const el=document.getElementById('fac-place'); if(el) el.focus(); }, 100);
+}
+function closeFacilities(){ const o=document.getElementById('facilities-overlay'); if(o) o.style.display='none'; }
+async function doFacilities(){
+  const place=(document.getElementById('fac-place')||{}).value||'';
+  const box=document.getElementById('fac-results');
+  if (place.trim().length<2){ if(box) box.innerHTML='<span style="color:#c0564e;font-size:13px;">Please enter a city or ZIP.</span>'; return; }
+  if (box) box.innerHTML='<span style="color:#6d8f80;font-size:14px;">Looking for places near you\u2026</span>';
+  try {
+    const r=await fetch('/api/facilities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place:place})});
+    const d=await r.json();
+    if (!d.results || !d.results.length){
+      box.innerHTML='<div style="font-size:14px;color:#475569;line-height:1.6;">We could not find listings for that area right now. You can also try:<br>'
+        + '\u2022 <b>SAMHSA National Helpline: 1-800-662-4357</b> (free, 24/7, finds local treatment)<br>'
+        + '\u2022 <b>FindTreatment.gov</b> \u2014 search by your location<br>'
+        + '\u2022 Call or text <b>988</b> to talk now.</div>';
+      metric('facilities_search', 'nores'); return;
+    }
+    box.innerHTML = d.results.map(function(f){
+      return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:11px 13px;margin:8px 0;">'
+        + '<b style="color:#1e3a5c;font-size:14.5px;">'+f.name+'</b>'
+        + (f.address?'<div style="font-size:12.5px;color:#64748b;">'+f.address+'</div>':'')
+        + (f.phone?'<div style="font-size:13px;color:#2e6e8e;margin-top:3px;">'+f.phone+'</div>':'')
+        + '</div>';
+    }).join('') + '<div style="font-size:12px;color:#94a3b8;margin-top:6px;">Please confirm hours and services by calling ahead. Listings come from public map data.</div>';
+    metric('facilities_search', 'ok');
+  } catch(e){ box.innerHTML='<span style="color:#c0564e;font-size:13px;">Could not search right now. For help finding treatment, call SAMHSA at 1-800-662-4357.</span>'; }
 }
 
 // ---- GENTLE FEEDBACK ASK (optional, anonymous) ----
@@ -4291,6 +4341,63 @@ def page_about():
 
 
 
+
+# ---- LOCAL MENTAL-HEALTH FACILITIES (non-crisis self-referral help) ----
+# A person can share where they are; we surface nearby places they can reach on
+# their own time. This is NAVIGATION, not treatment, and never replaces crisis
+# lines. Uses OpenStreetMap for lookups (free, no key) with graceful fallback.
+@app.route("/api/facilities", methods=["POST"])
+def facilities_lookup():
+    if not _rate_ok("facilities", 20, 3600):
+        return _gentle_429()
+    data = request.get_json(silent=True) or {}
+    place = str(data.get("place", "")).strip()[:120]
+    if not place:
+        return jsonify({"status": "empty"}), 200
+    results = []
+    try:
+        import urllib.request, urllib.parse
+        # 1) geocode the place the person typed
+        q = urllib.parse.urlencode({"q": place, "format": "json", "limit": 1})
+        geo_req = urllib.request.Request("https://nominatim.openstreetmap.org/search?" + q,
+                                         headers={"User-Agent": "InnerLight/1.0 (support@getinnerlight.com)"})
+        with urllib.request.urlopen(geo_req, timeout=8) as r:
+            geo = json.loads(r.read().decode("utf-8"))
+        if geo:
+            lat = geo[0]["lat"]; lon = geo[0]["lon"]
+            # 2) find nearby mental-health / clinic / social-facility amenities
+            # Overpass query for healthcare + social facilities within ~12km
+            overpass = (
+                '[out:json][timeout:12];('
+                'node["healthcare"="centre"](around:12000,%s,%s);'
+                'node["amenity"="clinic"]["healthcare:speciality"~"psychiatry|mental_health"](around:12000,%s,%s);'
+                'node["social_facility"~"outreach|group_home|counselling"](around:12000,%s,%s);'
+                'node["healthcare:speciality"~"psychiatry|mental_health"](around:12000,%s,%s);'
+                ');out center 20;' % (lat,lon,lat,lon,lat,lon,lat,lon)
+            )
+            op_req = urllib.request.Request("https://overpass-api.de/api/interpreter",
+                    data=urllib.parse.urlencode({"data": overpass}).encode(),
+                    headers={"User-Agent": "InnerLight/1.0 (support@getinnerlight.com)"})
+            with urllib.request.urlopen(op_req, timeout=14) as r2:
+                op = json.loads(r2.read().decode("utf-8"))
+            seen = set()
+            for el in op.get("elements", []):
+                tags = el.get("tags", {})
+                name = tags.get("name")
+                if not name or name in seen:
+                    continue
+                seen.add(name)
+                addr = " ".join(filter(None, [tags.get("addr:housenumber",""), tags.get("addr:street",""),
+                                              tags.get("addr:city","")])).strip()
+                results.append({"name": name[:80], "address": addr[:120],
+                                "phone": tags.get("phone", tags.get("contact:phone",""))[:24]})
+                if len(results) >= 12:
+                    break
+    except Exception as e:
+        print("[InnerLight] facilities lookup issue:", e)
+    return jsonify({"status": "ok", "place": place, "results": results})
+
+
 @app.route("/research")
 def page_research():
     inner = """
@@ -5680,7 +5787,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect", "lane_switch", "face_shift"}
+               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect", "lane_switch", "face_shift", "facilities_search"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
