@@ -1612,6 +1612,49 @@ function applyProviderSuggestion(){
 }
 
 
+
+// ---- IMMEDIATE HELP-REQUEST DETECTION (stops questioning, routes now) ----
+// The moment a person asks for help or a provider, we route immediately — no
+// more follow-up questions. Their request outranks our understanding-gathering.
+function detectHelpRequest(text){
+  if (!text) return false;
+  const t = ' ' + text.toLowerCase() + ' ';
+  const asks = ['i need help','need help now','can you help','help me','i want help',
+    'connect me','talk to someone','speak to someone','speak with someone','talk to a',
+    'speak to a','see a therapist','see a counselor','see a doctor','see a lawyer',
+    'talk to a lawyer','talk to an attorney','need a lawyer','need an attorney',
+    'need a therapist','need a counselor','need a doctor','get me help','find me help',
+    'i want to talk to','put me through','can i speak','can i talk'];
+  return asks.some(function(w){ return t.indexOf(w)>=0; });
+}
+window._routeRequested = false;
+function handleHelpRequestIfAny(text){
+  if (detectHelpRequest(text)){
+    window._routeRequested = true;
+    try { metric('help_requested'); } catch(e){}
+    // Surface routing immediately: legal if their words are legal, plus the
+    // provider path. Both can appear if both are needed.
+    try { applyProviderSuggestion(); } catch(e){}
+    // Bring the help options right into view.
+    const thread = document.getElementById('conversation-thread');
+    if (thread && !document.getElementById('route-now')){
+      const div = document.createElement('div');
+      div.id = 'route-now';
+      div.style.cssText = 'background:rgba(46,110,142,0.12);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#234;line-height:1.55;';
+      div.innerHTML = 'Of course \u2014 let us get you to real help now. Choose what fits, and you can pick more than one:'
+        + '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">'
+        + '<button onclick="routeProvider()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;">Talk to a provider</button>'
+        + '<button onclick="openLegalHelp()" style="background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;">Legal help</button>'
+        + '<button onclick="openFacilities()" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">Find nearby help</button>'
+        + '</div>';
+      thread.appendChild(div);
+      thread.scrollIntoView({behavior:'smooth', block:'end'});
+    }
+    return true;
+  }
+  return false;
+}
+
 // ---- LOCAL FACILITIES FINDER (non-crisis self-referral) ----
 function openFacilities(){
   let ov = document.getElementById('facilities-overlay');
@@ -3101,6 +3144,7 @@ async function analyzeVisualEmotion() {
 }
 window._applyProviderSuggestion = applyProviderSuggestion;
 function openLegalHelp(){ try{ openHelp('legal'); }catch(e){} }
+function routeProvider(){ try{ openHelp('telehealth'); }catch(e){} }
 function openHelp(kind){
   if (window._minorLock){ showMinorBridge(); return; }
   return _openHelpReal(kind);
@@ -5833,7 +5877,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect", "lane_switch", "face_shift", "facilities_search", "legal_surfaced"}
+               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect", "lane_switch", "face_shift", "facilities_search", "legal_surfaced", "help_requested"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
