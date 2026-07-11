@@ -3250,47 +3250,93 @@ document.addEventListener('keydown', function(){ window._lastTypedAt = performan
   window.addEventListener('scroll', onScroll, {passive:true});
 })();
 
+// ===================== SPEECH QUEUE — ONE VOICE AT A TIME =====================
+// Only ONE line is ever spoken at a time. New lines wait in a queue for the
+// current one to FINISH — they never overlap. This fixes the provider/therapist
+// prompt cutting in over the main response. Works for both the server's human
+// audio and the browser fallback voice.
+var _spQueue = [];
+var _spSpeaking = false;
+var _spCurAudio = null;
+
 function speak(text) {
   if (!voiceEnabled || !text) return;
-  // Try REAL human audio from the server first. If no voice service is
-  // configured, it tells us to use the browser's best neural voice instead.
+  _spQueue.push(String(text));
+  _spPump();
+}
+function _spPump() {
+  if (_spSpeaking) return;                 // something is already speaking; wait
+  var text = _spQueue.shift();
+  if (text == null) return;                // queue empty
+  _spSpeaking = true;
+  var advanced = false;
+  function done() {
+    if (advanced) return; advanced = true;
+    _spCurAudio = null; _spSpeaking = false;
+    _spPump();                             // speak the next queued line, if any
+  }
+  // Watchdog: a stalled clip must never freeze the queue forever.
+  var words = text.split(/\s+/).length;
+  var watchdog = setTimeout(done, Math.min(30000, words * 350 + 4000));
+  function finish() { clearTimeout(watchdog); done(); }
+  _spPlayOne(text, finish);
+}
+function _spPlayOne(text, finish) {
+  // Try REAL human audio from the server first; fall back to the browser voice.
   fetch('/api/voice/speak', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({text: text, voice_id: selectedVoiceId || ''})
-  }).then(r => r.json()).then(d => {
+  }).then(function(r){ return r.json(); }).then(function(d) {
     if (d && d.audio_b64) {
-      // genuine human voice
-      const audio = new Audio('data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio_b64);
-      audio.volume = 0.95;
-      audio.play().catch(() => speakBrowser(text));
+      try {
+        var audio = new Audio('data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio_b64);
+        _spCurAudio = audio;
+        audio.volume = 0.95;
+        audio.onended = finish;
+        audio.onerror = function(){ _spSpeakBrowser(text, finish); };
+        audio.play().catch(function(){ _spSpeakBrowser(text, finish); });
+      } catch(e) { _spSpeakBrowser(text, finish); }
     } else {
-      speakBrowser(text);
+      _spSpeakBrowser(text, finish);
     }
-  }).catch(() => speakBrowser(text));
+  }).catch(function(){ _spSpeakBrowser(text, finish); });
 }
-
-function speakBrowser(text) {
-  if (!voiceEnabled || !('speechSynthesis' in window) || !text) return;
-  speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
+function _spSpeakBrowser(text, finish) {
+  if (!voiceEnabled || !('speechSynthesis' in window) || !text) { finish(); return; }
+  try { speechSynthesis.cancel(); } catch(e){}
+  var utter = new SpeechSynthesisUtterance(text);
   if (selectedVoice) utter.voice = selectedVoice;
   utter.rate = 0.92;   // slightly slower = calmer
   utter.pitch = 1.0;
   utter.volume = 0.95;
-  speechSynthesis.speak(utter);
+  utter.onend = finish;
+  utter.onerror = finish;
+  try { speechSynthesis.speak(utter); } catch(e){ finish(); }
 }
+// Immediately silence everything and clear anything waiting (voice turned off,
+// or a brand-new turn begins so old lines shouldn't linger).
+function stopAllSpeech() {
+  _spQueue = [];
+  _spSpeaking = false;
+  try { if (_spCurAudio) { _spCurAudio.pause(); _spCurAudio.currentTime = 0; } } catch(e){}
+  _spCurAudio = null;
+  try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e){}
+}
+// Back-compat: any older caller of speakBrowser still works, now queued.
+function speakBrowser(text) { speak(text); }
 
 function toggleVoiceCombined(){
   const btn = document.getElementById('voice-toggle');
   const turningOn = !voiceEnabled;
   voiceEnabled = turningOn;
   try { window._voiceFirst = turningOn; } catch(e){}
+  if (!turningOn) { try { stopAllSpeech(); } catch(e){} }
   if (typeof applyVoiceFirst === 'function') { try { applyVoiceFirst(turningOn); } catch(e){} }
   if (btn) btn.innerHTML = turningOn ? '&#128266; Spoken voice: On' : '&#128263; Spoken voice: Off';
 }
 function toggleVoice() {
   voiceEnabled = !voiceEnabled;
-  if (!voiceEnabled) speechSynthesis.cancel();
+  if (!voiceEnabled) { try { stopAllSpeech(); } catch(e){} }
   const btn = document.getElementById('voice-toggle');
   if (btn) btn.textContent = voiceEnabled ? '🔊 Voice On' : '🔇 Voice Off';
 }
@@ -3484,6 +3530,7 @@ async function sendCheckin() {
     return;
   }
   voiceFinalTranscript = '';
+  try { stopAllSpeech(); } catch(e){}   // new turn: silence any lingering lines
   logTurn('user', msgVal);
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   const res = await fetch('/api/checkin', {
