@@ -699,6 +699,14 @@ PUBLIC_PAGE = """
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tone@14/build/Tone.js"></script>
 <script>
+/* ===== HOISTED STATE (declared before any function uses them) ===== */
+var faceInterval = null;
+var TARGET_VOL = 0.06;
+var entrainOn = false, entrainPanL = null, entrainPanR = null;
+var _duckActive = false, _duckRestoreTimer = null, _duckFadeTimer = null;
+var _hrTickInt = null, _hrEstInt = null;
+var adaptiveInterval = null;
+
 // ========================================================
 // CALMING SCENE ENGINE — realism leads, animation is fallback
 // ========================================================
@@ -1400,7 +1408,7 @@ async function detectFaceEmotion() {
   } catch (e) {}
   finally { window._faceBusy = false; }
 }
-let faceInterval = null;
+faceInterval = null;
 // Detect the face often — subtle emotion flickers across a face in fractions
 // of a second, so we look ~every 0.6s to catch the ticks. The SOUND still
 // responds gently (frequent detection + smoothed response = sensitive but not jittery).
@@ -1632,7 +1640,7 @@ function startBioPing(){
   }, 4000);
 }
 
-let _hrTickInt=null, _hrEstInt=null;
+_hrTickInt=null, _hrEstInt=null;
 function startHeartLoop(){
   if (_hrTickInt) return;
   _hrTickInt = setInterval(()=>{ try{ heartTick(); }catch(e){} }, 66);   // ~15 Hz
@@ -1652,7 +1660,7 @@ function startHeartLoop(){
 // softer and steadier for agitation (settle them), a touch warmer/present for
 // flatness (reach them), easing back toward gentle calm as they settle.
 // ---------------------------------------------------------------------------
-let adaptiveInterval = null;
+adaptiveInterval = null;
 let adaptiveArousal = 0.5;   // 0 = very calm/flat, 1 = very activated. Smoothed.
 let adaptiveLaneNow = 'calm'; // which lane the adaptive loop currently favors
 let adaptiveLastSwitch = 0;
@@ -1865,7 +1873,7 @@ let deckA, deckB, activeDeck = 'A';
 let crossfading = false;
 const CROSSFADE_MS = 4000; // 4 second blend
 const CROSSFADE_TRIGGER = 8; // start blend 8 seconds before track ends
-let TARGET_VOL = 0.06;    // headphone-safe; user slider can raise it
+TARGET_VOL = 0.06;    // headphone-safe; user slider can raise it
 
 function initDecks() {
   deckA = document.getElementById('ambient-a');
@@ -2148,8 +2156,8 @@ const SESSION_ID = 's' + Math.random().toString(16).slice(2,8);
 function metric(type, value){ try { fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type,value:value,sid:SESSION_ID})}); } catch(e){} }
 const PAGE_OPEN_MS = Date.now();
 // --- Hoisted audio-state declarations (must exist before any function uses them) ---
-let entrainOn = false, entrainPanL = null, entrainPanR = null;
-let _duckActive = false, _duckRestoreTimer = null, _duckFadeTimer = null;
+entrainOn = false; entrainPanL = null; entrainPanR = null;
+_duckActive = false; _duckRestoreTimer = null; _duckFadeTimer = null;
 // ---- Volume control: mute + slider. Slider 40 = the safe default. ----
 let userMuted = false;
 function currentTarget(){ return userMuted ? 0 : TARGET_VOL; }
