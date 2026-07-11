@@ -4334,18 +4334,12 @@ LEGAL_HANDOFF_PAGE = r"""
     <section class="panel who">
       <h2>Law-school legal knowledge &amp; clinics &mdash; authoritative and free</h2>
       <p>Law schools publish some of the clearest legal explanations available, and many run <b>free legal clinics</b> that represent low-income people directly. These broaden and cross-check the understanding of your rights &mdash; different schools sometimes explain or expand the same issue in ways that help.</p>
-      <p id="clinic-note" style="font-size:13px;color:var(--legal);font-weight:700;margin:6px 0 0;"></p>
-      <div class="reslib" id="clinic-lib">
-        <a class="res" data-state="CA" href="https://law.stanford.edu/mills-legal-clinic/" target="_blank" rel="noopener"><b>Stanford Law &mdash; Mills Legal Clinic</b><span>Free clinics incl. eviction defense, disability benefits, and reentry after incarceration (Bay Area).</span></a>
-        <a class="res" data-state="CA" href="https://law.stanford.edu/community-law-clinic/" target="_blank" rel="noopener"><b>Stanford Community Law Clinic</b><span>Free civil legal services for low-income residents &mdash; housing, disability, post-conviction.</span></a>
-        <a class="res" data-state="ALL" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Free, plain-language legal encyclopedia from Cornell Law School (explains the law for any state).</span></a>
-        <a class="res" data-state="NY" href="https://cardozo.yu.edu/clinics" target="_blank" rel="noopener"><b>Cardozo Law Clinics (NYC)</b><span>Free clinics incl. the Bet Tzedek civil litigation clinic &mdash; consumer, civil rights, eviction, seniors.</span></a>
-        <a class="res" data-state="NY" href="https://www.law.nyu.edu/academics/clinics/clinics-by-topic" target="_blank" rel="noopener"><b>NYU Law Clinics</b><span>Eviction defense, veterans&rsquo; rights, immigrant defense, civil rights, and more.</span></a>
-        <a class="res" data-state="NY" href="https://www.nyls.edu/academics/specialty-areas/clinics-and-experiential-learning/clinics/" target="_blank" rel="noopener"><b>New York Law School Clinics</b><span>Student clinics partnered with nonprofits and government agencies.</span></a>
-        <a class="res" data-state="DC" href="https://www.law.georgetown.edu/experiential-learning/clinics/" target="_blank" rel="noopener"><b>Georgetown Law Clinics</b><span>One of the largest clinical programs &mdash; broad free legal representation.</span></a>
-        <a class="res" data-state="MA" href="https://www.law.harvard.edu/clinics/" target="_blank" rel="noopener"><b>Harvard Law Clinics</b><span>Legal Services Center and many clinics offering free help and public legal guides.</span></a>
+      <p id="clinic-note" style="font-size:13px;color:var(--legal);font-weight:700;margin:6px 0 0;">Pick your state at the top of this page and your state's law-school clinic appears here.</p>
+      <div id="state-clinic" style="margin:10px 0;"></div>
+      <div class="reslib">
+        <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Free, plain-language legal encyclopedia from Cornell Law School &mdash; explains the law for any state.</span></a>
       </div>
-      <p style="font-size:12.5px;color:#8a929a;">Clinics accept clients by their own eligibility rules (often income-based and by region). Even when a clinic can't take your case, its public guides and Know-Your-Rights materials are free to read. To find a clinic in your own state, use the state directories at the top of this page.</p>
+      <p style="font-size:12.5px;color:#8a929a;">Clinics accept clients by their own eligibility rules (often income-based and by region). Even when a clinic can't take your case, its public guides and Know-Your-Rights materials are free to read. Every state's flagship law-school clinic is listed &mdash; choose your state above.</p>
     </section>
 
     <section class="panel who">
@@ -4422,6 +4416,61 @@ LEGAL_HANDOFF_PAGE = r"""
       ['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],
       ['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming']
     ];
+    // Verified flagship law-school legal clinic for every state (URLs confirmed
+    // to resolve). Alaska has no ABA-accredited law school. Some states list two.
+    var STATE_CLINICS = {
+      'AK': [],
+      'AL': [{s:'University of Alabama School of Law', u:'https://law.ua.edu/academics/law-clinics/', b:'Free civil, criminal defense, domestic violence, mediation clinics.'}],
+      'AR': [{s:'University of Arkansas School of Law', u:'https://law.uark.edu/service-outreach/clinics/', b:'Free civil, criminal, immigration, human trafficking clinics.'}],
+      'AZ': [{s:'University of Arizona College of Law', u:'https://law.arizona.edu/academics/clinical-programs', b:'Clinics: domestic violence, immigration, veterans, family.'}],
+      'CA': [{s:'Stanford Law — Mills Legal Clinic', u:'https://law.stanford.edu/mills-legal-clinic/', b:'Free clinics: eviction defense, disability, reentry.'},{s:'UC Berkeley School of Law', u:'https://www.law.berkeley.edu/experiential/clinics/', b:'Clinics: human rights, environmental, community law.'}],
+      'CO': [{s:'University of Colorado Law School', u:'https://www.colorado.edu/law/academics/clinical-education-program', b:'Clinics: civil, criminal defense, juvenile/family, immigration.'}],
+      'CT': [{s:'Yale Law School', u:'https://law.yale.edu/studying-law-yale/clinical-and-experiential-learning', b:'30+ clinics: veterans, immigration, housing, workers.'}],
+      'DE': [{s:'Widener University Delaware Law School', u:'https://delawarelaw.widener.edu/current-students/jd-academics/experiential-courses/clinics/', b:'Clinics: domestic violence, veterans, environmental, innocence.'}],
+      'DC': [{s:'Georgetown University Law Center', u:'https://www.law.georgetown.edu/experiential-learning/clinics/', b:'17 clinics: health justice, criminal defense, legislation.'}],
+      'FL': [{s:'University of Florida Levin College of Law', u:'https://law.ufl.edu/academics/experiential-learning/clinics-and-field-placements/', b:'Clinics: civil, immigration, veterans, juvenile, tax.'}],
+      'GA': [{s:'University of Georgia School of Law', u:'https://www.law.uga.edu/clinics-and-externships', b:'Clinics: family justice, veterans, community health law.'}],
+      'HI': [{s:'University of Hawaii Richardson School of Law', u:'https://law.hawaii.edu/academics/experiential-learning/', b:'Clinics: family, elder, immigration, Native Hawaiian rights.'}],
+      'ID': [{s:'University of Idaho College of Law', u:'https://www.uidaho.edu/law/legal-clinics-and-support', b:'Clinics: family, immigration, community, tribal law.'}],
+      'IL': [{s:'University of Illinois College of Law', u:'https://law.illinois.edu/academics/clinics-experiential-learning/', b:'Clinics: family, immigration, veterans, First Amendment.'}],
+      'IN': [{s:'Indiana University Maurer School of Law', u:'https://law.indiana.edu/academics/experiential-education/clinics/index.html', b:'Live-client clinics: reentry, protection orders, IP.'}],
+      'IA': [{s:'University of Iowa College of Law', u:'https://law.uiowa.edu/experiential-learning/clinical-law-program', b:'Clinics: immigration, criminal defense, community empowerment.'}],
+      'KS': [{s:'University of Kansas School of Law', u:'https://law.ku.edu/academics/hands-on-learning/clinics', b:'Clinics: legal aid, innocence, veterans.'}],
+      'KY': [{s:'University of Kentucky Rosenberg College of Law', u:'https://law.uky.edu/current-students/clinics', b:'Free civil litigation and civil rights clinics.'}],
+      'LA': [{s:'LSU Paul M. Hebert Law Center', u:'https://law.lsu.edu/experiential/clinics/', b:'Clinics: veterans, youth defense, small business, tax.'}],
+      'ME': [{s:'University of Maine School of Law', u:'https://mainelaw.maine.edu/academics/clinics-and-centers/', b:'Clinics: general practice, refugee/human rights, domestic abuse.'}],
+      'MD': [{s:'University of Maryland Carey School of Law', u:'https://www.law.umaryland.edu/academics/clinics/', b:'18 clinics: eviction prevention, immigration, consumer, medical-legal.'}],
+      'MA': [{s:'Harvard Law School Clinics', u:'https://www.law.harvard.edu/clinics/', b:'Legal Services Center and many free public clinics.'}],
+      'MI': [{s:'University of Michigan Law School', u:'https://michigan.law.umich.edu/academics/experiential-learning/clinics', b:'Clinics: child advocacy, immigration, human trafficking.'}],
+      'MN': [{s:'University of Minnesota Law School', u:'https://law.umn.edu/minnesota-law-clinics', b:'25+ clinics: family, immigration, consumer, economic justice.'}],
+      'MS': [{s:'University of Mississippi School of Law', u:'https://law.olemiss.edu/research-and-practice/clinics-centers-and-institutes/', b:'Clinics serving underserved clients with legal representation.'}],
+      'MO': [{s:'University of Missouri School of Law', u:'https://law.missouri.edu/academics/clinics/', b:'Clinics: child/family justice, veterans, entrepreneurship.'}],
+      'MT': [{s:'University of Montana Blewett School of Law', u:'https://www.umt.edu/law/academics/clinics/', b:'Clinics: veterans, domestic violence, Indian law.'}],
+      'NE': [{s:'University of Nebraska College of Law', u:'https://law.unl.edu/experiential-learning/', b:'Clinics: housing/eviction, children, debtor defense, innocence.'}],
+      'NV': [{s:'UNLV William S. Boyd School of Law', u:'https://law.unlv.edu/clinics/our-clinics', b:'Clinics: immigration, misdemeanor, mediation, public policy.'}],
+      'NH': [{s:'UNH Franklin Pierce School of Law', u:'https://law.unh.edu/academics/clinics', b:'Clinics: criminal defense, IP/transaction, live-client work.'}],
+      'NJ': [{s:'Rutgers Law School', u:'https://law.rutgers.edu/professional-skills/clinics', b:'20+ clinics: housing, domestic violence, immigrant rights, veterans.'}],
+      'NM': [{s:'University of New Mexico School of Law', u:'https://lawschool.unm.edu/clinic/index.html', b:'Clinics: family, economic justice, Indian law.'}],
+      'NY': [{s:'NYU Law Clinics', u:'https://www.law.nyu.edu/academics/clinics/clinics-by-topic', b:'Eviction defense, veterans, immigrant defense, civil rights.'},{s:'CUNY School of Law', u:'https://www.law.cuny.edu/academics/clinical-programs/', b:'Public-interest clinics: housing, immigration, family, disability.'}],
+      'NC': [{s:'University of North Carolina School of Law', u:'https://law.unc.edu/experiential-learning/clinics/', b:'Clinics: civil, family defense, immigration, veterans, youth.'}],
+      'ND': [{s:'University of North Dakota School of Law', u:'https://law.und.edu/academics/und-law-clinics.html', b:'Clinics: family, immigration, business/non-profit.'}],
+      'OH': [{s:'Ohio State Moritz College of Law', u:'https://moritzlaw.osu.edu/academics/clinics', b:'Clinics: civil, immigration, justice for children, mediation.'}],
+      'OK': [{s:'University of Oklahoma College of Law', u:'https://law.ou.edu/jd/academics/experiential-learning/clinics', b:'Free civil and criminal defense clinics for low-income.'}],
+      'OR': [{s:'University of Oregon School of Law', u:'https://law.uoregon.edu/become-practice-ready/clinics', b:'Clinics: domestic violence, criminal defense, nonprofit.'}],
+      'PA': [{s:'University of Pennsylvania Carey Law School', u:'https://www.law.upenn.edu/clinic/', b:'Gittis clinics: civil, criminal defense, child advocacy, immigration.'}],
+      'RI': [{s:'Roger Williams University School of Law', u:'https://law.rwu.edu/academics/juris-doctor/clinics-and-externships', b:'Clinics: immigration, housing, criminal defense, veterans.'}],
+      'SC': [{s:'University of South Carolina Rice School of Law', u:'https://sc.edu/study/colleges_schools/law/academics/experiential_learning/clinics/', b:'Clinics: domestic violence, veterans, education, tax, youth.'}],
+      'SD': [{s:'University of South Dakota Knudson School of Law', u:'https://www.usd.edu/Academics/Colleges-and-Schools/knudson-school-of-law/Experiential-Learning', b:'Clinics: divorce, veterans, tax help.'}],
+      'TN': [{s:'University of Tennessee College of Law', u:'https://winston.utk.edu/clinics/', b:'Clinics: advocacy, domestic violence, wills, expungement.'}],
+      'TX': [{s:'University of Texas School of Law', u:'https://law.utexas.edu/clinics/', b:'Clinics: housing, immigration, domestic violence, children.'}],
+      'UT': [{s:'University of Utah S.J. Quinney College of Law', u:'https://www.law.utah.edu/experiential-education/clinics/', b:'Clinics: immigration, mental health, environmental justice.'}],
+      'VT': [{s:'Vermont Law and Graduate School', u:'https://www.vermontlaw.edu/academics/clinics-and-externships', b:'South Royalton Legal Clinic, environmental justice, small business.'}],
+      'VA': [{s:'University of Virginia School of Law', u:'https://www.law.virginia.edu/clinics', b:'24 clinics: housing, immigration, civil rights, health/disability.'}],
+      'WA': [{s:'University of Washington School of Law', u:'https://www.law.uw.edu/academics/experiential-learning/clinics', b:'Clinics: housing, immigration, workers rights, veterans.'}],
+      'WV': [{s:'West Virginia University College of Law', u:'https://www.law.wvu.edu/clinical-law', b:'Clinics: general litigation, immigration, veterans, innocence.'}],
+      'WI': [{s:'University of Wisconsin Law School', u:'https://law.wisc.edu/clinics/', b:'Clinics: housing, family, consumer, restraining orders, immigration.'}],
+      'WY': [{s:'University of Wyoming College of Law', u:'https://www.uwyo.edu/law/experiential/clinics/index.html', b:'Clinics: civil, family, defender aid, estate.'}]
+    };
     function initStatePicker(){
       var sel = document.getElementById('state-select');
       if (!sel) return;
@@ -4445,23 +4494,24 @@ LEGAL_HANDOFF_PAGE = r"""
       } else if (help){
         help.innerHTML = '';
       }
-      // Reorder the law-school clinics: this state first, national next, others last.
-      var lib = document.getElementById('clinic-lib');
+      // Show the flagship law-school clinic(s) for the chosen state.
+      var box = document.getElementById('state-clinic');
       var note = document.getElementById('clinic-note');
-      if (lib){
-        var links = lib.querySelectorAll('.res');
-        var inState = 0;
-        for (var j=0;j<links.length;j++){
-          var st = links[j].getAttribute('data-state');
-          if (!abbr){ links[j].style.order=''; links[j].style.opacity=''; continue; }
-          if (st === abbr){ links[j].style.order='0'; links[j].style.opacity='1'; inState++; }
-          else if (st === 'ALL'){ links[j].style.order='1'; links[j].style.opacity='1'; }
-          else { links[j].style.order='2'; links[j].style.opacity='0.55'; }
-        }
-        if (note){
-          if (!abbr){ note.textContent=''; }
-          else if (inState>0){ note.textContent='Law-school clinics in ' + name + ' are shown first. Clinics in other states are still listed — their free public guides are worth reading anywhere.'; }
-          else { note.textContent='We do not yet list a law-school clinic based in ' + name + '. Use the ' + name + ' directories above to find local clinics; the clinics below (other states) still publish free public guides anyone can read.'; }
+      if (box){
+        if (!abbr){
+          box.innerHTML='';
+          if (note) note.textContent='Pick your state at the top of this page and your state’s law-school clinic appears here.';
+        } else {
+          var list = STATE_CLINICS[abbr] || [];
+          if (list.length){
+            box.innerHTML = '<div class="reslib">' + list.map(function(c){
+              return '<a class="res" href="' + c.u + '" target="_blank" rel="noopener"><b>' + esc(c.s) + '</b><span>' + esc(c.b) + '</span></a>';
+            }).join('') + '</div>';
+            if (note) note.textContent='Law-school clinic in ' + name + ':';
+          } else {
+            box.innerHTML='';
+            if (note) note.textContent=name + ' has no accredited law school with a public clinic. Use the ' + name + ' directories above — they will connect you to local legal aid.';
+          }
         }
       }
     }
