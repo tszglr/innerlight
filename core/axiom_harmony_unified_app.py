@@ -4308,13 +4308,23 @@ LEGAL_HANDOFF_PAGE = r"""
     <p id="pro-picked" style="font-weight:700;color:#2e6e8e;"></p>
   </header>
   <main>
+    <section class="panel who" id="state-panel">
+      <h2>First &mdash; what state are you in? Legal help is different in every state</h2>
+      <p>The law in New York is not the law in California. So we don't want to hand you another state's rules. Tell us your state and we'll point you to help for where you actually are.</p>
+      <label for="state-select">Your state</label>
+      <select id="state-select" style="width:100%;max-width:360px;padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;">
+        <option value="">Select your state&hellip;</option>
+      </select>
+      <div id="state-help" style="margin-top:14px;"></div>
+    </section>
+
     <section class="panel who">
       <h2>Self-help &amp; civic resources &mdash; free, trusted, available right now</h2>
       <p>These are established, free legal-information sources. They explain your rights and the process in plain language. They are information, <b>not</b> legal advice &mdash; only a lawyer can advise on your specific case &mdash; but they are a strong, fast place to start understanding where you stand.</p>
       <div class="reslib">
         <a class="res" href="https://www.lawhelp.org/" target="_blank" rel="noopener"><b>LawHelp.org</b><span>Find free legal aid and self-help by state and topic.</span></a>
         <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Plain-language legal dictionary &amp; explanations from Cornell Law School.</span></a>
-        <a class="res" href="https://www.courts.ca.gov/selfhelp.htm" target="_blank" rel="noopener"><b>California Courts Self-Help</b><span>Official step-by-step guides for common court matters.</span></a>
+        <a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers</b><span>Ask a lawyer a civil legal question free &mdash; you pick your state, and a volunteer attorney in your state answers.</span></a>
         <a class="res" href="https://www.usa.gov/legal-aid" target="_blank" rel="noopener"><b>USA.gov Legal Aid</b><span>Government directory of free and low-cost legal help.</span></a>
         <a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Legal Services Corporation</b><span>Find your local federally funded legal-aid office.</span></a>
         <a class="res" href="https://www.nolo.com/legal-encyclopedia" target="_blank" rel="noopener"><b>Nolo Legal Encyclopedia</b><span>Readable articles on tenants, family, debt, and more.</span></a>
@@ -4324,17 +4334,18 @@ LEGAL_HANDOFF_PAGE = r"""
     <section class="panel who">
       <h2>Law-school legal knowledge &amp; clinics &mdash; authoritative and free</h2>
       <p>Law schools publish some of the clearest legal explanations available, and many run <b>free legal clinics</b> that represent low-income people directly. These broaden and cross-check the understanding of your rights &mdash; different schools sometimes explain or expand the same issue in ways that help.</p>
-      <div class="reslib">
-        <a class="res" href="https://law.stanford.edu/mills-legal-clinic/" target="_blank" rel="noopener"><b>Stanford Law &mdash; Mills Legal Clinic</b><span>Free clinics incl. eviction defense, disability benefits, and reentry after incarceration (Bay Area).</span></a>
-        <a class="res" href="https://law.stanford.edu/community-law-clinic/" target="_blank" rel="noopener"><b>Stanford Community Law Clinic</b><span>Free civil legal services for low-income residents &mdash; housing, disability, post-conviction.</span></a>
-        <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Free, plain-language legal encyclopedia from Cornell Law School.</span></a>
-        <a class="res" href="https://cardozo.yu.edu/clinics" target="_blank" rel="noopener"><b>Cardozo Law Clinics (NYC)</b><span>Free clinics incl. the Bet Tzedek civil litigation clinic &mdash; consumer, civil rights, eviction, seniors.</span></a>
-        <a class="res" href="https://www.law.nyu.edu/academics/clinics/clinics-by-topic" target="_blank" rel="noopener"><b>NYU Law Clinics</b><span>Eviction defense, veterans&rsquo; rights, immigrant defense, civil rights, and more.</span></a>
-        <a class="res" href="https://www.nyls.edu/academics/specialty-areas/clinics-and-experiential-learning/clinics/" target="_blank" rel="noopener"><b>New York Law School Clinics</b><span>Student clinics partnered with nonprofits and government agencies.</span></a>
-        <a class="res" href="https://www.law.georgetown.edu/experiential-learning/clinics/" target="_blank" rel="noopener"><b>Georgetown Law Clinics</b><span>One of the largest clinical programs &mdash; broad free legal representation.</span></a>
-        <a class="res" href="https://www.law.harvard.edu/clinics/" target="_blank" rel="noopener"><b>Harvard Law Clinics</b><span>Legal Services Center and many clinics offering free help and public legal guides.</span></a>
+      <p id="clinic-note" style="font-size:13px;color:var(--legal);font-weight:700;margin:6px 0 0;"></p>
+      <div class="reslib" id="clinic-lib">
+        <a class="res" data-state="CA" href="https://law.stanford.edu/mills-legal-clinic/" target="_blank" rel="noopener"><b>Stanford Law &mdash; Mills Legal Clinic</b><span>Free clinics incl. eviction defense, disability benefits, and reentry after incarceration (Bay Area).</span></a>
+        <a class="res" data-state="CA" href="https://law.stanford.edu/community-law-clinic/" target="_blank" rel="noopener"><b>Stanford Community Law Clinic</b><span>Free civil legal services for low-income residents &mdash; housing, disability, post-conviction.</span></a>
+        <a class="res" data-state="ALL" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Free, plain-language legal encyclopedia from Cornell Law School (explains the law for any state).</span></a>
+        <a class="res" data-state="NY" href="https://cardozo.yu.edu/clinics" target="_blank" rel="noopener"><b>Cardozo Law Clinics (NYC)</b><span>Free clinics incl. the Bet Tzedek civil litigation clinic &mdash; consumer, civil rights, eviction, seniors.</span></a>
+        <a class="res" data-state="NY" href="https://www.law.nyu.edu/academics/clinics/clinics-by-topic" target="_blank" rel="noopener"><b>NYU Law Clinics</b><span>Eviction defense, veterans&rsquo; rights, immigrant defense, civil rights, and more.</span></a>
+        <a class="res" data-state="NY" href="https://www.nyls.edu/academics/specialty-areas/clinics-and-experiential-learning/clinics/" target="_blank" rel="noopener"><b>New York Law School Clinics</b><span>Student clinics partnered with nonprofits and government agencies.</span></a>
+        <a class="res" data-state="DC" href="https://www.law.georgetown.edu/experiential-learning/clinics/" target="_blank" rel="noopener"><b>Georgetown Law Clinics</b><span>One of the largest clinical programs &mdash; broad free legal representation.</span></a>
+        <a class="res" data-state="MA" href="https://www.law.harvard.edu/clinics/" target="_blank" rel="noopener"><b>Harvard Law Clinics</b><span>Legal Services Center and many clinics offering free help and public legal guides.</span></a>
       </div>
-      <p style="font-size:12.5px;color:#8a929a;">Clinics accept clients by their own eligibility rules (often income-based and by region). Even when a clinic can't take your case, its public guides and Know-Your-Rights materials are free to read.</p>
+      <p style="font-size:12.5px;color:#8a929a;">Clinics accept clients by their own eligibility rules (often income-based and by region). Even when a clinic can't take your case, its public guides and Know-Your-Rights materials are free to read. To find a clinic in your own state, use the state directories at the top of this page.</p>
     </section>
 
     <section class="panel who">
@@ -4395,6 +4406,67 @@ LEGAL_HANDOFF_PAGE = r"""
   </script>
   <script>
     function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+    // ---- STATE-SPECIFIC ROUTING: legal help differs by state; never hand a
+    // person another state's rules. Everyone is routed to help for THEIR state. ----
+    var US_STATES = [
+      ['AL','Alabama'],['AK','Alaska'],['AZ','Arizona'],['AR','Arkansas'],['CA','California'],
+      ['CO','Colorado'],['CT','Connecticut'],['DE','Delaware'],['DC','District of Columbia'],
+      ['FL','Florida'],['GA','Georgia'],['HI','Hawaii'],['ID','Idaho'],['IL','Illinois'],
+      ['IN','Indiana'],['IA','Iowa'],['KS','Kansas'],['KY','Kentucky'],['LA','Louisiana'],
+      ['ME','Maine'],['MD','Maryland'],['MA','Massachusetts'],['MI','Michigan'],['MN','Minnesota'],
+      ['MS','Mississippi'],['MO','Missouri'],['MT','Montana'],['NE','Nebraska'],['NV','Nevada'],
+      ['NH','New Hampshire'],['NJ','New Jersey'],['NM','New Mexico'],['NY','New York'],
+      ['NC','North Carolina'],['ND','North Dakota'],['OH','Ohio'],['OK','Oklahoma'],['OR','Oregon'],
+      ['PA','Pennsylvania'],['RI','Rhode Island'],['SC','South Carolina'],['SD','South Dakota'],
+      ['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],
+      ['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming']
+    ];
+    function initStatePicker(){
+      var sel = document.getElementById('state-select');
+      if (!sel) return;
+      for (var i=0;i<US_STATES.length;i++){
+        var o = document.createElement('option');
+        o.value = US_STATES[i][0]; o.textContent = US_STATES[i][1];
+        sel.appendChild(o);
+      }
+      sel.addEventListener('change', function(){ applyState(sel.value, sel.options[sel.selectedIndex].text); });
+    }
+    function applyState(abbr, name){
+      var help = document.getElementById('state-help');
+      if (abbr && help){
+        help.innerHTML =
+          '<div class="reslib">'
+          + '<a class="res" href="https://www.lawhelp.org/find-help" target="_blank" rel="noopener"><b>LawHelp.org &mdash; ' + esc(name) + '</b><span>Choose ' + esc(name) + ' to reach the free legal-aid and court self-help website for your state.</span></a>'
+          + '<a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers &mdash; ' + esc(name) + '</b><span>Ask a volunteer attorney in ' + esc(name) + ' a civil legal question, free.</span></a>'
+          + '<a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help" target="_blank" rel="noopener"><b>Find Legal Aid &mdash; ' + esc(name) + '</b><span>The federal directory of local legal-aid offices serving ' + esc(name) + '.</span></a>'
+          + '</div>'
+          + '<p style="font-size:12.5px;color:#8a929a;margin-top:8px;">These open the official directories. Pick <b>' + esc(name) + '</b> there and you will get help for your state &mdash; never another state’s rules.</p>';
+      } else if (help){
+        help.innerHTML = '';
+      }
+      // Reorder the law-school clinics: this state first, national next, others last.
+      var lib = document.getElementById('clinic-lib');
+      var note = document.getElementById('clinic-note');
+      if (lib){
+        var links = lib.querySelectorAll('.res');
+        var inState = 0;
+        for (var j=0;j<links.length;j++){
+          var st = links[j].getAttribute('data-state');
+          if (!abbr){ links[j].style.order=''; links[j].style.opacity=''; continue; }
+          if (st === abbr){ links[j].style.order='0'; links[j].style.opacity='1'; inState++; }
+          else if (st === 'ALL'){ links[j].style.order='1'; links[j].style.opacity='1'; }
+          else { links[j].style.order='2'; links[j].style.opacity='0.55'; }
+        }
+        if (note){
+          if (!abbr){ note.textContent=''; }
+          else if (inState>0){ note.textContent='Law-school clinics in ' + name + ' are shown first. Clinics in other states are still listed — their free public guides are worth reading anywhere.'; }
+          else { note.textContent='We do not yet list a law-school clinic based in ' + name + '. Use the ' + name + ' directories above to find local clinics; the clinics below (other states) still publish free public guides anyone can read.'; }
+        }
+      }
+    }
+    initStatePicker();
+
     function loadConvo(){
       let log=[]; try{ log=JSON.parse(sessionStorage.getItem('innerlight_convo')||'[]'); }catch(e){}
       const box=document.getElementById('convo-summary');
