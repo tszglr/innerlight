@@ -6483,6 +6483,92 @@ def _study_save_entry(entry):
         except Exception:
             pass
 
+
+@app.route("/api/admin/policy/patterns")
+def admin_policy_patterns():
+    """Summarize recurring need-patterns across recorded cases + metrics, so the
+    founder can see WHERE the law/systems fail people most across all sessions."""
+    if not session.get("founder_ok"):
+        return jsonify({"status": "locked"}), 403
+    # Tally legal categories surfaced + provider suggestions + track of themes
+    try:
+        from legal_guidance_engine import detect_legal_issues
+    except Exception:
+        detect_legal_issues = None
+    legal_tally = {}
+    theme_tally = {}
+    case_count = 0
+    try:
+        with _CASES_LOCK:
+            cases = _cases_load()
+        for cs in cases[-500:]:
+            case_count += 1
+            text = " ".join(t.get("t","") for t in cs.get("turns", []) if t.get("r")=="user")
+            if detect_legal_issues and text:
+                for iss in detect_legal_issues(text):
+                    legal_tally[iss["label"]] = legal_tally.get(iss["label"], 0) + 1
+    except Exception:
+        pass
+    # metrics: legal_surfaced categories
+    try:
+        with _METRICS_LOCK:
+            m = _metrics_load()
+        for day, d in m.items():
+            for k, v in (d.get("legal_categories", {}) or {}).items():
+                legal_tally[k] = legal_tally.get(k, 0) + v
+    except Exception:
+        pass
+    top_legal = sorted(legal_tally.items(), key=lambda kv: kv[1], reverse=True)[:12]
+    return jsonify({"status": "ok", "cases_reviewed": case_count,
+                    "legal_patterns": [{"issue": k, "count": v} for k, v in top_legal]})
+
+_POLICY_SYSTEM = (
+    "You are a legislative-research aid for the founder of InnerLight, a mental-health "
+    "and legal-navigation tool. The founder is a pre-law policy student studying how "
+    "legislation is crafted. Given a RECURRING PROBLEM PATTERN that real people face "
+    "(for example: repeated illegal lockout evictions, or long crisis wait-times), "
+    "produce an EDUCATIONAL policy study, clearly labeled as a learning exercise, that covers: "
+    "(1) the specific gap in current law that lets this harm happen; "
+    "(2) which level of government (local, city, county, state, federal) is the right venue and why; "
+    "(3) existing statutes or bills that already touch this area (named generally, for the founder to verify); "
+    "(4) how a new or amended law COULD be crafted to help people in this situation, in plain language; "
+    "(5) how the same change could also help businesses and organizations act lawfully and fairly; "
+    "(6) the realistic path a bill takes to become law, and where advocates apply pressure. "
+    "Be concrete and balanced. This is educational study material, not legal advice, and not a claim "
+    "about what the law currently is. Encourage the founder to verify every specific against primary sources."
+)
+
+@app.route("/api/admin/policy/study", methods=["POST"])
+def admin_policy_study():
+    if not session.get("founder_ok"):
+        return jsonify({"status": "locked"}), 403
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip(chr(34)).strip(chr(39))
+    if not key:
+        return jsonify({"status": "error", "text": "The comprehension key is not set on the server."}), 200
+    data = request.get_json(silent=True) or {}
+    pattern = str(data.get("pattern", ""))[:2000].strip()
+    if not pattern:
+        return jsonify({"status": "error", "text": "Describe the recurring problem pattern to study."}), 200
+    body = json.dumps({
+        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
+        "max_tokens": 1400,
+        "system": _POLICY_SYSTEM,
+        "messages": [{"role": "user", "content": "Recurring problem pattern to study for possible legislation: " + pattern}],
+    }).encode("utf-8")
+    import urllib.request
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body,
+        headers={"Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01"})
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            out = json.loads(resp.read().decode("utf-8"))
+        text = "".join(b.get("text","") for b in out.get("content", []) if b.get("type")=="text")
+        _study_save_entry({"when": time.strftime("%Y-%m-%d %H:%M"), "focus": "legislative-policy",
+                           "scenario": pattern, "walkthrough": text})
+        return jsonify({"status": "ok", "text": text})
+    except Exception as exc:
+        return jsonify({"status": "error", "text": "Policy study call failed: " + str(exc)}), 200
+
+
 @app.route("/api/admin/study/history")
 def admin_study_history():
     if not session.get("founder_ok"):
@@ -6544,6 +6630,20 @@ Nothing here is ever shown to users. Nothing here is legal or medical advice.</d
  <h2 style="margin-top:0;color:#1e3a8a;font-size:16px;">Cases from real sessions — de-identified</h2>
  <div style="font-size:12px;color:#64748b;margin-bottom:10px;">Every session is recorded here with names, numbers, and contact details removed before saving. Tap "Study this case" to send one into the study engine.</div>
  <div id="cases" style="font-size:13.5px;color:#334155;">Loading&hellip;</div>
+</div>
+<div class="card" style="border:2px solid #7c3aed;">
+ <h2 style="margin-top:0;color:#6d28d9;font-size:16px;">Policy Research Workbench</h2>
+ <div style="font-size:12.5px;color:#64748b;margin-bottom:12px;line-height:1.5;">Your vision: turn the patterns in real cases into the study of how laws could be crafted to genuinely help people &mdash; and help businesses and organizations act fairly. A private learning tool for your pre-law and policy work. Educational only; verify every specific against primary sources.</div>
+ <button onclick="loadPolicyPatterns()" style="background:linear-gradient(90deg,#6d28d9,#9333ea);">Show recurring problem patterns</button>
+ <div id="policy-patterns" style="margin-top:14px;font-size:13.5px;color:#334155;"></div>
+ <div style="margin-top:16px;">
+   <label>Study how legislation could address a recurring pattern</label>
+   <textarea id="policy-pattern" placeholder="Example: People are repeatedly locked out by landlords who put belongings on the street without a court order, and have nowhere to turn in the first 24 hours..."></textarea>
+   <button onclick="runPolicyStudy()" style="background:linear-gradient(90deg,#6d28d9,#9333ea);">Study possible legislation</button>
+   <div class="wait" id="policy-wait">Researching how legislation could be crafted&hellip; (uses your comprehension credit)</div>
+ </div>
+ <div class="stamp" style="margin-top:14px;">POLICY STUDY &mdash; EDUCATIONAL LEARNING EXERCISE &mdash; NOT LEGAL ADVICE</div>
+ <div id="policy-out" style="white-space:pre-wrap;font-size:14.5px;line-height:1.7;color:#1e293b;display:none;"></div>
 </div>
 <div class="card">
  <h2 style="margin-top:0;color:#1e3a8a;font-size:16px;">Saved studies — your growing casebook</h2>
