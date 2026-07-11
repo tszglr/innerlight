@@ -1624,8 +1624,24 @@ function detectHelpRequest(text){
     'speak to a','see a therapist','see a counselor','see a doctor','see a lawyer',
     'talk to a lawyer','talk to an attorney','need a lawyer','need an attorney',
     'need a therapist','need a counselor','need a doctor','get me help','find me help',
-    'i want to talk to','put me through','can i speak','can i talk'];
+    'i want to talk to','put me through','can i speak','can i talk','legal help','legal person',
+    'set up a session','start a session','connect me to legal','speak to a lawyer'];
   return asks.some(function(w){ return t.indexOf(w)>=0; });
+}
+// Decide LEGAL vs CLINICAL from the person's words.
+function helpKindFrom(text){
+  const t = ' ' + (text||'').toLowerCase() + ' ';
+  const legalWords = ['legal','lawyer','attorney','court','sue','lawsuit','eviction','evict','landlord','custody','arrest','charged','rights','consumer','contract','tenant'];
+  const clinicalWords = ['therapist','counselor','counseling','therapy','psychiatr','clinician','emotional','mental health','feelings','depress','anxious','anxiety'];
+  let isLegal = legalWords.some(function(w){ return t.indexOf(w)>=0; });
+  let isClinical = clinicalWords.some(function(w){ return t.indexOf(w)>=0; });
+  // Honor negations: 'don't need a clinician', 'not a therapist' -> not clinical.
+  if (/(don.t|do not|not|dont)\s+(need\s+)?(a\s+)?(clinician|counselor|therapist|therapy|counseling)/.test(t)) isClinical = false;
+  if (/(don.t|do not|not|dont)\s+(need\s+)?(a\s+)?(lawyer|attorney|legal)/.test(t)) isLegal = false;
+  if (isLegal && !isClinical) return 'legal';
+  if (isClinical && !isLegal) return 'clinical';
+  if (isLegal && isClinical) return 'both';
+  return 'unknown';
 }
 window._routeRequested = false;
 function handleHelpRequestIfAny(text){
@@ -1635,18 +1651,24 @@ function handleHelpRequestIfAny(text){
     // Surface routing immediately: legal if their words are legal, plus the
     // provider path. Both can appear if both are needed.
     try { applyProviderSuggestion(); } catch(e){}
-    // Bring the help options right into view.
+    let allText = text || '';
+    try { allText = (document.getElementById('conversation-thread')||{}).textContent || text; } catch(e){}
+    const kind = helpKindFrom(allText);
     const thread = document.getElementById('conversation-thread');
-    if (thread && !document.getElementById('route-now')){
+    if (thread){
+      const _ex = document.getElementById('route-now'); if (_ex) _ex.remove();
       const div = document.createElement('div');
       div.id = 'route-now';
       div.style.cssText = 'background:rgba(46,110,142,0.12);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#234;line-height:1.55;';
-      div.innerHTML = 'Of course \u2014 let us get you to real help now. Choose what fits, and you can pick more than one:'
-        + '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">'
-        + '<button onclick="routeProvider()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;">Talk to a provider</button>'
-        + '<button onclick="openLegalHelp()" style="background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;">Legal help</button>'
-        + '<button onclick="openFacilities()" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">Find nearby help</button>'
-        + '</div>';
+      const legalBtn = '<button onclick="openLegalHelp()" style="background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me to legal help</button>';
+      const provBtn = '<button onclick="routeProvider()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Talk to a counselor</button>';
+      const nearBtn = '<button onclick="openFacilities()" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Find nearby help</button>';
+      let lead, buttons;
+      if (kind === 'legal'){ lead = 'Of course \u2014 let me connect you to legal help right now.'; buttons = legalBtn + nearBtn; }
+      else if (kind === 'clinical'){ lead = 'Of course \u2014 let me connect you to someone who can support you right now.'; buttons = provBtn + nearBtn; }
+      else if (kind === 'both'){ lead = 'Of course \u2014 it sounds like both legal and emotional support could help. Choose either or both:'; buttons = legalBtn + provBtn + nearBtn; }
+      else { lead = 'Of course \u2014 let me get you to real help now. Choose what fits:'; buttons = provBtn + legalBtn + nearBtn; }
+      div.innerHTML = lead + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">' + buttons + '</div>';
       thread.appendChild(div);
       thread.scrollIntoView({behavior:'smooth', block:'end'});
     }
