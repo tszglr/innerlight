@@ -1723,7 +1723,7 @@ async function doFacilities(){
         + (f.address?'<div style="font-size:12.5px;color:#64748b;">'+f.address+'</div>':'')
         + (f.phone?'<div style="font-size:13px;color:#2e6e8e;margin-top:3px;">'+f.phone+'</div>':'')
         + '</div>';
-    }).join('') + '<div style="font-size:12px;color:#94a3b8;margin-top:6px;">Please confirm hours and services by calling ahead. Listings come from public map data.</div>';
+    }).join('') + '<div style="font-size:12px;color:#94a3b8;margin-top:6px;">Please confirm hours and services by calling ahead. Listings come from FindTreatment.gov, the federal directory of licensed facilities.</div>';
     metric('facilities_search', 'ok');
   } catch(e){ box.innerHTML='<span style="color:#c0564e;font-size:13px;">Could not search right now. For help finding treatment, call SAMHSA at 1-800-662-4357.</span>'; }
 }
@@ -4500,7 +4500,11 @@ def page_about():
 # ---- LOCAL MENTAL-HEALTH FACILITIES (non-crisis self-referral help) ----
 # A person can share where they are; we surface nearby places they can reach on
 # their own time. This is NAVIGATION, not treatment, and never replaces crisis
-# lines. Uses OpenStreetMap for lookups (free, no key) with graceful fallback.
+# lines. PRIMARY source: FindTreatment.gov — the federal government's own
+# directory of licensed mental-health facilities (free, no key, authoritative,
+# nationwide). FALLBACK: OpenStreetMap. Discovered the hard way: the federal
+# API wants coordinates as lat,lng (their developer guide says the opposite)
+# and sType must be uppercase.
 @app.route("/api/facilities", methods=["POST"])
 def facilities_lookup():
     if not _rate_ok("facilities", 20, 3600):
@@ -4510,25 +4514,68 @@ def facilities_lookup():
     if not place:
         return jsonify({"status": "empty"}), 200
     results = []
+    lat = lon = None
     try:
         import urllib.request, urllib.parse
-        # 1) geocode the place the person typed
-        q = urllib.parse.urlencode({"q": place, "format": "json", "limit": 1})
+        # 1) geocode the place the person typed (bias bare ZIPs to the US)
+        params = {"q": place, "format": "json", "limit": 1}
+        if re.fullmatch(r"\d{5}(-\d{4})?", place):
+            params["countrycodes"] = "us"
+        q = urllib.parse.urlencode(params)
         geo_req = urllib.request.Request("https://nominatim.openstreetmap.org/search?" + q,
                                          headers={"User-Agent": "InnerLight/1.0 (support@getinnerlight.com)"})
         with urllib.request.urlopen(geo_req, timeout=8) as r:
             geo = json.loads(r.read().decode("utf-8"))
         if geo:
             lat = geo[0]["lat"]; lon = geo[0]["lon"]
-            # 2) find nearby mental-health / clinic / social-facility amenities
-            # Overpass query for healthcare + social facilities within ~12km
+    except Exception as e:
+        print("[InnerLight] facilities geocode issue:", e)
+    # 2) PRIMARY: FindTreatment.gov — licensed mental-health facilities,
+    #    nearest first, within ~15 miles.
+    if lat is not None:
+        try:
+            import urllib.request, urllib.parse
+            ft_q = urllib.parse.urlencode({
+                "sAddr": "%s,%s" % (lat, lon),   # lat,lng — yes, really
+                "limitType": "2", "limitValue": "24140",  # meters (~15 miles)
+                "sType": "MH", "pageSize": "12", "page": "1", "sort": "0"})
+            ft_req = urllib.request.Request(
+                "https://findtreatment.gov/locator/exportsAsJson/v2?" + ft_q,
+                headers={"User-Agent": "InnerLight/1.0 (support@getinnerlight.com)",
+                         "Accept": "application/json"})
+            with urllib.request.urlopen(ft_req, timeout=12) as r:
+                ft = json.loads(r.read().decode("utf-8"))
+            for row in (ft.get("rows") or []):
+                name = (row.get("name1") or "").strip()
+                if not name:
+                    continue
+                addr = ", ".join(filter(None, [
+                    (row.get("street1") or "").strip(),
+                    (row.get("city") or "").strip(),
+                    (row.get("state") or "").strip()]))
+                miles = row.get("miles")
+                try:
+                    if miles is not None:
+                        addr = (addr + (" — %.1f miles" % float(miles))).strip(" —")
+                except (TypeError, ValueError):
+                    pass
+                results.append({"name": name[:80], "address": addr[:140],
+                                "phone": (row.get("phone") or "")[:24]})
+                if len(results) >= 12:
+                    break
+        except Exception as e:
+            print("[InnerLight] facilities FindTreatment issue:", e)
+    # 3) FALLBACK: OpenStreetMap (now searching buildings/areas too, not just
+    #    point markers, and broader health/social tags).
+    if lat is not None and not results:
+        try:
+            import urllib.request, urllib.parse
             overpass = (
                 '[out:json][timeout:12];('
-                'node["healthcare"="centre"](around:12000,%s,%s);'
-                'node["amenity"="clinic"]["healthcare:speciality"~"psychiatry|mental_health"](around:12000,%s,%s);'
-                'node["social_facility"~"outreach|group_home|counselling"](around:12000,%s,%s);'
-                'node["healthcare:speciality"~"psychiatry|mental_health"](around:12000,%s,%s);'
-                ');out center 20;' % (lat,lon,lat,lon,lat,lon,lat,lon)
+                'nwr["healthcare"~"centre|counselling|psychiatry|psychotherapist"](around:15000,%s,%s);'
+                'nwr["healthcare:speciality"~"psychiatry|mental_health"](around:15000,%s,%s);'
+                'nwr["amenity"="social_facility"](around:15000,%s,%s);'
+                ');out center 30;' % (lat, lon, lat, lon, lat, lon)
             )
             op_req = urllib.request.Request("https://overpass-api.de/api/interpreter",
                     data=urllib.parse.urlencode({"data": overpass}).encode(),
@@ -4544,12 +4591,12 @@ def facilities_lookup():
                 seen.add(name)
                 addr = " ".join(filter(None, [tags.get("addr:housenumber",""), tags.get("addr:street",""),
                                               tags.get("addr:city","")])).strip()
-                results.append({"name": name[:80], "address": addr[:120],
+                results.append({"name": name[:80], "address": addr[:140],
                                 "phone": tags.get("phone", tags.get("contact:phone",""))[:24]})
                 if len(results) >= 12:
                     break
-    except Exception as e:
-        print("[InnerLight] facilities lookup issue:", e)
+        except Exception as e:
+            print("[InnerLight] facilities lookup issue:", e)
     return jsonify({"status": "ok", "place": place, "results": results})
 
 
