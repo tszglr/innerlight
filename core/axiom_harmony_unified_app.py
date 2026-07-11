@@ -1192,7 +1192,7 @@ function mpTick(){
     // gently ask the person to come closer. Works on phone and computer.
     (function distanceNudge(){
       let tip = document.getElementById('hr-distance-tip');
-      const tooFar = faceFrac > 0 && faceFrac < 0.20;
+      const tooFar = faceFrac >= 0.02 && faceFrac < 0.20; // ignore faceFrac==0 (no face this frame)
       if (tooFar){
         if (!tip){
           tip = document.createElement('div');
@@ -1238,7 +1238,7 @@ function heartTick(){
 
   // ---- PASS 1: measure how dark the face is (mean luminance of skin area) ----
   let lumaSum=0, lumaCnt=0;
-  for (const nm of ['forehead','cheekLeft','cheekRight']){
+  for (const nm of ['forehead','cheekLeft','cheekRight','noseBridge','underEyeL','underEyeR']){
     const b = regions[nm]; if (!b || b.w<4 || b.h<4) continue;
     try { ctx.drawImage(video, b.x, b.y, b.w, b.h, 0,0,36,36); } catch(e){ continue; }
     const d = ctx.getImageData(0,0,36,36).data;
@@ -1251,16 +1251,23 @@ function heartTick(){
     window._darkStreak = (window._darkStreak||0) + 1;
     if (window._darkStreak === 40 && !window._lightTipShown){   // ~ sustained
       window._lightTipShown = true;
+      window._lightTipEl = null;
       const t = document.createElement('div');
       t.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:56;max-width:230px;'
         +'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;padding:11px 15px;'
         +'border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);text-align:center;';
       t.innerHTML='A little more light on your face helps me read your calm \u2014 only if you can. '
         +'<button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;background:#fff;color:#2e6e8e;border:0;border-radius:999px;padding:5px 14px;font-size:12px;cursor:pointer;">Okay</button>';
+      window._lightTipEl = t;
       document.body.appendChild(t);
       setTimeout(()=>{ if(t.isConnected) t.remove(); }, 12000);
     }
-  } else { window._darkStreak = 0; }
+  } else {
+    window._darkStreak = 0;
+    // Light came back -> clear the tip and allow it again later if needed.
+    if (window._lightTipEl && window._lightTipEl.isConnected) window._lightTipEl.remove();
+    window._lightTipShown = false;
+  }
   // ---- Choose an adaptive gamma. Bright face -> 1.0 (no change).
   // Dark face -> up to ~2.6 lift (research uses ~2.5 for low light). ----
   let gamma = 1.0, lowLight = false;
@@ -1277,7 +1284,9 @@ function heartTick(){
 
   // ---- PASS 2: read the (optionally brightened) green pulse signal ----
   let gSum=0, gCnt=0;
-  for (const nm of ['forehead','cheekLeft','cheekRight']){
+  // Specific stable-skin points: forehead + cheeks (strongest) + nose bridge +
+  // under-eye + mouth-side (added per founder request for a fuller reading).
+  for (const nm of ['forehead','cheekLeft','cheekRight','noseBridge','underEyeL','underEyeR','mouthSideL','mouthSideR']){
     const b = regions[nm]; if (!b || b.w<4 || b.h<4) continue;
     try { ctx.drawImage(video, b.x, b.y, b.w, b.h, 0,0,36,36); } catch(e){ continue; }
     const d = ctx.getImageData(0,0,36,36).data;
