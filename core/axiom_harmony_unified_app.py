@@ -1904,7 +1904,7 @@ function adaptiveTick() {
   if (now - adaptiveLastSwitch < 10000) return; // at most one shift per 10s
   let want = null;
   if (adaptiveArousal > 0.55 && adaptiveLaneNow !== 'deepcalm') want = 'deepcalm';
-  // lifting lane disabled per founder — never switch to it
+  else if (down > 0.45 && adaptiveArousal < 0.5 && adaptiveLaneNow !== 'lifting') want = 'lifting';
   else if (adaptiveArousal < 0.4 && down < 0.35 && adaptiveLaneNow !== 'calm') want = 'calm';
   if (want) {
     adaptiveLaneNow = want;
@@ -4760,11 +4760,10 @@ def zenisys_ambient():
         return jsonify({"tracks": deepcalm, "then": calm,
                         "transition_after_seconds": 240, "lane": "deepcalm",
                         "status": "ok"})
-    # Depressed / flat -> LIFTING LANE DISABLED (per founder: the lifting track
-    # kept resurfacing and must not play). Route to gentle calm instead.
-    if is_down and calm:
-        return jsonify({"tracks": calm, "then": [],
-                        "transition_after_seconds": 0, "lane": "calm",
+    # Depressed / flat -> lifting to bring them UP, then ease to calm.
+    if is_down and lifting:
+        return jsonify({"tracks": lifting, "then": calm,
+                        "transition_after_seconds": 300, "lane": "lifting",
                         "status": "ok"})
     # Default / arrival -> gentle calm, already present.
     return jsonify({"tracks": calm or deepcalm, "then": [],
