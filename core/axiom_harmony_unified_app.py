@@ -1661,30 +1661,91 @@ function startHeartLoop(){
 // flatness (reach them), easing back toward gentle calm as they settle.
 // ---------------------------------------------------------------------------
 adaptiveInterval = null;
+
+// ===== TEXT EMOTION SIGNAL (research: adding text lifted accuracy 48% -> 66%) =====
+// The words a person types are often the TRUEST signal — people say what they
+// cannot show. This reads recent typed text into a calm..activated estimate,
+// plus a separate "low/down" reading, so the music can answer hidden feeling.
+let _lastTextState = { up: 0, down: 0, at: 0 };
+const TXT_ACTIVATED = ['panic','panicking','can\u2019t breathe','cant breathe','can\u2019t take','cant take',
+  'terrified','scared','afraid','angry','furious','rage','hate','anxious','anxiety','overwhelmed',
+  'racing','shaking','freaking','can\u2019t stop','cant stop','out of control','emergency','help me',
+  'losing it','breaking down','too much','stressed','tense','worried','dread','nervous'];
+const TXT_LOW = ['hopeless','worthless','empty','numb','alone','lonely','tired','exhausted','done',
+  'give up','giving up','can\u2019t go on','cant go on','no point','pointless','sad','depressed',
+  'crying','cry','hurts','pain','lost','dark','heavy','defeated','miss'];
+const TXT_CALM = ['better','calmer','okay','ok','breathing','relaxed','safe','thank','grateful',
+  'peaceful','settling','easier','helps','helping','calm'];
+function analyzeText(text){
+  if (!text) return;
+  const t = ' ' + text.toLowerCase() + ' ';
+  let up=0, down=0, calm=0;
+  TXT_ACTIVATED.forEach(w=>{ if (t.indexOf(w)>=0) up++; });
+  TXT_LOW.forEach(w=>{ if (t.indexOf(w)>=0) down++; });
+  TXT_CALM.forEach(w=>{ if (t.indexOf(w)>=0) calm++; });
+  // normalize to 0..1, calm words pull activation down
+  const upN = Math.min(1, up*0.34 - calm*0.2);
+  const downN = Math.min(1, down*0.34);
+  _lastTextState = { up: Math.max(0,upN), down: Math.max(0,downN), at: Date.now() };
+  window._textEmotion = _lastTextState;
+}
+// text fades in relevance over ~90s (a feeling typed a while ago matters less)
+function textWeightNow(){
+  if (!_lastTextState.at) return 0;
+  const age = (Date.now() - _lastTextState.at)/1000;
+  return age > 90 ? 0.15 : (age > 45 ? 0.5 : 1.0);
+}
+
 let adaptiveArousal = 0.5;   // 0 = very calm/flat, 1 = very activated. Smoothed.
 let adaptiveLaneNow = 'calm'; // which lane the adaptive loop currently favors
 let adaptiveLastSwitch = 0;
 
 function readArousalSignal() {
-  // Heart above its own resting baseline = the body's testimony of activation.
-  let heartPush = 0;
-  if (window._heartBPM && window._heartBaseline){
-    heartPush = Math.max(0, Math.min(0.3, (window._heartBPM - window._heartBaseline) / 45));
+  // ===== FOUR-SIGNAL FUSION (text-led, heart-anchored, face+voice confirm) =====
+  // Research: all four combined tops every table (~72% sentiment). Text carries
+  // the largest lift (people say what they cannot show); heart is the steady
+  // body truth; face and voice confirm. Each contributes what it is good at.
+  let up = 0, down = 0, wSum = 0;
+
+  // (1) TEXT — the primary signal. Highest weight when recent.
+  const tw = textWeightNow();
+  if (tw > 0 && window._textEmotion){
+    up   += window._textEmotion.up   * 0.45 * tw;
+    down += window._textEmotion.down * 0.45 * tw;
+    wSum += 0.45 * tw;
   }
-  // Combine face + voice into a single 0..1 "activation" estimate.
-  // Face: anger/fear/disgust push UP; sad pushes DOWN-but-present; happy/neutral calm.
-  let faceUp = 0, faceDown = 0;
+
+  // (2) HEART/VIDEO — the body's testimony. Above baseline = activation.
+  if (window._heartBPM && window._heartBaseline){
+    const hp = Math.max(0, Math.min(1, (window._heartBPM - window._heartBaseline) / 35));
+    up   += hp * 0.30;
+    wSum += 0.30;
+  }
+
+  // (3) FACE — secondary confirmation (fires weakly, so weighted low).
   const s = faceEmotionScores || {};
-  faceUp = (s.angry||0)*1.0 + (s.fearful||0)*0.9 + (s.disgusted||0)*0.6 + (s.surprised||0)*0.4;
-  faceDown = (s.sad||0)*1.0;
-  // Voice: high energy + high pitch variance + tremor => more activated.
+  const faceUp = (s.angry||0)*1.0 + (s.fearful||0)*0.9 + (s.disgusted||0)*0.6 + (s.surprised||0)*0.4;
+  const faceDown = (s.sad||0)*1.0;
+  if (faceUp > 0.05 || faceDown > 0.05){
+    up   += Math.min(1, faceUp)  * 0.15;
+    down += Math.min(1, faceDown)* 0.15;
+    wSum += 0.15;
+  }
+
+  // (4) VOICE — tone/energy confirmation.
   const v = voiceFeatures || {};
-  const voiceUp = ((v.energy||0.5)*0.5 + (v.pitch_variance||0.5)*0.3 + (v.tremor||0)*0.6);
-  // Blend into an instantaneous arousal estimate.
-  let inst = Math.min(1, Math.max(0, faceUp*0.6 + voiceUp*0.5));
-  // "Down/flat" is low arousal but still needs reaching — track it separately.
-  window._adaptiveDown = faceDown;
-  return Math.min(1, (inst) + heartPush);
+  if (v && (v.energy != null || v.tremor != null)){
+    const voiceUp = ((v.energy||0.5)*0.5 + (v.pitch_variance||0.5)*0.3 + (v.tremor||0)*0.6);
+    up   += Math.min(1, voiceUp) * 0.10;
+    wSum += 0.10;
+  }
+
+  // Normalize by the weight actually present (so missing signals don't drag it).
+  const activation = wSum > 0 ? Math.min(1, up / Math.max(0.3, wSum)) : 0.5;
+  window._adaptiveDown = wSum > 0 ? Math.min(1, down / Math.max(0.3, wSum)) : 0;
+  window._fusionParts = { text: (window._textEmotion&&tw>0)?1:0, heart: (window._heartBPM?1:0),
+                          face: (faceUp>0.05||faceDown>0.05)?1:0, voice: (v&&v.energy!=null)?1:0 };
+  return activation;
 }
 
 function adaptiveTick() {
@@ -1710,11 +1771,11 @@ function adaptiveTick() {
   //    (deep-calm to bring an activated person DOWN; lifting to reach a flat/
   //    down person UP). Rate-limited so it can't flip back and forth.
   const now = Date.now();
-  if (now - adaptiveLastSwitch < 15000) return; // at most one shift per 15s
+  if (now - adaptiveLastSwitch < 10000) return; // at most one shift per 10s
   let want = null;
-  if (adaptiveArousal > 0.60 && adaptiveLaneNow !== 'deepcalm') want = 'deepcalm';
-  else if (down > 0.55 && adaptiveArousal < 0.45 && adaptiveLaneNow !== 'lifting') want = 'lifting';
-  else if (adaptiveArousal < 0.35 && down < 0.3 && adaptiveLaneNow !== 'calm') want = 'calm';
+  if (adaptiveArousal > 0.55 && adaptiveLaneNow !== 'deepcalm') want = 'deepcalm';
+  else if (down > 0.45 && adaptiveArousal < 0.5 && adaptiveLaneNow !== 'lifting') want = 'lifting';
+  else if (adaptiveArousal < 0.4 && down < 0.35 && adaptiveLaneNow !== 'calm') want = 'calm';
   if (want) {
     adaptiveLaneNow = want;
     adaptiveLastSwitch = now;
@@ -1726,7 +1787,7 @@ function adaptiveTick() {
         if (tracks.length) {
           ambientTracks = tracks; ambientIndex = 0;
           switchAmbient(tracks[0].url, tracks[0].name);
-          metric('lane_switch');
+          metric('lane_switch', want + ':' + JSON.stringify(window._fusionParts||{}));
           // The view answers too: agitated -> stillness (moons); low -> warmth (sun).
           if (!sceneUserChose){
             const sceneFor = { deepcalm: ['moon','moonleaf','horizon'],
@@ -3060,7 +3121,7 @@ async function doResume(){
 }
 
 async function sendCheckin() {
-  try { const _mv=(document.getElementById('message')||{}).value||''; checkSubstitutionSignals(_mv); checkMinorSignals(_mv); } catch(e){}
+  try { const _mv=(document.getElementById('message')||{}).value||''; checkSubstitutionSignals(_mv); checkMinorSignals(_mv); analyzeText(_mv); } catch(e){}
   if (window._minorLock){ showMinorBridge(); return; }  startZenisys('greeting');
   const msgVal = (val('message') || '').trim();
   // Empty guard: if there's nothing to send, don't fake a response.
@@ -5610,7 +5671,7 @@ def metrics_event():
                "face_shift", "scene_change", "hesitation",
                "soundbox_open_ms", "track_skip", "track_react", "distraction",
                "gaze_aversion", "heart_read", "selfreport", "wordplay", "subzone",
-               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect"}
+               "activity_open", "reengage_prompt", "bloom", "lowlight_rescue", "substitution_redirect", "minor_redirect", "lane_switch", "face_shift"}
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
