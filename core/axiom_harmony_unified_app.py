@@ -5536,6 +5536,23 @@ def api_checkin():
 
     threading.Thread(target=_persist_in_background, daemon=True).start()
 
+    # --- PRINCIPLE 13: THE ASYMMETRY OF FAILURE — attempt EVERY time. ---
+    # No response may EVER dead-end. If, for any reason, no follow-up question
+    # was produced, we still leave an open door — silence is never an option.
+    conv_questions = [q for q in (conv_questions or []) if q and q.strip()]
+    if not conv_questions:
+        conv_questions = ["I'm right here with you. What feels most important to "
+                          "say right now — even a few words is enough."]
+    # The human bridge is a PERMANENT fixture, present on every single response
+    # at every risk level, not something that appears only in an emergency.
+    human_help = {
+        "always_available": True,
+        "lifeline": "988",
+        "text_line": "Text HOME to 741741",
+        "message": "A real person is available any hour — call or text 988. "
+                   "You never have to get through this alone.",
+    }
+
     # SB 243 accountability: when the crisis protocol activates (the 988
     # referral is about to be shown), count it — count only, never content.
     if crisis.needs_immediate_support:
@@ -5567,6 +5584,8 @@ def api_checkin():
         "case_file": case_file,
         "learning_state": learning_state,
         "needs_immediate_support": crisis.needs_immediate_support,
+        "needs_investigation": getattr(crisis, "needs_investigation", False),
+        "human_help": human_help,
         "zenisys_music": get_zenisys_engine().detect_and_fetch(message),
         "sound_mode": innerlight_result["zenisys"]["mode"],
         "zenisys": innerlight_result["zenisys"],

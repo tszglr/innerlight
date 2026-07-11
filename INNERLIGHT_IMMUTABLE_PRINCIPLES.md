@@ -152,3 +152,22 @@
 - This principle governs the crisis engine, the conversation engine, and every
   future feature that reads a person: detect ambiguity, investigate it, and only
   then respond. No investigation, no right to speak.
+
+## 13. THE ASYMMETRY OF FAILURE — IT ONLY TAKES ONE TIME (set by the founder, July 2026)
+- It takes ONE time for a person to succeed at harming themselves, and we are a
+  complete failure. It takes BILLIONS of times for us to succeed at keeping them
+  from it. That asymmetry must live in the DNA of this program and in every
+  decision it makes. We are never "mostly" safe. One miss is total.
+- Therefore we ATTEMPT EVERY TIME. There is no session, no risk level, no quiet
+  moment where we relax, assume someone is fine, and stop offering the path to a
+  real human. A calm-looking check-in gets the same vigilance as a loud one.
+- Vigilance can only RAISE care, never lower it. No later step in the pipeline
+  may talk the system down from a concern an earlier step raised. When unsure,
+  we err toward care — every time, without exception.
+- We NEVER dead-end and we NEVER say goodbye cold. Every person, at every moment,
+  always has a visible, reachable bridge to a human being. The 988 path and the
+  human bridge are permanent fixtures, not things that appear only in emergencies.
+- This is bounded by Principle 11: every avenue we take is WITHIN the law. We do
+  not cross legal lines to pursue vigilance — but within those lines, we pursue
+  it relentlessly, because one time is all it takes and we intend to be there
+  that one time.

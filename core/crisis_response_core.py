@@ -49,6 +49,15 @@ class CrisisResponseCore:
 
     This must run before GPT/model response generation. Learned response models
     can help with tone only after the safety category is already decided.
+
+    PRINCIPLE 13 — THE ASYMMETRY OF FAILURE (in the DNA, on purpose):
+    It takes ONE time for a person to succeed at harming themselves and we have
+    failed completely. It takes BILLIONS of times for us to succeed at keeping
+    them from it. This engine is built around that asymmetry. Every rule here
+    errs toward care. Detection can only RAISE risk, never lower it. There is no
+    "probably fine." When two readings disagree, the more protective one wins.
+    We attempt EVERY time — because one time is all it takes, and we intend to be
+    there for it. (Bounded by Principle 11: always within the law.)
     """
 
     CRITICAL_PATTERNS = [
