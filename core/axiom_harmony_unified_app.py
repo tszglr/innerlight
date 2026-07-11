@@ -6518,9 +6518,34 @@ def admin_policy_patterns():
                 legal_tally[k] = legal_tally.get(k, 0) + v
     except Exception:
         pass
+    # CLINICAL / SUPPORT patterns — detect need themes across the same cases
+    clinical_tally = {}
+    CLIN = {
+        "crisis / safety": ["suicid","kill myself","end it","hurt myself","harm myself","want to die","not safe"],
+        "anxiety / panic": ["panic","anxious","anxiety","can't breathe","cant breathe","overwhelmed","racing","dread"],
+        "depression / low mood": ["hopeless","worthless","empty","numb","depressed","no point","give up","can't go on"],
+        "grief / loss": ["died","death","lost my","passed away","grief","funeral","miss them"],
+        "trauma": ["abused","assault","attacked","flashback","nightmare","ptsd","trauma"],
+        "substance use": ["drinking","alcohol","relapse","sober","withdrawal","overdose","addicted","using again","high"],
+        "medication needs": ["medication","meds","prescription","psychiatrist","side effect","refill","off my meds"],
+        "isolation / loneliness": ["alone","lonely","no one","nobody","isolated","by myself"],
+        "sleep": ["can't sleep","cant sleep","insomnia","nightmares","exhausted","no sleep"],
+    }
+    try:
+        with _CASES_LOCK:
+            cases2 = _cases_load()
+        for cs in cases2[-500:]:
+            text = (" ".join(t.get("t","") for t in cs.get("turns", []) if t.get("r")=="user")).lower()
+            for label, words in CLIN.items():
+                if any(w in text for w in words):
+                    clinical_tally[label] = clinical_tally.get(label, 0) + 1
+    except Exception:
+        pass
     top_legal = sorted(legal_tally.items(), key=lambda kv: kv[1], reverse=True)[:12]
+    top_clin = sorted(clinical_tally.items(), key=lambda kv: kv[1], reverse=True)[:12]
     return jsonify({"status": "ok", "cases_reviewed": case_count,
-                    "legal_patterns": [{"issue": k, "count": v} for k, v in top_legal]})
+                    "legal_patterns": [{"issue": k, "count": v} for k, v in top_legal],
+                    "clinical_patterns": [{"issue": k, "count": v} for k, v in top_clin]})
 
 _POLICY_SYSTEM = (
     "You are a legislative-research aid for the founder of InnerLight, a mental-health "
@@ -6685,6 +6710,51 @@ function studyCase(btn){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 loadCases();
+async function loadPolicyPatterns(){
+  var box = document.getElementById('policy-patterns');
+  if (box) box.innerHTML = 'Reviewing all cases (old and new) for recurring patterns\u2026';
+  try{
+    var r = await fetch('/api/admin/policy/patterns'); var d = await r.json();
+    if (!box) return;
+    var html = '<div style="font-weight:700;margin:6px 0;">Across ' + (d.cases_reviewed||0) + ' recorded cases:</div>';
+    var legal = d.legal_patterns || [];
+    var clin = d.clinical_patterns || [];
+    if (!legal.length && !clin.length){
+      box.innerHTML = 'No recurring patterns yet. As sessions accumulate, the legal and clinical needs people face most will surface here automatically \u2014 your evidence base for policy study.';
+      return;
+    }
+    html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
+    function rows(arr, color){ return arr.length ? arr.map(function(p){ return '<div class="pat-row" data-issue="' + p.issue + '" style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eef2f8;cursor:pointer;"><span>' + p.issue + '</span><b style="color:' + color + ';">' + p.count + '</b></div>'; }).join('') : '<div style="color:#94a3b8;">None yet.</div>'; }
+    html += '<div style="flex:1;min-width:220px;"><div style="font-weight:700;color:#6d28d9;margin-bottom:4px;">Legal patterns</div>' + rows(legal, '#6d28d9') + '</div>';
+    html += '<div style="flex:1;min-width:220px;"><div style="font-weight:700;color:#1d4ed8;margin-bottom:4px;">Clinical / support patterns</div>' + rows(clin, '#1d4ed8') + '</div>';
+    html += '</div><div style="font-size:12px;color:#64748b;margin-top:8px;">Each recurring pattern is a place the system may be failing people. Click any pattern to study how legislation could address it.</div>';
+    box.innerHTML = html;
+    box.querySelectorAll('.pat-row').forEach(function(row){
+      row.addEventListener('click', function(){ studyThisPattern(row.getAttribute('data-issue')); });
+    });
+  }catch(e){ if(box) box.innerHTML = 'Could not load patterns right now.'; }
+}
+function studyThisPattern(issue){
+  var ta = document.getElementById('policy-pattern');
+  if (ta){ ta.value = 'Recurring pattern across our cases: ' + issue + '. Study how legislation could better help people facing this, and how it could help businesses and organizations act fairly.'; ta.scrollIntoView({behavior:'smooth', block:'center'}); }
+}
+async function runPolicyStudy(){
+  var pattern = (document.getElementById('policy-pattern')||{}).value || '';
+  var out = document.getElementById('policy-out');
+  var wait = document.getElementById('policy-wait');
+  if (pattern.trim().length < 10){ if(out){ out.style.display='block'; out.textContent='Describe the recurring pattern first (or click a pattern above).'; } return; }
+  if (wait) wait.style.display='block';
+  if (out) out.style.display='none';
+  try{
+    var r = await fetch('/api/admin/policy/study', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({pattern: pattern})});
+    var d = await r.json();
+    if (wait) wait.style.display='none';
+    if (out){ out.style.display='block'; out.textContent = d.text || 'No result.'; }
+    if (typeof loadShelf==='function') loadShelf();
+  }catch(e){ if(wait) wait.style.display='none'; if(out){ out.style.display='block'; out.textContent='Study call failed. Try again.'; } }
+}
+
+loadPolicyPatterns(); // auto-identify recurring patterns on load
 </script>
 <script>
 async function runStudy(){
