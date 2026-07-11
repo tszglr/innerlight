@@ -1290,8 +1290,11 @@ function heartTick(){
   const rMin = lowLight ? 28 : 50;
   const diffMin = lowLight ? 4 : 8;
 
-  // ---- PASS 2: read the (optionally brightened) green pulse signal ----
-  let gSum=0, gCnt=0;
+  // ---- PASS 2: read the (optionally brightened) skin pulse — ALL THREE color
+  // channels now, not just green. The POS algorithm downstream combines red,
+  // green, and blue to cancel motion and lighting, which is far more robust
+  // than green-only and much fairer across skin tones. ----
+  let rSum=0, gSum=0, bSum=0, gCnt=0;
   // Specific stable-skin points: forehead + cheeks (strongest) + nose bridge +
   // under-eye + mouth-side (added per founder request for a fuller reading).
   for (const nm of ['forehead','cheekLeft','cheekRight','noseBridge','underEyeL','underEyeR','mouthSideL','mouthSideR']){
@@ -1301,13 +1304,48 @@ function heartTick(){
     for (let i=0;i<d.length;i+=4){
       let r=d[i], g=d[i+1], bl=d[i+2];
       if (lut){ r=lut[r]; g=lut[g]; bl=lut[bl]; }   // brighten for the reading only
-      if (r>rMin && r>=g && g>=bl && (r-bl)>diffMin){ gSum+=g; gCnt++; }
+      if (r>rMin && r>=g && g>=bl && (r-bl)>diffMin){ rSum+=r; gSum+=g; bSum+=bl; gCnt++; }
     }
   }
   if (gCnt < 60) return;               // still not enough skin even after lift
-  hrSig.push({v:gSum/gCnt, t:performance.now()});
+  hrSig.push({r:rSum/gCnt, g:gSum/gCnt, b:bSum/gCnt, v:gSum/gCnt, t:performance.now()});
   const cutoff = performance.now()-12000;
   while (hrSig.length && hrSig[0].t < cutoff) hrSig.shift();
+}
+
+// ---- POS (Plane-Orthogonal-to-Skin, Wang et al. 2017) ----
+// The current gold-standard classical rPPG method — the same math commercial
+// heart-from-camera kits are built on. It normalizes each color channel by its
+// own recent average, then projects the RGB signal onto a plane that is
+// orthogonal to the skin-tone direction, which cancels most of the change that
+// comes from movement and light instead of from the pulse. Runs entirely on the
+// person's device. Returns a single pulse waveform.
+function posPulse(R, G, B, fs){
+  const n = R.length;
+  const out = new Float64Array(n);
+  const l = Math.max(20, Math.round(fs*1.6));   // ~1.6s sliding window
+  if (n < l) return out;
+  const sd = (a)=>{ let mu=0; for (let i=0;i<a.length;i++) mu+=a[i]; mu/=a.length;
+                    let v=0; for (let i=0;i<a.length;i++){ const dd=a[i]-mu; v+=dd*dd; }
+                    return Math.sqrt(v/a.length) || 1e-9; };
+  for (let m=0; m+l<=n; m++){
+    let mr=0,mg=0,mb=0;
+    for (let i=m;i<m+l;i++){ mr+=R[i]; mg+=G[i]; mb+=B[i]; }
+    mr/=l; mg/=l; mb/=l;
+    if (mr<=0||mg<=0||mb<=0) continue;
+    const S1=new Float64Array(l), S2=new Float64Array(l);
+    for (let i=0;i<l;i++){
+      const rn=R[m+i]/mr, gn=G[m+i]/mg, bn=B[m+i]/mb;   // temporal normalization
+      S1[i]= gn - bn;                 // projection row 1: [ 0, 1, -1]
+      S2[i]= -2*rn + gn + bn;         // projection row 2: [-2, 1,  1]
+    }
+    const alpha = sd(S1)/sd(S2);
+    let hmu=0; const h=new Float64Array(l);
+    for (let i=0;i<l;i++){ h[i]=S1[i]+alpha*S2[i]; hmu+=h[i]; }
+    hmu/=l;
+    for (let i=0;i<l;i++){ out[m+i] += (h[i]-hmu); }     // overlap-add, mean-removed
+  }
+  return out;
 }
 
 function heartEstimate(){
@@ -1316,29 +1354,52 @@ function heartEstimate(){
   const dur = (hrSig[n-1].t - hrSig[0].t)/1000;
   if (dur < 6) return;
   const fs = n/dur;                    // sample rate (Hz)
-  // 1) detrend (remove slow drift) + mean-center
-  const vals = hrSig.map(s=>s.v);
-  const mean = vals.reduce((a,b)=>a+b,0)/n;
-  let sig = vals.map(v=>v-mean);
-  // moving-average detrend
+  // 1) Build the pulse waveform with POS (all three channels). Fall back to the
+  //    green channel only if older samples lack full color (transition safety).
+  let pulse;
+  if (hrSig[0].r != null && hrSig[n-1].r != null){
+    const R = hrSig.map(s=>s.r), G = hrSig.map(s=>s.g), B = hrSig.map(s=>s.b);
+    pulse = posPulse(R, G, B, fs);
+  } else {
+    const vals = hrSig.map(s=>s.v);
+    const mean = vals.reduce((a,b)=>a+b,0)/n;
+    pulse = vals.map(v=>v-mean);
+  }
+  // 2) BAND-LIMIT to the heart band. High-pass (moving-average detrend) removes
+  //    slow drift; a light 3-tap low-pass removes fast noise. Together they keep
+  //    only the ~0.7-2.8 Hz (42-170 bpm) band, which sharply cuts octave errors.
   const win = Math.round(fs*0.8)||1;
-  const detr = sig.map((v,i)=>{
-    let s=0,c=0; for(let j=Math.max(0,i-win);j<=Math.min(n-1,i+win);j++){s+=sig[j];c++;}
+  const detr = Array.prototype.map.call(pulse, (v,i)=>{
+    let s=0,c=0; for(let j=Math.max(0,i-win);j<=Math.min(n-1,i+win);j++){s+=pulse[j];c++;}
     return v - s/c;
   });
-  // 2) autocorrelation over the plausible heart-period range (40..170 bpm)
+  const band = detr.map((v,i)=>{
+    const a=detr[Math.max(0,i-1)], b=detr[i], c=detr[Math.min(n-1,i+1)];
+    return (a + 2*b + c)/4;               // gentle low-pass smoothing
+  });
+  // 3) autocorrelation over the plausible heart-period range (40..170 bpm)
   const minLag = Math.floor(fs*60/170), maxLag = Math.ceil(fs*60/40);
+  const ac = new Float64Array(maxLag+2);
   let bestLag=0, bestCorr=0, corr0=0;
-  for (let i=0;i<n;i++) corr0 += detr[i]*detr[i];
+  for (let i=0;i<n;i++) corr0 += band[i]*band[i];
   corr0 = corr0||1;
   for (let lag=minLag; lag<=maxLag && lag<n; lag++){
-    let c=0; for (let i=0;i+lag<n;i++) c += detr[i]*detr[i+lag];
-    const norm = c/corr0;
-    if (norm > bestCorr){ bestCorr=norm; bestLag=lag; }
+    let c=0; for (let i=0;i+lag<n;i++) c += band[i]*band[i+lag];
+    ac[lag] = c/corr0;
+    if (ac[lag] > bestCorr){ bestCorr=ac[lag]; bestLag=lag; }
   }
   if (!bestLag) return;
-  const bpm = 60*fs/bestLag;
-  // 3) confidence from autocorrelation peak strength (0..1)
+  // 4) SUBHARMONIC GUARD: autocorrelation can latch onto TWICE the true period
+  //    (reading half the real heart rate). Prefer the first strong local peak —
+  //    the fundamental — instead of the global maximum when they disagree.
+  let fundLag = bestLag;
+  for (let lag=minLag+1; lag<=maxLag-1 && lag<n-1; lag++){
+    if (ac[lag] >= 0.5*bestCorr && ac[lag] >= ac[lag-1] && ac[lag] >= ac[lag+1]){
+      fundLag = lag; break;   // first strong local peak = the true fundamental
+    }
+  }
+  const bpm = 60*fs/fundLag;
+  // 5) confidence from autocorrelation peak strength (0..1)
   const conf = Math.max(0, Math.min(1, bestCorr*1.4));
   _hrConf = conf;
   // 4) smooth gently toward the new reading, weighted by confidence
