@@ -5478,6 +5478,24 @@ def api_checkin():
     conv_questions = [get_cultural_engine().shape_response(
         initial_conv["question"], cultural["register"]
     )]
+    # --- PRINCIPLE 12: NO INVESTIGATION, NO RIGHT TO SPEAK ---
+    # If the person used ambiguous shorthand that COULD carry something serious
+    # ("hurt myself at the gym", "landlord is ending my lease"), we do not
+    # dismiss it and we do not red-flag it. We LEAD with a specific, caring
+    # question that opens the door — and we never let it be treated as benign.
+    # Applies whenever we are investigating and there is NO explicit crisis
+    # phrase (needs_immediate_support). If a true crisis phrase was present,
+    # the crisis flow leads instead — investigation never overrides an active
+    # crisis. Otherwise the caring door-opener leads, even if the deeper reader
+    # raised the care level, so we investigate before any verdict.
+    if getattr(crisis, "needs_investigation", False) and not crisis.needs_immediate_support:
+        probe = get_cultural_engine().shape_response(
+            crisis.investigation_prompt, cultural["register"])
+        # The investigative question leads; keep any engine question behind it.
+        conv_questions = [probe] + [q for q in conv_questions if q and q != probe]
+        # Not dismissed: an ambiguous serious signal is never "steady/low".
+        if risk == "low":
+            risk = "moderate"
     legal_issues = detect_legal_issues(message)
     legal_guidance = generate_legal_guidance(legal_issues)
     legal_code = legal_guidance.get("issue_code") if legal_guidance else None

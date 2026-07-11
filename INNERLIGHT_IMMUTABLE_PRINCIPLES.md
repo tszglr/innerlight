@@ -133,3 +133,22 @@
 - Legal review is part of shipping, not an afterthought: significant features
   that touch care, minors, providers, money, or data get checked against the
   current legal landscape before they go live.
+
+## 12. NO INVESTIGATION, NO RIGHT TO SPEAK (set by the founder, July 2026)
+- InnerLight does not get to conclude anything about a person — not that they
+  are fine, and not that they are in crisis — until it has INVESTIGATED. If we
+  have not investigated, we have no right to say anything definitive.
+- A short or shorthand statement is NEVER dismissed. Frightened people open the
+  door a crack first: "I hurt myself at the gym" may be "I hurt myself on
+  purpose." "My landlord is ending my lease" may be "my things are on the curb
+  tonight and I don't know where my kids will sleep." Shorthand is how people in
+  distress test whether it is safe to say more.
+- The correct response to an ambiguous statement is neither alarm nor dismissal.
+  It is a CARING, SPECIFIC follow-up that gently opens the door the rest of the
+  way — an investigation, not a verdict. We ask; we do not assume.
+- Equally, we do NOT slam a red-flag verdict onto an ambiguous statement without
+  investigating, because a false alarm can alienate the very person who was
+  reaching out. Investigate first; let the person's own next words set the level.
+- This principle governs the crisis engine, the conversation engine, and every
+  future feature that reads a person: detect ambiguity, investigate it, and only
+  then respond. No investigation, no right to speak.

@@ -17,6 +17,13 @@ class CrisisResult:
     provider_focus: str
     sound_mode: str
     needs_immediate_support: bool
+    # Principle 12 — "No investigation, no right to speak." When a statement is
+    # ambiguous shorthand that COULD carry something serious, we neither dismiss
+    # nor red-flag it: we investigate with a specific, caring follow-up. These
+    # carry that investigation. Defaults keep existing call sites unchanged.
+    needs_investigation: bool = False
+    investigation_prompt: str = ""
+    investigation_topic: str = ""
 
     def to_dict(self) -> Dict:
         return {
@@ -30,6 +37,9 @@ class CrisisResult:
             "provider_focus": self.provider_focus,
             "sound_mode": self.sound_mode,
             "needs_immediate_support": self.needs_immediate_support,
+            "needs_investigation": self.needs_investigation,
+            "investigation_prompt": self.investigation_prompt,
+            "investigation_topic": self.investigation_topic,
         }
 
 
@@ -132,10 +142,62 @@ class CrisisResponseCore:
         r"\bafraid\b",
     ]
 
+    # ------------------------------------------------------------------
+    # PRINCIPLE 12 — "No investigation, no right to speak."
+    # Ambiguous shorthand that COULD carry something serious. We do not
+    # dismiss it and we do not red-flag it. We INVESTIGATE it, with a
+    # specific, caring, open question that gives the person room to say
+    # more. Each entry: (pattern, topic, gentle door-opening question).
+    # Order matters — the first match wins, so most-serious first.
+    # ------------------------------------------------------------------
+    INVESTIGATE_PATTERNS = [
+        # Possible intentional self-harm hiding inside an "accident"
+        (r"\bhurt myself\b|\bhurt me\b|\binjured myself\b|\bhurt my ?self\b",
+         "self_harm_ambiguous",
+         "I want to make sure I really understand what you mean — when you say you hurt yourself, was that an accident, or did you hurt yourself on purpose? Either way, I'm here and I'm listening."),
+        # Housing loss / eviction — could be an imminent street situation
+        (r"\bevict(?:ed|ion|ing)?\b|\bending my lease\b|\blease is (?:up|ending|over)\b|\bkicked out\b|\bthrowing (?:out |away )?my (?:stuff|things|belongings)\b|\bnowhere to (?:go|live|stay)\b|\bon the street\b|\blos(?:e|ing) my (?:home|apartment|place|housing)\b|\bput out\b",
+         "housing",
+         "That sounds urgent and frightening. Can you tell me what's happening right now — do you have somewhere safe to stay tonight, and is anyone else, like kids, in this with you?"),
+        # Interpersonal violence — someone may be being hurt by another person
+        (r"\bhe hit me\b|\bshe hit me\b|\bthey hit me\b|\bhit me\b|\bhurt me\b|\bhitting me\b|\bbeat me\b|\bthrew me\b|\bchoked me\b|\bafraid to go home\b|\bscared to go home\b|\bnot safe at home\b",
+         "safety_from_person",
+         "Thank you for telling me that — it matters. Are you safe where you are right this moment? You can say as much or as little as you want."),
+        # Child safety / losing children
+        (r"\btook my (?:kids|kid|children|child|baby|son|daughter)\b|\blos(?:e|ing|t) my (?:kids|kid|children|child|custody)\b|\bcps\b|\bchild protective\b",
+         "children",
+         "That's a lot to be carrying. Can you tell me a little more about what's happening with your children right now, so I can point you to the right kind of help?"),
+        # Substance relapse / escalation
+        (r"\brelaps(?:e|ed|ing)\b|\busing again\b|\bdrinking too much\b|\bcan'?t stop drinking\b|\bcan'?t stop using\b|\bhigh right now\b|\bwithdrawal\b",
+         "substance",
+         "I'm glad you said it out loud — that takes courage. Can you tell me more about what's going on, and whether you're safe in your body right now?"),
+        # Job / money loss that can spiral fast
+        (r"\blost my job\b|\bgot (?:laid off|fired)\b|\blaid off\b|\bcan'?t afford\b|\bhaven'?t eaten\b|\bno money for\b|\bcan'?t pay\b|\bout of money\b",
+         "financial",
+         "Losing that footing is a real shock, and it's okay that it's heavy. Can you tell me what's most pressing right now — is it food, rent, or something else this week?"),
+        # Not sleeping / not eating — bodily signs worth checking
+        (r"\bhaven'?t slept\b|\bcan'?t sleep\b|\bnot sleeping\b|\bnot eating\b|\bcan'?t eat\b|\bstopped eating\b",
+         "body_signal",
+         "Your body's been going through it. How long has this been happening, and what do you think is underneath it?"),
+        # Loss / grief shorthand
+        (r"\b(?:he|she|they) (?:died|passed)\b|\blost (?:my|him|her|them)\b|\bpassed away\b|\bfuneral\b|\bgrieving\b",
+         "grief",
+         "I'm so sorry. Loss like that changes the ground under you. Would you like to tell me a little about who, and how you're holding up tonight?"),
+    ]
+
+    def _investigate(self, normalized: str):
+        """Principle 12: find ambiguous shorthand that must be investigated,
+        not dismissed and not red-flagged. Returns (needs, prompt, topic)."""
+        for pattern, topic, prompt in self.INVESTIGATE_PATTERNS:
+            if re.search(pattern, normalized):
+                return True, prompt, topic
+        return False, "", ""
+
     def evaluate(self, text: str, preferred_name: str | None = None) -> CrisisResult:
         normalized = self._normalize(text)
         name = self._safe_name(preferred_name)
         address = f"{name}, " if name else ""
+        inv_needed, inv_prompt, inv_topic = self._investigate(normalized)
         critical = self._matches(normalized, self.CRITICAL_PATTERNS)
         if critical:
             return CrisisResult(
@@ -221,6 +283,9 @@ class CrisisResponseCore:
                 provider_focus="Non-emergency mental health support; route by symptom pattern, duration, and preferred support type.",
                 sound_mode="encouragement",
                 needs_immediate_support=False,
+                needs_investigation=inv_needed,
+                investigation_prompt=inv_prompt,
+                investigation_topic=inv_topic,
             )
 
         return CrisisResult(
@@ -243,6 +308,9 @@ class CrisisResponseCore:
             provider_focus="General support and provider matching based on what the person says next.",
             sound_mode="greeting",
             needs_immediate_support=False,
+            needs_investigation=inv_needed,
+            investigation_prompt=inv_prompt,
+            investigation_topic=inv_topic,
         )
 
     @staticmethod
