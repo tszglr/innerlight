@@ -2517,7 +2517,8 @@ function beginTrackWatch(name){
   const sc = faceEmotionScores || {};
   const displeasure = (sc.disgusted||0)*1.2 + (sc.angry||0) + (sc.surprised||0)*0.6;
   const easeB = ((sc.happy||0) + (sc.neutral||0)*0.3);
-  trackWatch = { name: name || 'unknown', startMs: Date.now(), baseline: displeasure, easeBase: easeB, easeSum: 0, samples: 0, strikes: 0 };
+  const arousalBase = (typeof readArousalSignal==='function') ? readArousalSignal() : 0.5;
+  trackWatch = { name: name || 'unknown', startMs: Date.now(), baseline: displeasure, easeBase: easeB, easeSum: 0, arousalSum: 0, arousalBase: arousalBase, samples: 0, strikes: 0 };
 }
 function trackGuardianTick(){
   if (!trackWatch) return;
@@ -2525,17 +2526,26 @@ function trackGuardianTick(){
   const sc = faceEmotionScores || {};
   const displeasure = (sc.disgusted||0)*1.2 + (sc.angry||0) + (sc.surprised||0)*0.6;
   const ease = (sc.happy||0) + (sc.neutral||0)*0.3;
-  if (age > 60000) {
-    // Opening minute complete: render the verdict — liked, or neutral.
+  // FUSION-BASED reaction: use the whole four-signal state, not just the face,
+  // so reactions register even when the face is flat (the real-world case).
+  const arousalNow = (typeof readArousalSignal==='function') ? readArousalSignal() : 0.5;
+  if (age > 45000) {
+    // Verdict: did the person SETTLE during this track (arousal fell) = liked;
+    // did they get MORE activated = disliked; little change = neutral.
+    const arousalDrop = (trackWatch.arousalBase||0.5) - (trackWatch.arousalSum/Math.max(1,trackWatch.samples));
     const avgEase = trackWatch.easeSum / Math.max(1, trackWatch.samples);
-    const verdict = (avgEase - trackWatch.easeBase > 0.12) ? 'liked' : 'neutral';
+    let verdict = 'neutral';
+    if (arousalDrop > 0.06 || (avgEase - trackWatch.easeBase > 0.10)) verdict = 'liked';
+    else if (arousalDrop < -0.08) verdict = 'disliked';
     metric('track_react', trackWatch.name + '|' + verdict);
     trackWatch = null; return;
   }
   if (age < 4000) return;                          // let the crossfade settle first
   trackWatch.easeSum = (trackWatch.easeSum||0) + ease;
+  trackWatch.arousalSum = (trackWatch.arousalSum||0) + arousalNow;
   trackWatch.samples = (trackWatch.samples||0) + 1;
-  if (displeasure - trackWatch.baseline > 0.35) trackWatch.strikes++;
+  // Strikes now come from RISING arousal during the track (any signal), not just face.
+  if (arousalNow - (trackWatch.arousalBase||0.5) > 0.18 || displeasure - trackWatch.baseline > 0.35) trackWatch.strikes++;
   else if (trackWatch.strikes > 0) trackWatch.strikes--;
   if (trackWatch.strikes >= 4) {
     // A held reaction against this track: change the song, not the lane.
@@ -4648,6 +4658,16 @@ def zenisys_ambient():
                 fp = _FINGERPRINTS.get(n, {})
                 return fp.get("calm_score", 0.5)
             files.sort(key=calm_of, reverse=calmest_first)  # True: calmest first
+            # Keep the calmest as the gentle lead, but SHUFFLE the rest so the
+            # rotation is never identical twice (founder: songs must never play
+            # in the same order).
+            import random as _rnd
+            if len(files) > 2:
+                lead = files[0]; rest = files[1:]; _rnd.shuffle(rest)
+                files = [lead] + rest
+        elif len(files) > 1:
+            import random as _rnd
+            _rnd.shuffle(files)
         else:
             files.sort(key=track_number)
         return [{"url": f"/audio/{n}", "name": label,
