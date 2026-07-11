@@ -967,12 +967,12 @@ function openActivities(){
   const acts=[
     ['breathe','Breathing circle','Slow the body directly'],
     ['ground','5-4-3-2-1 senses','Come back to the room'],
-    ['words','Word Play','Find the calm word'],
+    ['words','Word search','Hunt the hidden calm words'],
     ['shapes','Shape match','Busy the picture-mind'],
-    ['trace','Slow trace','Follow the drifting light'],
+    ['bubbles','Bubble pop','Pop the drifting lights'],
     ['stars','Count the stars','A gentle anchor'],
-    ['release','Body release','Unclench, head to toe'],
-    ['good','Three good things','Small true lights'],
+    ['release','Body release','Squeeze, hold, let go'],
+    ['sequence','Glow sequence','Follow and repeat the lights'],
   ];
   const menu = actOverlay.querySelector('#act-menu');
   menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:13px;cursor:pointer;color:#e6f1fa;">
@@ -1085,7 +1085,78 @@ function startAct(name){
     st.querySelector('#g-next').onclick=()=>{ bloom(); i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
     show();
   }
-  if (name==='words'){ if(!wordsPanel) buildWordsPanel(); wordsPanel.style.display='block'; st.appendChild(wordsPanel); wordsRound(); }
+  if (name==='words'){
+    // WORD SEARCH — hidden calm words in a letter grid. More complex and more
+    // absorbing than pick-a-word: tap the first letter then the last letter of a
+    // word to find it. Generated fresh each time (no two grids alike).
+    const WS_WORDS=['CALM','REST','BREATHE','RIVER','MEADOW','WILLOW','LANTERN','PEBBLE','GARDEN','OCEAN','MAPLE','CLOUD','EMBER','QUIET','STILL','HARBOR'];
+    const N=9;
+    function wsBuild(){
+      const chosen=WS_WORDS.slice().sort(()=>Math.random()-0.5).filter(w=>w.length<=N).slice(0,4);
+      const grid=[]; for(let r=0;r<N;r++){ grid.push(new Array(N).fill('')); }
+      const dirs=[[0,1],[1,0],[1,1],[-1,1]];
+      const placed=[];
+      chosen.forEach(function(word){
+        let ok=false;
+        for(let tries=0;tries<140 && !ok;tries++){
+          const dir=dirs[Math.floor(Math.random()*dirs.length)]; const L=word.length;
+          const r0=Math.floor(Math.random()*N), c0=Math.floor(Math.random()*N);
+          const rE=r0+dir[0]*(L-1), cE=c0+dir[1]*(L-1);
+          if(rE<0||rE>=N||cE<0||cE>=N) continue;
+          let good=true; const cells=[];
+          for(let k=0;k<L;k++){ const rr=r0+dir[0]*k, cc=c0+dir[1]*k; const ex=grid[rr][cc];
+            if(ex && ex!==word[k]){ good=false; break; } cells.push([rr,cc]); }
+          if(!good) continue;
+          for(let k=0;k<L;k++){ grid[cells[k][0]][cells[k][1]]=word[k]; }
+          placed.push({word:word,cells:cells}); ok=true;
+        }
+      });
+      const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      for(let r=0;r<N;r++){ for(let c=0;c<N;c++){ if(!grid[r][c]) grid[r][c]=A[Math.floor(Math.random()*26)]; } }
+      return {grid:grid, placed:placed, words:placed.map(function(p){return p.word;})};
+    }
+    let puzzle=wsBuild(), found=[], selA=null;
+    function wsRender(){
+      st.innerHTML='<div style="text-align:center;">'
+        +'<div id="ws-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Find the hidden calm words. Tap the FIRST letter, then the LAST letter of a word.</div>'
+        +'<div id="ws-words" style="font-size:13px;margin-bottom:10px;"></div>'
+        +'<div id="ws-grid" style="display:inline-grid;grid-template-columns:repeat('+N+',1fr);gap:3px;"></div></div>';
+      st.querySelector('#ws-words').innerHTML=puzzle.words.map(function(w){
+        const done=found.indexOf(w)>=0;
+        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:#7dd3a8;text-decoration:line-through;':'color:#e6f1fa;')+'">'+w+'</span>';
+      }).join('');
+      let html='';
+      for(let r=0;r<N;r++){ for(let c=0;c<N;c++){
+        const lit=found.some(function(w){ const p=puzzle.placed.find(function(x){return x.word===w;}); return p&&p.cells.some(function(cell){return cell[0]===r&&cell[1]===c;}); });
+        html+='<button data-r="'+r+'" data-c="'+c+'" style="width:30px;height:30px;font-size:14px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;'
+          +(lit?'background:rgba(125,211,168,0.45);color:#0c1322;font-weight:700;':'background:rgba(255,255,255,0.06);color:#e6f1fa;')+'">'+puzzle.grid[r][c]+'</button>';
+      } }
+      const g=st.querySelector('#ws-grid'); g.innerHTML=html;
+      g.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ wsClick(+b.dataset.r,+b.dataset.c,b); }); });
+    }
+    function wsClick(r,c,b){
+      if(!selA){ selA=[r,c]; b.style.outline='2px solid #cfe9ff'; return; }
+      const r0=selA[0], c0=selA[1]; selA=null;
+      st.querySelectorAll('#ws-grid button').forEach(function(x){ x.style.outline=''; });
+      const dr=r-r0, dc=c-c0, adr=Math.abs(dr), adc=Math.abs(dc);
+      if(!(dr===0||dc===0||adr===adc)) return;               // must be a straight line
+      const L=Math.max(adr,adc)+1, sr=Math.sign(dr), sc=Math.sign(dc);
+      let str='';
+      for(let k=0;k<L;k++){ str+=puzzle.grid[r0+sr*k][c0+sc*k]; }
+      const rev=str.split('').reverse().join('');
+      const match=puzzle.words.find(function(w){ return (w===str||w===rev) && found.indexOf(w)<0; });
+      if(match){
+        found.push(match); metric('wordplay'); if(typeof bloom==='function') bloom();
+        if(found.length>=puzzle.words.length){
+          wsRender(); const p=st.querySelector('#ws-p'); if(p){ p.textContent='All found — beautifully done. A fresh grid…'; p.style.color='#7dd3a8'; }
+          actTimers.push(setTimeout(function(){ puzzle=wsBuild(); found=[]; selA=null; wsRender(); }, 1800));
+          return;
+        }
+        wsRender();
+      }
+    }
+    wsRender();
+  }
   if (name==='shapes'){
     st.innerHTML=`<div style="text-align:center;"><div id="sh-prompt" style="font-size:15px;color:#cfe3f2;margin:8px 0 12px;"></div>
       <div id="sh-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto;"></div></div>`;
@@ -1099,16 +1170,35 @@ function startAct(name){
     };
     window._shRound=round; round();
   }
-  if (name==='trace'){
-    st.innerHTML=`<div style="text-align:center;"><div style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Rest your finger or cursor on the light, and drift with it.</div>
-    <canvas id="tr-cv" width="600" height="300" style="width:100%;max-width:600px;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;"></canvas></div>`;
-    const cv=st.querySelector('#tr-cv'), ctx=cv.getContext('2d'); let t0=performance.now();
-    const draw=()=>{ if(!cv.isConnected) return; const t=(performance.now()-t0)/1000;
-      ctx.fillStyle='rgba(12,19,34,0.18)'; ctx.fillRect(0,0,600,300);
-      const x=300+220*Math.sin(t*0.28), y=150+90*Math.sin(t*0.19+1.3);
-      const g=ctx.createRadialGradient(x,y,2,x,y,26); g.addColorStop(0,'#cfe9ff'); g.addColorStop(1,'rgba(111,179,212,0)');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,26,0,7); ctx.fill(); requestAnimationFrame(draw); };
-    draw();
+  if (name==='bubbles'){
+    // BUBBLE POP — soft lights drift up; tap them to pop. Endless, gentle,
+    // and genuinely absorbing. No score to fear, just a quiet tally.
+    st.innerHTML=`<div style="text-align:center;"><div id="bb-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Tap the drifting lights to pop them. No rush, no wrong move.</div>
+      <div id="bb-field" style="position:relative;height:320px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);overflow:hidden;touch-action:manipulation;"></div>
+      <div id="bb-count" style="margin-top:8px;font-size:13px;color:#7dd3a8;min-height:18px;"></div></div>`;
+    const field=st.querySelector('#bb-field'); let popped=0;
+    const colors=['#7dd3a8','#6fb3d4','#d4a86f','#c78ad4','#cfe9ff'];
+    const spawn=()=>{ if(!field.isConnected) return;
+      const b=document.createElement('div');
+      const size=26+Math.random()*36, col=colors[Math.floor(Math.random()*colors.length)];
+      b.style.cssText='position:absolute;width:'+size+'px;height:'+size+'px;border-radius:50%;cursor:pointer;'
+        +'background:radial-gradient(circle at 35% 30%, #ffffff, '+col+' 72%);box-shadow:0 0 16px '+col+';';
+      b.style.left=(6+Math.random()*80)+'%'; b.style.top='102%';
+      field.appendChild(b);
+      const drift=(Math.random()*40-20), dur=6500+Math.random()*5000;
+      const anim=b.animate([{transform:'translate(0,0)'},{transform:'translate('+drift+'px,-360px)'}],{duration:dur,easing:'linear'});
+      const pop=(e)=>{ if(e){ e.preventDefault(); } if(!b.isConnected) return;
+        popped++; if(typeof bloom==='function' && popped%4===0) bloom();
+        const cnt=st.querySelector('#bb-count'); if(cnt) cnt.textContent=popped+' popped';
+        try{ anim.cancel(); }catch(_){}
+        b.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(1.7)'}],{duration:220});
+        setTimeout(()=>{ if(b.isConnected) b.remove(); },200);
+      };
+      b.addEventListener('click',pop);
+      b.addEventListener('touchstart',pop,{passive:false});
+      anim.onfinish=()=>{ if(b.isConnected) b.remove(); };
+    };
+    actTimers.push(setInterval(spawn,800)); spawn(); spawn();
   }
   if (name==='stars'){
     st.innerHTML=`<div style="text-align:center;"><div id="st-p" style="font-size:14px;color:#cfe3f2;margin-bottom:10px;">Stars will appear, slowly. Count them, then answer.</div>
@@ -1126,27 +1216,78 @@ function startAct(name){
     }, 900+n*Math.max(500,1700-n*60)+800));
   }
   if (name==='release'){
-    const steps=[['HANDS \u2014 let\u2019s go','Squeeze those fists like you mean it \u2014 5, 4, 3, 2, 1 \u2014 and RELEASE. Feel that? That\u2019s tension leaving the building.'],
-      ['SHOULDERS \u2014 you got this','Drive them up to your ears \u2014 hold it, hold it \u2014 and DROP. Beautiful. Shake it out.'],
-      ['JAW \u2014 easy money','Clench lightly\u2026 hold\u2026 now let it hang like you just finished laughing. That jaw carries more stress than it tells you.'],
-      ['BROW \u2014 smooth operator','Eyebrows UP like you just heard great news \u2014 hold \u2014 and smooth them down. Your face just got lighter.'],
-      ['CORE \u2014 strong center','Brace that stomach like a soft punch is coming \u2014 hold, 3, 2, 1 \u2014 and let it all go. That\u2019s the deepest one.'],
-      ['LEGS \u2014 ground and power','Press your feet into the floor like you own it \u2014 HOLD \u2014 and float. You are anchored AND light.'],
-      ['ALL OF YOU \u2014 champion finish','One big breath in\u2026 and let everything fall loose at once. Look at you \u2014 you just coached your whole body down. That\u2019s real strength.']];
-    let i=0; st.innerHTML=`<div style="text-align:center;padding:16px;"><div id="r-t" style="font-size:22px;color:#fff;"></div>
-      <div id="r-s" style="font-size:14px;color:#b9d0e2;margin:12px 0 18px;line-height:1.6;"></div>
-      <button id="r-n" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Released &mdash; next</button></div>`;
-    const show=()=>{ st.querySelector('#r-t').textContent=steps[i][0]; st.querySelector('#r-s').textContent=steps[i][1];
-      if(i===steps.length-1) st.querySelector('#r-n').textContent='Finish'; };
-    st.querySelector('#r-n').onclick=()=>{ bloom(); i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
-    show();
+    // Interactive tension-release: a real timed HOLD with a shrinking ring and a
+    // countdown, then an animated RELEASE and a word of encouragement. You DO it,
+    // it responds -- like the breathing circle, not a wall of text.
+    const groups=[
+      ['Hands','Make two tight fists'],
+      ['Shoulders','Lift them up to your ears'],
+      ['Jaw and face','Scrunch your whole face'],
+      ['Belly','Brace your stomach, gently'],
+      ['Legs','Straighten your legs, press your feet down'],
+      ['Whole body','Tense everything at once, softly']
+    ];
+    const cheer=["That's tension leaving.","Feel the difference.","Lighter already.","Nicely done.","That was a deep one.","Your whole body just let go."];
+    let i=0;
+    st.innerHTML=`<div style="text-align:center;padding:6px;">
+      <div id="rl-t" style="font-size:23px;color:#fff;font-weight:700;"></div>
+      <div id="rl-s" style="font-size:14px;color:#b9d0e2;margin:8px 0 14px;line-height:1.5;"></div>
+      <div style="position:relative;width:150px;height:150px;margin:0 auto 14px;">
+        <div id="rl-ring" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#d4a86f,#7a5230);transition:transform 0.9s ease;display:flex;align-items:center;justify-content:center;">
+          <span id="rl-num" style="font-size:42px;color:#fff;font-weight:700;">&nbsp;</span></div>
+      </div>
+      <button id="rl-go" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:12px 30px;font-size:15px;font-weight:700;cursor:pointer;">Squeeze &amp; hold</button>
+      <div id="rl-msg" style="margin-top:12px;color:#7dd3a8;font-size:14px;min-height:18px;"></div></div>`;
+    const T=st.querySelector('#rl-t'),S=st.querySelector('#rl-s'),ring=st.querySelector('#rl-ring'),
+          num=st.querySelector('#rl-num'),go=st.querySelector('#rl-go'),msg=st.querySelector('#rl-msg');
+    const show=()=>{ T.textContent=groups[i][0]; S.textContent=groups[i][1]; msg.textContent='';
+      msg.style.color='#7dd3a8'; num.innerHTML='&nbsp;'; ring.style.transform='scale(1)';
+      go.textContent='Squeeze & hold'; go.disabled=false; go.style.opacity='1'; };
+    const run=()=>{ go.disabled=true; go.style.opacity='0.5'; let t=5;
+      ring.style.transform='scale(1.14)'; num.textContent=t; msg.textContent='Squeeze...';
+      const iv=setInterval(()=>{ if(!ring.isConnected){ clearInterval(iv); return; }
+        t--; if(t>0){ num.textContent=t; }
+        else { clearInterval(iv); num.innerHTML='&nbsp;'; ring.style.transform='scale(0.78)';
+          msg.textContent='...and let it ALL go. ' + cheer[i%cheer.length]; if(typeof bloom==='function') bloom();
+          actTimers.push(setTimeout(()=>{ i++;
+            if(i>=groups.length){ st.innerHTML='<div style="text-align:center;padding:20px;color:#7dd3a8;font-size:16px;line-height:1.6;">Every part of you just let go a little.<br>Well done. Pick another, or press Back.</div>'; return; }
+            show();
+          }, 1700));
+        }
+      },1000);
+      actTimers.push(iv);
+    };
+    go.onclick=run; show();
   }
-  if (name==='good'){
-    st.innerHTML=`<div style="max-width:420px;margin:0 auto;text-align:center;">
-      <div style="font-size:14px;color:#cfe3f2;margin-bottom:12px;">Three small true things that are good — today, this week, ever. Nothing you write here is saved or sent anywhere.</div>
-      ${[1,2,3].map(i=>`<input id="tg-${i}" placeholder="Good thing ${i}" style="width:100%;box-sizing:border-box;margin:6px 0;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;font-size:15px;">`).join('')}
-      <button onclick="(function(){ const v=[1,2,3].map(i=>document.getElementById('tg-'+i).value.trim()).filter(Boolean); const m=document.getElementById('tg-msg'); m.textContent = v.length ? 'Those are real. Carry them with you \u2014 they came from you.' : 'Even one small thing counts. Try one.'; if (v.length) bloom(); })()" style="margin-top:10px;background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Hold onto these</button>
-      <div id="tg-msg" style="margin-top:12px;color:#7dd3a8;font-size:14px;"></div></div>`;
+  if (name==='sequence'){
+    // GLOW SEQUENCE -- a gentle memory game (like Simon). The lights glow in
+    // order; repeat them back. Absorbing and distracting, grows one step at a
+    // time so it never feels like failure.
+    st.innerHTML=`<div style="text-align:center;">
+      <div id="sq-p" style="font-size:14px;color:#cfe3f2;margin-bottom:12px;">Watch the lights glow in order, then tap them back the same way.</div>
+      <div id="sq-grid" style="display:grid;grid-template-columns:repeat(2,112px);gap:12px;justify-content:center;"></div>
+      <div id="sq-msg" style="margin-top:14px;font-size:14px;color:#7dd3a8;min-height:20px;"></div></div>`;
+    const cols=['#7dd3a8','#6fb3d4','#d4a86f','#c78ad4'];
+    const grid=st.querySelector('#sq-grid'), msg=st.querySelector('#sq-msg');
+    const dim=(c)=>c+'44';
+    const pads=cols.map((c,idx)=>{ const p=document.createElement('button');
+      p.style.cssText='width:112px;height:82px;border-radius:16px;border:1px solid rgba(255,255,255,0.2);background:'+dim(c)+';cursor:pointer;transition:background 0.18s ease,transform 0.1s ease;';
+      p.dataset.i=idx; grid.appendChild(p); return p; });
+    let seq=[], expect=0, accept=false;
+    const flash=(idx,cb)=>{ const p=pads[idx]; if(!p||!p.isConnected){ if(cb) cb(); return; }
+      p.style.background=cols[idx]; p.style.transform='scale(1.06)';
+      actTimers.push(setTimeout(()=>{ if(p.isConnected){ p.style.background=dim(cols[idx]); p.style.transform='scale(1)'; } if(cb) cb(); },420)); };
+    const play=(k)=>{ if(!grid.isConnected) return;
+      if(k>=seq.length){ accept=true; expect=0; msg.textContent='Your turn'; return; }
+      flash(seq[k], ()=> actTimers.push(setTimeout(()=>play(k+1),180))); };
+    const nextRound=()=>{ accept=false; seq.push(Math.floor(Math.random()*4));
+      msg.textContent='Watch... (round '+seq.length+')'; actTimers.push(setTimeout(()=>play(0),600)); };
+    pads.forEach((p)=>{ p.addEventListener('click',()=>{ if(!accept) return; const idx=+p.dataset.i; flash(idx);
+      if(idx===seq[expect]){ expect++;
+        if(expect>=seq.length){ accept=false; msg.textContent='Nice -- '+seq.length+' in a row!'; if(typeof bloom==='function') bloom(); actTimers.push(setTimeout(nextRound,900)); }
+      } else { accept=false; msg.textContent="Close -- let's watch that one again"; actTimers.push(setTimeout(()=>{ expect=0; msg.textContent='Watch...'; actTimers.push(setTimeout(()=>play(0),400)); },900)); }
+    }); });
+    nextRound();
   }
   if (name==='menuDone'){
     st.innerHTML=`<div style="text-align:center;padding:20px;color:#7dd3a8;font-size:16px;">Well done. Pick another, or press Back when you're ready.</div>`;
