@@ -422,7 +422,7 @@ PUBLIC_PAGE = """
   <!-- Creator imprint: God's Love for Us LLC, Axiom Harmony Protocol, InnerLight, VEIL, EDEN, and the Zenisys Sound System are created by Toshay S. Zeigler. -->
   <style>
   @keyframes listenpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
-    :root { --page:#f7fbf8; --ink:#17221b; --muted:#52645a; --panel:#ffffff; --line:#d8e6dd; --teal:#0f766e; --leaf:#2f855a; --coral:#c85c54; --gold:#b7791f; }
+    :root { --page:#faf5ec; --ink:#2a1e14; --muted:#8a7a68; --panel:#ffffff; --line:#ece0d0; --teal:#b24a2a; --leaf:#c56a2c; --coral:#c85c54; --gold:#b7791f; }
     * { box-sizing:border-box; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--page); color:var(--ink); line-height:1.5; }
     a { color:var(--teal); text-decoration:none; }
@@ -438,19 +438,19 @@ PUBLIC_PAGE = """
     .button { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:10px 16px; border:1px solid var(--teal); background:var(--teal); color:white; border-radius:4px; font-weight:700; cursor:pointer; }
     .button.secondary { background:white; color:var(--teal); }
     .sound-scene { position:absolute; inset:0; opacity:.58; pointer-events:none; }
-    .bar { position:absolute; bottom:0; width:18px; border:1px solid rgba(15,118,110,.25); background:#d7f3eb; animation:pulse 4s ease-in-out infinite; }
+    .bar { position:absolute; bottom:0; width:18px; border:1px solid rgba(178,74,42,.25); background:#f0e4da; animation:pulse 4s ease-in-out infinite; }
     .bar:nth-child(1) { left:6%; height:28%; animation-delay:.1s; }
-    .bar:nth-child(2) { left:13%; height:52%; animation-delay:.5s; background:#eaf7f1; }
+    .bar:nth-child(2) { left:13%; height:52%; animation-delay:.5s; background:#f5f0ec; }
     .bar:nth-child(3) { left:22%; height:36%; animation-delay:.2s; background:#f7e1de; }
     .bar:nth-child(4) { left:33%; height:66%; animation-delay:.8s; }
     .bar:nth-child(5) { left:45%; height:42%; animation-delay:.4s; background:#f3ead3; }
-    .bar:nth-child(6) { left:58%; height:74%; animation-delay:.9s; background:#e7f4dd; }
+    .bar:nth-child(6) { left:58%; height:74%; animation-delay:.9s; background:#efe8e2; }
     .bar:nth-child(7) { left:70%; height:48%; animation-delay:.3s; background:#f7e1de; }
     .bar:nth-child(8) { left:83%; height:61%; animation-delay:.7s; }
-    .bar:nth-child(9) { left:93%; height:33%; animation-delay:.2s; background:#eaf7f1; }
+    .bar:nth-child(9) { left:93%; height:33%; animation-delay:.2s; background:#f5f0ec; }
     @keyframes pulse { 0%,100% { transform:scaleY(.82); } 50% { transform:scaleY(1.08); } }
     .band { padding:54px 24px; }
-    .band.alt { background:#eef8f2; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .band.alt { background:#f7f3ef; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
     .wrap { max-width:1040px; margin:0 auto; }
     .section-title { font-size:32px; margin:0 0 12px; }
     .section-copy { color:var(--muted); max-width:760px; margin:0 0 24px; }
@@ -471,28 +471,28 @@ PUBLIC_PAGE = """
     input { width:100%; padding:11px; border:1px solid var(--line); border-radius:4px; background:white; color:var(--ink); }
     .check-row { display:flex; align-items:center; gap:8px; margin:10px 0; color:var(--muted); font-size:14px; }
     .check-row input { width:auto; }
-    .sound-panel { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:6px; background:#f9fcfa; }
+    .sound-panel { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:6px; background:#fcfaf9; }
     .emotion-panel { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:6px; background:#fffdf7; }
     .inline-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
-    .video-preview { width:100%; max-height:190px; margin-top:8px; border:1px solid var(--line); border-radius:6px; background:#eef4f2; object-fit:cover; }
+    .video-preview { width:100%; max-height:190px; margin-top:8px; border:1px solid var(--line); border-radius:6px; background:#f4f1ee; object-fit:cover; }
     .emotion-status { color:var(--muted); font-size:13px; margin-top:8px; }
     .sound-status { color:var(--muted); font-size:13px; margin-top:8px; }
     /* Calm welcome redesign — light, warm, inviting */
     #welcome-gate { position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
-      background:linear-gradient(160deg, #f0f7f4 0%, #e8f4ec 30%, #fdf2f0 60%, #f5eef6 100%); text-align:center; padding:24px; }
+      background:linear-gradient(160deg, #f7f3f0 0%, #f3ede9 30%, #fdf2f0 60%, #f6f2ee 100%); text-align:center; padding:24px; }
     .gate-inner { max-width:440px; }
-    .gate-mark { font-size:46px; color:#7eb8a0; opacity:.85; margin-bottom:6px; animation:breathe 4s ease-in-out infinite; }
+    .gate-mark { font-size:46px; color:#c59771; opacity:.85; margin-bottom:6px; animation:breathe 4s ease-in-out infinite; }
     @keyframes breathe { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
-    #welcome-gate h1 { font-size:30px; margin:6px 0 12px; font-weight:600; letter-spacing:.02em; color:#2d4a3e; }
-    #welcome-gate p { color:#5a7d6d; font-size:15px; line-height:1.6; margin:0 0 22px; }
-    .gate-links { margin-top:22px; font-size:13px; color:#8fa8a0; display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
-    .gate-links a { color:#6d8f80; text-decoration:none; border-bottom:1px solid transparent; transition:border-color .2s; }
-    .gate-links a:hover { border-bottom-color:#7eb8a0; }
-    .gate-links span { color:#c8ddd2; }
-    .gate-button { background:#5ba08a; color:#fff; border:0; border-radius:999px; padding:15px 38px;
+    #welcome-gate h1 { font-size:30px; margin:6px 0 12px; font-weight:600; letter-spacing:.02em; color:#4a372d; }
+    #welcome-gate p { color:#99673e; font-size:15px; line-height:1.6; margin:0 0 22px; }
+    .gate-links { margin-top:22px; font-size:13px; color:#c59772; display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
+    .gate-links a { color:#9a8778; text-decoration:none; border-bottom:1px solid transparent; transition:border-color .2s; }
+    .gate-links a:hover { border-bottom-color:#c59771; }
+    .gate-links span { color:#ddd1c8; }
+    .gate-button { background:#b27849; color:#fff; border:0; border-radius:999px; padding:15px 38px;
       font-size:16px; font-weight:600; cursor:pointer; box-shadow:0 12px 30px rgba(91,160,138,.35); transition:transform .15s; }
-    .gate-button:hover { transform:translateY(-2px); background:#4e9079; }
-    .gate-sub { font-size:12px; color:#8fa8a0; margin-top:18px !important; }
+    .gate-button:hover { transform:translateY(-2px); background:#9e6a40; }
+    .gate-sub { font-size:12px; color:#c59772; margin-top:18px !important; }
     .story-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:0 20px 40px;
       position:relative;
       background:transparent; }
@@ -514,8 +514,8 @@ PUBLIC_PAGE = """
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
       border-radius:18px; padding:4px 16px; scroll-behavior:smooth; }
     #conversation-thread:empty { background:none; padding:0; }
-    .story-video { width:300px; height:300px; max-width:78vw; max-height:78vw; object-fit:cover; border-radius:28px; border:3px solid #c8ddd2;
-      margin:0 auto 8px; display:block; background:#e8f0eb; box-shadow:0 8px 30px rgba(0,0,0,0.18);
+    .story-video { width:300px; height:300px; max-width:78vw; max-height:78vw; object-fit:cover; border-radius:28px; border:3px solid #ddd1c8;
+      margin:0 auto 8px; display:block; background:#f0ece8; box-shadow:0 8px 30px rgba(0,0,0,0.18);
       transition:width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, box-shadow 0.4s ease, margin 0.4s ease; }
     .story-video-bar.floating .story-video { width:110px; height:110px; border-radius:50%;
       border-width:3px; margin:0; box-shadow:0 6px 22px rgba(0,0,0,0.28); }
@@ -523,20 +523,20 @@ PUBLIC_PAGE = """
       .story-video-bar.floating { top:70px; right:12px; } }
     /* Readable over ANY background scene: strong color + a white legibility
        halo so the text is clear on dark moons and bright gardens alike. */
-    .story-title { font-size:26px; font-weight:700; margin:0 0 6px; color:#183028;
+    .story-title { font-size:26px; font-weight:700; margin:0 0 6px; color:#302018;
       text-shadow:0 1px 2px rgba(255,255,255,0.95), 0 2px 12px rgba(255,255,255,0.7), 0 0 2px rgba(255,255,255,0.9); }
-    .story-sub { color:#20423a; font-size:14.5px; font-weight:600; margin:0 0 22px;
+    .story-sub { color:#422b20; font-size:14.5px; font-weight:600; margin:0 0 22px;
       text-shadow:0 1px 2px rgba(255,255,255,0.95), 0 1px 8px rgba(255,255,255,0.65); }
     .story-sub a { color:#1d5f7e; }
     .story-input { width:100%; min-height:130px; box-sizing:border-box; padding:18px; border-radius:16px;
-      border:1px solid #c8ddd2; background:#ffffff; color:#2d4a3e; font-size:16px; line-height:1.6; resize:vertical;
+      border:1px solid #ddd1c8; background:#ffffff; color:#4a372d; font-size:16px; line-height:1.6; resize:vertical;
       font-family:inherit; }
-    .story-input::placeholder { color:#a3bfb2; }
-    .story-input:focus { outline:none; border-color:#5ba08a; box-shadow:0 0 0 3px rgba(91,160,138,.15); }
+    .story-input::placeholder { color:#d2ae90; }
+    .story-input:focus { outline:none; border-color:#b27849; box-shadow:0 0 0 3px rgba(91,160,138,.15); }
     .story-actions { display:flex; gap:12px; justify-content:center; margin:18px 0 10px; }
-    .story-send { background:#5ba08a; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
+    .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
-    .story-send:hover { background:#4e9079; }
+    .story-send:hover { background:#9e6a40; }
     .help-rail-placeholder {}
     #help-rail { position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:90;
       display:flex; flex-direction:column; gap:8px; }
@@ -559,20 +559,20 @@ PUBLIC_PAGE = """
       .story-screen { padding-bottom:150px; }
       body { padding-bottom:70px; }
     }
-    .story-mic { background:#fff; color:#5a7d6d; border:1px solid #c8ddd2; border-radius:999px; padding:13px 22px;
+    .story-mic { background:#fff; color:#99673e; border:1px solid #ddd1c8; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
-    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#6d8f80; font-size:13px; }
-    .music-change { background:#fff; border:1px solid #c8ddd2; color:#5a7d6d; border-radius:999px; padding:6px 16px;
+    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#9a8778; font-size:13px; }
+    .music-change { background:#fff; border:1px solid #ddd1c8; color:#99673e; border-radius:999px; padding:6px 16px;
       font-size:12px; cursor:pointer; }
-    .emotion-badge { display:inline-block; background:#e8f4ec; color:#2d6b4f; font-size:12px; padding:4px 12px;
+    .emotion-badge { display:inline-block; background:#f3ede9; color:#6c412c; font-size:12px; padding:4px 12px;
       border-radius:999px; margin-top:10px; font-weight:500; }
-    .care-result .detail-band { background:#f5faf7; border:1px solid #d8e6dd; border-radius:12px; padding:16px; margin:14px 0; }
-    .zen-alts .zen-track, .zen-alts .music-change { background:#fff; border:1px solid #c8ddd2; color:#3d6b5a;
+    .care-result .detail-band { background:#faf7f5; border:1px solid #e6ded8; border-radius:12px; padding:16px; margin:14px 0; }
+    .zen-alts .zen-track, .zen-alts .music-change { background:#fff; border:1px solid #ddd1c8; color:#775031;
       border-radius:999px; padding:7px 16px; font-size:12px; cursor:pointer; }
-    .zen-alts .zen-track:hover { background:#e8f4ec; }
+    .zen-alts .zen-track:hover { background:#f3ede9; }
     .question-list li { margin-bottom:8px; color:var(--ink); }
     .detail-band { border-top:1px solid var(--line); margin-top:14px; padding-top:12px; }
-    .pill { display:inline-block; margin:3px 6px 3px 0; padding:4px 8px; border-radius:4px; border:1px solid var(--line); background:#f9fcfa; color:var(--muted); font-size:12px; }
+    .pill { display:inline-block; margin:3px 6px 3px 0; padding:4px 8px; border-radius:4px; border:1px solid var(--line); background:#fcfaf9; color:var(--muted); font-size:12px; }
     .care-result.critical { border-color:var(--coral); background:#fff7f6; }
     .care-result.critical h3 { color:#a33b35; }
     .care-result.high { border-color:var(--gold); background:#fffaf0; }
@@ -593,7 +593,7 @@ PUBLIC_PAGE = """
       <div class="gate-inner">
         <div id="lang-toggle" style="text-align:right;margin-bottom:4px;font-size:12px;">
           <a href="#" onclick="setLang('en');return false;" data-langbtn="en" style="color:#2e6e8e;text-decoration:none;">English</a>
-          <span style="color:#c8ddd2;">&middot;</span>
+          <span style="color:#ddd1c8;">&middot;</span>
           <a href="#" onclick="setLang('es');return false;" data-langbtn="es" style="color:#2e6e8e;text-decoration:none;">Espa&ntilde;ol</a>
         </div>
         <div class="gate-mark" aria-hidden="true">&#9711;</div>
@@ -601,15 +601,15 @@ PUBLIC_PAGE = """
         <p data-i18n="gate.tagline">A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
         <button class="gate-button" onclick="startExperience()" data-i18n="gate.begin">Tap to begin</button>
         <p class="gate-sub"><span data-i18n="gate.startnote">Soft music and your camera begin gently when you tap.</span><br>
-        <span data-i18n="gate.camera" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
-        <b style="color:#5a7d6d;">About your camera:</b> your video is analyzed <b>on your own device</b> &mdash;
+        <span data-i18n="gate.camera" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#bd885c;line-height:1.55;">
+        <b style="color:#99673e;">About your camera:</b> your video is analyzed <b>on your own device</b> &mdash;
         for gentle expression and heart signals only. The video itself is <b>never sent to us or stored anywhere</b>.
         Nothing leaves your device. You can decline the camera and still use everything else.</span><br>
-        <span data-i18n="gate.ainotice" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#7d9c92;line-height:1.55;">
-        <b style="color:#5a7d6d;">Please know:</b> InnerLight is an <b>artificial-intelligence program</b> &mdash; a computer,
+        <span data-i18n="gate.ainotice" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#bd885c;line-height:1.55;">
+        <b style="color:#99673e;">Please know:</b> InnerLight is an <b>artificial-intelligence program</b> &mdash; a computer,
         not a human being. It is not a therapist, doctor, or lawyer, and it may not be suitable for some minors.
         In an emergency, call or text <b>988</b> or call <b>911</b>. <a href="/safety" style="color:#2e6e8e;">How we respond in a crisis</a></span><br>
-        <span data-i18n="gate.adult" style="font-size:12px;color:#8aa39a;">By continuing you confirm you are 18 or older.
+        <span data-i18n="gate.adult" style="font-size:12px;color:#9a8778;">By continuing you confirm you are 18 or older.
         <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
         <div class="gate-links">
           <a href="/about">About</a><span>&middot;</span>
@@ -633,8 +633,8 @@ PUBLIC_PAGE = """
         "gate.tagline": "Un lugar tranquilo y privado para contar tu historia.<br>Nada de lo que compartas se muestra a nadie &mdash; est&aacute; cifrado.",
         "gate.begin": "Toca para comenzar",
         "gate.startnote": "La m&uacute;sica suave y tu c&aacute;mara comienzan con calma cuando tocas.",
-        "gate.camera": "<b style=\"color:#5a7d6d;\">Sobre tu c&aacute;mara:</b> tu video se analiza <b>en tu propio dispositivo</b> &mdash; solo para leer con suavidad tu expresi&oacute;n y tu ritmo card&iacute;aco. El video en s&iacute; <b>nunca se nos env&iacute;a ni se guarda en ning&uacute;n lugar</b>. Nada sale de tu dispositivo. Puedes rechazar la c&aacute;mara y usar todo lo dem&aacute;s.",
-        "gate.ainotice": "<b style=\"color:#5a7d6d;\">Ten en cuenta:</b> InnerLight es un <b>programa de inteligencia artificial</b> &mdash; una computadora, no una persona. No es un terapeuta, m&eacute;dico ni abogado, y puede no ser apropiado para algunos menores. En una emergencia, llama o env&iacute;a un mensaje al <b>988</b>, o llama al <b>911</b>. <a href=\"/safety\" style=\"color:#2e6e8e;\">C&oacute;mo respondemos en una crisis</a>",
+        "gate.camera": "<b style=\"color:#99673e;\">Sobre tu c&aacute;mara:</b> tu video se analiza <b>en tu propio dispositivo</b> &mdash; solo para leer con suavidad tu expresi&oacute;n y tu ritmo card&iacute;aco. El video en s&iacute; <b>nunca se nos env&iacute;a ni se guarda en ning&uacute;n lugar</b>. Nada sale de tu dispositivo. Puedes rechazar la c&aacute;mara y usar todo lo dem&aacute;s.",
+        "gate.ainotice": "<b style=\"color:#99673e;\">Ten en cuenta:</b> InnerLight es un <b>programa de inteligencia artificial</b> &mdash; una computadora, no una persona. No es un terapeuta, m&eacute;dico ni abogado, y puede no ser apropiado para algunos menores. En una emergencia, llama o env&iacute;a un mensaje al <b>988</b>, o llama al <b>911</b>. <a href=\"/safety\" style=\"color:#2e6e8e;\">C&oacute;mo respondemos en una crisis</a>",
         "gate.adult": "Al continuar, confirmas que tienes 18 a&ntilde;os o m&aacute;s. <a href=\"#\" onclick=\"showMinorBridge();return false;\" style=\"color:#2e6e8e;\">&iquest;Menor de 18? Tambi&eacute;n tenemos ayuda real para ti.</a>",
         "story.title": "Cu&eacute;ntame tu historia.",
         "story.sub": "T&oacute;mate tu tiempo. Di lo que sientas verdadero. Te escucho.",
@@ -723,14 +723,14 @@ PUBLIC_PAGE = """
       <div class="story-wrap">
         <h2 class="story-title" data-i18n="story.title">Tell me your story.</h2>
         <p class="story-sub"><span data-i18n="story.sub">Take your time. Say whatever feels true. I am listening.</span> &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;" data-i18n="story.resume">Been here before? Continue your story</a></p>
-        <p style="font-size:12px;color:#3a5b4f;font-weight:500;margin:-6px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
+        <p style="font-size:12px;color:#6a402b;font-weight:500;margin:-6px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
         <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
           <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
           <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
         </div>
         <div class="music-bar">
-          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #c8ddd2;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
+          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
           <button class="music-change" type="button" onclick="changeMusic()" data-i18n="music.change">Change music</button>
           <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()" data-i18n="music.pulseon">&#10041; Calm pulse: on</button>
           <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()" data-i18n="music.voiceoff">&#128263; Spoken voice: Off</button>
@@ -768,7 +768,7 @@ PUBLIC_PAGE = """
           <div style="margin-top:10px;">
             <div style="font-size:11px;color:#6e8ba3;margin-bottom:4px;">Microphone level</div>
             <div style="height:8px;background:rgba(90,130,160,0.18);border-radius:6px;overflow:hidden;">
-              <div id="mic-level-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#6fb3d4,#3aa56b);border-radius:6px;transition:width 0.06s linear;"></div>
+              <div id="mic-level-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#6fb3d4,#a56a3a);border-radius:6px;transition:width 0.06s linear;"></div>
             </div>
           </div>
         </div>
@@ -889,7 +889,7 @@ function gardenBar(){
     g.style.cssText = 'min-height:44px;margin:6px 0 12px;padding:8px 12px;border-radius:14px;'
       + 'background:linear-gradient(180deg, rgba(40,70,50,0.35), rgba(20,40,30,0.5));'
       + 'border:1px solid rgba(125,211,168,0.25);font-size:24px;letter-spacing:4px;line-height:1.5;';
-    g.innerHTML = '<span style="font-size:11.5px;color:#9fd4b4;display:block;letter-spacing:0.4px;">Your calm garden — each success grows it</span><span id="garden-row"></span>';
+    g.innerHTML = '<span style="font-size:11.5px;color:#d7b79c;display:block;letter-spacing:0.4px;">Your calm garden — each success grows it</span><span id="garden-row"></span>';
     const menu = actOverlay.querySelector('#act-menu');
     menu.parentNode.insertBefore(g, menu);
   }
@@ -933,7 +933,7 @@ function burstAt(el){
       const p = document.createElement('div');
       const a = Math.random()*6.28, d = 26+Math.random()*30;
       p.style.cssText = 'position:fixed;width:6px;height:6px;border-radius:50%;z-index:90;pointer-events:none;'
-        + 'background:#bfe8cf;box-shadow:0 0 8px #bfe8cf;left:'+(r.left+r.width/2)+'px;top:'+(r.top+r.height/2)+'px;'
+        + 'background:#e6d2c1;box-shadow:0 0 8px #e6d2c1;left:'+(r.left+r.width/2)+'px;top:'+(r.top+r.height/2)+'px;'
         + 'transition:all 0.9s ease-out;opacity:1;';
       document.body.appendChild(p);
       requestAnimationFrame(()=>{ p.style.left=(r.left+r.width/2+Math.cos(a)*d)+'px';
@@ -1000,7 +1000,7 @@ function startAct(name){
   if (name==='breathe'){
     st.innerHTML = `<div style="text-align:center;padding:6px;">
       <div id="br-word" style="font-size:26px;color:#fff;font-weight:700;min-height:34px;">Breathe in&hellip;</div>
-      <div id="br-count" style="font-size:44px;color:#7dd3a8;font-weight:700;min-height:52px;">5</div>
+      <div id="br-count" style="font-size:44px;color:#d3a47d;font-weight:700;min-height:52px;">5</div>
       <div style="position:relative;width:150px;height:150px;margin:6px auto 10px;overflow:visible;">
         <div id="br-aura" style="position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(207,233,255,0.35);"></div>
         <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 4.6s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;">
@@ -1039,7 +1039,7 @@ function startAct(name){
         const msg = st.querySelector('#br-msg');
         if (msg && brStartBpm - bpm >= 5){
           msg.textContent = brStartBpm + ' \u2192 ' + bpm + ' \u2014 your heart is listening. Keep going.';
-          msg.style.color = '#7dd3a8';
+          msg.style.color = '#d3a47d';
         }
       }
     }, 1500));
@@ -1123,7 +1123,7 @@ function startAct(name){
         +'<div id="ws-grid" style="display:inline-grid;grid-template-columns:repeat('+N+',1fr);gap:3px;"></div></div>';
       st.querySelector('#ws-words').innerHTML=puzzle.words.map(function(w){
         const done=found.indexOf(w)>=0;
-        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:#7dd3a8;text-decoration:line-through;':'color:#e6f1fa;')+'">'+w+'</span>';
+        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:#d3a47d;text-decoration:line-through;':'color:#e6f1fa;')+'">'+w+'</span>';
       }).join('');
       let html='';
       for(let r=0;r<N;r++){ for(let c=0;c<N;c++){
@@ -1148,7 +1148,7 @@ function startAct(name){
       if(match){
         found.push(match); metric('wordplay'); if(typeof bloom==='function') bloom();
         if(found.length>=puzzle.words.length){
-          wsRender(); const p=st.querySelector('#ws-p'); if(p){ p.textContent='All found — beautifully done. A fresh grid…'; p.style.color='#7dd3a8'; }
+          wsRender(); const p=st.querySelector('#ws-p'); if(p){ p.textContent='All found — beautifully done. A fresh grid…'; p.style.color='#d3a47d'; }
           actTimers.push(setTimeout(function(){ puzzle=wsBuild(); found=[]; selA=null; wsRender(); }, 1800));
           return;
         }
@@ -1160,7 +1160,7 @@ function startAct(name){
   if (name==='shapes'){
     st.innerHTML=`<div style="text-align:center;"><div id="sh-prompt" style="font-size:15px;color:#cfe3f2;margin:8px 0 12px;"></div>
       <div id="sh-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto;"></div></div>`;
-    const SH=['\u25CF','\u25A0','\u25B2','\u2666','\u2605','\u2B22']; const CO=['#7dd3a8','#6fb3d4','#d4a86f','#c78ad4'];
+    const SH=['\u25CF','\u25A0','\u25B2','\u2666','\u2605','\u2B22']; const CO=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a'];
     const round=()=>{ const tS=SH[Math.floor(Math.random()*SH.length)], tC=CO[Math.floor(Math.random()*CO.length)];
       st.querySelector('#sh-prompt').innerHTML='Find: <span style="color:'+tC+';font-size:26px;">'+tS+'</span>';
       const cells=[{s:tS,c:tC}]; while(cells.length<8){ const s2=SH[Math.floor(Math.random()*SH.length)], c2=CO[Math.floor(Math.random()*CO.length)];
@@ -1175,9 +1175,9 @@ function startAct(name){
     // and genuinely absorbing. No score to fear, just a quiet tally.
     st.innerHTML=`<div style="text-align:center;"><div id="bb-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Tap the drifting lights to pop them. No rush, no wrong move.</div>
       <div id="bb-field" style="position:relative;height:320px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);overflow:hidden;touch-action:manipulation;"></div>
-      <div id="bb-count" style="margin-top:8px;font-size:13px;color:#7dd3a8;min-height:18px;"></div></div>`;
+      <div id="bb-count" style="margin-top:8px;font-size:13px;color:#d3a47d;min-height:18px;"></div></div>`;
     const field=st.querySelector('#bb-field'); let popped=0;
-    const colors=['#7dd3a8','#6fb3d4','#d4a86f','#c78ad4','#cfe9ff'];
+    const colors=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a','#cfe9ff'];
     const spawn=()=>{ if(!field.isConnected) return;
       const b=document.createElement('div');
       const size=26+Math.random()*36, col=colors[Math.floor(Math.random()*colors.length)];
@@ -1237,11 +1237,11 @@ function startAct(name){
           <span id="rl-num" style="font-size:42px;color:#fff;font-weight:700;">&nbsp;</span></div>
       </div>
       <button id="rl-go" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:12px 30px;font-size:15px;font-weight:700;cursor:pointer;">Squeeze &amp; hold</button>
-      <div id="rl-msg" style="margin-top:12px;color:#7dd3a8;font-size:14px;min-height:18px;"></div></div>`;
+      <div id="rl-msg" style="margin-top:12px;color:#d3a47d;font-size:14px;min-height:18px;"></div></div>`;
     const T=st.querySelector('#rl-t'),S=st.querySelector('#rl-s'),ring=st.querySelector('#rl-ring'),
           num=st.querySelector('#rl-num'),go=st.querySelector('#rl-go'),msg=st.querySelector('#rl-msg');
     const show=()=>{ T.textContent=groups[i][0]; S.textContent=groups[i][1]; msg.textContent='';
-      msg.style.color='#7dd3a8'; num.innerHTML='&nbsp;'; ring.style.transform='scale(1)';
+      msg.style.color='#d3a47d'; num.innerHTML='&nbsp;'; ring.style.transform='scale(1)';
       go.textContent='Squeeze & hold'; go.disabled=false; go.style.opacity='1'; };
     const run=()=>{ go.disabled=true; go.style.opacity='0.5'; let t=5;
       ring.style.transform='scale(1.14)'; num.textContent=t; msg.textContent='Squeeze...';
@@ -1250,7 +1250,7 @@ function startAct(name){
         else { clearInterval(iv); num.innerHTML='&nbsp;'; ring.style.transform='scale(0.78)';
           msg.textContent='...and let it ALL go. ' + cheer[i%cheer.length]; if(typeof bloom==='function') bloom();
           actTimers.push(setTimeout(()=>{ i++;
-            if(i>=groups.length){ st.innerHTML='<div style="text-align:center;padding:20px;color:#7dd3a8;font-size:16px;line-height:1.6;">Every part of you just let go a little.<br>Well done. Pick another, or press Back.</div>'; return; }
+            if(i>=groups.length){ st.innerHTML='<div style="text-align:center;padding:20px;color:#d3a47d;font-size:16px;line-height:1.6;">Every part of you just let go a little.<br>Well done. Pick another, or press Back.</div>'; return; }
             show();
           }, 1700));
         }
@@ -1266,8 +1266,8 @@ function startAct(name){
     st.innerHTML=`<div style="text-align:center;">
       <div id="sq-p" style="font-size:14px;color:#cfe3f2;margin-bottom:12px;">Watch the lights glow in order, then tap them back the same way.</div>
       <div id="sq-grid" style="display:grid;grid-template-columns:repeat(2,112px);gap:12px;justify-content:center;"></div>
-      <div id="sq-msg" style="margin-top:14px;font-size:14px;color:#7dd3a8;min-height:20px;"></div></div>`;
-    const cols=['#7dd3a8','#6fb3d4','#d4a86f','#c78ad4'];
+      <div id="sq-msg" style="margin-top:14px;font-size:14px;color:#d3a47d;min-height:20px;"></div></div>`;
+    const cols=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a'];
     const grid=st.querySelector('#sq-grid'), msg=st.querySelector('#sq-msg');
     const dim=(c)=>c+'44';
     const pads=cols.map((c,idx)=>{ const p=document.createElement('button');
@@ -1290,7 +1290,7 @@ function startAct(name){
     nextRound();
   }
   if (name==='menuDone'){
-    st.innerHTML=`<div style="text-align:center;padding:20px;color:#7dd3a8;font-size:16px;">Well done. Pick another, or press Back when you're ready.</div>`;
+    st.innerHTML=`<div style="text-align:center;padding:20px;color:#d3a47d;font-size:16px;">Well done. Pick another, or press Back when you're ready.</div>`;
   }
 }
 
@@ -1325,7 +1325,7 @@ function wordsRound(){
 }
 function wordsPick(btn){
   if (btn.dataset.w === wordsTarget){
-    btn.style.background = 'rgba(90,180,130,0.55)'; btn.style.borderColor = '#7dd3a8';
+    btn.style.background = 'rgba(90,180,130,0.55)'; btn.style.borderColor = '#d3a47d';
     metric('wordplay'); if (typeof bloom==='function') bloom();
     setTimeout(wordsRound, 900);
   } else {
@@ -1785,7 +1785,7 @@ function checkMinorSignals(text){
     const thread = document.getElementById('conversation-thread');
     if (thread){
       const div = document.createElement('div');
-      div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#2c4a3a;line-height:1.55;';
+      div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#4a362c;line-height:1.55;';
       div.textContent = 'It sounds like you may be under 18 \u2014 and I want the right help for you, which is a real person trained to support someone your age. Please look at the options I just showed you, and please tell a trusted adult how you are feeling. You deserve real support.';
       thread.appendChild(div);
     }
@@ -1815,7 +1815,7 @@ function gentlyRedirectFromSubstitution(){
   const thread = document.getElementById('conversation-thread');
   if (!thread) return;
   const div = document.createElement('div');
-  div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#2c4a3a;line-height:1.55;';
+  div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#4a362c;line-height:1.55;';
   div.innerHTML = 'I am really glad being here helps, and I want to be honest with you because I care: '
     + 'I am not a person, and I cannot be a substitute for real human connection. '
     + 'What I can do is stay with you right now and help you reach people who can truly be there for you \u2014 '
@@ -1844,11 +1844,11 @@ function showGentleBridge(message){
   const b = document.createElement('div');
   b.id = 'gentle-bridge';
   b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:74;'
-    + 'background:rgba(255,255,255,0.98);border:1px solid #cfe0d6;border-radius:16px;padding:16px 18px;'
+    + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
     + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;text-align:center;';
-  b.innerHTML = '<div style="font-size:14px;color:#2c4a3a;line-height:1.5;margin-bottom:12px;">' + message + '</div>'
+  b.innerHTML = '<div style="font-size:14px;color:#4a362c;line-height:1.5;margin-bottom:12px;">' + message + '</div>'
     + '<button onclick="bridgeConnect()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me with someone</button>'
-    + '<button onclick="closeGentleBridge()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Keep talking a little longer</button>';
+    + '<button onclick="closeGentleBridge()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Keep talking a little longer</button>';
   document.body.appendChild(b);
 }
 function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} closeGentleBridge(); }
@@ -1904,7 +1904,7 @@ function applyProviderSuggestion(){
     if (!s) return;
     const tip = document.getElementById('pro-suggestion');
     if (tip){ tip.style.display='block'; tip.innerHTML = s.why +
-      ' <span style="color:#6d8f80;">You can choose any option below \u2014 this is only a suggestion.</span>'; }
+      ' <span style="color:#9a8778;">You can choose any option below \u2014 this is only a suggestion.</span>'; }
     document.querySelectorAll('.pro-btn').forEach(function(b){
       if (b.getAttribute('data-pro') === s.pro){ b.classList.add('suggested'); }
     });
@@ -1914,8 +1914,8 @@ function applyProviderSuggestion(){
       if (thread && !document.getElementById('legal-nudge')){
         const div = document.createElement('div');
         div.id = 'legal-nudge';
-        div.style.cssText = 'background:#f5f0fa;border:1px solid #a78bfa;border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#4a3570;line-height:1.55;';
-        div.innerHTML = s.why + '<br><button onclick="openLegalHelp()" style="margin-top:10px;background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;">See legal help options</button>';
+        div.style.cssText = 'background:#f8f5f2;border:1px solid #dcc0a9;border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#754f30;line-height:1.55;';
+        div.innerHTML = s.why + '<br><button onclick="openLegalHelp()" style="margin-top:10px;background:#d4782d;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;">See legal help options</button>';
         thread.appendChild(div);
         try { metric('legal_surfaced', s.category || ''); } catch(e){}
       }
@@ -1972,7 +1972,7 @@ function handleHelpRequestIfAny(text){
       const div = document.createElement('div');
       div.id = 'route-now';
       div.style.cssText = 'background:rgba(46,110,142,0.12);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#234;line-height:1.55;';
-      const legalBtn = '<button onclick="openLegalHelp()" style="background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me to legal help</button>';
+      const legalBtn = '<button onclick="openLegalHelp()" style="background:#d4782d;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me to legal help</button>';
       const provBtn = '<button onclick="routeProvider()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Talk to a counselor</button>';
       const nearBtn = '<button onclick="openFacilities()" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Find nearby help</button>';
       let lead, buttons;
@@ -2000,9 +2000,9 @@ function openFacilities(){
     + '<div style="display:flex;justify-content:space-between;align-items:center;">'
     + '<h3 style="margin:0;color:#1e3a5c;">Find help near you</h3>'
     + '<button onclick="closeFacilities()" style="background:rgba(0,0,0,0.06);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;">Close</button></div>'
-    + '<p style="font-size:13px;color:#6d8f80;line-height:1.5;">If you are not in immediate crisis and feel able to reach out yourself, enter your city or ZIP and we will look for mental-health places near you that you can contact on your own time.</p>'
+    + '<p style="font-size:13px;color:#9a8778;line-height:1.5;">If you are not in immediate crisis and feel able to reach out yourself, enter your city or ZIP and we will look for mental-health places near you that you can contact on your own time.</p>'
     + '<div style="display:flex;gap:8px;">'
-    + '<input id="fac-place" placeholder="City or ZIP (e.g. San Jose, CA)" style="flex:1;padding:11px;border:1px solid #c8ddd2;border-radius:10px;font-size:15px;">'
+    + '<input id="fac-place" placeholder="City or ZIP (e.g. San Jose, CA)" style="flex:1;padding:11px;border:1px solid #ddd1c8;border-radius:10px;font-size:15px;">'
     + '<button onclick="doFacilities()" style="background:#2e6e8e;color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer;">Search</button></div>'
     + '<div id="fac-results" style="margin-top:14px;"></div>'
     + '<p style="font-size:12px;color:#94a3b8;margin-top:14px;border-top:1px solid #eef2f8;padding-top:10px;">If you are in immediate danger or crisis, call or text <b>988</b>, or call <b>911</b>. This list is for planning your own next step, not for emergencies.</p>'
@@ -2015,7 +2015,7 @@ async function doFacilities(){
   const place=(document.getElementById('fac-place')||{}).value||'';
   const box=document.getElementById('fac-results');
   if (place.trim().length<2){ if(box) box.innerHTML='<span style="color:#c0564e;font-size:13px;">Please enter a city or ZIP.</span>'; return; }
-  if (box) box.innerHTML='<span style="color:#6d8f80;font-size:14px;">Looking for places near you\u2026</span>';
+  if (box) box.innerHTML='<span style="color:#9a8778;font-size:14px;">Looking for places near you\u2026</span>';
   try {
     const r=await fetch('/api/facilities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place:place})});
     const d=await r.json();
@@ -2048,19 +2048,19 @@ function offerFeedback(){
   const box = document.createElement('div');
   box.id = 'fb-card';
   box.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:78;'
-    + 'background:rgba(255,255,255,0.98);border:1px solid #cfe0d6;border-radius:16px;padding:16px 18px;'
+    + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
     + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;';
   box.innerHTML =
-     '<div style="font-size:14px;color:#2c4a3a;margin-bottom:10px;text-align:center;">If you have a moment: did this help? Your answer is anonymous and helps us help others.</div>'
+     '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;text-align:center;">If you have a moment: did this help? Your answer is anonymous and helps us help others.</div>'
    + '<div style="text-align:center;margin-bottom:8px;">'
-   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #7dd3a8;background:#f0faf4;color:#2c6a48;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">It helped</button>'
-   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #c8ddd2;background:#fff;color:#5a7d6d;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Somewhat</button>'
+   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #d3a47d;background:#f8f5f2;color:#6a402c;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">It helped</button>'
+   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #ddd1c8;background:#fff;color:#99673e;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Somewhat</button>'
    +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Not really</button>'
    + '</div>'
-   + '<textarea id="fb-words" placeholder="Anything you want to share about how you feel, or what helped? (optional)" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #c8ddd2;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
+   + '<textarea id="fb-words" placeholder="Anything you want to share about how you feel, or what helped? (optional)" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
    + '<div style="text-align:center;margin-top:8px;">'
    +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">Share</button>'
-   +   '<button onclick="closeFb()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">No thanks</button>'
+   +   '<button onclick="closeFb()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">No thanks</button>'
    + '</div>';
   document.body.appendChild(box);
   box.querySelectorAll('.fb-h').forEach(function(b){
@@ -2078,7 +2078,7 @@ async function submitFeedback(){
       body: JSON.stringify({helped: helped, feeling: feeling, words: words})});
   } catch(e){}
   const card = document.getElementById('fb-card');
-  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#2c6a48;padding:6px;">Thank you for sharing \u2014 it genuinely helps us reach others. <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:6px 14px;cursor:pointer;">Close</button></div>';
+  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#6a402c;padding:6px;">Thank you for sharing \u2014 it genuinely helps us reach others. <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:6px 14px;cursor:pointer;">Close</button></div>';
 }
 
 // ---- LIVE BIOMETRIC PING: anonymous, every 4s, for the founder's live monitor.
@@ -3669,11 +3669,11 @@ function maybeOfferSave(){
   const bar = document.createElement('div');
   bar.id = 'save-offer';
   bar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:75;'
-    + 'background:rgba(255,255,255,0.97);border:1px solid #cfe0d6;border-radius:16px;padding:14px 18px;'
+    + 'background:rgba(255,255,255,0.97);border:1px solid #e0d7cf;border-radius:16px;padding:14px 18px;'
     + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
-  bar.innerHTML = '<div style="font-size:14px;color:#2c4a3a;margin-bottom:10px;">Would you like to save where you are, so you don\u2019t have to start over if you come back?</div>'
+  bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">Would you like to save where you are, so you don\u2019t have to start over if you come back?</div>'
     + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">Save my place</button>'
-    + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
+    + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
   document.body.appendChild(bar);
 }
 async function doSaveStory(){
@@ -3684,11 +3684,11 @@ async function doSaveStory(){
       body: JSON.stringify({summary: story})});
     const d = await r.json();
     if (d.status === 'ok'){
-      if (offer) offer.innerHTML = '<div style="font-size:14px;color:#2c4a3a;margin-bottom:8px;">Saved. This is your return code \u2014 keep it somewhere safe:</div>'
+      if (offer) offer.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:8px;">Saved. This is your return code \u2014 keep it somewhere safe:</div>'
         + '<div style="font-size:22px;font-weight:800;letter-spacing:1px;color:#1e3a5c;margin:6px 0;">' + d.code + '</div>'
-        + '<div style="font-size:12px;color:#6d8f80;margin-bottom:10px;">Only this code can reopen your story \u2014 not even we can read it without the code.</div>'
+        + '<div style="font-size:12px;color:#9a8778;margin-bottom:10px;">Only this code can reopen your story \u2014 not even we can read it without the code.</div>'
         + '<button onclick="copyReturnCode(this)" data-code="' + d.code + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">Copy code</button>'
-        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">Done</button>';
+        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">Done</button>';
     } else if (offer){ offer.querySelector('div').textContent = 'There was nothing saved yet \u2014 share a little first.'; }
   } catch(e){ if (offer) offer.querySelector('div').textContent = 'Could not save right now. Please try again.'; }
 }
@@ -3698,11 +3698,11 @@ function openResume(){
   box.style.cssText = 'position:fixed;inset:0;z-index:95;background:rgba(10,18,30,0.75);display:flex;align-items:center;justify-content:center;padding:20px;';
   box.innerHTML = '<div style="background:#fff;border-radius:18px;padding:26px;max-width:360px;width:100%;font-family:Arial;text-align:center;">'
     + '<h3 style="margin:0 0 6px;color:#1e3a5c;">Continue your story</h3>'
-    + '<p style="font-size:13px;color:#6d8f80;margin:0 0 16px;">Enter the return code you saved last time.</p>'
-    + '<input id="resume-code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #c8ddd2;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
+    + '<p style="font-size:13px;color:#9a8778;margin:0 0 16px;">Enter the return code you saved last time.</p>'
+    + '<input id="resume-code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd1c8;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
     + '<div id="resume-msg" style="font-size:13px;color:#c0564e;min-height:18px;margin:8px 0;"></div>'
     + '<button onclick="doResume()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;">Continue</button> '
-    + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #c8ddd2;color:#5a7d6d;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
+    + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
     + '</div>';
   document.body.appendChild(box);
   setTimeout(()=>{ const el=document.getElementById('resume-code'); if(el) el.focus(); }, 100);
@@ -3720,7 +3720,7 @@ async function doResume(){
       const thread = document.getElementById('conversation-thread');
       if (thread){
         const div = document.createElement('div');
-        div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:14px;color:#2c4a3a;';
+        div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:14px;color:#4a362c;';
         div.innerHTML = '<b>Welcome back.</b> Here\u2019s where you left off, so you don\u2019t have to start over:<br><br>' + (d.summary||'').replace(/</g,'&lt;');
         thread.appendChild(div);
         thread.scrollIntoView({behavior:'smooth', block:'start'});
@@ -3778,7 +3778,7 @@ async function sendCheckin() {
   const firstQ = allQ.length ? allQ[0] : 'Can you tell me a little more about that?';
   const warmReply = data.response || 'I hear you.';
   const safetyBlock = data.needs_immediate_support
-    ? '<p style="background:#f0f7f4;border:1px solid #c8ddd2;border-radius:12px;padding:14px;color:#2d4a3e;font-size:15px;margin:14px 0;">You are not alone. If you need immediate support, you can reach the 988 Suicide and Crisis Lifeline anytime by calling or texting 988. I am staying right here with you.</p>'
+    ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">You are not alone. If you need immediate support, you can reach the 988 Suicide and Crisis Lifeline anytime by calling or texting 988. I am staying right here with you.</p>'
     : '';
   // Hide the initial "Tell me your story" area
   const title = document.querySelector('.story-title'); if (title) title.style.display = 'none';
@@ -3796,30 +3796,30 @@ async function sendCheckin() {
 function appendLegalGuidance(thread, lg) {
   if (!lg || !lg.issue_detected) return;
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:left;background:#f5f0fa;border:1px solid #d8cce6;border-radius:14px;padding:18px;margin:14px 0;';
+  el.style.cssText = 'text-align:left;background:#f8f5f2;border:1px solid #e6d8cc;border-radius:14px;padding:18px;margin:14px 0;';
   const rights = (lg.your_rights || []).slice(0,3).map(r => '<li style="margin:4px 0;">' + escapeHtml(r) + '</li>').join('');
   const askAtty = (lg.questions_for_attorney || []).slice(0,3).map(q => '<li style="margin:4px 0;">' + escapeHtml(q) + '</li>').join('');
   const freeHelp = (lg.free_legal_help || []).slice(0,3).map(h => '<li style="margin:4px 0;">' + escapeHtml(h) + '</li>').join('');
   const steps = (lg.steps_you_can_take_now || []).slice(0,3).map(s => '<li style="margin:4px 0;">' + escapeHtml(s) + '</li>').join('');
   el.innerHTML = `
-    <p style="font-size:15px;color:#4a3660;font-weight:600;margin:0 0 8px;">Based on what you shared, here are some things you should know about your ${escapeHtml(lg.issue_detected)}:</p>
+    <p style="font-size:15px;color:#6a402c;font-weight:600;margin:0 0 8px;">Based on what you shared, here are some things you should know about your ${escapeHtml(lg.issue_detected)}:</p>
     <details style="margin:8px 0;" open>
-      <summary style="font-size:13px;font-weight:600;color:#5a4570;cursor:pointer;">Your rights</summary>
-      <ul style="font-size:14px;color:#2d4a3e;padding-left:20px;margin:6px 0;">${rights}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Your rights</summary>
+      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${rights}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#5a4570;cursor:pointer;">Questions to ask an attorney</summary>
-      <ul style="font-size:14px;color:#2d4a3e;padding-left:20px;margin:6px 0;">${askAtty}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Questions to ask an attorney</summary>
+      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${askAtty}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#5a4570;cursor:pointer;">Where to get free legal help</summary>
-      <ul style="font-size:14px;color:#2d4a3e;padding-left:20px;margin:6px 0;">${freeHelp}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Where to get free legal help</summary>
+      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${freeHelp}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#5a4570;cursor:pointer;">Steps you can take right now</summary>
-      <ul style="font-size:14px;color:#2d4a3e;padding-left:20px;margin:6px 0;">${steps}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Steps you can take right now</summary>
+      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${steps}</ul>
     </details>
-    <p style="font-size:11px;color:#8a7a9a;margin:10px 0 0;line-height:1.5;">${escapeHtml(lg.disclaimer || '')}</p>
+    <p style="font-size:11px;color:#bb8559;margin:10px 0 0;line-height:1.5;">${escapeHtml(lg.disclaimer || '')}</p>
   `;
   thread.appendChild(el);
 }
@@ -3837,8 +3837,8 @@ function appendHandoff(thread, handoff, data) {
   const el = document.createElement('div');
   el.className = 'handoff-card';
   const colors = {
-    crisis: {bg:'#f0f7f4', border:'#5ba08a', accent:'#2d6a4e'},
-    legal: {bg:'#f5f0fa', border:'#a78bfa', accent:'#6d28d9'},
+    crisis: {bg:'#f7f3f0', border:'#b27849', accent:'#6b412c'},
+    legal: {bg:'#f8f5f2', border:'#dcc0a9', accent:'#d4782d'},
     telehealth: {bg:'#eff6ff', border:'#60a5fa', accent:'#1d4ed8'},
     community: {bg:'#fef9ec', border:'#f0c14b', accent:'#a16207'}
   };
@@ -3852,7 +3852,7 @@ function appendHandoff(thread, handoff, data) {
   const emergencyStyle = 'background:#fff;color:#b91c1c;border:1px solid #fca5a5;border-radius:10px;padding:12px 18px;font-size:14px;cursor:pointer;margin:4px 6px 4px 0;';
   el.innerHTML = `
     <p style="font-size:15px;font-weight:600;color:${c.accent};margin:0 0 6px;">${escapeHtml(handoff.label)}</p>
-    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#3d5a4e;margin:10px 0;cursor:pointer;">
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#6b412c;margin:10px 0;cursor:pointer;">
       <input type="checkbox" id="consent-${handoff.type}" style="margin-top:3px;">
       <span>${escapeHtml(handoff.context_prompt || 'Share my context so I do not have to repeat myself.')}</span>
     </label>
@@ -3914,14 +3914,14 @@ function showWarmHandoff(thread, warm, resolution, action, value) {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:left;background:linear-gradient(135deg,#5ba08a,#4e9079);color:#fff;border-radius:16px;padding:24px;margin:18px 0;';
+  el.style.cssText = 'text-align:left;background:linear-gradient(135deg,#b27849,#9e6a40);color:#fff;border-radius:16px;padding:24px;margin:18px 0;';
   // Show the warm handoff parts in sequence, gently
   const partsHtml = (warm.parts || []).map(p =>
     `<p style="font-size:16px;line-height:1.75;margin:0 0 12px;">${escapeHtml(p)}</p>`).join('');
   el.innerHTML = `
     ${partsHtml}
     <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <button id="bridge-go" style="background:#fff;color:#2d6a4e;border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Connect now</button>
+      <button id="bridge-go" style="background:#fff;color:#6b412c;border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Connect now</button>
       <span style="font-size:13px;opacity:0.9;">whenever you're ready — no rush</span>
     </div>
     <button onclick="restartConversation()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:9px 20px;font-size:13px;cursor:pointer;margin-top:14px;">I'm here if you need to talk more</button>
@@ -3950,7 +3950,7 @@ function showExit(thread, exitMsg, resolution) {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:center;background:linear-gradient(135deg,#5ba08a,#4e9079);color:#fff;border-radius:14px;padding:22px;margin:18px 0;';
+  el.style.cssText = 'text-align:center;background:linear-gradient(135deg,#b27849,#9e6a40);color:#fff;border-radius:14px;padding:22px;margin:18px 0;';
   el.innerHTML = `
     <p style="font-size:16px;line-height:1.7;margin:0;">${escapeHtml(exitMsg.message)}</p>
     <button onclick="restartConversation()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:10px 22px;font-size:13px;cursor:pointer;margin-top:16px;">I'm here if you need to talk more</button>
@@ -3979,12 +3979,12 @@ function appendExchange(thread, reply, question, safetyHtml) {
   if (oldReply) oldReply.remove();
   // Append the AI's response
   const exchange = document.createElement('div');
-  exchange.style.cssText = 'text-align:left;padding:16px 0;border-bottom:1px solid #e8f0eb;';
+  exchange.style.cssText = 'text-align:left;padding:16px 0;border-bottom:1px solid #f0ece8;';
   const questionHtml = (question && question.trim())
-    ? `<p style="font-size:16px;line-height:1.7;color:#2d4a3e;margin:14px 0 0;font-weight:500;">${escapeHtml(question)}</p>`
+    ? `<p style="font-size:16px;line-height:1.7;color:#4a372d;margin:14px 0 0;font-weight:500;">${escapeHtml(question)}</p>`
     : '';
   exchange.innerHTML = `
-    <p style="font-size:16px;line-height:1.7;color:#2d4a3e;margin:0 0 8px;">${escapeHtml(reply)}</p>
+    <p style="font-size:16px;line-height:1.7;color:#4a372d;margin:0 0 8px;">${escapeHtml(reply)}</p>
     ${safetyHtml || ''}
     ${questionHtml}
   `;
@@ -4047,7 +4047,7 @@ async function continueConversation() {
   const thread = document.getElementById('conversation-thread');
   const userMsg = document.createElement('div');
   userMsg.style.cssText = 'text-align:right;padding:10px 0;';
-  userMsg.innerHTML = `<p style="display:inline-block;background:#e8f4ec;color:#2d4a3e;padding:10px 16px;border-radius:16px 16px 4px 16px;font-size:15px;max-width:80%;text-align:left;">${escapeHtml(userAnswer)}</p>`;
+  userMsg.innerHTML = `<p style="display:inline-block;background:#f3ede9;color:#4a372d;padding:10px 16px;border-radius:16px 16px 4px 16px;font-size:15px;max-width:80%;text-align:left;">${escapeHtml(userAnswer)}</p>`;
   // Remove the reply box before appending user message
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
@@ -4074,7 +4074,7 @@ async function continueConversation() {
   const reply = data.response || 'Thank you for sharing that with me.';
   logTurn('innerlight', reply);
   const safety = data.needs_immediate_support
-    ? '<p style="background:#f0f7f4;border:1px solid #c8ddd2;border-radius:12px;padding:14px;color:#2d4a3e;font-size:15px;margin:14px 0;">You are not alone. The 988 Lifeline is available anytime — call or text 988. I am right here.</p>'
+    ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">You are not alone. The 988 Lifeline is available anytime — call or text 988. I am right here.</p>'
     : '';
   appendExchange(thread, reply, nextQ, safety);
   // Show legal guidance if detected in this turn
@@ -4293,12 +4293,12 @@ PAGE = """
   <title>Axiom Harmony Private Console</title>
   <!-- Creator imprint: Axiom Harmony Protocol / InnerLight / VEIL / EDEN / Zenisys Sound System created by Toshay S. Zeigler for God's Love for Us LLC. -->
   <style>
-    :root { color-scheme: light; --bg:#f7fbf8; --panel:#ffffff; --line:#d8e6dd; --text:#17221b; --muted:#52645a; --ok:#2f855a; --warn:#b7791f; --bad:#c53030; --accent:#0f766e; }
+    :root { color-scheme: light; --bg:#faf5ec; --panel:#ffffff; --line:#ece0d0; --text:#2a1e14; --muted:#8a7a68; --ok:#2f6da8; --warn:#b7791f; --bad:#c53030; --accent:#b24a2a; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--bg); color:var(--text); }
     header { padding:20px 24px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; align-items:center; }
     h1 { font-size:22px; margin:0; }
-    .brand-block { padding:22px 24px; border-bottom:1px solid var(--line); background:#eef8f2; }
+    .brand-block { padding:22px 24px; border-bottom:1px solid var(--line); background:#f7f3ef; }
     .brand-block strong { color:var(--accent); }
     .brand-block p { max-width:900px; margin:8px 0 0; color:var(--muted); }
     main { display:grid; grid-template-columns: 280px 1fr; min-height:calc(100vh - 73px); }
@@ -4313,7 +4313,7 @@ PAGE = """
     input, textarea, select { width:100%; padding:10px; background:#ffffff; color:var(--text); border:1px solid var(--line); border-radius:4px; }
     textarea { min-height:110px; resize:vertical; }
     .action { margin-top:12px; padding:10px 14px; border:1px solid var(--accent); background:var(--accent); color:white; cursor:pointer; border-radius:4px; }
-    pre { white-space:pre-wrap; word-break:break-word; background:#f9fcfa; border:1px solid var(--line); padding:12px; border-radius:4px; max-height:420px; overflow:auto; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#fcfaf9; border:1px solid var(--line); padding:12px; border-radius:4px; max-height:420px; overflow:auto; }
     .status { display:inline-block; padding:4px 8px; border-radius:4px; border:1px solid var(--line); color:var(--muted); }
     .ok { color:var(--ok); } .warn { color:var(--warn); } .bad { color:var(--bad); }
     @media (max-width: 820px) { main { grid-template-columns: 1fr; } nav { border-right:0; border-bottom:1px solid var(--line); } .grid { grid-template-columns:1fr; } }
@@ -4443,9 +4443,9 @@ CLINICAL_HANDOFF_PAGE = r"""
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>InnerLight &mdash; Connecting You to a Care Professional</title>
   <style>
-    :root { --ink:#1f3029; --muted:#5f7168; --line:#d9e4df; --soft:#f7fbf8; --urgent:#b84a44; --green:#2f7c5f; --blue:#2e6e8e; }
+    :root { --ink:#2a1e14; --muted:#8a7a68; --line:#ece0d0; --soft:#faf5ec; --urgent:#b84a44; --green:#b24a2a; --blue:#2f6da8; }
     * { box-sizing:border-box; }
-    body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:#fbfdfb; }
+    body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:#fdfcfb; }
     header { padding:26px 6vw; border-bottom:1px solid var(--line); background:white; }
     main { padding:24px 6vw 60px; max-width:920px; margin:0 auto; }
     h1 { margin:0 0 6px; font-size:clamp(26px, 4.5vw, 44px); line-height:1.05; }
@@ -4458,7 +4458,7 @@ CLINICAL_HANDOFF_PAGE = r"""
     .who li { padding:9px 0; border-bottom:1px solid #e4eef2; color:var(--ink); }
     .who li:last-child { border-bottom:0; }
     .who b { color:var(--blue); }
-    .rights { background:#f7fbf8; border-color:#d9e9df; }
+    .rights { background:#fbf9f7; border-color:#e9e0d9; }
     .rights summary { cursor:pointer; font-weight:700; color:var(--green); }
     .rights p { font-size:14px; }
     .urgent-note { background:#fff7f6; border:1px solid #e5b5b1; border-radius:12px; padding:14px 16px; }
@@ -4470,12 +4470,12 @@ CLINICAL_HANDOFF_PAGE = r"""
     .convo .a { color:var(--blue); margin:0 0 10px; }
     .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; }
     button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--green); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
-    .secondary { background:#e8f1ed; color:var(--ink); }
+    .secondary { background:#f1ece8; color:var(--ink); }
     .locked { font-size:13px; color:var(--muted); margin-top:8px; }
     .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
                border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
     .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
-    .pro-btn.picked { border-color:var(--green); background:#f0faf5; box-shadow:0 0 0 2px rgba(46,125,90,0.18); }
+    .pro-btn.picked { border-color:var(--green); background:#fbf2ea; box-shadow:0 0 0 2px rgba(178,74,42,0.18); }
     .pro-btn.suggested { border-color:#2e6e8e; box-shadow:0 0 0 2px rgba(46,110,142,0.25); }
     .disclaimer { font-size:12.5px; color:#8794a0; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
@@ -4491,7 +4491,7 @@ CLINICAL_HANDOFF_PAGE = r"""
       <h2>Choose who you want to reach</h2>
       <p>You pick. Tap the kind of professional you want &mdash; your summary goes to them, and only when you say send.</p>
       <div id="pro-choices">
-        <div id="pro-suggestion" style="display:none;background:#f0faf4;border:1px solid #c8e6d4;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#2c6a48;margin-bottom:12px;"></div>
+        <div id="pro-suggestion" style="display:none;background:#f8f5f2;border:1px solid #e6d6c8;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#6a402c;margin-bottom:12px;"></div>
         <button type="button" class="pro-btn" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
         <button type="button" class="pro-btn" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
         <button type="button" class="pro-btn" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
@@ -4581,7 +4581,7 @@ CLINICAL_HANDOFF_PAGE = r"""
           + 'While our professional network grows, an <b>InnerLight responder</b> \u2014 our founder, not a licensed '
           + 'provider \u2014 will meet you first, stay with you, and help arrange the ' + esc(pickedPro.toLowerCase()) + ' you chose. '
           + 'Above is the exact summary they will read.<br><br>'
-          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#2e7d5a;color:#fff;'
+          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#7d522e;color:#fff;'
           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>'
           + '<br><span style="font-size:12.5px;color:#8794a0;">The room is private to this request. If no one joins within a few minutes, '
           + 'call or text 988 anytime \u2014 you never have to wait alone.</span>';
@@ -4606,7 +4606,7 @@ LEGAL_HANDOFF_PAGE = r"""
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>InnerLight &mdash; Connecting You to Legal Help</title>
   <style>
-    :root { --ink:#23292f; --muted:#5f6b73; --line:#dde2e6; --soft:#f7f9fb; --urgent:#b84a44; --legal:#5a4596; --legal2:#6f57b0; }
+    :root { --ink:#2a1e14; --muted:#8a7a68; --line:#ece0d0; --soft:#faf5ec; --urgent:#b84a44; --legal:#b24a2a; --legal2:#c56a2c; }
     * { box-sizing:border-box; }
     body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:#fbfbfd; }
     header { padding:26px 6vw; border-bottom:1px solid var(--line); background:white; }
@@ -4614,11 +4614,11 @@ LEGAL_HANDOFF_PAGE = r"""
     h1 { margin:0 0 6px; font-size:clamp(26px, 4.5vw, 44px); line-height:1.05; }
     h2 { margin:0 0 10px; font-size:20px; }
     p { color:var(--muted); line-height:1.55; }
-    .tag { display:inline-block; padding:5px 12px; border-radius:999px; background:#efeaf9; border:1px solid #d8cdf0; color:var(--legal); font-weight:700; font-size:13px; margin-bottom:10px; }
+    .tag { display:inline-block; padding:5px 12px; border-radius:999px; background:#f6f1ed; border:1px solid #ecddd1; color:var(--legal); font-weight:700; font-size:13px; margin-bottom:10px; }
     .panel { border:1px solid var(--line); border-radius:12px; background:white; padding:20px; margin:16px 0; }
-    .who { background:#f7f4fd; border-color:#e0d6f4; }
+    .who { background:#faf8f7; border-color:#f0e4da; }
     .who ul { margin:8px 0 0; padding-left:0; list-style:none; }
-    .who li { padding:9px 0; border-bottom:1px solid #ebe3f7; color:var(--ink); }
+    .who li { padding:9px 0; border-bottom:1px solid #f2ece8; color:var(--ink); }
     .who li:last-child { border-bottom:0; }
     .who b { color:var(--legal); }
     .rights { background:#f7f9fb; border-color:#dde2e6; }
@@ -4631,12 +4631,12 @@ LEGAL_HANDOFF_PAGE = r"""
     .convo .a { color:var(--legal2); margin:0 0 10px; }
     .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; }
     button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--legal); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
-    .secondary { background:#ece7f6; color:var(--ink); }
+    .secondary { background:#f3eeea; color:var(--ink); }
     .locked { font-size:13px; color:var(--muted); margin-top:8px; }
     .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
                border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
     .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
-    .pro-btn.picked { border-color:var(--green); background:#f0faf5; box-shadow:0 0 0 2px rgba(46,125,90,0.18); }
+    .pro-btn.picked { border-color:var(--green); background:#fbf2ea; box-shadow:0 0 0 2px rgba(178,74,42,0.18); }
     .disclaimer { font-size:12.5px; color:#8a929a; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
 </head>
@@ -4930,27 +4930,27 @@ def _info_page(title, inner):
 <title>{{ title }} &mdash; InnerLight</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI', system-ui, -apple-system, sans-serif; color:#2d4a3e;
-         background:linear-gradient(160deg,#f4faf7 0%,#eef6f2 55%,#f0f5fa 100%);
+  body { font-family:'Segoe UI', system-ui, -apple-system, sans-serif; color:#4a372d;
+         background:linear-gradient(160deg,#f9f7f5 0%,#f6f2ee 55%,#f0f5fa 100%);
          line-height:1.7; min-height:100vh; }
   .breathe { animation:breathe 5s ease-in-out infinite; }
   @keyframes breathe { 0%,100%{opacity:.85;transform:scale(1);} 50%{opacity:1;transform:scale(1.04);} }
   .wrap { max-width:720px; margin:0 auto; padding:54px 26px 80px; }
-  .mark { font-size:40px; color:#7eb8a0; text-align:center; margin-bottom:6px; }
+  .mark { font-size:40px; color:#c59771; text-align:center; margin-bottom:6px; }
   .brand { text-align:center; font-size:15px; letter-spacing:.16em; text-transform:uppercase;
-           color:#7fa595; margin-bottom:30px; }
-  h1 { font-size:29px; font-weight:600; color:#274539; margin-bottom:18px; letter-spacing:.01em; }
-  h2 { font-size:18px; font-weight:600; color:#3a6553; margin:30px 0 10px; }
-  p { font-size:16px; color:#40564d; margin-bottom:15px; }
-  .lead { font-size:18px; color:#35544a; margin-bottom:22px; }
-  .cite { font-size:12.5px; color:#5f7d8c; margin:2px 0 10px; padding-left:12px; border-left:2px solid #cfe0d6; } .soft { background:rgba(255,255,255,.6); border:1px solid #d8e8e0; border-left:4px solid #7eb8a0;
+           color:#c08d64; margin-bottom:30px; }
+  h1 { font-size:29px; font-weight:600; color:#453127; margin-bottom:18px; letter-spacing:.01em; }
+  h2 { font-size:18px; font-weight:600; color:#714c2e; margin:30px 0 10px; }
+  p { font-size:16px; color:#6a402c; margin-bottom:15px; }
+  .lead { font-size:18px; color:#613b28; margin-bottom:22px; }
+  .cite { font-size:12.5px; color:#5f7d8c; margin:2px 0 10px; padding-left:12px; border-left:2px solid #e0d7cf; } .soft { background:rgba(255,255,255,.6); border:1px solid #e8dfd8; border-left:4px solid #c59771;
           border-radius:0 14px 14px 0; padding:18px 22px; margin:22px 0; }
-  a { color:#3a8f74; }
-  .back { display:inline-block; margin-top:38px; color:#6d8f80; text-decoration:none; font-size:15px;
+  a { color:#8f603a; }
+  .back { display:inline-block; margin-top:38px; color:#9a8778; text-decoration:none; font-size:15px;
           border-bottom:1px solid transparent; }
-  .back:hover { border-bottom-color:#7eb8a0; }
-  .footer { margin-top:46px; padding-top:20px; border-top:1px solid #dcebe4; font-size:13px; color:#9bb3aa; text-align:center; }
-  .footer a { color:#7d9f91; text-decoration:none; margin:0 7px; }
+  .back:hover { border-bottom-color:#c59771; }
+  .footer { margin-top:46px; padding-top:20px; border-top:1px solid #ebe3dc; font-size:13px; color:#cca382; text-align:center; }
+  .footer a { color:#bd895f; text-decoration:none; margin:0 7px; }
 </style></head><body>
   <div class="wrap">
     <div class="mark breathe" aria-hidden="true">&#9711;</div>
@@ -5152,28 +5152,28 @@ def page_research():
 
     <p><strong>In plain terms:</strong> when you save your story, InnerLight takes your private return code and, through a deliberately slow mathematical process, turns it into a unique digital key. It then locks your words with that key so thoroughly that the stored result looks like random noise. Your code is the only thing that can produce that key again. We never keep your code, so we can never unlock your story &mdash; and neither can anyone who breaks into the server. If you lose the code, the data is gone for good. That is the trade-off of true privacy: the lock is real, and you hold the only key.</p>
 
-    <div style="background:#f4faf7;border:1px solid #d8e8e0;border-radius:14px;padding:18px 16px;margin:18px 0;overflow-x:auto;">
+    <div style="background:#f9f7f5;border:1px solid #e8dfd8;border-radius:14px;padding:18px 16px;margin:18px 0;overflow-x:auto;">
     <svg viewBox="0 0 720 150" width="100%" style="min-width:640px;max-width:720px;display:block;margin:0 auto;font-family:Arial,sans-serif;" role="img" aria-label="How AHP encrypts your saved story: your return code becomes a key through 390,000 rounds of key-stretching, which locks your words with AES-256-GCM into unreadable stored data.">
-      <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3a6553"/></marker></defs>
-      <rect x="8" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#7eb8a0" stroke-width="1.5"/>
-      <text x="78" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#274539">Your return code</text>
+      <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#714c2e"/></marker></defs>
+      <rect x="8" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#c59771" stroke-width="1.5"/>
+      <text x="78" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#453127">Your return code</text>
       <text x="78" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">(only you have it)</text>
-      <line x1="150" y1="75" x2="212" y2="75" stroke="#3a6553" stroke-width="2" marker-end="url(#ah)"/>
+      <line x1="150" y1="75" x2="212" y2="75" stroke="#714c2e" stroke-width="2" marker-end="url(#ah)"/>
       <text x="181" y="40" text-anchor="middle" font-size="10.5" fill="#C56A2C" font-weight="700">390,000 rounds</text>
       <text x="181" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">PBKDF2</text>
-      <rect x="214" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#7eb8a0" stroke-width="1.5"/>
-      <text x="284" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#274539">256-bit key</text>
+      <rect x="214" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#c59771" stroke-width="1.5"/>
+      <text x="284" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#453127">256-bit key</text>
       <text x="284" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">never stored</text>
-      <line x1="356" y1="75" x2="418" y2="75" stroke="#3a6553" stroke-width="2" marker-end="url(#ah)"/>
+      <line x1="356" y1="75" x2="418" y2="75" stroke="#714c2e" stroke-width="2" marker-end="url(#ah)"/>
       <text x="387" y="40" text-anchor="middle" font-size="10.5" fill="#C56A2C" font-weight="700">AES-256-GCM</text>
       <text x="387" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">+ random nonce</text>
-      <rect x="420" y="45" width="150" height="60" rx="10" fill="#fff" stroke="#7eb8a0" stroke-width="1.5"/>
-      <text x="495" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#274539">Your words, locked</text>
+      <rect x="420" y="45" width="150" height="60" rx="10" fill="#fff" stroke="#c59771" stroke-width="1.5"/>
+      <text x="495" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#453127">Your words, locked</text>
       <text x="495" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">reads as noise</text>
-      <line x1="572" y1="75" x2="628" y2="75" stroke="#3a6553" stroke-width="2" marker-end="url(#ah)"/>
-      <rect x="630" y="45" width="82" height="60" rx="10" fill="#274539"/>
+      <line x1="572" y1="75" x2="628" y2="75" stroke="#714c2e" stroke-width="2" marker-end="url(#ah)"/>
+      <rect x="630" y="45" width="82" height="60" rx="10" fill="#453127"/>
       <text x="671" y="72" text-anchor="middle" font-size="20">&#128274;</text>
-      <text x="671" y="94" text-anchor="middle" font-size="10" fill="#cfe0d6">stored</text>
+      <text x="671" y="94" text-anchor="middle" font-size="10" fill="#e0d7cf">stored</text>
       <text x="360" y="132" text-anchor="middle" font-size="11" fill="#5f7d8c">Without your code, the key cannot be rebuilt &mdash; so no one, not even InnerLight, can reverse this.</text>
     </svg>
     </div>
@@ -5828,8 +5828,8 @@ async function zenPlay(emotion){
     +plan.key_root+' '+plan.scale+'  \\u00b7  '+(plan.binaural_band?('binaural '+plan.binaural_band+' '+plan.binaural_beat_hz+'Hz  \\u00b7  '):'')
     +(plan.solfeggio?('solfeggio '+plan.solfeggio+'Hz'):'');
   const orb=document.getElementById('orb');
-  const hues={calm:'#6fb3d4',peaceful:'#7fc4b8',anxiety:'#c4a06f',fear:'#9c8ad4',anger:'#d48a8a',
-    sadness:'#8a9cd4',grief:'#7d8aa0',numbness:'#a0a0b0',overwhelm:'#b8a0c4',hope:'#9cd4a0',joy:'#e0c46f'};
+  const hues={calm:'#6fb3d4',peaceful:'#c99e7a',anxiety:'#c4a06f',fear:'#d4ab8a',anger:'#d48a8a',
+    sadness:'#8a9cd4',grief:'#7d8aa0',numbness:'#a0a0b0',overwhelm:'#d2af92',hope:'#d6b59a',joy:'#e0c46f'};
   const h=hues[emotion]||'#6fb3d4';
   orb.style.background='radial-gradient(circle at 35% 35%, '+h+', #3a6b9c 55%, #1a2744)';
   orb.style.boxShadow='0 0 60px '+h+'66';
@@ -6841,7 +6841,7 @@ LOGIN_PAGE = """
 <meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-      font-family:Arial;background:linear-gradient(135deg,#0f2447 0%,#1d4ed8 55%,#7c3aed 100%);}
+      font-family:Arial;background:linear-gradient(135deg,#0f2447 0%,#1d4ed8 55%,#da8c4d 100%);}
  .card{background:rgba(255,255,255,0.97);border-radius:16px;padding:36px 34px;width:330px;
        box-shadow:0 18px 50px rgba(10,20,60,0.45);}
  h1{font-size:19px;color:#1e3a8a;margin:0 0 4px;} .sub{font-size:12px;color:#64748b;margin-bottom:22px;}
@@ -6849,7 +6849,7 @@ LOGIN_PAGE = """
  input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;
        font-size:15px;} input:focus{outline:2px solid #3b82f6;border-color:#3b82f6;}
  button{margin-top:20px;width:100%;padding:12px;border:0;border-radius:9px;font-size:15px;font-weight:700;
-        color:#fff;background:linear-gradient(90deg,#1d4ed8,#7c3aed);cursor:pointer;}
+        color:#fff;background:linear-gradient(90deg,#1d4ed8,#da8c4d);cursor:pointer;}
  .err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:9px 12px;
       font-size:13px;margin-bottom:6px;display:{{ 'block' if err else 'none' }};}
 </style></head><body>
@@ -6975,13 +6975,13 @@ def admin_dashboard():
         order=["measured","estimated","baseline-held"]
         bars="".join(
             f'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eef2f8;">'
-            f'<span>{k.capitalize()}</span><b style="color:{"#16a34a" if k=="measured" else "#d97706" if k=="estimated" else "#64748b"};">'
+            f'<span>{k.capitalize()}</span><b style="color:{"#2f6da8" if k=="measured" else "#d97706" if k=="estimated" else "#64748b"};">'
             f'{tiers.get(k,0)} ({100*tiers.get(k,0)/ttot:.0f}%)</b></div>'
             for k in order if tiers.get(k,0))
         meas_pct = 100*tiers.get("measured",0)/ttot
         heart_rows = (f'<div style="font-size:15px;margin-bottom:8px;">Average heart rate: <b>{avg:.0f} bpm</b> '
-                      f'across <b>{h_n}</b> readings &mdash; <b style="color:#16a34a;">100% session coverage</b>, '
-                      f'{meas_pct:.0f}% high-confidence.</div>' + bars)
+                      f'across <b>{h_n}</b> readings &mdash; <b style="color:#9a561f;">100% session coverage</b>, '
+                      f'{meas_pct:.0f}% high-confidence.</div>' + bars).replace("#9a561f","#2f6da8")
     else:
         heart_rows = "<i>No heart readings recorded yet. They gather as people use the camera.</i>"
     # Experimental sub-zone accuracy across all shown days
@@ -6995,43 +6995,111 @@ def admin_dashboard():
     if zagg:
         subzone_rows = "".join(
             f'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eef2f8;">'
-            f'<span>{ZLABEL.get(z, z)}</span><b style="color:#4f46e5;">{(a["sum"]/a["n"]):.0f}% agreement</b></div>'
+            f'<span>{ZLABEL.get(z, z)}</span><b style="color:#b24a2a;">{(a["sum"]/a["n"]):.0f}% agreement</b></div>'
             for z, a in sorted(zagg.items(), key=lambda x: -(x[1]["sum"]/max(1,x[1]["n"]))))
     else:
         subzone_rows = '<i>No experimental sub-zone data yet. It gathers as people use the camera.</i>'
+    # ---- Headline KPIs for the rebuilt dashboard hero strip (server-side) ----
+    _tot_sessions = sum(max(m[d0].get('sessions', 0), len(m[d0].get('by_session', {}))) for d0 in days) if days else 0
+    _tot_messages = sum(m[d0].get('messages', 0) for d0 in days) if days else 0
+    _fs_sum = sum(m[d0].get('first_sound_ms_sum', 0) for d0 in days)
+    _fs_cnt = sum(m[d0].get('first_sound_count', 0) for d0 in days)
+    _avg_first = (_fs_sum / _fs_cnt / 1000.0) if _fs_cnt else 0
+    _tot_handoffs = 0
+    for _d0 in days:
+        for _hk, _hv in m[_d0].get('handoffs', {}).items():
+            _tot_handoffs += _hv
+    _avg_heart = (h_sum / h_n) if h_n else 0
+    def _kpi(val, label, sub, ocean=False, vid=""):
+        cls = "kpi ocean" if ocean else "kpi"
+        vspan = f'<span id="{vid}">{val}</span>' if vid else str(val)
+        return (f'<div class="{cls}"><div class="kpi-v">{vspan}</div>'
+                f'<div class="kpi-l">{label}</div><div class="kpi-s">{sub}</div></div>')
+    kpi_cards = (
+        f'<div class="kpi ocean"><div class="kpi-v"><span class="dot"></span><span id="kpi-live-n">0</span></div>'
+        f'<div class="kpi-l">Live right now</div><div class="kpi-s">people in a session</div></div>'
+        + _kpi(_tot_sessions, "Sessions", "last 14 days")
+        + _kpi((f"{_avg_first:.1f}s" if _fs_cnt else "&mdash;"), "To first sound", "lower is better")
+        + _kpi(_tot_messages, "Messages", "last 14 days")
+        + _kpi((f"{_avg_heart:.0f}" if h_n else "&mdash;"), "Avg heart rate", "bpm seen", ocean=True)
+        + _kpi(_tot_handoffs, "Human handoffs", "bridges to a person")
+    )
     return render_template_string("""
 <!doctype html><html><head><title>InnerLight — Operations</title>
 <meta name="robots" content="noindex,nofollow">
 <style>
- body{font-family:Arial;margin:0;padding:28px;color:#1e293b;
-      background:linear-gradient(160deg,#2a1e14 0%,#3c2c1e 30%,#fbf3e9 30.5%,#fbf7f1 100%);}
- .top{display:flex;justify-content:space-between;align-items:flex-start;color:#fff;margin-bottom:24px;}
- h1{color:#fff;font-size:23px;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
- .sub{color:#e8d8c4;font-size:13px;margin-top:5px;}
- .logout{color:#e8d8c4;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
-         padding:7px 14px;border-radius:999px;} .logout:hover{background:rgba(255,255,255,0.12);}
- table{border-collapse:collapse;width:100%;background:#fff;border-radius:12px;overflow:hidden;
-       box-shadow:0 8px 28px rgba(15,36,71,0.14);}
- th,td{padding:10px 12px;text-align:left;font-size:13.5px;border-bottom:1px solid #efe4d6;}
- th{background:linear-gradient(90deg,#c56a2c,#c56a2c,#b24a2a);color:#fff;font-size:11.5px;letter-spacing:0.5px;}
- tr:hover td{background:#fbf6ef;}
- .note{margin-top:16px;font-size:12.5px;color:#475569;background:#fff;border-left:4px solid #c56a2c;
-       border-radius:8px;padding:14px 16px;box-shadow:0 4px 16px rgba(15,36,71,0.08);line-height:1.65;}
- .graph{display:flex;align-items:flex-end;gap:8px;background:#fff;padding:18px;border-radius:12px;
-        box-shadow:0 8px 28px rgba(15,36,71,0.14);margin:18px 0;overflow-x:auto;}
+ :root{
+   --ink:#2a1e14; --ink2:#5c4636; --muted:#8a7a68;
+   --paper:#f4ecdf; --card:#ffffff; --line:#ece0d0;
+   --amber:#c56a2c; --amber-d:#a9531f; --terra:#b24a2a; --ocean:#2f6da8;
+   --shadow-s:0 6px 20px rgba(42,30,20,0.08);
+ }
+ *{box-sizing:border-box;}
+ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+   color:var(--ink2);background:var(--paper);
+   background-image:radial-gradient(1100px 380px at 50% -140px,#fff7ec 0%,rgba(255,247,236,0) 72%);}
+ a{color:var(--ocean);}
+ .topbar{position:sticky;top:0;z-index:50;background:rgba(42,30,20,0.97);
+   color:#f6ece0;display:flex;align-items:center;gap:14px;padding:12px 22px;
+   box-shadow:0 2px 18px rgba(0,0,0,0.18);flex-wrap:wrap;}
+ .topbar .brand{font-family:Georgia,"Times New Roman",serif;font-size:16px;font-weight:700;color:#fff;white-space:nowrap;}
+ .topbar .brand span{color:var(--amber);}
+ .nav{display:flex;gap:2px;flex-wrap:wrap;flex:1;margin-left:6px;}
+ .nav a{color:#e8d8c4;text-decoration:none;font-size:13px;padding:6px 12px;border-radius:999px;}
+ .nav a:hover{background:rgba(255,255,255,0.12);color:#fff;}
+ .act{display:flex;gap:8px;}
+ .act a{color:#e8d8c4;font-size:12.5px;text-decoration:none;border:1px solid rgba(255,255,255,0.35);
+   padding:7px 14px;border-radius:999px;white-space:nowrap;} .act a:hover{background:rgba(255,255,255,0.12);}
+ .act a.primary{background:var(--amber);border-color:var(--amber);color:#fff;}
+ .wrap{max-width:1180px;margin:0 auto;padding:24px 22px 64px;}
+ .lede{font-family:Georgia,serif;color:var(--ink);font-size:15px;margin:2px 0 20px;}
+ .lede b{color:var(--amber-d);}
+ .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:8px;}
+ .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;
+   box-shadow:var(--shadow-s);position:relative;overflow:hidden;}
+ .kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+   background:linear-gradient(180deg,var(--amber),var(--terra));}
+ .kpi.ocean:before{background:linear-gradient(180deg,#5aa0d8,var(--ocean));}
+ .kpi-v{font-size:30px;font-weight:800;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums;}
+ .kpi-l{font-size:13.5px;font-weight:700;color:var(--ink2);margin-top:9px;}
+ .kpi-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+ .kpi .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ocean);
+   margin-right:6px;vertical-align:middle;animation:ilpulse 1.6s infinite;}
+ @keyframes ilpulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+ h2{font-family:Georgia,serif;color:var(--ink);font-size:18px;margin:34px 0 12px;padding-left:14px;
+   border-left:5px solid var(--amber);line-height:1.25;scroll-margin-top:74px;}
+ .card-like{background:var(--card)!important;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-s);}
+ .tablewrap{background:var(--card);border:1px solid var(--line);border-radius:16px;
+   box-shadow:var(--shadow-s);overflow-x:auto;}
+ table{border-collapse:collapse;width:100%;background:transparent;}
+ th,td{padding:11px 13px;text-align:left;font-size:13px;border-bottom:1px solid var(--line);white-space:nowrap;}
+ th{background:#f3e7d7;color:var(--ink);font-size:11px;letter-spacing:0.4px;text-transform:uppercase;}
+ td{color:var(--ink2);} tr:hover td{background:#faf4ea;} tr:last-child td{border-bottom:0;}
+ .note{margin-top:18px;font-size:12.8px;color:var(--ink2);background:var(--card);border:1px solid var(--line);
+   border-left:5px solid var(--amber);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow-s);line-height:1.7;}
+ .graph{display:flex;align-items:flex-end;gap:8px;background:var(--card);border:1px solid var(--line);
+   padding:18px;border-radius:16px;box-shadow:var(--shadow-s);margin:6px 0 0;overflow-x:auto;}
  .bar-col{display:flex;flex-direction:column;align-items:center;min-width:44px;}
- .bar{width:26px;background:linear-gradient(180deg,#e0a458,#c56a2c);border-radius:4px 4px 0 0;}
- .bar-lbl{font-size:10px;color:#64748b;margin-top:4px;} .bar-num{font-size:11px;color:#c56a2c;font-weight:700;}
- h2{color:#7a3e1e;font-size:16px;margin-top:26px;}
- .sci-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px;}
- .sci{background:#fff;border-radius:10px;padding:14px 16px;font-size:12.8px;line-height:1.6;color:#334155;
-      box-shadow:0 4px 16px rgba(15,36,71,0.08);border-top:3px solid #c56a2c;}
- .sci b{color:#7a3e1e;font-size:13.2px;}
+ .bar{width:26px;background:linear-gradient(180deg,#e0a458,var(--amber));border-radius:5px 5px 0 0;}
+ .bar-lbl{font-size:10px;color:var(--muted);margin-top:4px;} .bar-num{font-size:11px;color:var(--amber-d);font-weight:700;}
+ .sci-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;}
+ .sci{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;font-size:12.8px;
+   line-height:1.62;color:var(--ink2);box-shadow:var(--shadow-s);border-top:3px solid var(--amber);}
+ .sci b{color:var(--amber-d);font-size:13.2px;}
+ @media(max-width:640px){ .wrap{padding:18px 14px 52px;} .topbar .brand{font-size:14px;} .kpi-v{font-size:26px;} }
 </style></head><body>
-<div class="top"><div>
-<h1>InnerLight — Founder's Operations Room</h1>
-<div class="sub">Anonymous counts and clock-times only. No words, names, faces, or voices are ever stored.</div>
-</div><div><a class="logout" href="/admin/study" style="margin-right:8px;">Founder's Study</a><a class="logout" href="/admin/logout">Sign out</a></div></div>
+<div class="topbar">
+ <div class="brand">Inner<span>Light</span> · Operations Room</div>
+ <nav class="nav">
+  <a href="#overview">Overview</a><a href="#live">Live</a><a href="#music">Music</a><a href="#people">People</a><a href="#research">Research</a>
+ </nav>
+ <div class="act"><a href="/admin/study">Founder's Study</a><a class="primary" href="/admin/logout">Sign out</a></div>
+</div>
+<main class="wrap">
+<div class="lede">Anonymous counts and clock-times only — <b>no words, names, faces, or voices are ever stored.</b></div>
+<div class="hero">{{ kpi_cards|safe }}</div>
+<h2 id="overview">Daily overview — the last 14 days</h2>
+<div class="tablewrap">
 <table>
 <tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
 <th>Expression shifts seen</th><th>Music lane shifts</th><th>Scene changes</th>
@@ -7040,6 +7108,7 @@ def admin_dashboard():
 <th>Gaze aversions (eyes fled)</th><th>Avg heart rate seen</th><th>Calm scale: arrival &rarr; later</th></tr>
 {{ body|safe }}
 </table>
+</div>
 <h2>Incoming connection requests — people who asked for a human</h2>
 <div class="card-like" id="connects" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;">Loading&hellip;</div>
 <script>
@@ -7110,7 +7179,7 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   }catch(e){}
 })();
 </script>
-<h2>Music control &mdash; listen to any track, switch any track off</h2>
+<h2 id="music">Music control &mdash; listen to any track, switch any track off</h2>
 <div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
 <div style="font-size:12px;color:#64748b;margin-bottom:6px;">Press <b>Listen</b> to hear any track right here. Press <b>Turn off</b> and that exact song stops being offered &mdash; no redeploy needed, and you can turn it back on any time. Honest note: someone already listening may still hear their current list until their music next shifts; every new playlist skips it.</div>
 <div id="tc-status" style="font-size:12px;color:#c0564e;font-weight:700;margin-bottom:6px;"></div>
@@ -7212,7 +7281,7 @@ async function loadPlays(){
 }
 loadPlays();
 </script>
-<h2>Live sessions &mdash; real-time biometric monitor</h2>
+<h2 id="live">Live sessions &mdash; real-time biometric monitor</h2>
 <div class="card-like" style="background:#2a1e14;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.2);margin-bottom:14px;color:#f3e9db;">
 <div style="font-size:12px;color:#c9b79f;margin-bottom:10px;">Anonymous, live. Each person currently using InnerLight with their camera on appears here \u2014 heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the biometric signal. <span id="bio-clock" style="float:right;"></span></div>
 <div id="bio-live-list"><i style="color:#b7a084;">Waiting for a live session\u2026</i></div>
@@ -7231,6 +7300,7 @@ loadPlays();
     try{
       const r=await fetch('/api/admin/bio/live'); if(!r.ok) return;
       const d=await r.json();
+      var kln=document.getElementById('kpi-live-n'); if(kln) kln.textContent=((d.active&&d.active.length)||0);
       var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
       var el=document.getElementById('bio-live-list'); if(!el) return;
       if(!d.active||!d.active.length){ el.innerHTML='<i style="color:#b7a084;">No live sessions right now. When someone is using InnerLight, they appear here live \u2014 with or without a heart reading.</i>'; return; }
@@ -7275,7 +7345,7 @@ loadPlays();
 </div>
 <h2>Sessions per day</h2>
 <div class="graph">{{ bars|safe }}</div>
-<h2>Today, person by person — anonymous session breakdown</h2>
+<h2 id="people">Today, person by person — anonymous session breakdown</h2>
 <table>
 <tr><th>Session</th><th>Expression shifts</th><th>Messages</th><th>Hesitations</th>
 <th>Scene changes</th><th>Distractions (looked away)</th><th>Word plays</th><th>Music lane shifts</th></tr>
@@ -7286,7 +7356,7 @@ loadPlays();
 <tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
 {{ t_rows|safe }}
 </table>
-<h2>The scientific method — where this study stands</h2>
+<h2 id="research">The scientific method — where this study stands</h2>
 <div class="sci-grid">
  <div class="sci"><b>1. Observation (complete)</b><br>Across ~2,500 rideshare trips, agitated passengers reliably settled when calm instrumental music was already playing on entry. Repeated, real-world, years-long observation.</div>
  <div class="sci"><b>2. Question (framed)</b><br>Can adaptive calming sound, delivered during the crisis wait-gap, measurably reduce acute distress?</div>
@@ -7351,7 +7421,7 @@ music (lower is better; phones cannot legally start sound before a tap). Express
 silent face reading. Hesitations = typed a real thought, erased it unsent. Distractions = an engaged face
 turned away for a couple of seconds. Track verdicts come from each song's opening minute judged against that
 person's own baseline. All counts are anonymous — no words, names, faces, or voices are ever stored.</div>
-</body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows, subzone_rows=subzone_rows, heart_rows=heart_rows)
+</main></body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows, subzone_rows=subzone_rows, heart_rows=heart_rows, kpi_cards=kpi_cards)
 
 
 # ===========================================================================
@@ -8302,7 +8372,7 @@ def responder_brief(rid):
  .badge{display:inline-block;background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:999px;
         padding:5px 14px;font-size:13px;font-weight:700;margin-bottom:6px;}
  .why{font-size:16px;line-height:1.7;color:#1e293b;white-space:pre-wrap;}
- .join{display:inline-block;margin-top:8px;background:linear-gradient(90deg,#1d4ed8,#7c3aed);color:#fff;
+ .join{display:inline-block;margin-top:8px;background:linear-gradient(90deg,#1d4ed8,#da8c4d);color:#fff;
        padding:16px 34px;border-radius:999px;font-size:17px;font-weight:700;text-decoration:none;}
  .meta{font-size:12.5px;color:#64748b;margin-top:10px;}
 </style></head><body>
