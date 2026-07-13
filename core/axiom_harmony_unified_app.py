@@ -6957,29 +6957,29 @@ def admin_dashboard():
 <meta name="robots" content="noindex,nofollow">
 <style>
  body{font-family:Arial;margin:0;padding:28px;color:#1e293b;
-      background:linear-gradient(160deg,#0f2447 0%,#14346b 30%,#eef2ff 30.5%,#f8fafc 100%);}
+      background:linear-gradient(160deg,#2a1e14 0%,#3c2c1e 30%,#fbf3e9 30.5%,#fbf7f1 100%);}
  .top{display:flex;justify-content:space-between;align-items:flex-start;color:#fff;margin-bottom:24px;}
  h1{color:#fff;font-size:23px;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
- .sub{color:#c7d6f5;font-size:13px;margin-top:5px;}
- .logout{color:#c7d6f5;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
+ .sub{color:#e8d8c4;font-size:13px;margin-top:5px;}
+ .logout{color:#e8d8c4;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
          padding:7px 14px;border-radius:999px;} .logout:hover{background:rgba(255,255,255,0.12);}
  table{border-collapse:collapse;width:100%;background:#fff;border-radius:12px;overflow:hidden;
        box-shadow:0 8px 28px rgba(15,36,71,0.14);}
- th,td{padding:10px 12px;text-align:left;font-size:13.5px;border-bottom:1px solid #e6ecf8;}
- th{background:linear-gradient(90deg,#1d4ed8,#4f46e5,#7c3aed);color:#fff;font-size:11.5px;letter-spacing:0.5px;}
- tr:hover td{background:#f4f7ff;}
- .note{margin-top:16px;font-size:12.5px;color:#475569;background:#fff;border-left:4px solid #4f46e5;
+ th,td{padding:10px 12px;text-align:left;font-size:13.5px;border-bottom:1px solid #efe4d6;}
+ th{background:linear-gradient(90deg,#c56a2c,#c56a2c,#b24a2a);color:#fff;font-size:11.5px;letter-spacing:0.5px;}
+ tr:hover td{background:#fbf6ef;}
+ .note{margin-top:16px;font-size:12.5px;color:#475569;background:#fff;border-left:4px solid #c56a2c;
        border-radius:8px;padding:14px 16px;box-shadow:0 4px 16px rgba(15,36,71,0.08);line-height:1.65;}
  .graph{display:flex;align-items:flex-end;gap:8px;background:#fff;padding:18px;border-radius:12px;
         box-shadow:0 8px 28px rgba(15,36,71,0.14);margin:18px 0;overflow-x:auto;}
  .bar-col{display:flex;flex-direction:column;align-items:center;min-width:44px;}
- .bar{width:26px;background:linear-gradient(180deg,#60a5fa,#4f46e5);border-radius:4px 4px 0 0;}
- .bar-lbl{font-size:10px;color:#64748b;margin-top:4px;} .bar-num{font-size:11px;color:#4f46e5;font-weight:700;}
- h2{color:#1e3a8a;font-size:16px;margin-top:26px;}
+ .bar{width:26px;background:linear-gradient(180deg,#e0a458,#c56a2c);border-radius:4px 4px 0 0;}
+ .bar-lbl{font-size:10px;color:#64748b;margin-top:4px;} .bar-num{font-size:11px;color:#c56a2c;font-weight:700;}
+ h2{color:#7a3e1e;font-size:16px;margin-top:26px;}
  .sci-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px;}
  .sci{background:#fff;border-radius:10px;padding:14px 16px;font-size:12.8px;line-height:1.6;color:#334155;
-      box-shadow:0 4px 16px rgba(15,36,71,0.08);border-top:3px solid #4f46e5;}
- .sci b{color:#1e3a8a;font-size:13.2px;}
+      box-shadow:0 4px 16px rgba(15,36,71,0.08);border-top:3px solid #c56a2c;}
+ .sci b{color:#7a3e1e;font-size:13.2px;}
 </style></head><body>
 <div class="top"><div>
 <h1>InnerLight — Founder's Operations Room</h1>
@@ -7000,9 +7000,9 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
   const el = document.getElementById('connects');
   if(!d.connects || !d.connects.length){ el.textContent = 'No connection requests yet.'; return; }
   el.innerHTML = d.connects.map(function(c){
-    return '<div style="border-bottom:1px solid #e6ecf8;padding:9px 0;">'
-      + '<b style="color:#1e3a8a;">' + c.when + '</b> — ' + c.kind.toUpperCase() + ' — wants: <b>' + c.pro + '</b> '
-      + '— <a href="' + c.room + '" target="_blank" style="color:#4f46e5;font-weight:700;">Join room</a>'
+    return '<div style="border-bottom:1px solid #efe4d6;padding:9px 0;">'
+      + '<b style="color:#7a3e1e;">' + c.when + '</b> — ' + c.kind.toUpperCase() + ' — wants: <b>' + c.pro + '</b> '
+      + '— <a href="' + c.room + '" target="_blank" style="color:#c56a2c;font-weight:700;">Join room</a>'
       + (c.summary ? '<div style="color:#475569;margin-top:4px;white-space:pre-wrap;">' + c.summary.replace(/</g,'&lt;') + '</div>' : '')
       + '</div>';
   }).join('');
@@ -7024,15 +7024,15 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
       const h=d.helped||{}, tot=d.total||1;
       const pct=function(n){return Math.round(100*(n||0)/tot);};
       let html='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:14px;">'
-        +'<div style="flex:1;min-width:120px;background:#f0faf4;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#16a34a;">'+pct(h.yes)+'%</b><br>said it helped</div>'
-        +'<div style="flex:1;min-width:120px;background:#f8fafc;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#64748b;">'+pct(h.somewhat)+'%</b><br>somewhat</div>'
+        +'<div style="flex:1;min-width:120px;background:#edf3f8;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#2f6da8;">'+pct(h.yes)+'%</b><br>said it helped</div>'
+        +'<div style="flex:1;min-width:120px;background:#fbf7f1;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#64748b;">'+pct(h.somewhat)+'%</b><br>somewhat</div>'
         +'<div style="flex:1;min-width:120px;background:#fdf5f5;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#9a6a6a;">'+pct(h.no)+'%</b><br>not really</div>'
-        +'<div style="flex:1;min-width:120px;background:#eef4fb;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#1e3a5c;">'+d.total+'</b><br>total responses</div>'
+        +'<div style="flex:1;min-width:120px;background:#fbf3e9;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#7a3e1e;">'+d.total+'</b><br>total responses</div>'
         +'</div>';
       if(d.quotes&&d.quotes.length){
         html+='<div style="font-size:13px;color:#475569;font-weight:700;margin:6px 0;">In their own words:</div>';
         html+=d.quotes.map(function(q){
-          return '<div style="border-left:3px solid #7dd3a8;background:#f8fafc;border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14px;color:#334155;font-style:italic;">“'
+          return '<div style="border-left:3px solid #7fa8c9;background:#fbf7f1;border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14px;color:#334155;font-style:italic;">“'
             +(q.words||'').replace(/</g,'&lt;')+'”<span style="display:block;font-style:normal;font-size:11px;color:#94a3b8;margin-top:4px;">'+(q.when||'')+(q.helped?' · '+q.helped:'')+'</span></div>';
         }).join('');
       }
@@ -7057,7 +7057,7 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
     if(!months.length){ el.innerHTML = '<i style="color:#94a3b8;">No crisis-protocol activations recorded yet. Counting began with this deploy.</i>'; return; }
     var html = '<div style="font-weight:700;margin-bottom:8px;">' + d.total + ' total activation' + (d.total===1?'':'s') + ' since counting began</div>';
     for (var i=0; i<months.length; i++){
-      html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eef2f8;"><span>' + months[i] + '</span><b style="color:#2e6e8e;">' + d.by_month[months[i]] + '</b></div>';
+      html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3eade;"><span>' + months[i] + '</span><b style="color:#2f6da8;">' + d.by_month[months[i]] + '</b></div>';
     }
     el.innerHTML = html;
   }catch(e){}
@@ -7083,13 +7083,13 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
       var lanes = d.lanes || {};
       var html = '';
       Object.keys(lanes).sort().forEach(function(lane){
-        html += '<div style="font-weight:700;color:#2e6e8e;margin:10px 0 4px;">' + esc(LANE_NAMES[lane] || lane) + '</div>';
+        html += '<div style="font-weight:700;color:#2f6da8;margin:10px 0 4px;">' + esc(LANE_NAMES[lane] || lane) + '</div>';
         lanes[lane].forEach(function(t){
           var rowStyle = t.enabled ? '' : 'opacity:0.5;';
-          var btnBg = t.enabled ? '#c0564e' : '#16a34a';
+          var btnBg = t.enabled ? '#c0564e' : '#2f6da8';
           var btnLabel = t.enabled ? 'Turn off' : 'Turn on';
-          html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eef2f8;' + rowStyle + '">'
-            + '<button data-listen="' + esc(t.file) + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:66px;">Listen</button>'
+          html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f3eade;' + rowStyle + '">'
+            + '<button data-listen="' + esc(t.file) + '" style="background:#2f6da8;color:#fff;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:66px;">Listen</button>'
             + '<span style="flex:1;">' + esc(t.file) + (t.enabled ? '' : ' <b style="color:#c0564e;">(off)</b>') + '</span>'
             + '<span style="color:#94a3b8;font-size:12px;">' + (t.plays||0) + ' plays</span>'
             + '<button data-toggle="' + esc(t.file) + '" data-en="' + (t.enabled ? '1' : '0') + '" style="background:' + btnBg + ';color:#fff;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:76px;">' + btnLabel + '</button>'
@@ -7136,7 +7136,7 @@ fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
 </script>
 <h2>Song play log &mdash; every track, every timestamp</h2>
 <div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
-<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Exactly what played and when. Every play is stamped to the second, so you can see if a track repeats within an hour. Use this to spot any song that plays too often. <button onclick="loadPlays()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:8px;">Refresh</button></div>
+<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Exactly what played and when. Every play is stamped to the second, so you can see if a track repeats within an hour. Use this to spot any song that plays too often. <button onclick="loadPlays()" style="background:#2f6da8;color:#fff;border:0;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:8px;">Refresh</button></div>
 <div id="plays-report"><i style="color:#94a3b8;">Loading play log\u2026</i></div>
 </div>
 <script>
@@ -7149,15 +7149,15 @@ async function loadPlays(){
     var html = '<div style="font-weight:700;margin-bottom:8px;">' + d.total_plays + ' total plays recorded</div>';
     // per-track totals
     html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
-    html += '<div style="flex:1;min-width:240px;"><div style="font-weight:700;color:#2e6e8e;margin-bottom:4px;">Plays per track (most played first)</div>'
+    html += '<div style="flex:1;min-width:240px;"><div style="font-weight:700;color:#2f6da8;margin-bottom:4px;">Plays per track (most played first)</div>'
       + d.by_track.map(function(t){
-          var heavy = t.count >= 5 ? 'color:#c0564e;font-weight:800;' : 'color:#2e6e8e;';
-          return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eef2f8;"><span>' + t.file + '</span><b style="' + heavy + '">' + t.count + '</b></div>';
+          var heavy = t.count >= 5 ? 'color:#c0564e;font-weight:800;' : 'color:#2f6da8;';
+          return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3eade;"><span>' + t.file + '</span><b style="' + heavy + '">' + t.count + '</b></div>';
         }).join('') + '</div>';
     // full timestamp list
     html += '<div style="flex:1;min-width:240px;max-height:340px;overflow:auto;"><div style="font-weight:700;color:#334155;margin-bottom:4px;">Every play, newest first (with timestamp)</div>'
       + d.recent.map(function(r){
-          return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:13px;"><span style="color:#475569;">' + r.file + '</span><span style="color:#94a3b8;font-variant-numeric:tabular-nums;">' + (r.ts||'') + '</span></div>';
+          return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5efe6;font-size:13px;"><span style="color:#475569;">' + r.file + '</span><span style="color:#94a3b8;font-variant-numeric:tabular-nums;">' + (r.ts||'') + '</span></div>';
         }).join('') + '</div>';
     html += '</div>';
     el.innerHTML = html;
@@ -7166,9 +7166,9 @@ async function loadPlays(){
 loadPlays();
 </script>
 <h2>Live sessions &mdash; real-time biometric monitor</h2>
-<div class="card-like" style="background:#0f2447;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.2);margin-bottom:14px;color:#e6f1fa;">
-<div style="font-size:12px;color:#9db8cf;margin-bottom:10px;">Anonymous, live. Each person currently using InnerLight with their camera on appears here \u2014 heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the biometric signal. <span id="bio-clock" style="float:right;"></span></div>
-<div id="bio-live-list"><i style="color:#7d97b0;">Waiting for a live session\u2026</i></div>
+<div class="card-like" style="background:#2a1e14;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.2);margin-bottom:14px;color:#f3e9db;">
+<div style="font-size:12px;color:#c9b79f;margin-bottom:10px;">Anonymous, live. Each person currently using InnerLight with their camera on appears here \u2014 heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the biometric signal. <span id="bio-clock" style="float:right;"></span></div>
+<div id="bio-live-list"><i style="color:#b7a084;">Waiting for a live session\u2026</i></div>
 </div>
 <script>
 (function(){
@@ -7176,9 +7176,9 @@ loadPlays();
     if(!vals||!vals.length) return '';
     const w=180,h=34,min=Math.min.apply(null,vals),max=Math.max.apply(null,vals),rng=(max-min)||1;
     const pts=vals.map(function(v,i){return (i/(vals.length-1)*w).toFixed(1)+','+(h-(v-min)/rng*h).toFixed(1);}).join(' ');
-    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="#7dd3a8" stroke-width="2"/></svg>';
+    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="#7fa8c9" stroke-width="2"/></svg>';
   }
-  function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#7dd3a8':'#9db8cf'); }
+  function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#7fa8c9':'#c9b79f'); }
   function stateWord(st){ return st==='rising'?'rising / activating':(st==='settling'?'settling / calming':'steady'); }
   async function poll(){
     try{
@@ -7186,29 +7186,29 @@ loadPlays();
       const d=await r.json();
       var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
       var el=document.getElementById('bio-live-list'); if(!el) return;
-      if(!d.active||!d.active.length){ el.innerHTML='<i style="color:#7d97b0;">No live sessions right now. When someone is using InnerLight, they appear here live \u2014 with or without a heart reading.</i>'; return; }
+      if(!d.active||!d.active.length){ el.innerHTML='<i style="color:#b7a084;">No live sessions right now. When someone is using InnerLight, they appear here live \u2014 with or without a heart reading.</i>'; return; }
       el.innerHTML=d.active.map(function(p){
-        var left = '<div style="min-width:80px;"><b>'+p.who+'</b><div style="font-size:11px;color:#7d97b0;">'+p.ago+'s ago</div></div>';
+        var left = '<div style="min-width:80px;"><b>'+p.who+'</b><div style="font-size:11px;color:#b7a084;">'+p.ago+'s ago</div></div>';
         if (p.bpm && p.hasheart){
           // Full heart reading available
           return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">'
             + left
-            +'<div style="text-align:center;"><span style="font-size:26px;font-weight:800;">'+p.bpm+'</span> <span style="font-size:12px;color:#9db8cf;">bpm</span>'
-            +'<div style="font-size:11px;color:#7d97b0;">baseline '+(p.base||p.bpm)+'</div></div>'
+            +'<div style="text-align:center;"><span style="font-size:26px;font-weight:800;">'+p.bpm+'</span> <span style="font-size:12px;color:#c9b79f;">bpm</span>'
+            +'<div style="font-size:11px;color:#b7a084;">baseline '+(p.base||p.bpm)+'</div></div>'
             +'<div style="text-align:center;color:'+stateColor(p.state)+';font-size:13px;font-weight:700;min-width:120px;">'+stateWord(p.state)
-            +'<div style="font-size:10.5px;color:#7d97b0;font-weight:400;">'+(p.tier||'')+(p.face?' \u00b7 '+p.face:'')+'</div></div>'
+            +'<div style="font-size:10.5px;color:#b7a084;font-weight:400;">'+(p.tier||'')+(p.face?' \u00b7 '+p.face:'')+'</div></div>'
             +'<div>'+spark(p.spark)+'</div>'
             +'</div>';
         }
         // Live session but no heart reading yet \u2014 show honest status.
         var status = p.cam ? 'camera on \u2014 acquiring heart signal\u2026' : 'text-only session (camera off)';
-        var scolor = p.cam ? '#f0a868' : '#9db8cf';
+        var scolor = p.cam ? '#f0a868' : '#c9b79f';
         return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">'
           + left
           +'<div style="text-align:center;flex:1;color:'+scolor+';font-size:13px;font-weight:700;">'+status
-          + (p.face?'<div style="font-size:10.5px;color:#7d97b0;font-weight:400;">expression: '+p.face+'</div>':'')
+          + (p.face?'<div style="font-size:10.5px;color:#b7a084;font-weight:400;">expression: '+p.face+'</div>':'')
           +'</div>'
-          +'<div style="min-width:60px;text-align:right;color:#7d97b0;font-size:12px;">live</div>'
+          +'<div style="min-width:60px;text-align:right;color:#b7a084;font-size:12px;">live</div>'
           +'</div>';
       }).join('');
     }catch(e){}
@@ -7770,23 +7770,23 @@ def admin_study_page():
 <meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
  body{font-family:Arial;margin:0;padding:28px;color:#1e293b;
-      background:linear-gradient(160deg,#0f2447 0%,#14346b 30%,#eef2ff 30.5%,#f8fafc 100%);}
+      background:linear-gradient(160deg,#2a1e14 0%,#3c2c1e 30%,#fbf3e9 30.5%,#fbf7f1 100%);}
  .top{display:flex;justify-content:space-between;align-items:flex-start;color:#fff;margin-bottom:22px;}
  h1{color:#fff;font-size:23px;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
- .sub{color:#c7d6f5;font-size:13px;margin-top:5px;max-width:760px;line-height:1.5;}
- .nav a{color:#c7d6f5;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
+ .sub{color:#e8d8c4;font-size:13px;margin-top:5px;max-width:760px;line-height:1.5;}
+ .nav a{color:#e8d8c4;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
         padding:7px 14px;border-radius:999px;margin-left:8px;} .nav a:hover{background:rgba(255,255,255,0.12);}
  .card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:18px;}
  label{font-size:12px;font-weight:700;color:#334155;display:block;margin-bottom:6px;}
  textarea{width:100%;box-sizing:border-box;min-height:110px;padding:12px;border:1px solid #cbd5e1;
-          border-radius:9px;font-size:15px;font-family:Arial;} textarea:focus{outline:2px solid #3b82f6;}
+          border-radius:9px;font-size:15px;font-family:Arial;} textarea:focus{outline:2px solid #c56a2c;}
  select{padding:10px;border:1px solid #cbd5e1;border-radius:9px;font-size:14px;margin-right:10px;}
  button{padding:11px 26px;border:0;border-radius:9px;font-size:15px;font-weight:700;color:#fff;
-        background:linear-gradient(90deg,#1d4ed8,#7c3aed);cursor:pointer;margin-top:12px;}
+        background:linear-gradient(90deg,#c56a2c,#b24a2a);cursor:pointer;margin-top:12px;}
  #out{white-space:pre-wrap;font-size:14.5px;line-height:1.7;color:#1e293b;display:none;}
  .stamp{display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;
         font-weight:700;border-radius:6px;padding:4px 10px;margin-bottom:12px;letter-spacing:0.4px;}
- .wait{display:none;color:#4f46e5;font-weight:700;font-size:13px;margin-top:12px;}
+ .wait{display:none;color:#c56a2c;font-weight:700;font-size:13px;margin-top:12px;}
 </style></head><body>
 <div class="top"><div>
 <h1>Founder's Study</h1>
@@ -7806,7 +7806,7 @@ Nothing here is ever shown to users. Nothing here is legal or medical advice.</d
     <option value="legislative">Legislative — how a bill/policy change would work</option>
   </select>
   <button onclick="runStudy()">Study this one lens</button>
-  <button onclick="runAllLenses()" style="margin-left:6px;background:linear-gradient(90deg,#1d4ed8,#6d28d9);">Study all three: legal &bull; legislative &bull; medical</button>
+  <button onclick="runAllLenses()" style="margin-left:6px;background:linear-gradient(90deg,#c56a2c,#b24a2a);">Study all three: legal &bull; legislative &bull; medical</button>
  </div>
  <div style="font-size:12px;color:#64748b;margin-top:8px;">Each lens is a separate, independent study with its own conclusion. A scenario may reach one, two, or all three levels &mdash; and if it doesn't truly reach a level, that study says so plainly.</div>
  <div class="wait" id="wait">Preparing your study material&hellip; (this uses your comprehension credit, so it only runs when you press the button)</div>
@@ -7814,26 +7814,26 @@ Nothing here is ever shown to users. Nothing here is legal or medical advice.</d
 <div class="card"><div class="stamp">FOUNDER STUDY &mdash; EDUCATIONAL SIMULATION &mdash; NOT LEGAL OR MEDICAL ADVICE</div>
 <div id="out"></div></div>
 <div class="card">
- <h2 style="margin-top:0;color:#1e3a8a;font-size:16px;">Cases from real sessions — de-identified</h2>
+ <h2 style="margin-top:0;color:#7a3e1e;font-size:16px;">Cases from real sessions — de-identified</h2>
  <div style="font-size:12px;color:#64748b;margin-bottom:10px;">Every session is recorded here with names, numbers, and contact details removed before saving. Tap "Study this case" to send one into the study engine.</div>
  <div id="cases" style="font-size:13.5px;color:#334155;">Loading&hellip;</div>
 </div>
-<div class="card" style="border:2px solid #7c3aed;">
- <h2 style="margin-top:0;color:#6d28d9;font-size:16px;">Policy Research Workbench</h2>
+<div class="card" style="border:2px solid #b24a2a;">
+ <h2 style="margin-top:0;color:#b24a2a;font-size:16px;">Policy Research Workbench</h2>
  <div style="font-size:12.5px;color:#64748b;margin-bottom:12px;line-height:1.5;">Your vision: turn the patterns in real cases into the study of how laws could be crafted to genuinely help people &mdash; and help businesses and organizations act fairly. A private learning tool for your pre-law and policy work. Educational only; verify every specific against primary sources.</div>
- <button onclick="loadPolicyPatterns()" style="background:linear-gradient(90deg,#6d28d9,#9333ea);">Show recurring problem patterns</button>
+ <button onclick="loadPolicyPatterns()" style="background:linear-gradient(90deg,#b24a2a,#c56a2c);">Show recurring problem patterns</button>
  <div id="policy-patterns" style="margin-top:14px;font-size:13.5px;color:#334155;"></div>
  <div style="margin-top:16px;">
    <label>Study how legislation could address a recurring pattern</label>
    <textarea id="policy-pattern" placeholder="Example: People are repeatedly locked out by landlords who put belongings on the street without a court order, and have nowhere to turn in the first 24 hours..."></textarea>
-   <button onclick="runPolicyStudy()" style="background:linear-gradient(90deg,#6d28d9,#9333ea);">Study possible legislation</button>
+   <button onclick="runPolicyStudy()" style="background:linear-gradient(90deg,#b24a2a,#c56a2c);">Study possible legislation</button>
    <div class="wait" id="policy-wait">Researching how legislation could be crafted&hellip; (uses your comprehension credit)</div>
  </div>
  <div class="stamp" style="margin-top:14px;">POLICY STUDY &mdash; EDUCATIONAL LEARNING EXERCISE &mdash; NOT LEGAL ADVICE</div>
  <div id="policy-out" style="white-space:pre-wrap;font-size:14.5px;line-height:1.7;color:#1e293b;display:none;"></div>
 </div>
 <div class="card">
- <h2 style="margin-top:0;color:#1e3a8a;font-size:16px;">Saved studies — your growing casebook</h2>
+ <h2 style="margin-top:0;color:#7a3e1e;font-size:16px;">Saved studies — your growing casebook</h2>
  <div id="shelf" style="font-size:13.5px;color:#334155;">Loading&hellip;</div>
 </div>
 <script>
@@ -7844,7 +7844,7 @@ async function loadShelf(){
     if (!d.studies || !d.studies.length){ shelf.textContent = 'No studies saved yet. Every study you run is kept here.'; return; }
     shelf.innerHTML = d.studies.map(function(st, i){
       return '<details style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">'
-        + '<summary style="cursor:pointer;font-weight:700;color:#1d4ed8;">' + st.when + ' &mdash; ' + st.focus
+        + '<summary style="cursor:pointer;font-weight:700;color:#c56a2c;">' + st.when + ' &mdash; ' + st.focus
         + ' &mdash; ' + (st.scenario||'').slice(0,90).replace(/</g,'&lt;') + '&hellip;</summary>'
         + '<div style="white-space:pre-wrap;margin-top:10px;line-height:1.65;">' + (st.walkthrough||'').replace(/</g,'&lt;') + '</div></details>';
     }).join('');
@@ -7859,7 +7859,7 @@ async function loadCases(){
     el.innerHTML = d.cases.map(function(c){
       const convo = c.turns.map(function(t){ return (t.r==='user'?'PERSON: ':'INNERLIGHT: ') + t.t; }).join(String.fromCharCode(10));
       return '<details style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">'
-        + '<summary style="cursor:pointer;font-weight:700;color:#1d4ed8;">' + c.label + ' &mdash; ' + c.when
+        + '<summary style="cursor:pointer;font-weight:700;color:#c56a2c;">' + c.label + ' &mdash; ' + c.when
         + (c.tags.length ? ' &mdash; <span style="color:#b45309;">' + c.tags.join(', ') + '</span>' : '') + '</summary>'
         + '<div style="white-space:pre-wrap;margin-top:10px;line-height:1.6;">' + convo.replace(/</g,'&lt;') + '</div>'
         + '<button style="margin-top:10px;padding:8px 18px;" onclick="studyCase(this)" data-convo="' + convo.replace(/"/g,'&quot;').replace(/</g,'&lt;') + '">Study this case</button>'
@@ -7886,9 +7886,9 @@ async function loadPolicyPatterns(){
       return;
     }
     html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
-    function rows(arr, color){ return arr.length ? arr.map(function(p){ return '<div class="pat-row" data-issue="' + p.issue + '" style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eef2f8;cursor:pointer;"><span>' + p.issue + '</span><b style="color:' + color + ';">' + p.count + '</b></div>'; }).join('') : '<div style="color:#94a3b8;">None yet.</div>'; }
-    html += '<div style="flex:1;min-width:220px;"><div style="font-weight:700;color:#6d28d9;margin-bottom:4px;">Legal patterns</div>' + rows(legal, '#6d28d9') + '</div>';
-    html += '<div style="flex:1;min-width:220px;"><div style="font-weight:700;color:#1d4ed8;margin-bottom:4px;">Clinical / support patterns</div>' + rows(clin, '#1d4ed8') + '</div>';
+    function rows(arr, color){ return arr.length ? arr.map(function(p){ return '<div class="pat-row" data-issue="' + p.issue + '" style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3eade;cursor:pointer;"><span>' + p.issue + '</span><b style="color:' + color + ';">' + p.count + '</b></div>'; }).join('') : '<div style="color:#94a3b8;">None yet.</div>'; }
+    html += '<div style="flex:1;min-width:220px;"><div style="font-weight:700;color:#b24a2a;margin-bottom:4px;">Legal patterns</div>' + rows(legal, '#b24a2a') + '</div>';
+    html += '<div style="flex:1;min-width:220px;"><div style="font-weight:700;color:#c56a2c;margin-bottom:4px;">Clinical / support patterns</div>' + rows(clin, '#c56a2c') + '</div>';
     html += '</div><div style="font-size:12px;color:#64748b;margin-top:8px;">Each recurring pattern is a place the system may be failing people. Click any pattern to study how legislation could address it.</div>';
     box.innerHTML = html;
     box.querySelectorAll('.pat-row').forEach(function(row){
@@ -7948,9 +7948,9 @@ async function runAllLenses(){
   const origWait = wait.textContent;
   out.style.display='none'; wait.style.display='block';
   const lenses = [
-    ['legal', 'LEGAL — this person’s own rights and remedies', '#1d4ed8'],
-    ['legislative', 'LEGISLATIVE — the systemic policy angle', '#6d28d9'],
-    ['medical', 'MEDICAL — underlying health considerations', '#0f766e']
+    ['legal', 'LEGAL — this person’s own rights and remedies', '#c56a2c'],
+    ['legislative', 'LEGISLATIVE — the systemic policy angle', '#b24a2a'],
+    ['medical', 'MEDICAL — underlying health considerations', '#2f6da8']
   ];
   let html = '';
   for (let i=0;i<lenses.length;i++){
