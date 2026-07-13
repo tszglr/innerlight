@@ -2169,10 +2169,13 @@ let adaptiveLaneNow = 'calm'; // which lane the adaptive loop currently favors
 let adaptiveLastSwitch = 0;
 
 function readArousalSignal() {
-  // ===== FOUR-SIGNAL FUSION (text-led, heart-anchored, face+voice confirm) =====
-  // Research: all four combined tops every table (~72% sentiment). Text carries
-  // the largest lift (people say what they cannot show); heart is the steady
-  // body truth; face and voice confirm. Each contributes what it is good at.
+  // ===== SIGNAL FUSION (text-led; face + voice confirm) =====
+  // Text carries the largest lift — people say what they cannot show — and the
+  // face and voice confirm. The HEART is deliberately EXCLUDED from this read:
+  // beats-per-minute does not reliably indicate emotional state, so we no longer
+  // let it move the music or the state estimate (founder decision, see below).
+  // This is a clean slate: a better, non-BPM read of how a person is doing is
+  // the work we are building next.
   let up = 0, down = 0, wSum = 0;
 
   // (1) TEXT — the primary signal. Highest weight when recent.
@@ -2183,19 +2186,14 @@ function readArousalSignal() {
     wSum += 0.45 * tw;
   }
 
-  // (2) HEART/VIDEO — the body's testimony. Above baseline = activation.
-  // A heart WELL ABOVE baseline is loud evidence. A heart resting AT baseline
-  // is quiet evidence — it must not shout down what the face is showing.
-  // (Bug fixed: the old fixed 0.30 weight sat in the divisor even when the
-  // heart said nothing, so a calm heartbeat mathematically vetoed the face
-  // and a sad or angry face could NEVER move the music. Now the heart's
-  // weight grows with how much it is actually saying.)
-  if (window._heartBPM && window._heartBaseline){
-    const hp = Math.max(0, Math.min(1, (window._heartBPM - window._heartBaseline) / 35));
-    const heartW = 0.30 * (0.4 + 0.6 * hp);
-    up   += hp * heartW;
-    wSum += heartW;
-  }
+  // (2) HEART — intentionally NOT fused into the emotional read.
+  // We do NOT treat a raised heart rate as evidence of distress or activation.
+  // Beats-per-minute is an ambiguous, heavily-confounded, and sometimes
+  // contradictory signal of emotional state: a frightened or frozen person can
+  // slow DOWN, and movement, talking, caffeine, and medication swamp any
+  // emotional change. So the heart contributes ZERO to the arousal/music read.
+  // The reading is still measured and shown (research + the live monitor); the
+  // better, non-BPM read of how a person is doing is what we build next.
 
   // (3) FACE — with recent text, the face confirms (low weight, per the
   // research: text leads). With NO recent text, the face LEADS — it is the
@@ -2220,12 +2218,13 @@ function readArousalSignal() {
   }
 
   // Normalize each direction by the signals that can actually SPEAK in that
-  // direction. Heart and voice only measure activation — they know nothing
-  // about sadness, so they must not dilute the sadness reading.
+  // direction. Voice only measures activation — it knows nothing about sadness,
+  // so it must not dilute the sadness reading. (The heart no longer participates
+  // in the fusion at all — high BPM never implies distress here.)
   const downW = (tw > 0 && window._textEmotion ? 0.45 * tw : 0) + (facePresent ? faceW : 0);
   const activation = wSum > 0 ? Math.min(1, up / Math.max(0.28, wSum)) : 0.5;
   window._adaptiveDown = downW > 0 ? Math.min(1, down / Math.max(0.22, downW)) : 0;
-  window._fusionParts = { text: (window._textEmotion&&tw>0)?1:0, heart: (window._heartBPM?1:0),
+  window._fusionParts = { text: (window._textEmotion&&tw>0)?1:0, heart: 0,
                           face: (faceUp>0.05||faceDown>0.05)?1:0, voice: (v&&v.energy!=null)?1:0 };
   return activation;
 }
@@ -5146,7 +5145,7 @@ def page_research():
     <p class="cite">Frontiers in Digital Health (2025), 7:1552396 &mdash; review of music therapy, entrainment, and AI-driven biofeedback.</p>
 
     <h2>3. Real-time, physiology-guided adaptation (in development)</h2>
-    <p>The strongest current evidence favors adjusting <strong>musical parameters</strong> &mdash; tempo, volume, complexity &mdash; smoothly and in real time in response to physiological signals, rather than abruptly switching tracks. When tension rises, effective systems slow the tempo and simplify the music with <em>soft transitions</em>. This is the direction of InnerLight&rsquo;s ongoing sound development, using the person&rsquo;s heart signal as the primary, steadier feedback channel.</p>
+    <p>The strongest current evidence favors adjusting <strong>musical parameters</strong> &mdash; tempo, volume, complexity &mdash; smoothly and in real time in response to physiological signals, rather than abruptly switching tracks. When tension rises, effective systems slow the tempo and simplify the music with <em>soft transitions</em>. This is the direction of InnerLight&rsquo;s ongoing sound development. We are deliberately re-examining which signal should drive it: because beats-per-minute is an unreliable indicator of emotional state, we do not use heart rate as a distress signal, and are building a more trustworthy read of how a person is doing.</p>
     <p class="cite">REMAST: Real-time Emotion-based Music Arrangement with Soft Transition (arXiv:2305.08029).</p>
     <p class="cite">Williams et al. (2020); Jiao (2025) &mdash; adaptive functional music generation with real-time biofeedback, reviewed in <em>Frontiers in Psychology</em> (2026), 16:1741463.</p>
 
@@ -5228,17 +5227,17 @@ def page_how():
     <h3>2. You tell your story, your way</h3>
     <p>You can type or speak, whichever is easier. InnerLight listens for what you actually mean, reflects it back, and asks one gentle question at a time drawn from what you said &mdash; never a wall of forms, never rushed. You decide when you are ready for a response; nothing answers over you.</p>
     <h3>3. You are met where you are</h3>
-    <p>Using the optional camera reading and what you say, the calming sound gently shifts to match how you are feeling and then guides it toward calm. The aim is to help you feel heard and steadier while you wait.</p>
+    <p>Using what you tell us &mdash; and, if you like, the breathing guide &mdash; the calming sound gently shifts to meet the moment and then eases toward calm. We do <strong>not</strong> use your heart rate to judge how you feel; beats-per-minute is an ambiguous signal, and we would rather listen to you. The aim is to help you feel heard and steadier while you wait.</p>
     <h3>4. A bridge to real help &mdash; only with your consent</h3>
     <p>When it would help, InnerLight can connect you to real human support &mdash; a crisis line, a mobile crisis team, a telehealth provider, legal aid, and in urgent moments the right emergency help. If you choose to share a summary of what you talked about, <strong>you</strong> review and control it first. Nothing is shared without your say-so.</p>
 
     <h2>System one &mdash; the sound</h2>
     <p><strong>In plain terms:</strong> InnerLight&rsquo;s sound is built on a music-therapy method called the <em>Iso-Principle</em>. Instead of jumping straight to the calmest music &mdash; which can feel like being told to &ldquo;just relax&rdquo; &mdash; it starts with sound that <em>matches</em> where you are, so you feel met, and then gradually eases the music toward calm and carries you with it. As the reading of your state changes, the music moves between prepared &ldquo;lanes&rdquo; that differ in energy, tempo, and fullness.</p>
-    <div class="tech"><b>Technical detail:</b> lanes are selected by a live state estimate (from the heart read and conversation) and sequenced by the Iso-Principle &mdash; enter on a matching lane, then step down through intermediate lanes to the calmest over one to three minutes. Calming targets follow the literature: slower tempo (roughly a 60&ndash;80&nbsp;bpm feel, or a <em>decreasing</em> tempo, which produced the strongest parasympathetic response in controlled work), low rhythmic density, soft attacks, and minimal sudden dynamics. Transitions use equal-power (cosine) crossfades and gain automation so changes are smooth rather than abrupt. In active development: stem-layered lanes (fading instrument layers in and out instead of switching tracks) and a low-pass &ldquo;settle&rdquo; sweep so the sound literally softens as you calm.</div>
+    <div class="tech"><b>Technical detail:</b> lanes are selected from the conversation (and, optionally, the breathing guide) and sequenced by the Iso-Principle &mdash; enter on a matching lane, then step down through intermediate lanes to the calmest over one to three minutes. Calming targets follow the literature: slower tempo (roughly a 60&ndash;80&nbsp;bpm feel, or a <em>decreasing</em> tempo, which produced the strongest parasympathetic response in controlled work), low rhythmic density, soft attacks, and minimal sudden dynamics. Transitions use equal-power (cosine) crossfades and gain automation so changes are smooth rather than abrupt. In active development: stem-layered lanes (fading instrument layers in and out instead of switching tracks) and a low-pass &ldquo;settle&rdquo; sweep so the sound literally softens as you calm.</div>
     <p class="cite">Honest limit: calming-audio effects are real but modest and individual, and &ldquo;60&nbsp;bpm music syncs your heartbeat&rdquo; is an overstatement &mdash; music nudges the nervous system toward rest; it does not lock your pulse to the beat. Full citations are on the <a href="/research">Research &amp; Methods</a> page.</p>
 
     <h2>System two &mdash; the heartbeat reading</h2>
-    <p><strong>In plain terms:</strong> if you allow the camera, InnerLight can estimate your heart rate without touching you, by watching the tiny color changes in your face as blood pulses just beneath the skin. This happens <strong>entirely on your own device</strong> &mdash; the video is analyzed in your browser and is never sent to us or stored. It lets the sound and support respond to how your body is actually doing, and it powers an anonymous, words-free view that a supporter can watch to see whether you are settling.</p>
+    <p><strong>In plain terms:</strong> if you allow the camera, InnerLight can estimate your heart rate without touching you, by watching the tiny color changes in your face as blood pulses just beneath the skin. This happens <strong>entirely on your own device</strong> &mdash; the video is analyzed in your browser and is never sent to us or stored. The reading is shown to you, powers an anonymous, words-free view a supporter can watch, and is recorded for research &mdash; but we do <strong>not</strong> treat a higher heart rate as &ldquo;distress.&rdquo; Beats-per-minute is too ambiguous for that, so it never decides anything on its own.</p>
     <div class="tech"><b>Technical detail:</b> this is <b>remote photoplethysmography (rPPG)</b>. We sample skin from the forehead and both cheeks (avoiding eyes and mouth, which add motion noise), combine the red, green, and blue channels using the <b>Plane-Orthogonal-to-Skin (POS)</b> algorithm to cancel motion and lighting, band-limit the signal to the plausible heart range (about 0.7&ndash;2.8&nbsp;Hz), and add a sub-harmonic guard so the estimator cannot latch onto half the true rate. In dim light the image is brightened first (adaptive gamma correction) so people in poor lighting are not excluded. Every reading carries a confidence tier &mdash; <b>measured</b>, <b>estimated</b>, or <b>baseline-held</b> &mdash; so coverage is complete without overstating precision.</div>
     <p class="cite">Why webcam rPPG and not a wearable: a crisis tool must work for anyone, instantly, with no device to buy or pair. It needs reasonable light and a mostly still face, and we label every reading&rsquo;s confidence rather than pretend to clinical accuracy. Facial-expression signals use Google&rsquo;s on-device MediaPipe Face Landmarker. Method citations are on the <a href="/research">Research</a> page.</p>
 
