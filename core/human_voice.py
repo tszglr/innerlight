@@ -45,6 +45,30 @@ OPENAI_VOICES = [
 # cache of voices fetched live from the ElevenLabs account
 _eleven_voice_cache = None
 
+# ---- HUME OCTAVE (emotion-aware, warmest for a crisis companion) ----
+# Hume Octave specifies a voice by a DESCRIPTION (a short prompt) or a saved
+# voice id. We offer a curated, respectful set of warm voices — male and female,
+# varied accents — each described to sound gentle, calm, and reassuring, never
+# stereotyped. The person picks the one that feels safest.
+HUME_DEFAULT = os.environ.get("HUME_VOICE_ID", "warm_female_us")
+HUME_VOICES = [
+    {"id": "warm_female_us", "label": "Ava - warm, gentle woman (American)", "gender": "female",
+     "description": "A warm, gentle, calm woman with a soft, reassuring American accent, speaking slowly and kindly, as if comforting someone who is hurting."},
+    {"id": "calm_male_us", "label": "Sam - calm, steady man (American)", "gender": "male",
+     "description": "A calm, steady, reassuring man with a warm American accent, speaking slowly and softly, gentle and grounded."},
+    {"id": "soft_female_uk", "label": "Grace - soft-spoken woman (British)", "gender": "female",
+     "description": "A soft-spoken, soothing woman with a gentle British accent, warm, patient, and unhurried."},
+    {"id": "warm_male_uk", "label": "Oliver - warm man (British)", "gender": "male",
+     "description": "A warm, kind man with a gentle British accent, calm and reassuring, speaking slowly."},
+    {"id": "gentle_female_latin", "label": "Lucia - warm woman (Latin American)", "gender": "female",
+     "description": "A warm, caring woman with a gentle Latin American accent, speaking softly and kindly in a soothing tone."},
+]
+def _hume_desc(voice_id: str) -> str:
+    for v in HUME_VOICES:
+        if v["id"] == (voice_id or HUME_DEFAULT):
+            return v["description"]
+    return HUME_VOICES[0]["description"]
+
 
 # A curated, respectful set of voices offered as a comfort CHOICE if the live
 # account list can't be fetched. Male and female, varied accents. These are
@@ -67,6 +91,9 @@ def list_voices() -> Dict[str, Any]:
     reflects what's actually available and never breaks when defaults change),
     grouped by gender and accent. For OpenAI we return the fixed set."""
     provider = voice_provider()
+    if provider == "hume":
+        return {"provider": "hume",
+                "voices": [{"id": v["id"], "label": v["label"], "gender": v["gender"]} for v in HUME_VOICES]}
     if provider == "elevenlabs":
         try:
             live = _fetch_eleven_voices()
@@ -112,6 +139,10 @@ def _fetch_eleven_voices():
 
 
 def voice_provider() -> Optional[str]:
+    # Hume Octave takes priority — it is the warmest, emotion-aware voice and the
+    # best fit for a crisis companion. Falls back to ElevenLabs / OpenAI / browser.
+    if os.environ.get("HUME_API_KEY"):
+        return "hume"
     if os.environ.get("ELEVENLABS_API_KEY"):
         return "elevenlabs"
     if os.environ.get("OPENAI_API_KEY"):
@@ -134,6 +165,8 @@ def synthesize(text: str, voice_id: str = "") -> Dict[str, Any]:
         return {"use_browser": True, "reason": "no_voice_service_configured"}
 
     try:
+        if provider == "hume":
+            return _hume(text, voice_id)
         if provider == "elevenlabs":
             return _elevenlabs(text, voice_id or ELEVEN_VOICE)
         if provider == "openai":
@@ -152,6 +185,26 @@ def synthesize(text: str, voice_id: str = "") -> Dict[str, Any]:
         print(f"[Voice] error: {e}")
         return {"use_browser": True, "reason": f"voice_service_error: {e}"}
     return {"use_browser": True}
+
+
+def _hume(text: str, voice_id: str = "") -> Dict[str, Any]:
+    import base64
+    key = os.environ["HUME_API_KEY"]
+    body = json.dumps({
+        "utterances": [{"text": text, "description": _hume_desc(voice_id)}],
+        "format": {"type": "mp3"},
+        "num_generations": 1,
+    }).encode()
+    req = urllib.request.Request("https://api.hume.ai/v0/tts", data=body, method="POST", headers={
+        "X-Hume-Api-Key": key, "Content-Type": "application/json", "Accept": "application/json",
+        "User-Agent": "InnerLight/1.0 (+https://getinnerlight.com)",
+    })
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode())
+    gens = data.get("generations") or []
+    if not gens or not gens[0].get("audio"):
+        return {"use_browser": True, "reason": "hume_no_audio"}
+    return {"audio_b64": gens[0]["audio"], "mime": "audio/mpeg", "provider": "hume"}
 
 
 def _elevenlabs(text: str, voice_id: str = "") -> Dict[str, Any]:
