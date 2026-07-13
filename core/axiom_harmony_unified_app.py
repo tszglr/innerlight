@@ -3364,6 +3364,7 @@ function initVoices() {
     window._voiceRanked = ranked;
     console.log('[Voice] using:', selectedVoice && selectedVoice.name,
                 '| best available:', ranked.slice(0,3).map(v=>v.name));
+    try { populateVoicePicker(); } catch(e){}
   };
   pick();
   // voices often load async — re-pick when they arrive
@@ -3375,20 +3376,61 @@ function initVoices() {
 }
 
 let selectedVoiceId = '';
-function selectVoice(v){ selectedVoiceId = v || '';
-  // give an instant preview when they pick, if voice is on
-  if(voiceEnabled && v){ speak('This is the voice I will use.'); } }
-async function loadVoiceChoices(){
-  try{
-    const r = await fetch('/api/voice/list'); const d = await r.json();
-    const sel = document.getElementById('voice-picker'); if(!sel || !d.voices || !d.voices.length) return;
-    // group respectfully by gender, then accent
-    sel.innerHTML = '<option value="">Voice: default</option>';
-    d.voices.forEach(v=>{
-      const o = document.createElement('option'); o.value = v.id; o.textContent = v.label || v.id; sel.appendChild(o);
-    });
-  }catch(e){}
+function selectVoice(v){
+  v = v || '';
+  if (v.indexOf('b:') === 0){
+    // a specific BROWSER voice chosen by the person
+    var nm = v.slice(2);
+    var found = (window._voiceRanked||[]).find(function(x){ return x.name === nm; });
+    if (found) selectedVoice = found;
+    selectedVoiceId = '';   // browser voice takes over
+  } else {
+    selectedVoiceId = v;    // a premium provider voice id
+  }
+  if (voiceEnabled && v){ speak('This is the voice I will use.'); }
 }
+// Build the voice picker from BOTH the premium provider (if a key is live) AND
+// the best browser voices, so the person can choose a male/female/accent voice
+// even without a paid voice service. Reveals the picker only when there's a
+// real choice to make. A guess at gender from the voice name, for grouping.
+function _voiceGender(name){
+  var n=(name||'').toLowerCase();
+  if(/(female|aria|jenny|sonia|libby|michelle|samantha|ava|allison|zoe|nicky|joelle|zira|susan|karen|serena|tessa|fiona|moira|catherine)/.test(n)) return 'Female';
+  if(/(male|guy|ryan|tom|evan|david|mark|daniel|fred|alex|oliver|george|james)/.test(n)) return 'Male';
+  return 'Voice';
+}
+async function populateVoicePicker(){
+  var sel = document.getElementById('voice-picker'); if(!sel) return;
+  var opts = '<option value="">Voice: automatic (best available)</option>';
+  var any = false;
+  // premium provider voices (only present when a voice key is configured)
+  try{
+    var r = await fetch('/api/voice/list'); var d = await r.json();
+    if (d && d.voices && d.voices.length){
+      opts += '<optgroup label="Human voices">';
+      d.voices.forEach(function(v){ any=true; opts += '<option value="'+v.id+'">'+(v.label||v.id)+'</option>'; });
+      opts += '</optgroup>';
+    }
+  }catch(e){}
+  // browser voices — grouped by likely gender, best first
+  var ranked = (window._voiceRanked||[]).slice(0,10);
+  if (ranked.length){
+    var groups = {Female:[],Male:[],Voice:[]};
+    ranked.forEach(function(v){ groups[_voiceGender(v.name)].push(v); });
+    ['Female','Male','Voice'].forEach(function(g){
+      if(!groups[g].length) return;
+      opts += '<optgroup label="'+(g==='Voice'?'Other voices':g+' voices')+'">';
+      groups[g].forEach(function(v){ any=true;
+        var lang=(v.lang||'').toUpperCase();
+        opts += '<option value="b:'+v.name.replace(/"/g,'')+'">'+v.name+(lang?' ('+lang+')':'')+'</option>';
+      });
+      opts += '</optgroup>';
+    });
+  }
+  sel.innerHTML = opts;
+  sel.style.display = any ? '' : 'none';
+}
+function loadVoiceChoices(){ return populateVoicePicker(); }
 document.addEventListener('DOMContentLoaded', loadVoiceChoices);
 // Record when the person is typing so heavy work (face detection) yields to
 // the keyboard and typing always stays instant.
@@ -3470,8 +3512,12 @@ function _spSpeakBrowser(text, finish) {
   try { speechSynthesis.cancel(); } catch(e){}
   var utter = new SpeechSynthesisUtterance(text);
   if (selectedVoice) utter.voice = selectedVoice;
-  utter.rate = 0.92;   // slightly slower = calmer
-  utter.pitch = 1.0;
+  // WARMTH + TONE-STEERING: a slightly lower pitch reads as warmer, and we slow
+  // down when the person is activated (the vocal twin of the adaptive music).
+  var ar = (typeof adaptiveArousal !== 'undefined') ? adaptiveArousal : 0.5;
+  ar = Math.max(0, Math.min(1, ar));
+  utter.rate = 0.95 - 0.13 * ar;   // ~0.95 when calm, ~0.82 when activated
+  utter.pitch = 0.97;              // a touch lower = warmer, less robotic
   utter.volume = 0.95;
   utter.onend = finish;
   utter.onerror = finish;
