@@ -4930,30 +4930,42 @@ def _info_page(title, inner):
 <title>{{ title }} &mdash; InnerLight</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI', system-ui, -apple-system, sans-serif; color:#4a372d;
-         background:linear-gradient(160deg,#f9f7f5 0%,#f6f2ee 55%,#f0f5fa 100%);
-         line-height:1.7; min-height:100vh; }
-  .breathe { animation:breathe 5s ease-in-out infinite; }
-  @keyframes breathe { 0%,100%{opacity:.85;transform:scale(1);} 50%{opacity:1;transform:scale(1.04);} }
-  .wrap { max-width:720px; margin:0 auto; padding:54px 26px 80px; }
-  .mark { font-size:40px; color:#c59771; text-align:center; margin-bottom:6px; }
-  .brand { text-align:center; font-size:15px; letter-spacing:.16em; text-transform:uppercase;
-           color:#c08d64; margin-bottom:30px; }
-  h1 { font-size:29px; font-weight:600; color:#453127; margin-bottom:18px; letter-spacing:.01em; }
-  h2 { font-size:18px; font-weight:600; color:#714c2e; margin:30px 0 10px; }
-  p { font-size:16px; color:#6a402c; margin-bottom:15px; }
-  .lead { font-size:18px; color:#613b28; margin-bottom:22px; }
-  .cite { font-size:12.5px; color:#5f7d8c; margin:2px 0 10px; padding-left:12px; border-left:2px solid #e0d7cf; } .soft { background:rgba(255,255,255,.6); border:1px solid #e8dfd8; border-left:4px solid #c59771;
+  :root{ --ink:#2b2620; --body:#4a4235; --muted:#8a7d6c; --blue:#33567c; --blue-d:#25405e;
+         --amber:#c56a2c; --amber-d:#a9531f; --line:#e7dccc; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:var(--body);
+         background:linear-gradient(168deg,#eef2f6 0%,#f3ece0 55%,#f7efe4 100%);
+         line-height:1.75; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .orb { width:60px; height:60px; border-radius:50%; margin:0 auto 8px;
+         background:radial-gradient(circle at 38% 34%, #ffffff 0%, #a9c6e2 34%, #5f8bb6 70%, #33567c 100%);
+         box-shadow:0 8px 24px rgba(51,86,124,0.28); }
+  .breathe { animation:breathe 10s ease-in-out infinite; }
+  @keyframes breathe { 0%{transform:scale(.82);} 40%{transform:scale(1);} 50%{transform:scale(1);} 100%{transform:scale(.82);} }
+  .wrap { max-width:760px; margin:0 auto; padding:52px 26px 80px; }
+  .brand { text-align:center; font-family:Georgia,'Times New Roman',serif; font-size:14px; letter-spacing:.22em;
+           text-transform:uppercase; color:var(--amber-d); margin-bottom:30px; }
+  h1 { font-family:Georgia,'Times New Roman',serif; font-size:32px; font-weight:700; color:var(--ink); margin-bottom:18px; line-height:1.25; }
+  h2 { font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:700; color:var(--blue); margin:34px 0 10px;
+       padding-left:13px; border-left:4px solid var(--amber); line-height:1.3; }
+  h3 { font-size:16.5px; font-weight:700; color:var(--ink); margin:22px 0 6px; }
+  p { font-size:16.5px; color:var(--body); margin-bottom:15px; }
+  .lead { font-size:19px; color:#3a3428; margin-bottom:22px; line-height:1.6; }
+  ul { margin:0 0 15px 22px; } li { font-size:16px; color:var(--body); margin-bottom:8px; }
+  .cite { font-size:12.5px; color:#5f7d8c; margin:2px 0 10px; padding-left:12px; border-left:2px solid var(--line); }
+  .soft { background:rgba(255,255,255,.62); border:1px solid var(--line); border-left:4px solid var(--amber);
           border-radius:0 14px 14px 0; padding:18px 22px; margin:22px 0; }
-  a { color:#8f603a; }
-  .back { display:inline-block; margin-top:38px; color:#9a8778; text-decoration:none; font-size:15px;
+  .soft p { margin:0; }
+  .card { background:rgba(255,255,255,.62); border:1px solid var(--line); border-radius:16px; padding:20px 22px; margin:18px 0; }
+  .tech { background:#f1f5f9; border:1px solid #d8e5f0; border-radius:12px; padding:14px 16px; margin:14px 0; font-size:14.5px; color:#33455c; line-height:1.65; }
+  .tech b { color:var(--blue-d); }
+  a { color:var(--blue); }
+  .back { display:inline-block; margin-top:38px; color:var(--muted); text-decoration:none; font-size:15px;
           border-bottom:1px solid transparent; }
-  .back:hover { border-bottom-color:#c59771; }
-  .footer { margin-top:46px; padding-top:20px; border-top:1px solid #ebe3dc; font-size:13px; color:#cca382; text-align:center; }
-  .footer a { color:#bd895f; text-decoration:none; margin:0 7px; }
+  .back:hover { border-bottom-color:var(--amber); }
+  .footer { margin-top:46px; padding-top:20px; border-top:1px solid var(--line); font-size:13px; color:#a79a88; text-align:center; }
+  .footer a { color:var(--blue); text-decoration:none; margin:0 7px; }
 </style></head><body>
   <div class="wrap">
-    <div class="mark breathe" aria-hidden="true">&#9711;</div>
+    <div class="orb breathe" aria-hidden="true"></div>
     <div class="brand">InnerLight</div>
     {{ inner|safe }}
     <a class="back" href="/">&larr; Back to InnerLight</a>
@@ -4974,22 +4986,34 @@ def _info_page(title, inner):
 def page_about():
     inner = """
     <h1>Why InnerLight exists</h1>
-    <p class="lead">InnerLight exists to hold the hardest space in the mental-health system: the gap between the moment a person reaches out and the moment real human help actually arrives.</p>
+    <p class="lead">InnerLight holds the hardest space in the mental-health system: the gap between the moment a person reaches out and the moment real human help actually arrives.</p>
 
-    <p>Across the country, that gap is measured in waitlists, transfers, and hold music. When someone is in crisis, help usually does exist &mdash; a clinician, a counselor, a legal-aid office, a crisis line &mdash; but reaching it means navigating hospitals, insurance, county agencies, schools, and courts, often during the hardest hours of a person&rsquo;s life. In the space between &ldquo;I need help&rdquo; and &ldquo;help has arrived,&rdquo; people wait &mdash; frequently 45 minutes to two hours &mdash; and too often they wait alone. InnerLight was built to hold that space: to steady a person and bridge them to the right human help, quickly.</p>
+    <p>Across the country, that gap is measured in waitlists, transfers, and hold music. When someone is in crisis, help usually does exist &mdash; a clinician, a counselor, a legal-aid office, a crisis line &mdash; but reaching it means navigating hospitals, insurance, county agencies, schools, and courts, often during the hardest hours of a person&rsquo;s life. In the space between &ldquo;I need help&rdquo; and &ldquo;help has arrived,&rdquo; people wait, and too often they wait alone. National crisis systems themselves report answer and dispatch times measured in many minutes to hours; mobile crisis and appointment waits are far longer. InnerLight was built to hold that specific interval &mdash; to keep a person company and steady while a bridge to the right human help is built.</p>
+
+    <h2>The gap we target, precisely</h2>
+    <p>We are deliberately narrow. InnerLight is not therapy, not a diagnosis, and not a replacement for a clinician, a lawyer, or a crisis counselor. It is a <strong>survive-the-wait companion</strong> for the acute interval &mdash; the minutes to hours when a person has decided to seek help but has not yet reached a human. Its two jobs are to <strong>help the person settle</strong> and to <strong>shorten the distance to the right human help</strong>, with the person&rsquo;s consent at every step. Success, for us, is measured by connection to a human &mdash; not by time spent in the app.</p>
+
+    <h2>How it actually works</h2>
+    <p>InnerLight combines four evidence-informed elements, each explained in plain and technical detail on the <a href="/how-it-works">How it works</a> page:</p>
+    <ul>
+      <li><strong>Adaptive calming sound</strong> built on the music-therapy <em>Iso-Principle</em> &mdash; meet a person&rsquo;s current state, then gently guide the music toward calm.</li>
+      <li><strong>A contactless heart-rate reading</strong> from an ordinary webcam (remote photoplethysmography), running entirely on the person&rsquo;s own device, so the sound and support can respond to how the body is actually doing.</li>
+      <li><strong>A warm, plain-language conversation</strong> that listens for what a person means, reflects it back, and asks one gentle question at a time &mdash; never a wall of forms.</li>
+      <li><strong>A consented bridge to human help</strong> &mdash; crisis lines, mobile crisis teams, telehealth, legal aid, and, in emergencies, 988/911 &mdash; with any shared summary reviewed and controlled by the person first.</li>
+    </ul>
 
     <h2>The founder</h2>
     <p>InnerLight is founded by <strong>Toshay S. Zeigler</strong>, founder of <strong>God&rsquo;s Love For Us LLC</strong>. A dedicated adult learner, he earned two associate degrees and a university-transfer certificate while working, and is continuing his studies in political science with the goal of law school &mdash; driven by a determination to understand and improve the systems that shape people&rsquo;s lives. His professional background spans logistics, operations, transportation, and in-home care: work grounded in getting people and things where they need to be, reliably and under pressure.</p>
-    <p>That determination is rooted in firsthand experience of how fragmented the safety net can be &mdash; of how often people are expected to become experts in medicine, law, education, housing, and government during their most difficult moments. InnerLight is a considered answer to that gap.</p>
-
-    <h2>The method</h2>
-    <p>The calming core of InnerLight began with a practical observation. Across years of driving and thousands of trips, Toshay noticed that when calm instrumental music was already playing, agitated people settled &mdash; reliably, and often without a word. That simple, repeatable effect &mdash; the right sound, at the right level, at the right moment &mdash; became the seed of InnerLight&rsquo;s approach: meet a person where they are and gently carry them toward calm while a bridge to human help is built. The established principles behind it are documented, with citations, on the <a href="/research">Research &amp; Methods</a> page.</p>
+    <p>The calming core of InnerLight began with a practical observation. Across years of driving and thousands of trips, he noticed that when calm instrumental music was already playing, agitated people settled &mdash; reliably, and often without a word. That simple, repeatable effect &mdash; the right sound, at the right level, at the right moment &mdash; became the seed of InnerLight&rsquo;s approach.</p>
 
     <h2>Built by a person, with the help of AI</h2>
     <p>InnerLight is built by Toshay directly, working alongside artificial intelligence as a tool and collaborator. The vision, the direction, and every decision about what InnerLight should be are his. AI helps build it &mdash; the idea, and the responsibility, are human.</p>
 
-    <h2>What InnerLight believes</h2>
-    <p>Technology should <strong>strengthen</strong> human decision-making, not replace it. Mental-health tools should <strong>complement</strong> human care, never pretend to be it. Privacy is not a feature to trade away &mdash; it is the foundation. And no one reaching out for help should have their first response be a waitlist.</p>
+    <h2>Our standards and ethics</h2>
+    <p>We hold ourselves to explicit, published rules: technology should <strong>strengthen</strong> human decision-making, not replace it; a mental-health tool should <strong>complement</strong> human care, never pretend to be it; privacy is the foundation, not a feature to trade away; and no one reaching out for help should have their first response be a waitlist. InnerLight never diagnoses, never names a clinical condition, never practices medicine or law, and uses <strong>no engagement tricks</strong> &mdash; no streaks, no badges, no pressure to stay. We operate strictly within the law, and we will report results honestly, including negative ones.</p>
+
+    <h2>For clinicians, researchers, and partners</h2>
+    <p>We are actively looking for people who can help us sharpen and validate this work &mdash; clinicians, crisis-service providers, researchers, and technologists. We do not claim InnerLight is proven; it is built on established principles and is itself untested, and independent evaluation is exactly what we want. Our methods, technologies, and honest limitations are documented for review on the <a href="/research">Research &amp; Methods</a> page, our privacy and data handling on the <a href="/privacy">Your privacy</a> page, and our crisis protocol on the <a href="/safety">Safety</a> page. If you can help &mdash; or challenge us &mdash; please <a href="/contact">get in touch</a>.</p>
 
     <div class="soft">
       <p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a place to be heard and steadied, and a bridge to the right human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p>
@@ -5196,31 +5220,65 @@ def page_research():
 def page_how():
     inner = """
     <h1>How InnerLight works</h1>
-    <p class="lead">Simple, private, and built for the moment you can't wait.</p>
+    <p class="lead">Nothing here is a black box. This page explains exactly what happens in a session, and then exactly how each of our three systems &mdash; the sound, the heartbeat reading, and the encryption &mdash; actually works, in plain language first and technical detail second.</p>
 
-    <h2>1. A calm space opens</h2>
-    <p>When you arrive, a soft, calming environment is already there &mdash; gentle sound and a peaceful scene, present
-    from the first moment, not something you have to switch on. It's designed to help your body settle before anything
-    else happens.</p>
+    <h2>The experience, step by step</h2>
+    <h3>1. A calm space opens</h3>
+    <p>When you arrive, a soft environment is already present &mdash; gentle sound and a breathing guide &mdash; not something you have to switch on. A slowly expanding and contracting circle paces your breath at about six breaths per minute, the rate best supported in the research for calming the body. You never have to use it; it is simply there.</p>
+    <h3>2. You tell your story, your way</h3>
+    <p>You can type or speak, whichever is easier. InnerLight listens for what you actually mean, reflects it back, and asks one gentle question at a time drawn from what you said &mdash; never a wall of forms, never rushed. You decide when you are ready for a response; nothing answers over you.</p>
+    <h3>3. You are met where you are</h3>
+    <p>Using the optional camera reading and what you say, the calming sound gently shifts to match how you are feeling and then guides it toward calm. The aim is to help you feel heard and steadier while you wait.</p>
+    <h3>4. A bridge to real help &mdash; only with your consent</h3>
+    <p>When it would help, InnerLight can connect you to real human support &mdash; a crisis line, a mobile crisis team, a telehealth provider, legal aid, and in urgent moments the right emergency help. If you choose to share a summary of what you talked about, <strong>you</strong> review and control it first. Nothing is shared without your say-so.</p>
 
-    <h2>2. You tell your story, your way</h2>
-    <p>You can type or speak &mdash; whatever feels easier. InnerLight listens to what you actually mean, reflects it
-    back, and asks one gentle question at a time, drawn from what you said. Never a wall of forms. Never rushed. You
-    decide when you're finished and ready for a response &mdash; nothing answers over you.</p>
+    <h2>System one &mdash; the sound</h2>
+    <p><strong>In plain terms:</strong> InnerLight&rsquo;s sound is built on a music-therapy method called the <em>Iso-Principle</em>. Instead of jumping straight to the calmest music &mdash; which can feel like being told to &ldquo;just relax&rdquo; &mdash; it starts with sound that <em>matches</em> where you are, so you feel met, and then gradually eases the music toward calm and carries you with it. As the reading of your state changes, the music moves between prepared &ldquo;lanes&rdquo; that differ in energy, tempo, and fullness.</p>
+    <div class="tech"><b>Technical detail:</b> lanes are selected by a live state estimate (from the heart read and conversation) and sequenced by the Iso-Principle &mdash; enter on a matching lane, then step down through intermediate lanes to the calmest over one to three minutes. Calming targets follow the literature: slower tempo (roughly a 60&ndash;80&nbsp;bpm feel, or a <em>decreasing</em> tempo, which produced the strongest parasympathetic response in controlled work), low rhythmic density, soft attacks, and minimal sudden dynamics. Transitions use equal-power (cosine) crossfades and gain automation so changes are smooth rather than abrupt. In active development: stem-layered lanes (fading instrument layers in and out instead of switching tracks) and a low-pass &ldquo;settle&rdquo; sweep so the sound literally softens as you calm.</div>
+    <p class="cite">Honest limit: calming-audio effects are real but modest and individual, and &ldquo;60&nbsp;bpm music syncs your heartbeat&rdquo; is an overstatement &mdash; music nudges the nervous system toward rest; it does not lock your pulse to the beat. Full citations are on the <a href="/research">Research &amp; Methods</a> page.</p>
 
-    <h2>3. You are met where you are</h2>
-    <p>The calming sound can gently shift to match and soothe how you're feeling, helping bring intensity down. The goal
-    is to help you feel heard and steadier &mdash; to hold the space with you while you wait.</p>
+    <h2>System two &mdash; the heartbeat reading</h2>
+    <p><strong>In plain terms:</strong> if you allow the camera, InnerLight can estimate your heart rate without touching you, by watching the tiny color changes in your face as blood pulses just beneath the skin. This happens <strong>entirely on your own device</strong> &mdash; the video is analyzed in your browser and is never sent to us or stored. It lets the sound and support respond to how your body is actually doing, and it powers an anonymous, words-free view that a supporter can watch to see whether you are settling.</p>
+    <div class="tech"><b>Technical detail:</b> this is <b>remote photoplethysmography (rPPG)</b>. We sample skin from the forehead and both cheeks (avoiding eyes and mouth, which add motion noise), combine the red, green, and blue channels using the <b>Plane-Orthogonal-to-Skin (POS)</b> algorithm to cancel motion and lighting, band-limit the signal to the plausible heart range (about 0.7&ndash;2.8&nbsp;Hz), and add a sub-harmonic guard so the estimator cannot latch onto half the true rate. In dim light the image is brightened first (adaptive gamma correction) so people in poor lighting are not excluded. Every reading carries a confidence tier &mdash; <b>measured</b>, <b>estimated</b>, or <b>baseline-held</b> &mdash; so coverage is complete without overstating precision.</div>
+    <p class="cite">Why webcam rPPG and not a wearable: a crisis tool must work for anyone, instantly, with no device to buy or pair. It needs reasonable light and a mostly still face, and we label every reading&rsquo;s confidence rather than pretend to clinical accuracy. Facial-expression signals use Google&rsquo;s on-device MediaPipe Face Landmarker. Method citations are on the <a href="/research">Research</a> page.</p>
 
-    <h2>4. A bridge to real help &mdash; only with your consent</h2>
-    <p>When it would help, InnerLight can connect you to real human support &mdash; a crisis line, a mobile crisis team,
-    a telehealth provider, and in urgent moments the right emergency help. If you choose to share a summary of what you
-    talked about, <strong>you</strong> review and control it first. Nothing is shared without your say-so.</p>
+    <h2>System three &mdash; the Axiom Harmony Protocol (our encryption)</h2>
+    <p><strong>In plain terms:</strong> if you choose to save your story so you can return to it, InnerLight locks it with a key made from a private return code that only you hold. Through a deliberately slow mathematical process, your code becomes a unique digital key, and your words are locked with it so thoroughly that the stored result looks like random noise. We never keep your code, so we can never unlock your story &mdash; and neither can anyone who breaks into the server. If you lose the code, the data is gone for good. That is the trade-off of real privacy: the lock is genuine, and you hold the only key.</p>
+
+    <div class="card" style="overflow-x:auto;">
+    <svg viewBox="0 0 720 150" width="100%" style="min-width:640px;max-width:720px;display:block;margin:0 auto;font-family:Arial,sans-serif;" role="img" aria-label="How the Axiom Harmony Protocol encrypts your saved story: your return code becomes a key through 390,000 rounds of key-stretching, which locks your words with AES-256-GCM into unreadable stored data.">
+      <defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#33567c"/></marker></defs>
+      <rect x="8" y="45" width="140" height="60" rx="12" fill="#fff" stroke="#6f97c0" stroke-width="1.5"/>
+      <text x="78" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2620">Your return code</text>
+      <text x="78" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">(only you have it)</text>
+      <line x1="150" y1="75" x2="212" y2="75" stroke="#33567c" stroke-width="2" marker-end="url(#ah2)"/>
+      <text x="181" y="40" text-anchor="middle" font-size="10.5" fill="#a9531f" font-weight="700">390,000 rounds</text>
+      <text x="181" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">PBKDF2</text>
+      <rect x="214" y="45" width="140" height="60" rx="12" fill="#fff" stroke="#6f97c0" stroke-width="1.5"/>
+      <text x="284" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2620">256-bit key</text>
+      <text x="284" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">never stored</text>
+      <line x1="356" y1="75" x2="418" y2="75" stroke="#33567c" stroke-width="2" marker-end="url(#ah2)"/>
+      <text x="387" y="40" text-anchor="middle" font-size="10.5" fill="#a9531f" font-weight="700">AES-256-GCM</text>
+      <text x="387" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">+ random nonce</text>
+      <rect x="420" y="45" width="150" height="60" rx="12" fill="#fff" stroke="#6f97c0" stroke-width="1.5"/>
+      <text x="495" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2620">Your words, locked</text>
+      <text x="495" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">reads as noise</text>
+      <line x1="572" y1="75" x2="628" y2="75" stroke="#33567c" stroke-width="2" marker-end="url(#ah2)"/>
+      <rect x="630" y="45" width="82" height="60" rx="12" fill="#2b2620"/>
+      <text x="671" y="72" text-anchor="middle" font-size="20">&#128274;</text>
+      <text x="671" y="94" text-anchor="middle" font-size="10" fill="#e0d7cf">stored</text>
+      <text x="360" y="132" text-anchor="middle" font-size="11" fill="#5f7d8c">Without your code, the key cannot be rebuilt &mdash; so no one, not even InnerLight, can reverse this.</text>
+    </svg>
+    </div>
+
+    <div class="tech"><b>Technical detail:</b> AHP encrypts each payload with <b>AES-256-GCM</b> (Advanced Encryption Standard, 256-bit, Galois/Counter Mode) &mdash; an <i>authenticated</i> cipher protecting both confidentiality and integrity. The key is derived from the return code with <b>PBKDF2-HMAC-SHA256 at 390,000 iterations</b> and a random salt, a slow key-stretch that makes brute force enormously expensive. Every encryption uses a fresh random <b>nonce</b>, and the protocol version is bound in as authenticated associated data. The key is never written to disk &mdash; only ciphertext, salt, and nonce are stored. Toward the operator this is a zero-knowledge design: InnerLight holds bytes it cannot read.</div>
+    <p class="cite">Honest limit: AES-256-GCM with strong key derivation is robust modern cryptography, but it is not yet post-quantum. A documented hardening path is to add a post-quantum key-exchange layer (for example ML-KEM / Kyber) alongside it. We state this openly rather than overstate the protection.</p>
+
+    <h2>What we never do</h2>
+    <p>InnerLight never diagnoses, never names a clinical condition, never practices medicine or law, and never uses engagement tricks (no streaks, badges, or pressure to stay). The raw conversation is not stored; only a summary you choose to save is kept, with identifying details automatically removed. More on data handling is on the <a href="/privacy">Your privacy</a> page, and our crisis protocol is on the <a href="/safety">Safety</a> page.</p>
 
     <div class="soft">
-      <p style="margin:0;">InnerLight is a companion for the wait and a bridge to care. It does not diagnose or treat,
-      and it is not a substitute for professional or emergency help. If you are in immediate danger, call or text 988,
-      or call 911.</p>
+      <p style="margin:0;">InnerLight is a companion for the wait and a bridge to care. It does not diagnose or treat, and it is not a substitute for professional or emergency help. If you are in immediate danger, call or text 988, or call 911.</p>
     </div>
     """
     return _info_page("How it works", inner)
