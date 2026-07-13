@@ -4974,59 +4974,25 @@ def _info_page(title, inner):
 def page_about():
     inner = """
     <h1>Why InnerLight exists</h1>
-    <p class="lead">InnerLight was built by a father who lived the wait &mdash; and decided no family should face it alone.</p>
+    <p class="lead">InnerLight exists to hold the hardest space in the mental-health system: the gap between the moment a person reaches out and the moment real human help actually arrives.</p>
 
-    <p>Toshay S. Zeigler understands, from direct experience, what it means to depend on systems that are meant to
-    help &mdash; and to discover how often they fall short. From an early age he learned resilience, self-advocacy,
-    and the value of finding one’s own way forward when institutions falter. Those lessons became the foundation
-    of a lifelong conviction: that people navigating difficult moments deserve better than confusion and delay.</p>
+    <p>Across the country, that gap is measured in waitlists, transfers, and hold music. When someone is in crisis, help usually does exist &mdash; a clinician, a counselor, a legal-aid office, a crisis line &mdash; but reaching it means navigating hospitals, insurance, county agencies, schools, and courts, often during the hardest hours of a person&rsquo;s life. In the space between &ldquo;I need help&rdquo; and &ldquo;help has arrived,&rdquo; people wait &mdash; frequently 45 minutes to two hours &mdash; and too often they wait alone. InnerLight was built to hold that space: to steady a person and bridge them to the right human help, quickly.</p>
 
-    <p>He carried that conviction into a varied professional life &mdash; in logistics, operations, transportation,
-    and in-home care &mdash; and, as a dedicated adult learner, earned two associate degrees and a university-transfer
-    certificate while balancing work and family. He is now continuing his studies in political science with the goal
-    of law school, driven by a desire to understand and improve the systems that shape people’s lives. But the
-    experience that shaped him most profoundly has been fatherhood. Toshay is the primary caregiver for his daughters, both of whom
-    have faced significant mental-health challenges. One has gone through repeated psychiatric crises. Every crisis
-    meant navigating hospitals, psychiatrists, medications, school systems, insurance, county agencies, disability
-    services, and community programs &mdash; while trying to keep a family together.</p>
+    <h2>The founder</h2>
+    <p>InnerLight is founded by <strong>Toshay S. Zeigler</strong>, founder of <strong>God&rsquo;s Love For Us LLC</strong>. A dedicated adult learner, he earned two associate degrees and a university-transfer certificate while working, and is continuing his studies in political science with the goal of law school &mdash; driven by a determination to understand and improve the systems that shape people&rsquo;s lives. His professional background spans logistics, operations, transportation, and in-home care: work grounded in getting people and things where they need to be, reliably and under pressure.</p>
+    <p>That determination is rooted in firsthand experience of how fragmented the safety net can be &mdash; of how often people are expected to become experts in medicine, law, education, housing, and government during their most difficult moments. InnerLight is a considered answer to that gap.</p>
 
-    <div class="soft">
-      <p style="margin:0;">Those years revealed a painful truth: help exists, but it is fragmented. Families are
-      expected to become experts in medicine, law, education, housing, and government during the worst moments of
-      their lives &mdash; and in the gap between "we need help" and "help has arrived," they wait, often 45 minutes
-      to two hours, alone. InnerLight was built to hold that space.</p>
-    </div>
-
-    <p>The calming heart of InnerLight was proven in an unexpected place. During years of rideshare driving, Toshay
-    noticed that when calm instrumental music was already playing, agitated passengers settled &mdash; reliably,
-    across thousands of rides. It worked on strangers. It worked on his own family, in his own car, in their hardest
-    moments. That observation didn't create the mission &mdash; his daughters did &mdash; but it revealed the method:
-    the right sound, at the right level, at the right moment, can hold a person until human help arrives.</p>
-
-    <h2>Who is behind it</h2>
-    <p>InnerLight is created by <strong>Toshay S. Zeigler</strong>, founder of <strong>God's Love For Us LLC</strong>
-    &mdash; a caregiver father, a student of law and public policy at San Jos&eacute; State University with the
-    long-term goal of law school, and the holder of two associate degrees earned while caregiving and working.
-    He did not begin designing with AI because he wanted to build technology. He began because he wanted to build
-    something that would help families like his: systems that organize knowledge, explain complex subjects in plain
-    language, protect privacy, and help people understand their options &mdash; without ever replacing doctors,
-    therapists, attorneys, or other professionals.</p>
+    <h2>The method</h2>
+    <p>The calming core of InnerLight began with a practical observation. Across years of driving and thousands of trips, Toshay noticed that when calm instrumental music was already playing, agitated people settled &mdash; reliably, and often without a word. That simple, repeatable effect &mdash; the right sound, at the right level, at the right moment &mdash; became the seed of InnerLight&rsquo;s approach: meet a person where they are and gently carry them toward calm while a bridge to human help is built. The established principles behind it are documented, with citations, on the <a href="/research">Research &amp; Methods</a> page.</p>
 
     <h2>Built by a person, with the help of AI</h2>
-    <p>InnerLight is built by Toshay directly, working alongside artificial intelligence as a collaborator and tool. The
-    vision, the direction, and every decision about what InnerLight should be are his. AI helps build it &mdash; but the
-    idea, and the responsibility, are human.</p>
+    <p>InnerLight is built by Toshay directly, working alongside artificial intelligence as a tool and collaborator. The vision, the direction, and every decision about what InnerLight should be are his. AI helps build it &mdash; the idea, and the responsibility, are human.</p>
 
     <h2>What InnerLight believes</h2>
-    <p>Technology should <strong>strengthen</strong> human decision-making, not replace it. Mental-health tools should
-    <strong>complement</strong> human care, never pretend to be it. Your privacy is not a feature to trade away &mdash;
-    it is the foundation. And no one reaching out for help should have their first response be a waitlist.</p>
+    <p>Technology should <strong>strengthen</strong> human decision-making, not replace it. Mental-health tools should <strong>complement</strong> human care, never pretend to be it. Privacy is not a feature to trade away &mdash; it is the foundation. And no one reaching out for help should have their first response be a waitlist.</p>
 
     <div class="soft">
-      <p style="margin:0;">If InnerLight succeeds, it will mean another father or mother spends less time searching
-      for answers and more time caring for the people they love. InnerLight does not diagnose, prescribe, or practice
-      medicine or law. It is a place to be heard and steadied, and a bridge to the right human help &mdash; never a
-      replacement for it.</p>
+      <p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a place to be heard and steadied, and a bridge to the right human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p>
     </div>
     """
     return _info_page("About", inner)
@@ -5180,6 +5146,41 @@ def page_research():
       <li><strong>The live biometric monitor is anonymous and ephemeral.</strong> It shows heart rate and calm-state under anonymous labels (Person 1, Person 2), holds no words, and expires shortly after a session ends.</li>
       <li><strong>Facial analysis runs on-device.</strong> The person&rsquo;s video is analyzed in their own browser for heart and expression signals; the raw video is not transmitted for that analysis.</li>
     </ul>
+
+    <h2>7b. The Axiom Harmony Protocol (AHP) &mdash; what it is, and how it protects you</h2>
+    <p>The <strong>Axiom Harmony Protocol (AHP)</strong> is InnerLight&rsquo;s encryption layer &mdash; the system that turns anything a person chooses to save into scrambled, unreadable data that <em>only they</em> can unlock. It is not a marketing name over weak protection; it is built on the same class of encryption used to protect banking and government data. Here is exactly how it works, first in plain terms and then in technical terms.</p>
+
+    <p><strong>In plain terms:</strong> when you save your story, InnerLight takes your private return code and, through a deliberately slow mathematical process, turns it into a unique digital key. It then locks your words with that key so thoroughly that the stored result looks like random noise. Your code is the only thing that can produce that key again. We never keep your code, so we can never unlock your story &mdash; and neither can anyone who breaks into the server. If you lose the code, the data is gone for good. That is the trade-off of true privacy: the lock is real, and you hold the only key.</p>
+
+    <div style="background:#f4faf7;border:1px solid #d8e8e0;border-radius:14px;padding:18px 16px;margin:18px 0;overflow-x:auto;">
+    <svg viewBox="0 0 720 150" width="100%" style="min-width:640px;max-width:720px;display:block;margin:0 auto;font-family:Arial,sans-serif;" role="img" aria-label="How AHP encrypts your saved story: your return code becomes a key through 390,000 rounds of key-stretching, which locks your words with AES-256-GCM into unreadable stored data.">
+      <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3a6553"/></marker></defs>
+      <rect x="8" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#7eb8a0" stroke-width="1.5"/>
+      <text x="78" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#274539">Your return code</text>
+      <text x="78" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">(only you have it)</text>
+      <line x1="150" y1="75" x2="212" y2="75" stroke="#3a6553" stroke-width="2" marker-end="url(#ah)"/>
+      <text x="181" y="40" text-anchor="middle" font-size="10.5" fill="#C56A2C" font-weight="700">390,000 rounds</text>
+      <text x="181" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">PBKDF2</text>
+      <rect x="214" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#7eb8a0" stroke-width="1.5"/>
+      <text x="284" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#274539">256-bit key</text>
+      <text x="284" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">never stored</text>
+      <line x1="356" y1="75" x2="418" y2="75" stroke="#3a6553" stroke-width="2" marker-end="url(#ah)"/>
+      <text x="387" y="40" text-anchor="middle" font-size="10.5" fill="#C56A2C" font-weight="700">AES-256-GCM</text>
+      <text x="387" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">+ random nonce</text>
+      <rect x="420" y="45" width="150" height="60" rx="10" fill="#fff" stroke="#7eb8a0" stroke-width="1.5"/>
+      <text x="495" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#274539">Your words, locked</text>
+      <text x="495" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">reads as noise</text>
+      <line x1="572" y1="75" x2="628" y2="75" stroke="#3a6553" stroke-width="2" marker-end="url(#ah)"/>
+      <rect x="630" y="45" width="82" height="60" rx="10" fill="#274539"/>
+      <text x="671" y="72" text-anchor="middle" font-size="20">&#128274;</text>
+      <text x="671" y="94" text-anchor="middle" font-size="10" fill="#cfe0d6">stored</text>
+      <text x="360" y="132" text-anchor="middle" font-size="11" fill="#5f7d8c">Without your code, the key cannot be rebuilt &mdash; so no one, not even InnerLight, can reverse this.</text>
+    </svg>
+    </div>
+
+    <p><strong>In technical terms,</strong> for reviewers: AHP encrypts each payload with <strong>AES-256-GCM</strong> &mdash; the Advanced Encryption Standard at 256 bits in Galois/Counter Mode, an <em>authenticated</em> cipher that protects both confidentiality (no one can read it) and integrity (tampering is detectable). The key is derived from the person&rsquo;s return code using <strong>PBKDF2-HMAC-SHA256 with 390,000 iterations</strong> and a random salt &mdash; a deliberately slow key-stretching function that makes brute-force guessing enormously expensive. Every encryption uses a fresh random <strong>nonce</strong>, and the protocol version is bound in as authenticated associated data. The key is never written to disk; only the ciphertext, salt, and nonce are stored. This is a zero-knowledge design toward the operator: InnerLight holds encrypted bytes it cannot read.</p>
+
+    <p class="cite">Honest limit: AES-256-GCM with strong key derivation is robust modern cryptography, but it is not yet post-quantum. A documented future hardening path is to add a post-quantum key-exchange layer (for example, ML-KEM / Kyber) alongside the authenticated symmetric encryption. We state this openly rather than overstate the protection.</p>
 
     <h2>8. What we measure, and how we stay honest</h2>
     <p>InnerLight records anonymous, aggregate research metrics designed around recognized digital-health frameworks: uptake, engagement, session duration, adherence, and completion, alongside expression shifts, sound responses, self-reported calm (a wordless Self-Assessment Manikin scale), and heart-rate trends measured against each person&rsquo;s own baseline. Every heart reading carries a confidence tier so coverage is complete without overstating precision. We follow the scientific method explicitly: a falsifiable hypothesis, stated predictions, an instrument that gathers the data, and a commitment to replication and peer review.</p>
