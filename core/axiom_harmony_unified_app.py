@@ -2221,65 +2221,152 @@ let adaptiveDownSm = 0;      // smoothed "down/flat" reading — one flicker of 
 let adaptiveLaneNow = 'calm'; // which lane the adaptive loop currently favors
 let adaptiveLastSwitch = 0;
 
+// ===========================================================================
+// THE PERSONAL READ ("Attunement") — built from scratch on the constructive
+// science, replacing the old signal fusion. Principles:
+//  - Compare each person ONLY to their OWN calm (per-channel personal baselines),
+//    never to a population — the same signal means different things in different
+//    people (individual response stereotypy; the law of initial values).
+//  - Fuse several optional, on-device channels (words, facial engagement, facial
+//    volatility, voice energy) and LEARN which ones track THIS person from their
+//    own occasional one-tap check-ins (personalized models beat universal ones).
+//    The heart is deliberately not used.
+//  - Output a HUMBLE scalar — "activation relative to your own calm" — with a
+//    CONFIDENCE, never an emotion label. Low confidence => soften and ask the
+//    person, whose own words and taps are the real truth.
+//  - Everything stays on this device (localStorage). Nothing is shipped out.
+// ===========================================================================
+var ATT = (function(){
+  var CH = ['text','faceAct','faceVol','voiceAct'];
+  var PRIOR_W = { text:0.50, faceAct:0.20, faceVol:0.15, voiceAct:0.15 };
+  // Neutral-calm starting baseline per channel — NOT the person's first reading,
+  // so someone who arrives already activated still reads as activated. The
+  // baseline then personalizes over time (see relative()).
+  var PRIOR_M = { text:0.30, faceAct:0.30, faceVol:0.10, voiceAct:0.40 };
+  var st = { base:{}, weights:{}, reports:0, anchor:null, lastFace:null,
+             arousal:0.5, down:0, confidence:0, parts:{}, _rels:{} };
+  CH.forEach(function(c){ st.base[c]={m:PRIOR_M[c],d:0.15}; st.weights[c]=PRIOR_W[c]; });
+
+  function load(){ try{ var raw=localStorage.getItem('il_att_v1'); if(!raw) return;
+    var o=JSON.parse(raw); if(o&&o.base){ CH.forEach(function(c){ var bc=o.base[c];
+      if(bc && typeof bc.m==='number' && isFinite(bc.m) && typeof bc.d==='number' && isFinite(bc.d)) st.base[c]={m:bc.m,d:bc.d};
+      if(o.weights && typeof o.weights[c]==='number' && isFinite(o.weights[c])) st.weights[c]=o.weights[c]; }); }
+    if(o && typeof o.reports==='number' && isFinite(o.reports)) st.reports=o.reports; }catch(e){} }
+  function save(){ try{ localStorage.setItem('il_att_v1', JSON.stringify({base:st.base,weights:st.weights,reports:st.reports})); }catch(e){} }
+
+  function sampleText(){ try{ if(typeof textWeightNow!=='function'||!window._textEmotion) return null;
+    var tw=textWeightNow(); if(tw<=0) return null; return {v:Math.max(0,Math.min(1,window._textEmotion.up||0)), w:tw}; }catch(e){ return null; } }
+  function sampleFaceAct(){ try{ var s=(typeof faceEmotionScores!=='undefined'&&faceEmotionScores)?faceEmotionScores:null; if(!s) return null;
+    var a=(s.angry||0)*1.0+(s.fearful||0)*0.9+(s.surprised||0)*0.4+(s.disgusted||0)*0.5;
+    var present=(a>0.03)||((s.sad||0)>0.03)||((s.happy||0)>0.03)||((s.neutral||0)>0.05); if(!present) return null;
+    return {v:Math.max(0,Math.min(1,a)), w:1}; }catch(e){ return null; } }
+  function sampleFaceVol(){ try{ var s=(typeof faceEmotionScores!=='undefined'&&faceEmotionScores)?faceEmotionScores:null; if(!s) return null;
+    var vec=[s.angry||0,s.fearful||0,s.sad||0,s.happy||0,s.surprised||0,s.disgusted||0,s.neutral||0];
+    var vol=null; if(st.lastFace){ var d=0; for(var i=0;i<vec.length;i++){ d+=Math.abs(vec[i]-st.lastFace[i]); } vol=Math.max(0,Math.min(1,d*0.9)); }
+    st.lastFace=vec; if(vol===null) return null; return {v:vol, w:1}; }catch(e){ return null; } }
+  function sampleVoiceAct(){ try{ var v=(typeof voiceFeatures!=='undefined'&&voiceFeatures)?voiceFeatures:null; if(!v||(v.energy==null&&v.tremor==null)) return null;
+    var a=(v.energy||0.5)*0.5+(v.pitch_variance||0.5)*0.3+(v.tremor||0)*0.6; return {v:Math.max(0,Math.min(1,a)), w:1}; }catch(e){ return null; } }
+  var SAMP={ text:sampleText, faceAct:sampleFaceAct, faceVol:sampleFaceVol, voiceAct:sampleVoiceAct };
+
+  // Track each channel's OWN baseline and return activation relative to it
+  // (0.5 = own calm). The baseline learns the person's CALM FLOOR quickly but
+  // rises only very slowly, so sustained distress is not normalized away.
+  function relative(c,x){ var b=st.base[c];
+    if(typeof b.m!=='number' || !isFinite(b.m)) b.m=PRIOR_M[c];
+    if(typeof b.d!=='number' || !isFinite(b.d)) b.d=0.15;
+    var dev=x-b.m; var scale=2.2*(b.d+0.05); var rel=0.5+0.5*Math.tanh(dev/(scale||0.2));
+    var alpha=(x<b.m)?0.03:0.006; b.m+=alpha*dev; b.d+=0.02*(Math.abs(dev)-b.d);
+    return Math.max(0,Math.min(1,rel)); }
+
+  function update(){ var present={}, rels={}, wsum=0, acc=0, vals=[];
+    CH.forEach(function(c){ var s=SAMP[c]?SAMP[c]():null; if(!s){ present[c]=0; return; }
+      present[c]=1; var rel=relative(c,s.v); rels[c]=rel; var w=st.weights[c]*(s.w||1); acc+=rel*w; wsum+=w; vals.push(rel); });
+    var sensor=wsum>0?acc/wsum:0.5;
+    var nP=vals.length; var presence=Math.min(1,nP/2);
+    var spread=0; if(nP>1){ var mean=vals.reduce(function(a,b){return a+b;},0)/nP; var vv=0; vals.forEach(function(x){vv+=(x-mean)*(x-mean);}); spread=Math.sqrt(vv/nP); }
+    var agree=1-Math.min(1,spread*2); var calib=Math.min(1,st.reports/5);
+    var conf=Math.max(0.05,Math.min(1,0.15+0.35*presence+0.25*agree+0.25*calib));
+    var out=sensor;
+    if(st.anchor){ var age=(Date.now()-st.anchor.at)/1000; if(age<75){ var a=Math.max(0,1-age/75); out=a*st.anchor.v+(1-a)*sensor; conf=Math.max(conf,0.5+0.4*a); } }
+    st.arousal=Math.max(0,Math.min(1,out)); st.confidence=conf; st._rels=rels;
+    st.parts={ text:present.text||0, face:(present.faceAct||present.faceVol)?1:0, voice:present.voiceAct||0, self:st.anchor?1:0, conf:Math.round(conf*100) };
+    var dn=0,dw=0;
+    try{ if(typeof textWeightNow==='function'&&window._textEmotion){ var tw=textWeightNow(); if(tw>0){ dn+=(window._textEmotion.down||0)*tw; dw+=tw; } } }catch(e){}
+    try{ var s2=(typeof faceEmotionScores!=='undefined'&&faceEmotionScores)?faceEmotionScores:null; if(s2){ dn+=(s2.sad||0)*0.6; dw+=0.6; } }catch(e){}
+    st.down=dw>0?Math.max(0,Math.min(1,dn/dw)):0;
+    return st.arousal; }
+
+  // a self-report (ground truth). v in 0..1 (0 = settled, 1 = overwhelmed).
+  function report(v){ v=Math.max(0,Math.min(1,v)); st.anchor={v:v,at:Date.now()}; st.reports+=1;
+    var rels=st._rels||{}; var keys=Object.keys(rels);
+    if(keys.length){ var errs=keys.map(function(c){ return Math.abs(rels[c]-v); });
+      var mean=errs.reduce(function(a,b){return a+b;},0)/errs.length;
+      keys.forEach(function(c,i){ st.weights[c]=Math.max(0.04, st.weights[c]+0.15*(mean-errs[i])); });
+      var tot=0; CH.forEach(function(c){ tot+=st.weights[c]; }); if(tot>0){ CH.forEach(function(c){ st.weights[c]/=tot; }); } }
+    save(); }
+
+  load(); var _si=null;
+  return { update:update, report:report, start:function(){ if(!_si){ _si=setInterval(save,30000); } },
+           read:function(){ return {arousal:st.arousal, down:st.down, confidence:st.confidence, parts:st.parts}; },
+           confidence:function(){ return st.confidence; }, state:st };
+})();
+window.ATT = ATT;
+
+// ---- The wordless one-tap CHECK-IN — the person's own truth, and what teaches
+// the personal read which of their signals to trust. Gentle, optional, dismissible.
+var _ilCheckinLast = 0, _ilSessionStart = Date.now();
+var _IL_CT = {
+  en:{q:'How are you feeling right now?', a:'Settled', b:'Overwhelmed', thanks:'Thank you.', skip:'Not now'},
+  es:{q:'¿Cómo te sientes ahora mismo?', a:'En calma', b:'Abrumado/a', thanks:'Gracias.', skip:'Ahora no'},
+  zh:{q:'你现在感觉怎么样？', a:'平静', b:'不知所措', thanks:'谢谢你。', skip:'暂不'}
+};
+function _ilct(k){ var lg=(window._ilLang||'en'); return (_IL_CT[lg]||_IL_CT.en)[k]; }
+function showCheckin(){ if(document.getElementById('il-checkin')) return;
+  var wrap=document.createElement('div'); wrap.id='il-checkin';
+  wrap.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:92vw;'
+    +'background:#faf5ec;border:1px solid #e7dccc;border-radius:18px;box-shadow:0 12px 40px rgba(42,30,20,0.22);'
+    +'padding:16px 18px 14px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
+  var dots=''; var i;
+  for(i=0;i<5;i++){ var sz=14+i*3; var col=['#5f8bb6','#7f97b0','#b9a58f','#cf8a5e','#c56a2c'][i];
+    dots+='<button aria-label="'+i+'" onclick="ilCheckinPick('+(i/4)+')" style="border:0;background:'+col+';'
+      +'width:'+sz+'px;height:'+sz+'px;border-radius:50%;margin:0 9px;cursor:pointer;padding:0;vertical-align:middle;opacity:.92;"></button>'; }
+  wrap.innerHTML='<div style="font-size:15px;color:#2b2620;margin-bottom:12px;">'+_ilct('q')+'</div>'
+    +'<div style="display:flex;align-items:center;justify-content:center;">'
+    +'<span style="font-size:12px;color:#8a7d6c;margin-right:6px;">'+_ilct('a')+'</span>'+dots
+    +'<span style="font-size:12px;color:#8a7d6c;margin-left:6px;">'+_ilct('b')+'</span></div>'
+    +'<div style="margin-top:8px;"><a href="#" onclick="closeCheckin();return false;" style="font-size:12px;color:#8a7d6c;text-decoration:none;">'+_ilct('skip')+'</a></div>';
+  document.body.appendChild(wrap); _ilCheckinLast=Date.now();
+}
+function ilCheckinPick(v){ try{ if(window.ATT) ATT.report(v); }catch(e){}
+  var w=document.getElementById('il-checkin'); if(w){ w.innerHTML='<div style="font-size:15px;color:#2b2620;padding:6px 4px;">'+_ilct('thanks')+'</div>';
+    setTimeout(function(){ try{ w.remove(); }catch(e){} }, 1100); } _ilCheckinLast=Date.now(); }
+function closeCheckin(){ var w=document.getElementById('il-checkin'); if(w){ try{ w.remove(); }catch(e){} } _ilCheckinLast=Date.now(); }
+window.ilCheckinPick=ilCheckinPick; window.closeCheckin=closeCheckin; window.showCheckin=showCheckin;
+function ilMaybeInvite(){ try{
+  var ss=document.getElementById('story-screen'); if(!ss || ss.style.display==='none') return;
+  if(document.getElementById('il-checkin')) return;
+  var now=Date.now(); var since=now-_ilCheckinLast;
+  var conf=(window.ATT?ATT.confidence():1);
+  var firstDue=(_ilCheckinLast===0 && (now-_ilSessionStart)>60000);
+  var lowConf=(conf<0.45 && since>180000);
+  var periodic=(_ilCheckinLast>0 && since>270000);
+  if(firstDue||lowConf||periodic) showCheckin();
+}catch(e){} }
+
 function readArousalSignal() {
-  // ===== SIGNAL FUSION (text-led; face + voice confirm) =====
-  // Text carries the largest lift — people say what they cannot show — and the
-  // face and voice confirm. The HEART is deliberately EXCLUDED from this read:
-  // beats-per-minute does not reliably indicate emotional state, so we no longer
-  // let it move the music or the state estimate (founder decision, see below).
-  // This is a clean slate: a better, non-BPM read of how a person is doing is
-  // the work we are building next.
-  let up = 0, down = 0, wSum = 0;
-
-  // (1) TEXT — the primary signal. Highest weight when recent.
-  const tw = textWeightNow();
-  if (tw > 0 && window._textEmotion){
-    up   += window._textEmotion.up   * 0.45 * tw;
-    down += window._textEmotion.down * 0.45 * tw;
-    wSum += 0.45 * tw;
+  // Personal, baseline-relative, multi-channel read (see ATT above). The heart is
+  // deliberately excluded; this compares the person to their OWN calm, learns which
+  // signals track THEM from their own check-ins, and returns a humble activation
+  // (0.5 = their own calm) with a confidence — never an emotion label.
+  if (!window._attStarted){ window._attStarted = 1;
+    try { ATT.start(); } catch(e){}
+    try { setInterval(function(){ ilMaybeInvite(); }, 15000); } catch(e){}
   }
-
-  // (2) HEART — intentionally NOT fused into the emotional read.
-  // We do NOT treat a raised heart rate as evidence of distress or activation.
-  // Beats-per-minute is an ambiguous, heavily-confounded, and sometimes
-  // contradictory signal of emotional state: a frightened or frozen person can
-  // slow DOWN, and movement, talking, caffeine, and medication swamp any
-  // emotional change. So the heart contributes ZERO to the arousal/music read.
-  // The reading is still measured and shown (research + the live monitor); the
-  // better, non-BPM read of how a person is doing is what we build next.
-
-  // (3) FACE — with recent text, the face confirms (low weight, per the
-  // research: text leads). With NO recent text, the face LEADS — it is the
-  // clearest thing the person is giving us, so it carries real weight.
-  const s = faceEmotionScores || {};
-  const faceUp = (s.angry||0)*1.0 + (s.fearful||0)*0.9 + (s.disgusted||0)*0.6 + (s.surprised||0)*0.4;
-  const faceDown = (s.sad||0)*1.0;
-  const faceW = (tw > 0.3) ? 0.15 : 0.35;
-  const facePresent = (faceUp > 0.05 || faceDown > 0.05);
-  if (facePresent){
-    up   += Math.min(1, faceUp)  * faceW;
-    down += Math.min(1, faceDown)* faceW;
-    wSum += faceW;
-  }
-
-  // (4) VOICE — tone/energy confirmation.
-  const v = voiceFeatures || {};
-  if (v && (v.energy != null || v.tremor != null)){
-    const voiceUp = ((v.energy||0.5)*0.5 + (v.pitch_variance||0.5)*0.3 + (v.tremor||0)*0.6);
-    up   += Math.min(1, voiceUp) * 0.10;
-    wSum += 0.10;
-  }
-
-  // Normalize each direction by the signals that can actually SPEAK in that
-  // direction. Voice only measures activation — it knows nothing about sadness,
-  // so it must not dilute the sadness reading. (The heart no longer participates
-  // in the fusion at all — high BPM never implies distress here.)
-  const downW = (tw > 0 && window._textEmotion ? 0.45 * tw : 0) + (facePresent ? faceW : 0);
-  const activation = wSum > 0 ? Math.min(1, up / Math.max(0.28, wSum)) : 0.5;
-  window._adaptiveDown = downW > 0 ? Math.min(1, down / Math.max(0.22, downW)) : 0;
-  window._fusionParts = { text: (window._textEmotion&&tw>0)?1:0, heart: 0,
-                          face: (faceUp>0.05||faceDown>0.05)?1:0, voice: (v&&v.energy!=null)?1:0 };
-  return activation;
+  var a = ATT.update();
+  window._adaptiveDown = ATT.state.down;
+  window._fusionParts = ATT.state.parts;
+  window._attConfidence = ATT.state.confidence;
+  return a;
 }
 
 function adaptiveTick() {
