@@ -738,11 +738,13 @@ PUBLIC_PAGE = """
     }
     function setLang(code){
       try { localStorage.setItem('il_lang', code); } catch(e){}
+      try { document.cookie = 'il_lang=' + code + ';path=/;max-age=31536000'; } catch(e){}
       applyLang(code);
     }
     (function(){
       var saved = 'en';
       try { saved = localStorage.getItem('il_lang') || 'en'; } catch(e){}
+      try { if (saved && saved !== 'en') document.cookie = 'il_lang=' + saved + ';path=/;max-age=31536000'; } catch(e){}
       applyLang(saved);
     })();
     </script>
@@ -4979,9 +4981,39 @@ def index():
 # behind it and how their words are handled. These build that trust. Styled
 # "calm but alive" to match the rest of InnerLight.
 # ---------------------------------------------------------------------------
-def _info_page(title, inner):
+_PAGE_I18N = {}
+def _load_page_i18n():
+    import os as _os, json as _json
+    base = _os.path.dirname(_os.path.abspath(__file__))
+    for lg in ("es", "zh"):
+        try:
+            with open(_os.path.join(base, "i18n_pages_%s.json" % lg), encoding="utf-8") as f:
+                _PAGE_I18N[lg] = _json.load(f)
+        except Exception as e:
+            print("[InnerLight] page i18n %s not loaded: %s" % (lg, e))
+            _PAGE_I18N[lg] = {}
+_load_page_i18n()
+
+_INFO_CHROME = {
+    "en": {"back": "&larr; Back to InnerLight", "about": "About", "how": "How it works", "research": "Research", "safety": "Safety &amp; crisis protocol", "privacy": "Your privacy", "contact": "Contact"},
+    "es": {"back": "&larr; Volver a InnerLight", "about": "Acerca de", "how": "C&oacute;mo funciona", "research": "Investigaci&oacute;n", "safety": "Seguridad y protocolo de crisis", "privacy": "Tu privacidad", "contact": "Contacto"},
+    "zh": {"back": "&larr; 返回 InnerLight", "about": "关于", "how": "如何运作", "research": "研究", "safety": "安全与危机处理协议", "privacy": "你的隐私", "contact": "联系我们"},
+}
+
+def _info_lang():
+    lg = (request.args.get("lang") or request.cookies.get("il_lang") or "en")
+    return lg if lg in ("en", "es", "zh") else "en"
+
+def _info_page(title, inner, page_key=None):
+    lang = _info_lang()
+    if page_key and lang != "en":
+        _t = _PAGE_I18N.get(lang, {}).get(page_key)
+        if _t:
+            inner = _t
+    _ch = _INFO_CHROME.get(lang, _INFO_CHROME["en"])
+    _q = ("?lang=" + lang) if lang != "en" else ""
     return render_template_string("""<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
+<html lang="{{ lang }}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ title }} &mdash; InnerLight</title>
 <style>
@@ -5021,21 +5053,30 @@ def _info_page(title, inner):
   .footer a { color:var(--blue); text-decoration:none; margin:0 7px; }
 </style></head><body>
   <div class="wrap">
+    <div style="text-align:right;font-size:12.5px;margin-bottom:2px;">
+      <a href="?lang=en" onclick="try{document.cookie='il_lang=en;path=/;max-age=31536000'}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='en' else '' }}">English</a>
+      <span style="color:#ddd1c8;">&middot;</span>
+      <a href="?lang=es" onclick="try{document.cookie='il_lang=es;path=/;max-age=31536000'}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='es' else '' }}">Espa&ntilde;ol</a>
+      <span style="color:#ddd1c8;">&middot;</span>
+      <a href="?lang=zh" onclick="try{document.cookie='il_lang=zh;path=/;max-age=31536000'}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='zh' else '' }}">&#20013;&#25991;</a>
+    </div>
     <div class="orb breathe" aria-hidden="true"></div>
     <div class="brand">InnerLight</div>
     {{ inner|safe }}
-    <a class="back" href="/">&larr; Back to InnerLight</a>
+    <a class="back" href="/">{{ back|safe }}</a>
     <div class="footer">
-      <a href="/about">About</a>&middot;
-      <a href="/how-it-works">How it works</a>&middot;
-      <a href="/research">Research</a>&middot;
-      <a href="/safety">Safety &amp; crisis protocol</a>&middot;
-      <a href="/privacy">Your privacy</a>&middot;
-      <a href="/contact">Contact</a>
+      <a href="/about{{ q }}">{{ c_about|safe }}</a>&middot;
+      <a href="/how-it-works{{ q }}">{{ c_how|safe }}</a>&middot;
+      <a href="/research{{ q }}">{{ c_research|safe }}</a>&middot;
+      <a href="/safety{{ q }}">{{ c_safety|safe }}</a>&middot;
+      <a href="/privacy{{ q }}">{{ c_privacy|safe }}</a>&middot;
+      <a href="/contact{{ q }}">{{ c_contact|safe }}</a>
       <div style="margin-top:10px;">&copy; 2026 God's Love For Us LLC &middot; Created by Toshay S. Zeigler</div>
     </div>
   </div>
-</body></html>""", title=title, inner=inner)
+</body></html>""", title=title, inner=inner, lang=lang, q=_q, back=_ch["back"],
+    c_about=_ch["about"], c_how=_ch["how"], c_research=_ch["research"], c_safety=_ch["safety"],
+    c_privacy=_ch["privacy"], c_contact=_ch["contact"])
 
 
 @app.route("/about")
@@ -5075,7 +5116,7 @@ def page_about():
       <p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a place to be heard and steadied, and a bridge to the right human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p>
     </div>
     """
-    return _info_page("About", inner)
+    return _info_page("About", inner, "about")
 
 
 
@@ -5337,7 +5378,7 @@ def page_how():
       <p style="margin:0;">InnerLight is a companion for the wait and a bridge to care. It does not diagnose or treat, and it is not a substitute for professional or emergency help. If you are in immediate danger, call or text 988, or call 911.</p>
     </div>
     """
-    return _info_page("How it works", inner)
+    return _info_page("How it works", inner, "how-it-works")
 
 
 @app.route("/privacy")
@@ -5368,7 +5409,7 @@ def page_privacy():
       <a href="/contact">contact page</a>.</p>
     </div>
     """
-    return _info_page("Your privacy", inner)
+    return _info_page("Your privacy", inner, "privacy")
 
 
 @app.route("/contact")
@@ -5394,7 +5435,7 @@ def page_contact():
       <strong>911</strong>.</p>
     </div>
     """
-    return _info_page("Contact", inner)
+    return _info_page("Contact", inner, "contact")
 
 
 @app.route("/safety")
@@ -5448,7 +5489,7 @@ def page_safety():
       you and human help.</p>
     </div>
     """
-    return _info_page("Safety & crisis protocol", inner)
+    return _info_page("Safety & crisis protocol", inner, "safety")
 
 
 @app.route("/console")
