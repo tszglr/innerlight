@@ -595,6 +595,8 @@ PUBLIC_PAGE = """
           <a href="#" onclick="setLang('en');return false;" data-langbtn="en" style="color:#2e6e8e;text-decoration:none;">English</a>
           <span style="color:#ddd1c8;">&middot;</span>
           <a href="#" onclick="setLang('es');return false;" data-langbtn="es" style="color:#2e6e8e;text-decoration:none;">Espa&ntilde;ol</a>
+          <span style="color:#ddd1c8;">&middot;</span>
+          <a href="#" onclick="setLang('zh');return false;" data-langbtn="zh" style="color:#2e6e8e;text-decoration:none;">&#20013;&#25991;</a>
         </div>
         <div class="gate-mark" aria-hidden="true">&#9711;</div>
         <h1>InnerLight</h1>
@@ -633,9 +635,9 @@ PUBLIC_PAGE = """
         "gate.tagline": "Un lugar tranquilo y privado para contar tu historia.<br>Nada de lo que compartas se muestra a nadie &mdash; est&aacute; cifrado.",
         "gate.begin": "Toca para comenzar",
         "gate.startnote": "La m&uacute;sica suave y tu c&aacute;mara comienzan con calma cuando tocas.",
-        "gate.camera": "<b style=\"color:#99673e;\">Sobre tu c&aacute;mara:</b> tu video se analiza <b>en tu propio dispositivo</b> &mdash; solo para leer con suavidad tu expresi&oacute;n y tu ritmo card&iacute;aco. El video en s&iacute; <b>nunca se nos env&iacute;a ni se guarda en ning&uacute;n lugar</b>. Nada sale de tu dispositivo. Puedes rechazar la c&aacute;mara y usar todo lo dem&aacute;s.",
-        "gate.ainotice": "<b style=\"color:#99673e;\">Ten en cuenta:</b> InnerLight es un <b>programa de inteligencia artificial</b> &mdash; una computadora, no una persona. No es un terapeuta, m&eacute;dico ni abogado, y puede no ser apropiado para algunos menores. En una emergencia, llama o env&iacute;a un mensaje al <b>988</b>, o llama al <b>911</b>. <a href=\"/safety\" style=\"color:#2e6e8e;\">C&oacute;mo respondemos en una crisis</a>",
-        "gate.adult": "Al continuar, confirmas que tienes 18 a&ntilde;os o m&aacute;s. <a href=\"#\" onclick=\"showMinorBridge();return false;\" style=\"color:#2e6e8e;\">&iquest;Menor de 18? Tambi&eacute;n tenemos ayuda real para ti.</a>",
+        "gate.camera": "<b style='color:#99673e;'>Sobre tu c&aacute;mara:</b> tu video se analiza <b>en tu propio dispositivo</b> &mdash; solo para leer con suavidad tu expresi&oacute;n y tu ritmo card&iacute;aco. El video en s&iacute; <b>nunca se nos env&iacute;a ni se guarda en ning&uacute;n lugar</b>. Nada sale de tu dispositivo. Puedes rechazar la c&aacute;mara y usar todo lo dem&aacute;s.",
+        "gate.ainotice": "<b style='color:#99673e;'>Ten en cuenta:</b> InnerLight es un <b>programa de inteligencia artificial</b> &mdash; una computadora, no una persona. No es un terapeuta, m&eacute;dico ni abogado, y puede no ser apropiado para algunos menores. En una emergencia, llama o env&iacute;a un mensaje al <b>988</b>, o llama al <b>911</b>. <a href='/safety' style='color:#2e6e8e;'>C&oacute;mo respondemos en una crisis</a>",
+        "gate.adult": "Al continuar, confirmas que tienes 18 a&ntilde;os o m&aacute;s. <a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>&iquest;Menor de 18? Tambi&eacute;n tenemos ayuda real para ti.</a>",
         "story.title": "Cu&eacute;ntame tu historia.",
         "story.sub": "T&oacute;mate tu tiempo. Di lo que sientas verdadero. Te escucho.",
         "story.resume": "&iquest;Ya estuviste aqu&iacute;? Contin&uacute;a tu historia",
@@ -653,8 +655,54 @@ PUBLIC_PAGE = """
         "rail.nearby": "Ayuda cercana",
         "rail.activities": "Actividades",
         "rail.testmic": "Probar micr&oacute;fono"
+      },
+      zh: {
+        "gate.tagline": "一个安静、私密的地方，倾诉你的心事。<br>你分享的一切都不会展示给任何人——它是加密的。",
+        "gate.begin": "轻触开始",
+        "gate.startnote": "轻触后，柔和的音乐和你的摄像头会缓缓开启。",
+        "gate.camera": "<b style='color:#99673e;'>关于你的摄像头：</b>你的视频只在<b>你自己的设备上</b>分析——只用来轻轻读取你的表情和心率。视频本身<b>绝不会发送给我们，也不会保存在任何地方</b>。没有任何内容离开你的设备。你可以拒绝使用摄像头，并继续使用其他所有功能。",
+        "gate.ainotice": "<b style='color:#99673e;'>请注意：</b>InnerLight 是一个<b>人工智能程序</b>——一台计算机，不是真人。它不是心理治疗师、医生或律师，可能不适合部分未成年人。如遇紧急情况，请拨打或发短信至 <b>988</b>，或拨打 <b>911</b>。<a href='/safety' style='color:#2e6e8e;'>我们如何应对危机</a>",
+        "gate.adult": "继续即表示你确认自己已年满 18 岁。<a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>未满 18 岁？我们同样为你准备了真正的帮助。</a>",
+        "story.title": "把你的故事告诉我。",
+        "story.sub": "慢慢来。说出你真实的感受。我在倾听。",
+        "story.resume": "以前来过？继续你的故事",
+        "story.ainote": "InnerLight 是一个人工智能程序——不是真人，也不是心理治疗师、医生或律师。",
+        "story.safetylink": "安全与危机预案",
+        "story.placeholder": "从任何地方开始都可以……（按回车发送）",
+        "story.send": "发送",
+        "story.speak": "&#127908; 说话",
+        "music.now": "&#9834; 正在播放柔和的音乐",
+        "music.change": "更换音乐",
+        "music.pulseon": "&#10041; 平静脉动：已开启",
+        "music.voiceoff": "&#128263; 语音朗读：已关闭",
+        "rail.provider": "医疗资源",
+        "rail.legal": "法律帮助",
+        "rail.nearby": "附近的帮助",
+        "rail.activities": "活动",
+        "rail.testmic": "测试麦克风"
       }
     };
+    // Current UI language, and helpers that make the SPOKEN voice and the voice
+    // INPUT follow it — so Spanish and Chinese are actually heard in-language,
+    // not read aloud with an English accent.
+    window._ilLang = 'en';
+    function ilBcp47(code){ return code==='es' ? 'es-ES' : (code==='zh' ? 'zh-CN' : 'en-US'); }
+    function ilPickVoice(bcp){
+      try {
+        var vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+        var pref = bcp.slice(0,2).toLowerCase();
+        var exact = [], pfx = [];
+        for (var i=0;i<vs.length;i++){
+          var L = (vs[i].lang||'').toLowerCase().replace('_','-');
+          if (L === bcp.toLowerCase()) exact.push(vs[i]);
+          else if (L.slice(0,2) === pref) pfx.push(vs[i]);
+        }
+        var pool = exact.length ? exact : pfx;
+        if (!pool.length) return null;
+        pool.sort(function(a,b){ return (b.localService===true) - (a.localService===true); });
+        return pool[0];
+      } catch(e){ return null; }
+    }
     function applyLang(code){
       try {
         var dict = I18N[code] || null;   // null => English source stays
@@ -679,6 +727,9 @@ PUBLIC_PAGE = """
           }
         }
         try { document.documentElement.lang = code; } catch(e){}
+        window._ilLang = code;
+        // keep voice INPUT (speech-to-text) in the same language, if it's running
+        try { if (typeof voiceRecognizer !== 'undefined' && voiceRecognizer) voiceRecognizer.lang = ilBcp47(code); } catch(e){}
         var btns = document.querySelectorAll('[data-langbtn]');
         for (var k=0;k<btns.length;k++){
           btns[k].style.fontWeight = (btns[k].getAttribute('data-langbtn')===code) ? '700' : '400';
@@ -3181,7 +3232,7 @@ async function startVoiceCapture() {
       voiceRecognizer = new SR();
       voiceRecognizer.continuous = true;
       voiceRecognizer.interimResults = true;
-      voiceRecognizer.lang = 'en-US';
+      voiceRecognizer.lang = (typeof ilBcp47 === 'function') ? ilBcp47(window._ilLang || 'en') : 'en-US';
       voiceRecognizer.onresult = event => {
         let finalText = '', interimText = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -3490,7 +3541,7 @@ function _spPlayOne(text, finish) {
   // Try REAL human audio from the server first; fall back to the browser voice.
   fetch('/api/voice/speak', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({text: text, voice_id: selectedVoiceId || ''})
+    body: JSON.stringify({text: text, voice_id: selectedVoiceId || '', lang: (window._ilLang || 'en')})
   }).then(function(r){ return r.json(); }).then(function(d) {
     if (d && d.audio_b64) {
       try {
@@ -3510,7 +3561,13 @@ function _spSpeakBrowser(text, finish) {
   if (!voiceEnabled || !('speechSynthesis' in window) || !text) { finish(); return; }
   try { speechSynthesis.cancel(); } catch(e){}
   var utter = new SpeechSynthesisUtterance(text);
-  if (selectedVoice) utter.voice = selectedVoice;
+  // Speak in the person's chosen language, with a voice that actually speaks it.
+  var _lang = (typeof ilBcp47 === 'function') ? ilBcp47(window._ilLang || 'en') : 'en-US';
+  utter.lang = _lang;
+  var _v = null;
+  if (selectedVoice && (selectedVoice.lang||'').slice(0,2).toLowerCase() === _lang.slice(0,2).toLowerCase()) _v = selectedVoice;
+  if (!_v && typeof ilPickVoice === 'function') _v = ilPickVoice(_lang);
+  if (_v) utter.voice = _v;
   // WARMTH + TONE-STEERING: a slightly lower pitch reads as warmer, and we slow
   // down when the person is activated (the vocal twin of the adaptive music).
   var ar = (typeof adaptiveArousal !== 'undefined') ? adaptiveArousal : 0.5;
@@ -5678,7 +5735,8 @@ def api_voice_speak():
     data = request.get_json(force=True) or {}
     text = str(data.get("text", ""))[:600]
     voice_id = str(data.get("voice_id", ""))
-    result = voice_synthesize(text, voice_id)
+    lang = str(data.get("lang", "en"))[:8]
+    result = voice_synthesize(text, voice_id, lang)
     return jsonify(result)
 
 

@@ -150,11 +150,13 @@ def voice_provider() -> Optional[str]:
     return None
 
 
-def synthesize(text: str, voice_id: str = "") -> Dict[str, Any]:
+def synthesize(text: str, voice_id: str = "", lang: str = "en") -> Dict[str, Any]:
     """
     Return {"audio_b64": <mp3 base64>, "provider": ...} when a real voice
     service is configured, or {"use_browser": True} to fall back to the
-    best on-device neural voice. An optional voice_id selects which voice.
+    best on-device neural voice. An optional voice_id selects which voice,
+    and lang ('en'/'es'/'zh'/...) tells an emotion-aware provider which
+    language to speak so Spanish and Chinese are voiced natively.
     """
     text = (text or "").strip()
     if not text:
@@ -166,7 +168,7 @@ def synthesize(text: str, voice_id: str = "") -> Dict[str, Any]:
 
     try:
         if provider == "hume":
-            return _hume(text, voice_id)
+            return _hume(text, voice_id, lang)
         if provider == "elevenlabs":
             return _elevenlabs(text, voice_id or ELEVEN_VOICE)
         if provider == "openai":
@@ -187,11 +189,18 @@ def synthesize(text: str, voice_id: str = "") -> Dict[str, Any]:
     return {"use_browser": True}
 
 
-def _hume(text: str, voice_id: str = "") -> Dict[str, Any]:
+_HUME_LANG_HINT = {
+    "es": " Speak entirely in natural, native Spanish.",
+    "zh": " Speak entirely in natural, native Mandarin Chinese.",
+    "fr": " Speak entirely in natural, native French.",
+}
+
+def _hume(text: str, voice_id: str = "", lang: str = "en") -> Dict[str, Any]:
     import base64
     key = os.environ["HUME_API_KEY"]
+    desc = _hume_desc(voice_id) + _HUME_LANG_HINT.get((lang or "en")[:2].lower(), "")
     body = json.dumps({
-        "utterances": [{"text": text, "description": _hume_desc(voice_id)}],
+        "utterances": [{"text": text, "description": desc}],
         "format": {"type": "mp3"},
         "num_generations": 1,
     }).encode()
