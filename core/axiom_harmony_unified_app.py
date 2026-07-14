@@ -2353,6 +2353,94 @@ function ilMaybeInvite(){ try{
   if(firstDue||lowConf||periodic) showCheckin();
 }catch(e){} }
 
+// ===========================================================================
+// THE RHYTHM ANCHOR — a steady pulsing light that rises up to HOLD a person who
+// has gone quiet and slipped away (e.g. pulled back into their own thoughts or
+// voices). A predictable rhythm gives a preoccupied mind one external thing to
+// lock onto; the light, the word, and the person's own TAP all land on the same
+// beat, and the beat eases toward THEIR tapping tempo (meet them, then guide).
+// It appears on demand, and on its own after a stretch of stillness — so the app
+// never just goes silent and loses them. Gentle, dismissible, on-device.
+// ===========================================================================
+var _ilLastInteract = Date.now(), _ilEngaged = false, _ilAnchorLast = 0;
+function ilNoteInteract(){ _ilLastInteract = Date.now(); _ilEngaged = true; }
+var _IL_AN = {
+  en:{hint:'tap the light — the rhythm will follow you', close:'I’m okay for now', pill:'Focus with me',
+      stay:'… stay with me.', words:['here.','with you.','breathe in…','and out…','you’re safe.','stay with me.']},
+  es:{hint:'toca la luz — el ritmo te seguirá', close:'Estoy bien por ahora', pill:'Enfócate conmigo',
+      stay:'… quédate conmigo.', words:['aquí.','contigo.','inhala…','y exhala…','estás a salvo.','quédate conmigo.']},
+  zh:{hint:'轻触这束光——节奏会跟随你', close:'我现在还好', pill:'和我一起专注',
+      stay:'……和我在一起。', words:['就在这里。','陪着你。','吸气……','呼气……','你是安全的。','和我在一起。']}
+};
+function _ilan(k){ var lg=(window._ilLang||'en'); return (_IL_AN[lg]||_IL_AN.en)[k]; }
+function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAnchorLast=Date.now();
+  var A=_IL_AN[(window._ilLang||'en')]||_IL_AN.en;
+  var ov=document.createElement('div'); ov.id='il-anchor';
+  ov.style.cssText='position:fixed;inset:0;z-index:9500;opacity:0;transition:opacity 1.2s ease;overflow:hidden;'
+    +'background:radial-gradient(60% 60% at 50% 42%,#2a1d12 0%,#1c140d 55%,#140e09 100%);'
+    +'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
+  ov.innerHTML='<canvas id="il-anchor-c" style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>'
+    +'<div id="il-anchor-w" style="position:absolute;left:0;right:0;top:42%;transform:translateY(-50%);text-align:center;'
+    +'font-size:28px;color:#f3e9dc;opacity:0;pointer-events:none;text-shadow:0 2px 20px rgba(0,0,0,.6);"></div>'
+    +'<div style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#a8917c;pointer-events:none;">'+A.hint+'</div>'
+    +'<button id="il-anchor-x" style="position:absolute;left:50%;bottom:34px;transform:translateX(-50%);'
+    +'background:rgba(28,20,13,.7);border:1px solid rgba(240,176,112,.3);color:#d7c3ad;border-radius:999px;'
+    +'padding:9px 18px;font-size:13px;cursor:pointer;">'+A.close+'</button>';
+  document.body.appendChild(ov);
+  document.getElementById('il-anchor-x').addEventListener('click', function(ev){ ev.stopPropagation(); hideAnchor(); });
+  requestAnimationFrame(function(){ ov.style.opacity=1; });
+  ilAnchorRun(ov, A);
+}
+function hideAnchor(){ var o=document.getElementById('il-anchor'); if(o){ o._stop=true; try{o.remove();}catch(e){} } _ilAnchorLast=Date.now(); }
+function ilAnchorRun(ov, A){
+  var c=ov.querySelector('#il-anchor-c'), ctx=c.getContext('2d'), wordEl=ov.querySelector('#il-anchor-w');
+  var DPR=Math.min(2,window.devicePixelRatio||1), W=0,H=0;
+  function resize(){ W=c.clientWidth;H=c.clientHeight;c.width=W*DPR;c.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0); }
+  resize(); var ro=function(){resize();}; window.addEventListener('resize',ro);
+  var cycle=10000, t0=performance.now(), lastIdx=-1, rings=[], flash=0, wi=0, cur='', taps=[];
+  ov.addEventListener('pointerdown', function(e){ if(e.target && e.target.id==='il-anchor-x') return;
+    var now=performance.now(); taps.push(now); if(taps.length>4) taps.shift();
+    if(taps.length>=2){ var iv=[]; for(var i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]);
+      var avg=iv.reduce(function(a,b){return a+b;},0)/iv.length; var target=Math.max(5000,Math.min(14000,avg*2));
+      cycle=cycle*0.6+target*0.4; }
+    rings.push({born:now,strong:true}); flash=1; });
+  var nm=(window._ilName||'').toString().trim();
+  function frame(now){ if(ov._stop){ window.removeEventListener('resize',ro); return; }
+    var el=now-t0, idx=Math.floor(el/cycle), p=(el%cycle)/cycle, swell=0.5-0.5*Math.cos(2*Math.PI*p);
+    if(idx!==lastIdx){ lastIdx=idx; rings.push({born:now,strong:false});
+      if(nm && idx%3===0) cur=nm+A.stay; else { cur=A.words[wi%A.words.length]; wi++; } }
+    var cx=W/2, cy=H*0.42; ctx.clearRect(0,0,W,H);
+    for(var i=rings.length-1;i>=0;i--){ var age=(now-rings[i].born)/cycle; if(age>1.1){rings.splice(i,1);continue;}
+      var rr=60+age*Math.min(W,H)*0.55, op=Math.max(0,(1-age))*(rings[i].strong?0.5:0.28);
+      ctx.beginPath();ctx.arc(cx,cy,rr,0,2*Math.PI);ctx.strokeStyle='rgba(240,176,112,'+op.toFixed(3)+')';
+      ctx.lineWidth=rings[i].strong?2.5:1.5;ctx.stroke(); }
+    var R=64+swell*52+flash*14, g=ctx.createRadialGradient(cx,cy,4,cx,cy,R*1.9);
+    g.addColorStop(0,'rgba(255,236,205,'+Math.min(1,0.85+0.15*swell+flash*0.1).toFixed(3)+')');
+    g.addColorStop(0.35,'rgba(240,176,112,'+(0.75*(0.6+0.4*swell)).toFixed(3)+')');
+    g.addColorStop(1,'rgba(217,138,78,0)');
+    ctx.beginPath();ctx.arc(cx,cy,R*1.9,0,2*Math.PI);ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,R*0.5,0,2*Math.PI);ctx.fillStyle='rgba(255,240,215,'+(0.5+0.4*swell).toFixed(3)+')';ctx.fill();
+    flash*=0.9; if(flash<0.01) flash=0;
+    if(cur){ wordEl.textContent=cur; wordEl.style.opacity=(swell*0.95).toFixed(2); }
+    requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+}
+function ilAddAnchorPill(){ if(document.getElementById('il-anchor-pill')) return;
+  var b=document.createElement('button'); b.id='il-anchor-pill'; b.textContent='◎ '+_ilan('pill');
+  b.style.cssText='position:fixed;left:16px;bottom:16px;z-index:8000;background:rgba(42,29,18,.62);'
+    +'border:1px solid rgba(240,176,112,.3);color:#e8d8c4;border-radius:999px;padding:9px 14px;font-size:12.5px;'
+    +'cursor:pointer;backdrop-filter:blur(6px);';
+  b.addEventListener('click', function(){ showAnchor(); });
+  document.body.appendChild(b); }
+function ilMaybeAnchor(){ try{
+  var ss=document.getElementById('story-screen'); if(!ss || ss.style.display==='none') return;
+  if(document.getElementById('il-anchor')) return;
+  if(!_ilEngaged) return;
+  var now=Date.now();
+  if((now-_ilLastInteract) > 45000 && (now-_ilAnchorLast) > 150000) showAnchor();
+}catch(e){} }
+window.showAnchor=showAnchor; window.hideAnchor=hideAnchor;
+
 function readArousalSignal() {
   // Personal, baseline-relative, multi-channel read (see ATT above). The heart is
   // deliberately excluded; this compares the person to their OWN calm, learns which
@@ -2360,7 +2448,9 @@ function readArousalSignal() {
   // (0.5 = their own calm) with a confidence — never an emotion label.
   if (!window._attStarted){ window._attStarted = 1;
     try { ATT.start(); } catch(e){}
-    try { setInterval(function(){ ilMaybeInvite(); }, 15000); } catch(e){}
+    try { document.addEventListener('keydown', ilNoteInteract, true); document.addEventListener('pointerdown', ilNoteInteract, true); } catch(e){}
+    try { ilAddAnchorPill(); } catch(e){}
+    try { setInterval(function(){ ilMaybeInvite(); ilMaybeAnchor(); }, 12000); } catch(e){}
   }
   var a = ATT.update();
   window._adaptiveDown = ATT.state.down;
