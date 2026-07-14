@@ -426,7 +426,7 @@ PUBLIC_PAGE = """
     * { box-sizing:border-box; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--page); color:var(--ink); line-height:1.5; }
     a { color:var(--teal); text-decoration:none; }
-    header { position:sticky; top:0; z-index:5; background:rgba(247,251,248,.96); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
+    header { position:sticky; top:0; z-index:5; background:rgba(250,245,236,.96); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
     .brand { font-weight:700; color:var(--ink); }
     .brand small { display:block; color:var(--muted); font-weight:400; }
     nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; }
@@ -546,17 +546,30 @@ PUBLIC_PAGE = """
     #help-rail .rail-988 { background:#e8534e; color:#fff; border:0; }
     @media (max-width:760px){
       #help-rail { top:auto; bottom:0; left:0; right:0; transform:none; flex-direction:row;
-        justify-content:space-around; background:#ffffff; padding:10px 6px; z-index:95;
+        justify-content:space-between; background:#ffffff; padding:8px 6px; z-index:95; gap:4px;
         box-shadow:0 -3px 14px rgba(20,40,60,0.18); }
-      #help-rail .rail-btn { flex:1; min-width:0; margin:0 3px; padding:12px 4px; font-size:13px; }
+      #help-rail .rail-btn { flex:1 1 0; min-width:0; margin:0; padding:0 3px; height:46px; font-size:11px;
+        line-height:1.15; white-space:nowrap; display:flex; align-items:center; justify-content:center;
+        border-radius:11px; box-shadow:none; }
       /* Scene picker sits ABOVE the help bar, never overlapping it */
-      .scene-picker { bottom:76px !important; right:10px !important; z-index:40 !important;
-        background:rgba(255,255,255,0.85); border-radius:999px; padding:4px 8px; }
-      /* Heart chip also lifts above the help bar (bottom-left, scenes stay
-         bottom-right — they never overlap) */
-      #heart-chip { bottom:80px !important; left:10px !important; }
+      .scene-picker { bottom:70px !important; right:10px !important; z-index:40 !important;
+        background:rgba(255,255,255,0.85); border-radius:999px; padding:4px 8px;
+        max-width:calc(100vw - 20px); flex-wrap:nowrap; }
+      #heart-chip { bottom:74px !important; left:10px !important; }
       /* Give the whole page room so nothing hides behind the fixed help bar */
-      .story-screen { padding-bottom:150px; }
+      .story-screen { padding-bottom:120px; padding-left:14px; padding-right:14px; }
+      /* The camera preview becomes a small circle so an empty/off camera never
+         shows as a giant grey box (the #1 "beta" look on phones). */
+      .story-video { width:118px !important; height:118px !important; border-radius:50% !important;
+        border-width:2px; box-shadow:0 6px 18px rgba(0,0,0,0.16); }
+      .story-video-bar { padding:12px 0 4px; }
+      .story-title { font-size:22px; }
+      .story-sub { font-size:13.5px; margin-bottom:16px; }
+      .story-input { min-height:110px; padding:14px; }   /* keep 16px font to stop iOS zoom-on-focus */
+      .story-send { padding:12px 32px; }
+      .music-bar { flex-wrap:wrap; gap:8px 10px; margin-top:12px; padding:0 4px; }
+      #vol-slider { width:68px !important; }
+      .music-change { padding:6px 12px; font-size:12px; }
       body { padding-bottom:70px; }
     }
     .story-mic { background:#fff; color:#99673e; border:1px solid #ddd1c8; border-radius:999px; padding:13px 22px;
