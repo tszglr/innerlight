@@ -751,14 +751,18 @@ PUBLIC_PAGE = """
       } catch(e){}
     }
     function setLang(code){
-      try { localStorage.setItem('il_lang', code); } catch(e){}
-      try { document.cookie = 'il_lang=' + code + ';path=/;max-age=31536000'; } catch(e){}
+      // Language lasts for THIS visit only (session cookie, no expiry date).
+      try { sessionStorage.setItem('il_lang', code); } catch(e){}
+      try { document.cookie = 'il_lang=' + code + ';path=/'; } catch(e){}
       applyLang(code);
     }
     (function(){
+      // FOUNDER DECREE: ENGLISH IS THE DEFAULT, EVERY VISIT. No language choice
+      // ever sticks to the device across visits. Purge any old saved choice.
+      try { localStorage.removeItem('il_lang'); } catch(e){}
       var saved = 'en';
-      try { saved = localStorage.getItem('il_lang') || 'en'; } catch(e){}
-      try { if (saved && saved !== 'en') document.cookie = 'il_lang=' + saved + ';path=/;max-age=31536000'; } catch(e){}
+      try { saved = sessionStorage.getItem('il_lang') || 'en'; } catch(e){}
+      if (saved === 'en') { try { document.cookie = 'il_lang=en;path=/;max-age=0'; } catch(e){} }
       applyLang(saved);
     })();
     </script>
@@ -5287,11 +5291,11 @@ def _info_page(title, inner, page_key=None):
 </style></head><body>
   <div class="wrap">
     <div style="text-align:right;font-size:12.5px;margin-bottom:2px;">
-      <a href="?lang=en" onclick="try{document.cookie='il_lang=en;path=/;max-age=31536000'}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='en' else '' }}">English</a>
+      <a href="?lang=en" onclick="try{document.cookie='il_lang=en;path=/;max-age=0';sessionStorage.setItem('il_lang','en')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='en' else '' }}">English</a>
       <span style="color:#ddd1c8;">&middot;</span>
-      <a href="?lang=es" onclick="try{document.cookie='il_lang=es;path=/;max-age=31536000'}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='es' else '' }}">Espa&ntilde;ol</a>
+      <a href="?lang=es" onclick="try{document.cookie='il_lang=es;path=/';sessionStorage.setItem('il_lang','es')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='es' else '' }}">Espa&ntilde;ol</a>
       <span style="color:#ddd1c8;">&middot;</span>
-      <a href="?lang=zh" onclick="try{document.cookie='il_lang=zh;path=/;max-age=31536000'}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='zh' else '' }}">&#20013;&#25991;</a>
+      <a href="?lang=zh" onclick="try{document.cookie='il_lang=zh;path=/';sessionStorage.setItem('il_lang','zh')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='zh' else '' }}">&#20013;&#25991;</a>
     </div>
     <div class="orb breathe" aria-hidden="true"></div>
     <div class="brand">InnerLight</div>
