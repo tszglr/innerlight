@@ -499,8 +499,9 @@ PUBLIC_PAGE = """
     .story-screen > * { position:relative; z-index:1; }
     #scene-veil { position:fixed; inset:0; z-index:0; pointer-events:none;
       background:linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35)); }
-    .scene-picker { position:fixed; bottom:14px; right:14px; z-index:20; display:flex; gap:6px;
-      background:rgba(255,255,255,0.7); backdrop-filter:blur(6px); border-radius:999px; padding:6px 10px; }
+    .scene-picker { position:fixed; bottom:14px; right:14px; z-index:20; display:flex; gap:6px; flex-wrap:wrap;
+      justify-content:flex-end; max-width:min(90vw,300px); background:rgba(255,255,255,0.7);
+      backdrop-filter:blur(6px); border-radius:16px; padding:6px 10px; }
     .scene-btn { background:none; border:0; font-size:18px; cursor:pointer; opacity:0.6; padding:2px 4px; }
     .scene-btn.active { opacity:1; transform:scale(1.15); }
     /* FACE VIDEO — starts centered and calm. On scroll it gently floats to a
@@ -553,8 +554,8 @@ PUBLIC_PAGE = """
         border-radius:11px; box-shadow:none; }
       /* Scene picker sits ABOVE the help bar, never overlapping it */
       .scene-picker { bottom:70px !important; right:10px !important; z-index:40 !important;
-        background:rgba(255,255,255,0.85); border-radius:999px; padding:4px 8px;
-        max-width:calc(100vw - 20px); flex-wrap:nowrap; }
+        background:rgba(255,255,255,0.85); border-radius:16px; padding:5px 8px;
+        max-width:calc(100vw - 20px); flex-wrap:wrap; justify-content:flex-end; }
       #heart-chip { bottom:74px !important; left:10px !important; }
       /* Give the whole page room so nothing hides behind the fixed help bar */
       .story-screen { padding-bottom:120px; padding-left:14px; padding-right:14px; }
@@ -782,6 +783,11 @@ PUBLIC_PAGE = """
         <button class="scene-btn" data-scene="moon" onclick="setScene('moon')" title="Night moon">&#127765;</button>
         <button class="scene-btn" data-scene="daymoon" onclick="setScene('daymoon')" title="Day moon">&#127761;</button>
         <button class="scene-btn" data-scene="moonleaf" onclick="setScene('moonleaf')" title="Moon through leaves">&#127769;</button>
+        <button class="scene-btn" data-scene="sunflowers" onclick="setScene('sunflowers')" title="Sunflowers">&#127804;</button>
+        <button class="scene-btn" data-scene="wave" onclick="setScene('wave')" title="Ocean wave">&#127754;</button>
+        <button class="scene-btn" data-scene="lettuce" onclick="setScene('lettuce')" title="Garden greens">&#129382;</button>
+        <button class="scene-btn" data-scene="pepper" onclick="setScene('pepper')" title="Green pepper">&#129681;</button>
+        <button class="scene-btn" data-scene="redpepper" onclick="setScene('redpepper')" title="Red pepper">&#127798;</button>
       </div>
       <div class="story-video-bar">
         <video id="visual-preview" class="story-video" autoplay muted playsinline></video>
@@ -3140,8 +3146,11 @@ async function startExperience() {
   // face models, so an active session always shows up for the founder (even a
   // text-only, camera-off session). It's a no-op if it can't reach the server.
   try { startBioPing(); } catch(e){}
-  // Start on a real photograph (the founder's garden) and rotate slowly
-  setScene('garden', false);
+  // Start on a RANDOM real photograph each time — never the same one every login —
+  // then rotate gently from there.
+  var _startScene = SCENE_ORDER[Math.floor(Math.random() * SCENE_ORDER.length)];
+  currentScene = _startScene;
+  setScene(_startScene, false);
   startSceneRotation();
 
   // STEP 2: Start camera, face detection, and music IN THE BACKGROUND
