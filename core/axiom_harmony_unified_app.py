@@ -3872,6 +3872,7 @@ function _openHelpReal(kind){
   // buttons look dead / froze the page. The conversation is saved above and the
   // handoff page reads it, so same-tab is reliable everywhere and never freezes.
   var dest = (kind === 'attorney' || kind === 'legal') ? '/handoff/legal' : '/handoff/clinical';
+  var _lg = (window._ilLang || 'en'); if (_lg !== 'en') dest += '?lang=' + _lg;
   try { window.location.assign(dest); } catch(e){ window.location.href = dest; }
 }
 function revealUrgentHelp(data){
@@ -5687,24 +5688,47 @@ def console():
     return render_template_string(PAGE)
 
 
+# Crisis handoff pages, localized (Spanish / Chinese) with English fallback.
+_HANDOFF_I18N = {}
+def _load_handoff_i18n():
+    import os as _os, json as _json
+    base = _os.path.dirname(_os.path.abspath(__file__))
+    for lg in ("es", "zh"):
+        try:
+            with open(_os.path.join(base, "i18n_handoff_%s.json" % lg), encoding="utf-8") as f:
+                _HANDOFF_I18N[lg] = _json.load(f)
+        except Exception as e:
+            print("[InnerLight] handoff i18n %s not loaded: %s" % (lg, e))
+            _HANDOFF_I18N[lg] = {}
+_load_handoff_i18n()
+
+def _handoff_page(page_key, en_tpl):
+    lang = _info_lang()
+    if lang != "en":
+        t = _HANDOFF_I18N.get(lang, {}).get(page_key)
+        if t:
+            return render_template_string(t)
+    return render_template_string(en_tpl)
+
+
 @app.route("/handoff/clinical")
 def handoff_clinical():
-    return render_template_string(CLINICAL_HANDOFF_PAGE)
+    return _handoff_page("clinical", CLINICAL_HANDOFF_PAGE)
 
 
 @app.route("/handoff/legal")
 def handoff_legal():
-    return render_template_string(LEGAL_HANDOFF_PAGE)
+    return _handoff_page("legal", LEGAL_HANDOFF_PAGE)
 
 
 @app.route("/telehealth/urgent")
 def telehealth_urgent():
-    return render_template_string(CLINICAL_HANDOFF_PAGE)
+    return _handoff_page("clinical", CLINICAL_HANDOFF_PAGE)
 
 
 @app.route("/telehealth/intake")
 def telehealth_intake():
-    return render_template_string(CLINICAL_HANDOFF_PAGE)
+    return _handoff_page("clinical", CLINICAL_HANDOFF_PAGE)
 
 
 @app.route("/api/profile", methods=["POST"])
