@@ -2056,6 +2056,39 @@ function handleHelpRequestIfAny(text){
 }
 
 // ---- LOCAL FACILITIES FINDER (non-crisis self-referral) ----
+var _IL_FAC = {
+  en:{title:"Find help near you", close:"Close",
+    intro:"If you are not in immediate crisis and feel able to reach out yourself, enter your city or ZIP and we will look for mental-health places near you that you can contact on your own time.",
+    ph:"City or ZIP (e.g. San Jose, CA)", search:"Search",
+    foot:"If you are in immediate danger or crisis, call or text <b>988</b>, or call <b>911</b>. This list is for planning your own next step, not for emergencies.",
+    enter:"Please enter a city or ZIP.", looking:"Looking for places near you\u2026",
+    nores:"We could not find listings for that area right now. You can also try:",
+    samhsa:"SAMHSA National Helpline: 1-800-662-4357 (free, 24/7, finds local treatment)",
+    findtx:"FindTreatment.gov \u2014 search by your location", call988:"Call or text <b>988</b> to talk now.",
+    confirm:"Please confirm hours and services by calling ahead. Listings come from FindTreatment.gov, the federal directory of licensed facilities.",
+    err:"Could not search right now. For help finding treatment, call SAMHSA at 1-800-662-4357."},
+  es:{title:"Encuentra ayuda cerca de ti", close:"Cerrar",
+    intro:"Si no est\u00e1s en una crisis inmediata y te sientes capaz de comunicarte por tu cuenta, escribe tu ciudad o c\u00f3digo postal y buscaremos lugares de salud mental cerca de ti que puedas contactar cuando est\u00e9s listo/a.",
+    ph:"Ciudad o c\u00f3digo postal (p. ej. San Jose, CA)", search:"Buscar",
+    foot:"Si est\u00e1s en peligro inmediato o en crisis, llama o env\u00eda un mensaje al <b>988</b>, o llama al <b>911</b>. Esta lista es para planificar tu pr\u00f3ximo paso, no para emergencias.",
+    enter:"Por favor escribe una ciudad o c\u00f3digo postal.", looking:"Buscando lugares cerca de ti\u2026",
+    nores:"No encontramos resultados para esa zona en este momento. Tambi\u00e9n puedes probar:",
+    samhsa:"L\u00ednea Nacional de SAMHSA: 1-800-662-4357 (gratis, 24/7, encuentra tratamiento local)",
+    findtx:"FindTreatment.gov \u2014 busca por tu ubicaci\u00f3n", call988:"Llama o env\u00eda un mensaje al <b>988</b> para hablar ahora.",
+    confirm:"Por favor confirma los horarios y servicios llamando antes. Los resultados provienen de FindTreatment.gov, el directorio federal de centros con licencia.",
+    err:"No se pudo buscar en este momento. Para ayuda encontrando tratamiento, llama a SAMHSA al 1-800-662-4357."},
+  zh:{title:"\u67e5\u627e\u9644\u8fd1\u7684\u5e2e\u52a9", close:"\u5173\u95ed",
+    intro:"\u5982\u679c\u4f60\u73b0\u5728\u6ca1\u6709\u5904\u4e8e\u7d27\u6025\u5371\u673a\u4e2d\uff0c\u5e76\u4e14\u89c9\u5f97\u53ef\u4ee5\u81ea\u5df1\u8054\u7cfb\uff0c\u8bf7\u8f93\u5165\u4f60\u7684\u57ce\u5e02\u6216\u90ae\u653f\u7f16\u7801\uff0c\u6211\u4eec\u4f1a\u4e3a\u4f60\u67e5\u627e\u9644\u8fd1\u7684\u5fc3\u7406\u5065\u5eb7\u673a\u6784\uff0c\u4f60\u53ef\u4ee5\u5728\u65b9\u4fbf\u7684\u65f6\u5019\u81ea\u884c\u8054\u7cfb\u3002",
+    ph:"\u57ce\u5e02\u6216\u90ae\u653f\u7f16\u7801\uff08\u4f8b\u5982 San Jose, CA\uff09", search:"\u641c\u7d22",
+    foot:"\u5982\u679c\u4f60\u6b63\u5904\u4e8e\u7d27\u6025\u5371\u9669\u6216\u5371\u673a\u4e2d\uff0c\u8bf7\u62e8\u6253\u6216\u53d1\u77ed\u4fe1\u81f3 <b>988</b>\uff0c\u6216\u62e8\u6253 <b>911</b>\u3002\u6b64\u5217\u8868\u7528\u4e8e\u5e2e\u52a9\u4f60\u89c4\u5212\u4e0b\u4e00\u6b65\uff0c\u4e0d\u9002\u7528\u4e8e\u7d27\u6025\u60c5\u51b5\u3002",
+    enter:"\u8bf7\u8f93\u5165\u57ce\u5e02\u6216\u90ae\u653f\u7f16\u7801\u3002", looking:"\u6b63\u5728\u67e5\u627e\u4f60\u9644\u8fd1\u7684\u673a\u6784\u2026",
+    nores:"\u6211\u4eec\u6682\u65f6\u6ca1\u6709\u627e\u5230\u8be5\u5730\u533a\u7684\u673a\u6784\u3002\u4f60\u4e5f\u53ef\u4ee5\u5c1d\u8bd5\uff1a",
+    samhsa:"SAMHSA \u5168\u56fd\u70ed\u7ebf\uff1a1-800-662-4357\uff08\u514d\u8d39\uff0c\u5168\u5929\u5019\uff0c\u5e2e\u52a9\u67e5\u627e\u5f53\u5730\u6cbb\u7597\uff09",
+    findtx:"FindTreatment.gov \u2014\u2014 \u6309\u4f60\u7684\u4f4d\u7f6e\u641c\u7d22", call988:"\u62e8\u6253\u6216\u53d1\u77ed\u4fe1\u81f3 <b>988</b> \u7acb\u5373\u503e\u8bc9\u3002",
+    confirm:"\u8bf7\u81f4\u7535\u786e\u8ba4\u8425\u4e1a\u65f6\u95f4\u548c\u670d\u52a1\u9879\u76ee\u3002\u7ed3\u679c\u6765\u81ea FindTreatment.gov\uff0c\u5373\u8054\u90a6\u6301\u8bc1\u673a\u6784\u76ee\u5f55\u3002",
+    err:"\u6682\u65f6\u65e0\u6cd5\u641c\u7d22\u3002\u5982\u9700\u5e2e\u52a9\u67e5\u627e\u6cbb\u7597\uff0c\u8bf7\u62e8\u6253 SAMHSA\uff1a1-800-662-4357\u3002"}
+};
+function _ilfac(k){ var lg=(window._ilLang||"en"); return (_IL_FAC[lg]||_IL_FAC.en)[k]; }
 function openFacilities(){
   let ov = document.getElementById('facilities-overlay');
   if (ov){ ov.style.display='flex'; return; }
@@ -2064,14 +2097,14 @@ function openFacilities(){
   ov.style.cssText='position:fixed;inset:0;z-index:88;background:rgba(10,18,30,0.9);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
   ov.innerHTML = '<div style="background:#fff;border-radius:18px;padding:24px;max-width:440px;width:100%;font-family:Arial;max-height:86vh;overflow-y:auto;">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-    + '<h3 style="margin:0;color:#1e3a5c;">Find help near you</h3>'
-    + '<button onclick="closeFacilities()" style="background:rgba(0,0,0,0.06);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;">Close</button></div>'
-    + '<p style="font-size:13px;color:#9a8778;line-height:1.5;">If you are not in immediate crisis and feel able to reach out yourself, enter your city or ZIP and we will look for mental-health places near you that you can contact on your own time.</p>'
+    + '<h3 style="margin:0;color:#1e3a5c;">'+_ilfac("title")+'</h3>'
+    + '<button onclick="closeFacilities()" style="background:rgba(0,0,0,0.06);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;">'+_ilfac("close")+'</button></div>'
+    + '<p style="font-size:13px;color:#9a8778;line-height:1.5;">'+_ilfac("intro")+'</p>'
     + '<div style="display:flex;gap:8px;">'
-    + '<input id="fac-place" placeholder="City or ZIP (e.g. San Jose, CA)" style="flex:1;padding:11px;border:1px solid #ddd1c8;border-radius:10px;font-size:15px;">'
-    + '<button onclick="doFacilities()" style="background:#2e6e8e;color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer;">Search</button></div>'
+    + '<input id="fac-place" placeholder="'+_ilfac("ph")+'" style="flex:1;padding:11px;border:1px solid #ddd1c8;border-radius:10px;font-size:15px;">'
+    + '<button onclick="doFacilities()" style="background:#2e6e8e;color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer;">'+_ilfac("search")+'</button></div>'
     + '<div id="fac-results" style="margin-top:14px;"></div>'
-    + '<p style="font-size:12px;color:#94a3b8;margin-top:14px;border-top:1px solid #eef2f8;padding-top:10px;">If you are in immediate danger or crisis, call or text <b>988</b>, or call <b>911</b>. This list is for planning your own next step, not for emergencies.</p>'
+    + '<p style="font-size:12px;color:#94a3b8;margin-top:14px;border-top:1px solid #eef2f8;padding-top:10px;">'+_ilfac("foot")+'</p>'
     + '</div>';
   document.body.appendChild(ov);
   setTimeout(()=>{ const el=document.getElementById('fac-place'); if(el) el.focus(); }, 100);
@@ -2080,16 +2113,16 @@ function closeFacilities(){ const o=document.getElementById('facilities-overlay'
 async function doFacilities(){
   const place=(document.getElementById('fac-place')||{}).value||'';
   const box=document.getElementById('fac-results');
-  if (place.trim().length<2){ if(box) box.innerHTML='<span style="color:#c0564e;font-size:13px;">Please enter a city or ZIP.</span>'; return; }
-  if (box) box.innerHTML='<span style="color:#9a8778;font-size:14px;">Looking for places near you\u2026</span>';
+  if (place.trim().length<2){ if(box) box.innerHTML='<span style="color:#c0564e;font-size:13px;">'+_ilfac("enter")+'</span>'; return; }
+  if (box) box.innerHTML='<span style="color:#9a8778;font-size:14px;">'+_ilfac("looking")+'</span>';
   try {
     const r=await fetch('/api/facilities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place:place})});
     const d=await r.json();
     if (!d.results || !d.results.length){
-      box.innerHTML='<div style="font-size:14px;color:#475569;line-height:1.6;">We could not find listings for that area right now. You can also try:<br>'
-        + '\u2022 <b>SAMHSA National Helpline: 1-800-662-4357</b> (free, 24/7, finds local treatment)<br>'
-        + '\u2022 <b>FindTreatment.gov</b> \u2014 search by your location<br>'
-        + '\u2022 Call or text <b>988</b> to talk now.</div>';
+      box.innerHTML='<div style="font-size:14px;color:#475569;line-height:1.6;">'+_ilfac("nores")+'<br>'
+        + '\u2022 <b>'+_ilfac("samhsa")+'</b><br>'
+        + '\u2022 <b>'+_ilfac("findtx")+'</b><br>'
+        + '\u2022 '+_ilfac("call988")+'</div>';
       metric('facilities_search', 'nores'); return;
     }
     box.innerHTML = d.results.map(function(f){
@@ -2098,9 +2131,9 @@ async function doFacilities(){
         + (f.address?'<div style="font-size:12.5px;color:#64748b;">'+f.address+'</div>':'')
         + (f.phone?'<div style="font-size:13px;color:#2e6e8e;margin-top:3px;">'+f.phone+'</div>':'')
         + '</div>';
-    }).join('') + '<div style="font-size:12px;color:#94a3b8;margin-top:6px;">Please confirm hours and services by calling ahead. Listings come from FindTreatment.gov, the federal directory of licensed facilities.</div>';
+    }).join('') + '<div style="font-size:12px;color:#94a3b8;margin-top:6px;">'+_ilfac("confirm")+'</div>';
     metric('facilities_search', 'ok');
-  } catch(e){ box.innerHTML='<span style="color:#c0564e;font-size:13px;">Could not search right now. For help finding treatment, call SAMHSA at 1-800-662-4357.</span>'; }
+  } catch(e){ box.innerHTML='<span style="color:#c0564e;font-size:13px;">'+_ilfac("err")+'</span>'; }
 }
 
 // ---- GENTLE FEEDBACK ASK (optional, anonymous) ----
