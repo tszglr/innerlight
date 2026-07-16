@@ -744,6 +744,10 @@ PUBLIC_PAGE = """
         window._ilLang = code;
         // keep voice INPUT (speech-to-text) in the same language, if it's running
         try { if (typeof voiceRecognizer !== 'undefined' && voiceRecognizer) voiceRecognizer.lang = ilBcp47(code); } catch(e){}
+        // re-pick the spoken voice + rebuild the picker so a Spanish or Chinese
+        // page is read aloud in that language, not English.
+        try { if (typeof initVoices === 'function') initVoices(); } catch(e){}
+        try { if (typeof populateVoicePicker === 'function') populateVoicePicker(); } catch(e){}
         var btns = document.querySelectorAll('[data-langbtn]');
         for (var k=0;k<btns.length;k++){
           btns[k].style.fontWeight = (btns[k].getAttribute('data-langbtn')===code) ? '700' : '400';
@@ -3632,16 +3636,23 @@ function initVoices() {
     // RANK voices by how human they sound. Neural/Online/Natural voices on
     // modern Windows & Mac sound dramatically better than the default robotic one.
     // Higher score = more human.
-    const score = (v) => {
+    // the page's current language decides which language of voice we prefer.
+    var pageLang = (window._ilLang || 'en').slice(0,2).toLowerCase();
+    var score = (v) => {
       let s = 0;
       const n = (v.name || '').toLowerCase();
+      var vl = (v.lang || '').toLowerCase();
       if (/neural|natural|online/.test(n)) s += 100;     // the genuinely good ones
       if (/aria|jenny|guy|sonia|ryan|libby|michelle/.test(n)) s += 40; // MS neural names
       if (/samantha|ava|allison|tom|zoe|evan|nicky|joelle/.test(n)) s += 35; // Apple neural names
       if (/google/.test(n)) s += 30;                     // Google voices are decent
       if (v.localService === false) s += 25;             // cloud voices = better
-      if (/en-us|en-gb/i.test(v.lang || '')) s += 15;
-      if (/en/i.test(v.lang || '')) s += 5;
+      // MATCH THE PAGE LANGUAGE FIRST — a Spanish page should speak Spanish,
+      // a Chinese page should speak Mandarin. This dominates so the default
+      // voice is always in the person's language.
+      if (vl.slice(0,2) === pageLang) s += 300;
+      else s -= 200;                                     // wrong language: push it down hard
+      if (pageLang === 'en' && /en-us|en-gb/.test(vl)) s += 15;
       if (/microsoft (david|mark|zira)\b/.test(n)) s -= 30; // the old robotic ones
       if (/espeak|festival/.test(n)) s -= 50;
       return s;
@@ -3689,22 +3700,26 @@ function _voiceGender(name){
 }
 async function populateVoicePicker(){
   var sel = document.getElementById('voice-picker'); if(!sel) return;
+  var pageLang = (window._ilLang || 'en').slice(0,2).toLowerCase();
   var opts = '<option value="">Voice: automatic (best available)</option>';
   var any = false;
-  // premium provider voices (only present when a voice key is configured)
+  // premium provider voices for THIS language (only present when a voice key is configured)
   try{
-    var r = await fetch('/api/voice/list'); var d = await r.json();
+    var r = await fetch('/api/voice/list?lang=' + encodeURIComponent(pageLang)); var d = await r.json();
     if (d && d.voices && d.voices.length){
       opts += '<optgroup label="Human voices">';
       d.voices.forEach(function(v){ any=true; opts += '<option value="'+v.id+'">'+(v.label||v.id)+'</option>'; });
       opts += '</optgroup>';
     }
   }catch(e){}
-  // browser voices — grouped by likely gender, best first
-  var ranked = (window._voiceRanked||[]).slice(0,10);
-  if (ranked.length){
+  // browser voices — prefer ones that match the page language, grouped by
+  // likely gender, best first. A Spanish page should not offer English voices.
+  var ranked = (window._voiceRanked||[]).slice();
+  var matching = ranked.filter(function(v){ return (v.lang||'').slice(0,2).toLowerCase() === pageLang; });
+  var pool = (matching.length ? matching : ranked).slice(0,10);
+  if (pool.length){
     var groups = {Female:[],Male:[],Voice:[]};
-    ranked.forEach(function(v){ groups[_voiceGender(v.name)].push(v); });
+    pool.forEach(function(v){ groups[_voiceGender(v.name)].push(v); });
     ['Female','Male','Voice'].forEach(function(g){
       if(!groups[g].length) return;
       opts += '<optgroup label="'+(g==='Voice'?'Other voices':g+' voices')+'">';
@@ -6011,8 +6026,11 @@ def api_transcribe_token():
 @app.route("/api/voice/list")
 def api_voice_list():
     """Return the voices the person can choose from (male/female, accents),
-    so they can pick the most comforting voice to listen to."""
-    return jsonify(voice_list())
+    so they can pick the most comforting voice to listen to. Filters to the
+    page's current language so a Spanish or Chinese visitor is offered a
+    voice that actually speaks their language."""
+    lang = (request.args.get("lang") or "en").strip().lower()[:2]
+    return jsonify(voice_list(lang))
 
 
 @app.route("/api/voice/status")

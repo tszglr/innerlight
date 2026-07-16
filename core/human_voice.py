@@ -52,16 +52,25 @@ _eleven_voice_cache = None
 # stereotyped. The person picks the one that feels safest.
 HUME_DEFAULT = os.environ.get("HUME_VOICE_ID", "warm_female_us")
 HUME_VOICES = [
-    {"id": "warm_female_us", "label": "Ava - warm, gentle woman (American)", "gender": "female",
+    # English
+    {"id": "warm_female_us", "label": "Ava — warm woman (English)", "gender": "female", "lang": "en",
      "description": "A warm, gentle, calm woman with a soft, reassuring American accent, speaking slowly and kindly, as if comforting someone who is hurting."},
-    {"id": "calm_male_us", "label": "Sam - calm, steady man (American)", "gender": "male",
+    {"id": "calm_male_us", "label": "Sam — calm man (English)", "gender": "male", "lang": "en",
      "description": "A calm, steady, reassuring man with a warm American accent, speaking slowly and softly, gentle and grounded."},
-    {"id": "soft_female_uk", "label": "Grace - soft-spoken woman (British)", "gender": "female",
+    {"id": "soft_female_uk", "label": "Grace — soft-spoken woman (English, British)", "gender": "female", "lang": "en",
      "description": "A soft-spoken, soothing woman with a gentle British accent, warm, patient, and unhurried."},
-    {"id": "warm_male_uk", "label": "Oliver - warm man (British)", "gender": "male",
+    {"id": "warm_male_uk", "label": "Oliver — warm man (English, British)", "gender": "male", "lang": "en",
      "description": "A warm, kind man with a gentle British accent, calm and reassuring, speaking slowly."},
-    {"id": "gentle_female_latin", "label": "Lucia - warm woman (Latin American)", "gender": "female",
-     "description": "A warm, caring woman with a gentle Latin American accent, speaking softly and kindly in a soothing tone."},
+    # Spanish — NATIVE speakers, not English with an accent
+    {"id": "warm_female_es", "label": "Sofía — mujer cálida (Español)", "gender": "female", "lang": "es",
+     "description": "A warm, gentle, calm woman speaking natural, NATIVE Latin American Spanish, soft and reassuring, speaking slowly and kindly, as if comforting someone who is hurting. Speak entirely in Spanish."},
+    {"id": "calm_male_es", "label": "Mateo — hombre sereno (Español)", "gender": "male", "lang": "es",
+     "description": "A calm, steady, reassuring man speaking natural, NATIVE Latin American Spanish, warm and grounded, speaking slowly and softly. Speak entirely in Spanish."},
+    # Chinese — NATIVE Mandarin speakers
+    {"id": "warm_female_zh", "label": "Mei · 温柔女声 (中文)", "gender": "female", "lang": "zh",
+     "description": "A warm, gentle, soothing woman speaking natural, NATIVE Mandarin Chinese, soft and reassuring, comforting and unhurried. Speak entirely in Mandarin Chinese."},
+    {"id": "calm_male_zh", "label": "Jun · 沉稳男声 (中文)", "gender": "male", "lang": "zh",
+     "description": "A calm, steady, reassuring man speaking natural, NATIVE Mandarin Chinese, warm and grounded, speaking slowly and gently. Speak entirely in Mandarin Chinese."},
 ]
 def _hume_desc(voice_id: str) -> str:
     for v in HUME_VOICES:
@@ -85,15 +94,19 @@ CURATED_ELEVEN_VOICES = [
 ]
 
 
-def list_voices() -> Dict[str, Any]:
-    """Return the voices the user can choose from, grouped for a comfortable
-    pick. For ElevenLabs we fetch the account's LIVE voice list (so it always
-    reflects what's actually available and never breaks when defaults change),
-    grouped by gender and accent. For OpenAI we return the fixed set."""
+def list_voices(lang: str = "en") -> Dict[str, Any]:
+    """Return the voices the user can choose from, for the given language (so a
+    Spanish or Chinese speaker is offered NATIVE voices, not English ones). For
+    ElevenLabs we fetch the account's LIVE voice list; for OpenAI the fixed set
+    (both are multilingual and speak whatever language the text is in)."""
+    lang = (lang or "en")[:2].lower()
     provider = voice_provider()
     if provider == "hume":
+        vs = [v for v in HUME_VOICES if v.get("lang", "en") == lang]
+        if not vs:
+            vs = [v for v in HUME_VOICES if v.get("lang", "en") == "en"]
         return {"provider": "hume",
-                "voices": [{"id": v["id"], "label": v["label"], "gender": v["gender"]} for v in HUME_VOICES]}
+                "voices": [{"id": v["id"], "label": v["label"], "gender": v["gender"]} for v in vs]}
     if provider == "elevenlabs":
         try:
             live = _fetch_eleven_voices()
