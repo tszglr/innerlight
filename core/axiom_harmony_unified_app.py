@@ -806,7 +806,7 @@ PUBLIC_PAGE = """
           <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
         </div>
         <div class="music-bar">
-          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
+          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="24" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
           <button class="music-change" type="button" onclick="changeMusic()" data-i18n="music.change">Change music</button>
           <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()" data-i18n="music.pulseon">&#10041; Calm pulse: on</button>
           <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()" data-i18n="music.voiceoff">&#128263; Spoken voice: Off</button>
@@ -869,7 +869,7 @@ PUBLIC_PAGE = """
 <script>
 /* ===== HOISTED STATE (declared before any function uses them) ===== */
 var faceInterval = null;
-var TARGET_VOL = 0.06;
+var TARGET_VOL = 0.035;
 var entrainOn = false, entrainPanL = null, entrainPanR = null;
 var _duckActive = false, _duckRestoreTimer = null, _duckFadeTimer = null;
 var _hrTickInt = null, _hrEstInt = null;
@@ -2703,7 +2703,7 @@ let deckA, deckB, activeDeck = 'A';
 let crossfading = false;
 const CROSSFADE_MS = 4000; // 4 second blend
 const CROSSFADE_TRIGGER = 8; // start blend 8 seconds before track ends
-TARGET_VOL = 0.06;    // headphone-safe; user slider can raise it
+TARGET_VOL = 0.035;    // headphone-safe; user slider can raise it
 
 function initDecks() {
   deckA = document.getElementById('ambient-a');
@@ -3004,7 +3004,7 @@ _duckActive = false; _duckRestoreTimer = null; _duckFadeTimer = null;
 let userMuted = false;
 function currentTarget(){ return userMuted ? 0 : TARGET_VOL; }
 function setVol(v){
-  TARGET_VOL = 0.15 * (v/100); // slider full = 0.15 ceiling, default 40 = 0.06
+  TARGET_VOL = 0.12 * (v/100); // slider full = 0.12 ceiling; default 24 ≈ 0.029 (soft)
   ['deckA','deckB'].forEach(id=>{ const d=document.getElementById(id); if(d && !userMuted) d.volume = Math.min(1, TARGET_VOL); });
 }
 function toggleMute(){
@@ -3183,10 +3183,10 @@ async function startExperience() {
         if (deck.src !== ambientTracks[0].url) deck.src = ambientTracks[0].url;
         // GENTLE ARRIVAL: enter soft, then rise smoothly into full rich volume —
         // never an abrupt hit of sound in the ear.
-        deck.volume = TARGET_VOL * 0.22;  // enter very soft, rise gently
+        deck.volume = TARGET_VOL * 0.08;  // enter nearly silent, rise very gently
         deck.play().then(()=>metric('first_sound_ms', Date.now()-TAP_MS)).catch(()=>{});
         (function arrivalRise(){
-          const RISE_MS = 10000; // ten calm seconds from soft to full
+          const RISE_MS = 16000; // sixteen calm seconds from near-silent to full
           const start = performance.now(), from = deck.volume, to = TARGET_VOL;
           function step(t){
             const p = Math.min(1, (t - start) / RISE_MS);
@@ -5867,7 +5867,24 @@ def zenisys_ambient():
         # leans toward calmer music happens later, once the user is engaged, in
         # the adaptive loop — NOT here at the entry point.
         import random as _rnd
-        _rnd.shuffle(files)
+        def _calm(n): return _FINGERPRINTS.get(n, {}).get("calm_score", 0.5)
+        def _gentle(n):
+            fp = _FINGERPRINTS.get(n, {})
+            bpm = fp.get("bpm", 100) or 100
+            # calm AND slow — a fast track is never "gentle enough" for arrival
+            return fp.get("calm_score", 0.5) - max(0.0, (bpm - 85.0)) / 240.0
+        if calmest_first is True:
+            # Arrival must be CALM and SLOW — never a fast, busy track. Order by a
+            # gentle score (calm minus a tempo penalty), then shuffle within the
+            # gentlest few so a different SOFT track greets each visit.
+            files.sort(key=_gentle, reverse=True)
+            head = files[:max(4, len(files) // 2)]
+            _rnd.shuffle(head)
+            files = head + files[len(head):]
+        elif calmest_first is False:
+            files.sort(key=_calm)          # brighter / more energetic first, to lift low mood
+        else:
+            _rnd.shuffle(files)
         return [{"url": f"/audio/{n}", "name": label,
                  "fp": _FINGERPRINTS.get(n, {})} for n in files]
 
