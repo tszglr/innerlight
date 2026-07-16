@@ -499,6 +499,21 @@ PUBLIC_PAGE = """
     .story-screen > * { position:relative; z-index:1; }
     #scene-veil { position:fixed; inset:0; z-index:0; pointer-events:none;
       background:linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35)); }
+    /* THE PRESENCE — a soft light that openly breathes and moves with the read,
+       in real time. It sits above the photo but below all content, so text stays
+       perfectly readable. Everything about it is driven live in JS. */
+    #il-presence { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+    #il-presence .il-bloom { position:absolute; left:50%; top:45%;
+      width:70vmax; height:70vmax; border-radius:50%;
+      transform:translate(-50%,-50%) scale(1); opacity:0; will-change:transform,opacity,filter;
+      background:radial-gradient(circle at center,
+        rgba(255,216,164,0.55) 0%, rgba(255,192,126,0.20) 40%, rgba(255,192,126,0) 70%); }
+    #il-presence .il-vignette { position:absolute; inset:0; opacity:0; will-change:opacity;
+      background:radial-gradient(circle at 50% 46%, rgba(60,40,25,0) 42%, rgba(52,34,20,0.30) 100%); }
+    #il-presence-word { position:fixed; left:0; right:0; bottom:120px; text-align:center;
+      z-index:3; pointer-events:none; font-size:15.5px; letter-spacing:.3px; color:#6a402b;
+      font-weight:500; text-shadow:0 1px 3px rgba(255,255,255,0.9); opacity:0;
+      transition:opacity 1.8s ease; }
     .scene-picker { position:fixed; bottom:14px; right:14px; z-index:20; display:flex; gap:6px; flex-wrap:wrap;
       justify-content:flex-end; max-width:min(90vw,300px); background:rgba(255,255,255,0.7);
       backdrop-filter:blur(6px); border-radius:16px; padding:6px 10px; }
@@ -783,6 +798,8 @@ PUBLIC_PAGE = """
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
       </div>
       <div id="scene-veil"></div>
+      <div id="il-presence"><div class="il-bloom"></div><div class="il-vignette"></div></div>
+      <div id="il-presence-word"></div>
       <div class="scene-picker" id="scene-picker">
         <button class="scene-btn active" data-scene="garden" onclick="setScene('garden')" title="Garden">&#127807;</button>
         <button class="scene-btn" data-scene="sunflower" onclick="setScene('sunflower')" title="Sunflower">&#127803;</button>
@@ -2590,6 +2607,102 @@ function stopAdaptiveLoop() {
 }
 
 // ---------------------------------------------------------------------------
+// THE PRESENCE — the VISIBLE proof that InnerLight is reading and responding in
+// real time. The same personal, baseline-relative read that steers the sound
+// now openly moves a soft light on the screen:
+//   - When the person is more activated than their own calm, the light draws
+//     INWARD, warms, dims a touch, and breathes SLOWER and deeper — a contained,
+//     steady presence that meets them and gently leads the pace down (the same
+//     iso-principle the sound uses).
+//   - As they settle toward (and below) their own calm, the light OPENS wider,
+//     eases a little brighter, and breathes easy and spacious.
+// Confidence gates how much it moves: when the read is unsure, the motion is
+// barely there — it never pretends to know more than it does, and it NEVER
+// labels an emotion. Words are rare, about presence and time, never about a
+// detected state. All motion is smoothed frame-by-frame so it is alive but never
+// lurches. Text stays fully readable (this layer sits below all content).
+// ---------------------------------------------------------------------------
+let presenceRAF = null;
+let _presArousal = 0.5, _presConf = 0, _presDown = 0;   // extra-smoothed for buttery motion
+let _presPeak = 0.5, _presLastWord = 0, _presStart = 0;
+const _IL_PRES = {
+  en: ["I’m here.", "Take your time.", "There’s no rush.", "I’m right here with you.", "Breathe. I’m here."],
+  es: ["Estoy aquí.", "Tómate tu tiempo.", "No hay prisa.", "Respira, estoy aquí.", "Aquí estoy contigo."],
+  zh: ["我在这里。", "慢慢来。", "别急。", "呼吸，我在这里。", "我一直在你身边。"]
+};
+function _ilPresWords(){ var lg=(window._ilLang||"en"); return _IL_PRES[lg]||_IL_PRES.en; }
+
+function ilPresenceWord(){
+  var el = document.getElementById("il-presence-word"); if(!el) return;
+  var arr = _ilPresWords();
+  // pick without a hard index dependency (varies naturally)
+  var i = Math.floor((performance.now()/1000 + arr.length) % arr.length);
+  el.textContent = arr[i % arr.length];
+  el.style.opacity = "0.92";
+  setTimeout(function(){ el.style.opacity = "0"; }, 5200);
+}
+
+function startPresence(){
+  if (presenceRAF) return;
+  var bloom = document.querySelector("#il-presence .il-bloom");
+  var vig = document.querySelector("#il-presence .il-vignette");
+  if (!bloom || !vig) return;
+  _presStart = performance.now();
+  function frame(now){
+    // ease our display values toward the live read (which the adaptive loop keeps fresh)
+    var aRead = (typeof adaptiveArousal === "number") ? adaptiveArousal : 0.5;
+    var cRead = (typeof window._attConfidence === "number") ? window._attConfidence : 0;
+    var dRead = (typeof adaptiveDownSm === "number") ? adaptiveDownSm : 0;
+    _presArousal += (aRead - _presArousal) * 0.05;
+    _presConf    += (cRead - _presConf)    * 0.05;
+    _presDown    += (dRead - _presDown)    * 0.05;
+
+    // how far above / below their OWN calm (0.5)
+    var act = Math.max(0, Math.min(1, (_presArousal - 0.5) * 2));   // activated
+    var set = Math.max(0, Math.min(1, (0.5 - _presArousal) * 2));   // settled/flat
+    var conf = Math.max(0, Math.min(1, _presConf));
+
+    // breathing — slower & deeper when activated (leads the pace down)
+    var periodMs = 6500 + act * 4500;                 // 6.5s calm -> 11s activated
+    var ph = ((now - _presStart) % periodMs) / periodMs;
+    var breath = 0.5 - 0.5 * Math.cos(2 * Math.PI * ph);   // 0..1 smooth
+
+    // the light draws inward when activated, opens wide when settled
+    var baseScale = 1.06 - act * 0.30 + set * 0.14;        // smaller when activated
+    var scale = baseScale + breath * (0.05 + act * 0.05);
+
+    // visibility gated by confidence; a gentle floor so it is always faintly alive
+    var vis = 0.10 + conf * 0.34;
+    var op = vis * (0.55 + 0.45 * breath);
+
+    // warmth + brightness: activated -> warmer & a touch dimmer; settled -> open & clearer
+    var hue = -act * 10 + set * 6;                         // degrees
+    var bright = 1 + set * 0.10 - act * 0.06;
+
+    bloom.style.opacity = op.toFixed(3);
+    bloom.style.transform = "translate(-50%,-50%) scale(" + scale.toFixed(3) + ")";
+    bloom.style.filter = "hue-rotate(" + hue.toFixed(1) + "deg) brightness(" + bright.toFixed(3) + ")";
+
+    // the enclosing vignette appears only when activated — a gentle held frame
+    vig.style.opacity = (act * conf * 0.55).toFixed(3);
+
+    // rare, gentle words — on a clear SETTLE after being activated (not a label)
+    _presPeak = Math.max(_presPeak * 0.9995, _presArousal);
+    var settledFromPeak = (_presPeak > 0.60) && (_presArousal < _presPeak - 0.12) && (conf > 0.35);
+    if (settledFromPeak && (now - _presLastWord > 45000)) {
+      _presLastWord = now; _presPeak = _presArousal;   // reset so it doesn't repeat
+      try { ilPresenceWord(); } catch(e){}
+    }
+
+    presenceRAF = requestAnimationFrame(frame);
+  }
+  presenceRAF = requestAnimationFrame(frame);
+}
+function stopPresence(){
+  if (presenceRAF){ cancelAnimationFrame(presenceRAF); presenceRAF = null; }
+}
+
+// ---------------------------------------------------------------------------
 // THE ENTRAINMENT LAYER (free, generated) — a subtle, steady calming pulse
 // layered gently UNDER the warm music. Research links a slow pulse in the
 // ~6-10 Hz range (and low carrier tones) to easing anxiety. This is felt more
@@ -3160,6 +3273,9 @@ async function startExperience() {
   currentScene = _startScene;
   setScene(_startScene, false);
   startSceneRotation();
+  // The visible presence begins right away — a faint, alive glow — and grows
+  // more responsive as the read gains confidence from face/voice/typing.
+  try { startPresence(); } catch(e){}
 
   // STEP 2: Start camera, face detection, and music IN THE BACKGROUND
   // These are nice-to-have — the conversation works even if they all fail
