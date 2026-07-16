@@ -5866,25 +5866,15 @@ def zenisys_ambient():
         # random and every track is treated equally.) The emotion-targeting that
         # leans toward calmer music happens later, once the user is engaged, in
         # the adaptive loop — NOT here at the entry point.
+        # RANDOMIZE WITHIN THE GENRE — do NOT score or rank the tracks.
+        # The FOLDER is the label: every track in this lane is already the right
+        # KIND of music (calm / deep-calm / lifting). Scoring was the bug — it
+        # always picked the single highest-"calmest" song, so the SAME track
+        # greeted every visit. A plain shuffle gives every track in the genre an
+        # equal chance and a different one each time. The founder curates each
+        # genre and can switch any track off from the operations page.
         import random as _rnd
-        def _calm(n): return _FINGERPRINTS.get(n, {}).get("calm_score", 0.5)
-        def _gentle(n):
-            fp = _FINGERPRINTS.get(n, {})
-            bpm = fp.get("bpm", 100) or 100
-            # calm AND slow — a fast track is never "gentle enough" for arrival
-            return fp.get("calm_score", 0.5) - max(0.0, (bpm - 85.0)) / 240.0
-        if calmest_first is True:
-            # Arrival must be CALM and SLOW — never a fast, busy track. Order by a
-            # gentle score (calm minus a tempo penalty), then shuffle within the
-            # gentlest few so a different SOFT track greets each visit.
-            files.sort(key=_gentle, reverse=True)
-            head = files[:max(4, len(files) // 2)]
-            _rnd.shuffle(head)
-            files = head + files[len(head):]
-        elif calmest_first is False:
-            files.sort(key=_calm)          # brighter / more energetic first, to lift low mood
-        else:
-            _rnd.shuffle(files)
+        _rnd.shuffle(files)
         return [{"url": f"/audio/{n}", "name": label,
                  "fp": _FINGERPRINTS.get(n, {})} for n in files]
 
