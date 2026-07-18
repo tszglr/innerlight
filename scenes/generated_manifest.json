@@ -1,0 +1,116 @@
+[
+  {
+    "file": "gen_photo_1_rosemary_golden.jpg",
+    "source": "photo_1_rosemary.jpg",
+    "treatment": "golden",
+    "label": "Rosemary blossoms in golden-hour light"
+  },
+  {
+    "file": "gen_photo_1_rosemary_dawn.jpg",
+    "source": "photo_1_rosemary.jpg",
+    "treatment": "dawn",
+    "label": "Rosemary blossoms at first light"
+  },
+  {
+    "file": "gen_photo_1_rosemary_dream.jpg",
+    "source": "photo_1_rosemary.jpg",
+    "treatment": "dream",
+    "label": "Rosemary blossoms, soft as a memory"
+  },
+  {
+    "file": "gen_photo_5_sunflower_golden.jpg",
+    "source": "photo_5_sunflower.jpg",
+    "treatment": "golden",
+    "label": "Sunflower in warm evening sun"
+  },
+  {
+    "file": "gen_photo_5_sunflower_dusk.jpg",
+    "source": "photo_5_sunflower.jpg",
+    "treatment": "dusk",
+    "label": "Sunflower as the day settles"
+  },
+  {
+    "file": "gen_photo_5_sunflower_dream.jpg",
+    "source": "photo_5_sunflower.jpg",
+    "treatment": "dream",
+    "label": "Sunflower in a gentle haze"
+  },
+  {
+    "file": "gen_photo_6_golden_horizon_dawn.jpg",
+    "source": "photo_6_golden_horizon.jpg",
+    "treatment": "dawn",
+    "label": "The horizon at daybreak"
+  },
+  {
+    "file": "gen_photo_6_golden_horizon_dusk.jpg",
+    "source": "photo_6_golden_horizon.jpg",
+    "treatment": "dusk",
+    "label": "The horizon as evening deepens"
+  },
+  {
+    "file": "gen_photo_6_golden_horizon_dream.jpg",
+    "source": "photo_6_golden_horizon.jpg",
+    "treatment": "dream",
+    "label": "Golden horizon, softly glowing"
+  },
+  {
+    "file": "gen_photo_7_moon_leaves_moonlight.jpg",
+    "source": "photo_7_moon_leaves.jpg",
+    "treatment": "moonlight",
+    "label": "Moon through the leaves, deep night"
+  },
+  {
+    "file": "gen_photo_7_moon_leaves_dream.jpg",
+    "source": "photo_7_moon_leaves.jpg",
+    "treatment": "dream",
+    "label": "Moon through the leaves, dreaming"
+  },
+  {
+    "file": "gen_photo_4_moon_day_moonlight.jpg",
+    "source": "photo_4_moon_day.jpg",
+    "treatment": "moonlight",
+    "label": "The moon as night settles in"
+  },
+  {
+    "file": "gen_photo_4_moon_day_dawn.jpg",
+    "source": "photo_4_moon_day.jpg",
+    "treatment": "dawn",
+    "label": "Morning moon in a pale sky"
+  },
+  {
+    "file": "gen_photo_9_wave_dawn.jpg",
+    "source": "photo_9_wave.jpg",
+    "treatment": "dawn",
+    "label": "The sea at first light"
+  },
+  {
+    "file": "gen_photo_9_wave_dream.jpg",
+    "source": "photo_9_wave.jpg",
+    "treatment": "dream",
+    "label": "The sea, softly dreaming"
+  },
+  {
+    "file": "gen_photo_10_pepper_golden.jpg",
+    "source": "photo_10_pepper.jpg",
+    "treatment": "golden",
+    "label": "Pepper plant in golden-hour light"
+  },
+  {
+    "file": "gen_photo_10_pepper_dream.jpg",
+    "source": "photo_10_pepper.jpg",
+    "treatment": "dream",
+    "label": "Pepper plant, garden daydream"
+  },
+  {
+    "file": "gen_photo_12_sunflowers_golden.jpg",
+    "source": "photo_12_sunflowers.jpg",
+    "treatment": "golden",
+    "label": "Sunflowers in warm evening sun"
+  },
+  {
+    "file": "gen_photo_12_sunflowers_dusk.jpg",
+    "source": "photo_12_sunflowers.jpg",
+    "treatment": "dusk",
+    "label": "Sunflowers at dusk"
+  }
+]

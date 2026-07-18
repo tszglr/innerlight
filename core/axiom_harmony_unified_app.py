@@ -478,9 +478,10 @@ PUBLIC_PAGE = """
     .emotion-status { color:var(--muted); font-size:13px; margin-top:8px; }
     .sound-status { color:var(--muted); font-size:13px; margin-top:8px; }
     /* Calm welcome redesign — light, warm, inviting */
-    #welcome-gate { position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    #welcome-gate { position:fixed; inset:0; z-index:50; display:flex; align-items:flex-start; justify-content:center;
+      overflow-y:auto; -webkit-overflow-scrolling:touch;
       background:linear-gradient(160deg, #f7f3f0 0%, #f3ede9 30%, #fdf2f0 60%, #f6f2ee 100%); text-align:center; padding:24px; }
-    .gate-inner { max-width:440px; }
+    .gate-inner { max-width:440px; margin:auto; }
     .gate-mark { font-size:46px; color:#c59771; opacity:.85; margin-bottom:6px; animation:breathe 4s ease-in-out infinite; }
     @keyframes breathe { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
     #welcome-gate h1 { font-size:30px; margin:6px 0 12px; font-weight:600; letter-spacing:.02em; color:#4a372d; }
@@ -567,13 +568,43 @@ PUBLIC_PAGE = """
       #help-rail .rail-btn { flex:1 1 0; min-width:0; margin:0; padding:0 3px; height:46px; font-size:11px;
         line-height:1.15; white-space:nowrap; display:flex; align-items:center; justify-content:center;
         border-radius:11px; box-shadow:none; }
-      /* Scene picker sits ABOVE the help bar, never overlapping it */
+      /* PHONE CORNER MAP — every floating piece has its own home, nothing stacks:
+         top-left: focus pill · top-right: camera circle · bottom-left: heart chip
+         bottom-right: scene strip (one swipeable row) · above those: soft word/tips
+         bottom-center prompts sit just above the help bar and gently fade the
+         corner pieces while they are open, so only one thing speaks at a time. */
       .scene-picker { bottom:70px !important; right:10px !important; z-index:40 !important;
         background:rgba(255,255,255,0.85); border-radius:16px; padding:5px 8px;
-        max-width:calc(100vw - 20px); flex-wrap:wrap; justify-content:flex-end; }
-      #heart-chip { bottom:74px !important; left:10px !important; }
-      /* Give the whole page room so nothing hides behind the fixed help bar */
-      .story-screen { padding-bottom:120px; padding-left:14px; padding-right:14px; }
+        max-width:56vw; flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start;
+        scrollbar-width:none; }
+      .scene-picker::-webkit-scrollbar { display:none; }
+      #heart-chip { bottom:74px !important; left:10px !important;
+        padding:8px 14px !important; font-size:15px !important; }
+      #heart-chip #heart-beat { font-size:16px !important; }
+      #heart-chip #heart-num { font-size:18px !important; }
+      #heart-chip .hr-label { font-size:11px !important; }
+      /* Focus pill mirrors the camera circle in the opposite top corner */
+      #il-anchor-pill { top:70px !important; bottom:auto !important; left:12px !important;
+        right:auto !important; padding:7px 11px !important; font-size:11.5px !important; }
+      /* The soft presence word hugs its own text and floats in a clear band */
+      #il-presence-word { left:50%; right:auto; bottom:158px; width:max-content;
+        max-width:78vw; transform:translateX(-50%); }
+      /* Camera tips: small, one per side, in the band above the corner pieces */
+      #hr-distance-tip { bottom:160px !important; right:12px !important; max-width:165px !important; }
+      #il-light-tip { bottom:160px !important; left:12px !important; right:auto !important;
+        transform:none !important; max-width:160px !important; }
+      /* Feeling card + gentle prompts: bottom-center, always ABOVE the help bar */
+      #sam-card { top:auto !important; bottom:78px !important; left:50% !important;
+        right:auto !important; transform:translateX(-50%) !important;
+        max-width:min(320px, calc(100vw - 24px)) !important; }
+      #il-checkin, #gentle-bridge, #fb-card, #save-offer { bottom:78px !important; }
+      /* While a prompt is open, the corner pieces rest — one voice at a time */
+      body:has(#il-checkin, #sam-card, #gentle-bridge, #fb-card, #save-offer) :is(.scene-picker, #heart-chip, #il-anchor-pill, #il-presence-word, #hr-distance-tip, #il-light-tip) {
+        opacity:0 !important; pointer-events:none !important; transition:opacity .8s ease; }
+      body:has(#hr-distance-tip, #il-light-tip) #il-presence-word { opacity:0 !important; }
+      /* Give the whole page room so nothing hides behind the fixed help bar,
+         the scene strip, or the tip band — everything can scroll fully clear */
+      .story-screen { padding-bottom:170px; padding-left:14px; padding-right:14px; }
       /* The camera preview becomes a small circle so an empty/off camera never
          shows as a giant grey box (the #1 "beta" look on phones). */
       .story-video { width:118px !important; height:118px !important; border-radius:50% !important;
@@ -588,6 +619,22 @@ PUBLIC_PAGE = """
       .music-change { padding:6px 12px; font-size:12px; }
       body { padding-bottom:70px; }
     }
+    /* Only one bottom-center prompt speaks at a time, at every screen size.
+       Priority: reach-a-person invite, then feedback, then save, then check-in,
+       then the feeling faces. Lower ones wait, faded out, and return when the
+       higher one closes. */
+    body:has(#gentle-bridge) :is(#fb-card, #save-offer, #il-checkin, #sam-card) {
+      opacity:0 !important; pointer-events:none !important; }
+    body:has(#fb-card) :is(#save-offer, #il-checkin, #sam-card) {
+      opacity:0 !important; pointer-events:none !important; }
+    body:has(#save-offer) :is(#il-checkin, #sam-card) {
+      opacity:0 !important; pointer-events:none !important; }
+    body:has(#il-checkin) #sam-card {
+      opacity:0 !important; pointer-events:none !important; }
+    /* While the one-time readiness notice is open at the top, the top-corner
+       floaters rest so nothing sits on the notice (they return on dismiss). */
+    body:has(#readiness-bar) :is(#il-anchor-pill, .story-video-bar.floating) {
+      opacity:0 !important; pointer-events:none !important; }
     .story-mic { background:#fff; color:#99673e; border:1px solid #ddd1c8; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
     .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#9a8778; font-size:13px; }
@@ -876,8 +923,8 @@ PUBLIC_PAGE = """
         <div class="sound-status" id="sound-status"></div>
         <div class="emotion-status" id="emotion-status" style="display:none;"></div>
         <textarea id="voice_transcript" style="display:none;"></textarea>
-        <audio id="ambient-a" preload="auto"></audio>
-        <audio id="ambient-b" preload="auto"></audio>
+        <audio id="ambient-a" preload="auto" playsinline webkit-playsinline></audio>
+        <audio id="ambient-b" preload="auto" playsinline webkit-playsinline></audio>
       </div>
     </section>
   </main>
@@ -893,6 +940,11 @@ var faceInterval = null;
 var TARGET_VOL = 0.035;
 var entrainOn = false, entrainPanL = null, entrainPanR = null;
 var _duckActive = false, _duckRestoreTimer = null, _duckFadeTimer = null;
+// Gentle-arrival gate: 0..1 multiplier on the music ceiling during the 16s
+// arrival rise, so crossfades and adaptive nudges never jump above it.
+var _riseGate = 1;
+var _xfadeTimer = null;   // the one live crossfade interval (never two at once)
+var _musicErrRun = 0;     // consecutive track load errors (reset when audio plays)
 var _hrTickInt = null, _hrEstInt = null;
 var adaptiveInterval = null;
 
@@ -916,9 +968,35 @@ const SCENE_PHOTOS = {
   wave:      '/scenes/photo_9_wave.jpg',
   pepper:    '/scenes/photo_10_pepper.jpg',
   redpepper: '/scenes/photo_11_red_pepper.jpg',
-  sunflowers:'/scenes/photo_12_sunflowers.jpg'
+  sunflowers:'/scenes/photo_12_sunflowers.jpg',
+  // GENERATED SCENES — the founder's own photographs, re-lit by our scene
+  // generator as different times of day (dawn, golden hour, dusk, moonlight,
+  // soft-dream). Same real places, new light. They join the rotation so the
+  // background feels endlessly alive without ever leaving his garden.
+  g_rosemary_golden:  '/scenes/gen_photo_1_rosemary_golden.jpg',
+  g_rosemary_dawn:    '/scenes/gen_photo_1_rosemary_dawn.jpg',
+  g_rosemary_dream:   '/scenes/gen_photo_1_rosemary_dream.jpg',
+  g_sunflower_golden: '/scenes/gen_photo_5_sunflower_golden.jpg',
+  g_sunflower_dusk:   '/scenes/gen_photo_5_sunflower_dusk.jpg',
+  g_sunflower_dream:  '/scenes/gen_photo_5_sunflower_dream.jpg',
+  g_horizon_dawn:     '/scenes/gen_photo_6_golden_horizon_dawn.jpg',
+  g_horizon_dusk:     '/scenes/gen_photo_6_golden_horizon_dusk.jpg',
+  g_horizon_dream:    '/scenes/gen_photo_6_golden_horizon_dream.jpg',
+  g_moonleaf_night:   '/scenes/gen_photo_7_moon_leaves_moonlight.jpg',
+  g_moonleaf_dream:   '/scenes/gen_photo_7_moon_leaves_dream.jpg',
+  g_daymoon_night:    '/scenes/gen_photo_4_moon_day_moonlight.jpg',
+  g_daymoon_dawn:     '/scenes/gen_photo_4_moon_day_dawn.jpg',
+  g_wave_dawn:        '/scenes/gen_photo_9_wave_dawn.jpg',
+  g_wave_dream:       '/scenes/gen_photo_9_wave_dream.jpg',
+  g_pepper_golden:    '/scenes/gen_photo_10_pepper_golden.jpg',
+  g_pepper_dream:     '/scenes/gen_photo_10_pepper_dream.jpg',
+  g_sunflowers_golden:'/scenes/gen_photo_12_sunflowers_golden.jpg',
+  g_sunflowers_dusk:  '/scenes/gen_photo_12_sunflowers_dusk.jpg'
 };
 const SCENE_ORDER = ['garden','lettuce','pepper','redpepper','sunflower','sunflowers','sunset','horizon','wave','moon','daymoon','moonleaf'];
+// Everything eligible for the random start + slow rotation: originals AND
+// the generated re-lit variants. The picker buttons stay the 12 originals.
+const SCENE_POOL = SCENE_ORDER.concat(Object.keys(SCENE_PHOTOS).filter(function(k){ return k.indexOf('g_') === 0; }));
 let sceneAutoTimer = null, sceneUserChose = false;
 let currentScene = 'garden';
 let canvasAnim = null;
@@ -950,8 +1028,13 @@ function startSceneRotation() {
   if (sceneAutoTimer) clearInterval(sceneAutoTimer);
   sceneAutoTimer = setInterval(() => {
     if (sceneUserChose) { clearInterval(sceneAutoTimer); sceneAutoTimer = null; return; }
-    const i = SCENE_ORDER.indexOf(currentScene);
-    setScene(SCENE_ORDER[(i + 1) % SCENE_ORDER.length], false);
+    // drift to a RANDOM different scene from the full pool (originals + re-lit
+    // variants) — never a fixed loop, never the same scene twice in a row
+    var next = currentScene;
+    for (var t = 0; t < 8 && next === currentScene; t++) {
+      next = SCENE_POOL[Math.floor(Math.random() * SCENE_POOL.length)];
+    }
+    setScene(next, false);
   }, 90000); // a new scene every 90 calm seconds
 }
 
@@ -1583,6 +1666,7 @@ function heartTick(){
       window._lightTipShown = true;
       window._lightTipEl = null;
       const t = document.createElement('div');
+      t.id = 'il-light-tip';
       t.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:56;max-width:230px;'
         +'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;padding:11px 15px;'
         +'border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);text-align:center;';
@@ -2504,7 +2588,7 @@ function ilAnchorRun(ov, A){
 }
 function ilAddAnchorPill(){ if(document.getElementById('il-anchor-pill')) return;
   var b=document.createElement('button'); b.id='il-anchor-pill'; b.textContent='◎ '+_ilan('pill');
-  b.style.cssText='position:fixed;left:16px;bottom:16px;z-index:8000;background:rgba(42,29,18,.62);'
+  b.style.cssText='position:fixed;left:22px;bottom:96px;z-index:8000;background:rgba(42,29,18,.62);'
     +'border:1px solid rgba(240,176,112,.3);color:#e8d8c4;border-radius:999px;padding:9px 14px;font-size:12.5px;'
     +'cursor:pointer;backdrop-filter:blur(6px);';
   b.addEventListener('click', function(){ showAnchor(); });
@@ -2551,10 +2635,13 @@ function adaptiveTick() {
   if (deck && !crossfading) {
     const band = 0.04; // small, never dramatic
     if (_duckActive) return; // music is ducked for voice — do not touch volume
-    let target = TARGET_VOL - (adaptiveArousal - 0.5) * band; // higher arousal => softer
-    target = Math.max(TARGET_VOL - band, Math.min(TARGET_VOL + band*0.5, target));
-    // ease toward target
-    deck.volume = deck.volume + (target - deck.volume) * 0.2;
+    if (!userMuted) {  // never creep the volume back up on a muted person
+      const ceil = TARGET_VOL * _riseGate;  // respect the gentle 16s arrival rise
+      let target = ceil - (adaptiveArousal - 0.5) * band; // higher arousal => softer
+      target = Math.max(Math.max(0, ceil - band), Math.min(ceil + band*0.5, target));
+      // ease toward target
+      deck.volume = Math.min(1, Math.max(0, deck.volume + (target - deck.volume) * 0.2));
+    }
   }
 
   // 2) When the read is clearly and persistently one way, gently shift the LANE
@@ -2567,6 +2654,7 @@ function adaptiveTick() {
   else if (down > 0.45 && adaptiveArousal < 0.5 && adaptiveLaneNow !== 'lifting') want = 'lifting';
   else if (adaptiveArousal < 0.4 && down < 0.35 && adaptiveLaneNow !== 'calm') want = 'calm';
   if (want) {
+    const prevLane = adaptiveLaneNow;
     adaptiveLaneNow = want;
     adaptiveLastSwitch = now;
     const emo = want === 'deepcalm' ? 'angry' : (want === 'lifting' ? 'sad' : 'calm');
@@ -2580,14 +2668,16 @@ function adaptiveTick() {
           metric('lane_switch', want + ':' + JSON.stringify(window._fusionParts||{}));
           // The view answers too: agitated -> stillness (moons); low -> warmth (sun).
           if (!sceneUserChose){
-            const sceneFor = { deepcalm: ['moon','moonleaf','horizon'],
-                               lifting: ['sunflower','sunset','garden'],
-                               calm: ['garden','horizon','daymoon'] };
-            const opts = sceneFor[want] || SCENE_ORDER;
+            const sceneFor = { deepcalm: ['moon','moonleaf','horizon','g_moonleaf_night','g_daymoon_night','g_moonleaf_dream','g_wave_dream'],
+                               lifting: ['sunflower','sunset','garden','g_sunflower_golden','g_sunflowers_golden','g_rosemary_golden','g_horizon_dusk'],
+                               calm: ['garden','horizon','daymoon','g_rosemary_dawn','g_wave_dawn','g_horizon_dawn','g_daymoon_dawn'] };
+            const opts = sceneFor[want] || SCENE_POOL;
             setScene(opts[Math.floor(Math.random()*opts.length)], false);
           }
+        } else {
+          adaptiveLaneNow = prevLane;  // nothing came back — try again on a later tick
         }
-      }).catch(()=>{});
+      }).catch(()=>{ adaptiveLaneNow = prevLane; });  // fetch failed — retry later
   }
   // 3) Gently steer the entrainment pulse: a slightly slower, deeper pulse for
   //    an activated person (calming), easing toward a neutral rate as they settle.
@@ -2804,7 +2894,7 @@ function restoreMusicAfterVoice(){
     _duckActive = false;
     const active = (typeof getActiveDeck==='function') ? getActiveDeck() : document.getElementById('ambient-a');
     if (!active) return;
-    const ceiling = (typeof userMuted!=='undefined' && userMuted) ? 0 : TARGET_VOL;
+    const ceiling = (typeof userMuted!=='undefined' && userMuted) ? 0 : TARGET_VOL * _riseGate;
     if (ceiling <= 0) return;
     let step = 0; const steps = 80;         // ~4s at 50ms
     if (_duckFadeTimer) clearInterval(_duckFadeTimer);
@@ -2825,14 +2915,46 @@ TARGET_VOL = 0.035;    // headphone-safe; user slider can raise it
 function initDecks() {
   deckA = document.getElementById('ambient-a');
   deckB = document.getElementById('ambient-b');
-  if (deckA) {
-    deckA.volume = 0;
-    deckA.addEventListener('timeupdate', checkCrossfade);
+  if (deckA && deckA.dataset.wired) return;   // wire the decks exactly once
+  [deckA, deckB].forEach(function(d){
+    if (!d) return;
+    d.dataset.wired = '1';
+    d.volume = 0;
+    d.addEventListener('timeupdate', checkCrossfade);
+    // Backstop: if the crossfade never triggered (missing duration, sleeping
+    // tab), the end of a song must still lead into the next one — never silence.
+    d.addEventListener('ended', function(){
+      if (!crossfading && d === getActiveDeck()) playNextTrackBlended();
+    });
+    // Resilience: a track that fails (missing file / bad decode) is skipped —
+    // the person is never left in silence.
+    d.addEventListener('error', function(){ handleDeckError(d); });
+    d.addEventListener('playing', function(){ _musicErrRun = 0; });
+  });
+}
+function handleDeckError(d) {
+  if (!d || !d.src) return;               // no source yet — not a real failure
+  const badFile = (d.currentSrc || d.src || '').split('/').pop();
+  if (badFile) {
+    // Drop the broken track from the playlist so we never cycle back into it.
+    const kept = ambientTracks.filter(function(t){ return (t.url || '').split('/').pop() !== badFile; });
+    if (kept.length !== ambientTracks.length) {
+      if (ambientIndex >= kept.length) ambientIndex = 0;
+      ambientTracks = kept;
+    }
   }
-  if (deckB) {
-    deckB.volume = 0;
-    deckB.addEventListener('timeupdate', checkCrossfade);
+  _musicErrRun++;
+  const nowEl = document.getElementById('music-now');
+  if (_musicErrRun > 4) {   // several failures in a row — say so, stop hammering
+    if (nowEl) nowEl.textContent = 'music unavailable right now';
+    return;
   }
+  if (nowEl) nowEl.textContent = 'finding the next song...';
+  if (d === getActiveDeck() && !crossfading) {
+    setTimeout(function(){ if (!crossfading) playNextTrackBlended(); }, 400);
+  }
+  // If the FAILING deck was the incoming side of a crossfade, the completion
+  // check inside crossfade() hands the sound back to the outgoing deck.
 }
 function getActiveDeck() { return activeDeck === 'A' ? deckA : deckB; }
 function getInactiveDeck() { return activeDeck === 'A' ? deckB : deckA; }
@@ -2844,58 +2966,100 @@ function checkCrossfade() {
   const remaining = active.duration - active.currentTime;
   if (remaining > 0 && remaining <= CROSSFADE_TRIGGER) {
     // Time to blend into the next track
-    crossfading = true;
     playNextTrackBlended();
   }
 }
 
 function crossfade(fadeOut, fadeIn, duration) {
-  // Smooth DJ-style volume crossfade
+  // Smooth DJ-style volume crossfade. Reads the LIVE ceiling every tick so the
+  // slider, mute, voice-duck, and the gentle 16s arrival rise are all
+  // respected — the blend can never jump above what the person has chosen.
+  crossfading = true;
+  if (_xfadeTimer) { clearInterval(_xfadeTimer); _xfadeTimer = null; }
   const steps = 40;
   const interval = duration / steps;
   let step = 0;
   const startVolOut = fadeOut.volume;
-  const startVolIn = 0;
   fadeIn.volume = 0;
-  fadeIn.play().catch(()=>{});
-  const timer = setInterval(() => {
+  fadeIn.play().catch(() => {
+    // Playback refused (autoplay hiccup / slow load): one gentle retry; the
+    // completion check below hands the sound back if it still cannot start.
+    setTimeout(() => { if (fadeIn.paused) fadeIn.play().catch(()=>{}); }, 600);
+  });
+  _xfadeTimer = setInterval(() => {
     step++;
     const progress = step / steps;
     // Ease curve for smooth blend
     const ease = progress * progress * (3 - 2 * progress); // smoothstep
-    fadeOut.volume = Math.max(0, startVolOut * (1 - ease));
-    fadeIn.volume = TARGET_VOL * ease;
+    const ceil = (userMuted || _duckActive) ? 0 : TARGET_VOL * _riseGate;
+    fadeOut.volume = Math.max(0, Math.min(1, startVolOut * (1 - ease)));
+    fadeIn.volume = Math.min(1, ceil * ease);
     if (step >= steps) {
-      clearInterval(timer);
-      fadeOut.pause();
-      fadeOut.volume = 0;
-      fadeIn.volume = TARGET_VOL;
-      crossfading = false;
+      clearInterval(_xfadeTimer); _xfadeTimer = null;
+      const ceilEnd = (userMuted || _duckActive) ? 0 : TARGET_VOL * _riseGate;
+      if (fadeIn.paused) {
+        // The incoming track never started (blocked or broken): keep the
+        // person in sound — give the outgoing deck back instead of silence.
+        activeDeck = (fadeOut === deckA) ? 'A' : 'B';
+        fadeOut.volume = Math.min(1, ceilEnd);
+        if (fadeOut.paused || fadeOut.ended) fadeOut.play().catch(()=>{});
+        // Tell the truth in the little label: this is the song still playing.
+        const nowEl = document.getElementById('music-now');
+        if (nowEl) {
+          const f = (fadeOut.currentSrc || fadeOut.src || '').split('/').pop();
+          const t = ambientTracks.filter(function(x){ return (x.url || '').split('/').pop() === f; })[0];
+          nowEl.textContent = '♪ ' + ((t && t.name) || 'music');
+        }
+      } else {
+        fadeOut.pause();
+        fadeOut.volume = 0;
+        fadeIn.volume = Math.min(1, ceilEnd);
+      }
+      crossfading = false;   // released on EVERY completion path
     }
   }, interval);
 }
 
 async function playNextTrackBlended() {
-  if (ambientTracks.length <= 1) {
-    // Only one track — fetch new ones based on current emotion
-    const emo = currentFaceEmotion || 'calm';
-    try {
-      const res = await fetch('/api/zenisys/ambient?emotion=' + encodeURIComponent(emo));
-      const d = await res.json();
-      if (d.tracks && d.tracks.length) { ambientTracks = d.tracks; }
-    } catch (e) {}
+  if (crossfading) return;   // one blend at a time
+  crossfading = true;        // claimed now; handed to crossfade() or released below
+  try {
+    if (ambientTracks.length <= 1) {
+      // Only one track (or none) — fetch new ones based on current emotion
+      const emo = currentFaceEmotion || 'calm';
+      const url = '/api/zenisys/ambient?emotion=' + encodeURIComponent(emo);
+      let d = null;
+      try { d = await (await fetch(url)).json(); } catch (e) { d = null; }
+      if (!d || !d.tracks || !d.tracks.length) {
+        // One quiet retry after a short wait — the network may have blinked.
+        await new Promise(res => setTimeout(res, 3000));
+        try { d = await (await fetch(url)).json(); } catch (e) { d = null; }
+      }
+      if (d && d.tracks && d.tracks.length) { ambientTracks = d.tracks; }
+    }
+    if (!ambientTracks.length) {
+      // Still nothing — say so and keep trying gently. Never fail silently.
+      crossfading = false;
+      const nowEl = document.getElementById('music-now');
+      if (nowEl) nowEl.textContent = 'music unavailable - retrying...';
+      setTimeout(() => { if (!crossfading && !ambientTracks.length) playNextTrackBlended(); }, 20000);
+      return;
+    }
+    ambientIndex = (ambientIndex + 1) % ambientTracks.length;
+    const next = ambientTracks[ambientIndex];
+    const inactive = getInactiveDeck();
+    if (!inactive || !next) { crossfading = false; return; }
+    inactive.src = next.url;
+    inactive.load();
+    // Start crossfade
+    crossfade(getActiveDeck(), inactive, CROSSFADE_MS);
+    activeDeck = activeDeck === 'A' ? 'B' : 'A';
+    const now = document.getElementById('music-now');
+    if (now) now.textContent = '\u266a ' + (next.name || 'music');
+    reportTrackPlay(next);   // record this play with a timestamp
+  } catch (e) {
+    crossfading = false;     // an error must never freeze the volume system
   }
-  ambientIndex = (ambientIndex + 1) % ambientTracks.length;
-  const next = ambientTracks[ambientIndex];
-  const inactive = getInactiveDeck();
-  inactive.src = next.url;
-  inactive.load();
-  // Start crossfade
-  crossfade(getActiveDeck(), inactive, CROSSFADE_MS);
-  activeDeck = activeDeck === 'A' ? 'B' : 'A';
-  const now = document.getElementById('music-now');
-  if (now) now.textContent = '\u266a ' + (next.name || 'music');
-  reportTrackPlay(next);   // record this play with a timestamp
 }
 
 // Report every track play (file + lane + timestamp) so the founder page can
@@ -3122,13 +3286,21 @@ let userMuted = false;
 function currentTarget(){ return userMuted ? 0 : TARGET_VOL; }
 function setVol(v){
   TARGET_VOL = 0.12 * (v/100); // slider full = 0.12 ceiling; default 24 ≈ 0.029 (soft)
-  ['deckA','deckB'].forEach(id=>{ const d=document.getElementById(id); if(d && !userMuted) d.volume = Math.min(1, TARGET_VOL); });
+  // The real deck ids are ambient-a / ambient-b. Only the ACTIVE deck gets the
+  // new level right away; fades/crossfades read TARGET_VOL live on their own.
+  if (userMuted || _duckActive || crossfading) return;
+  const d = (typeof getActiveDeck === 'function' && getActiveDeck()) || document.getElementById('ambient-a');
+  if (d) d.volume = Math.min(1, TARGET_VOL * _riseGate);
 }
 function toggleMute(){
   userMuted = !userMuted;
   const b = document.getElementById('mute-btn');
   if (b) b.innerHTML = userMuted ? '&#128263;' : '&#128266;';
-  ['deckA','deckB'].forEach(id=>{ const d=document.getElementById(id); if(d) d.volume = userMuted ? 0 : Math.min(1, TARGET_VOL); });
+  ['ambient-a','ambient-b'].forEach(id=>{ const d=document.getElementById(id); if(d) d.volume = 0; });
+  if (!userMuted && !_duckActive){
+    const d = (typeof getActiveDeck === 'function' && getActiveDeck()) || document.getElementById('ambient-a');
+    if (d) d.volume = Math.min(1, TARGET_VOL * _riseGate);
+  }
 }
 // ================= READINESS CHECK — tests the device, installs nothing =================
 // Runs quietly at start; if something could hurt the experience, it offers a
@@ -3161,6 +3333,7 @@ function runReadinessCheck(){
 function showReadiness(notes){
   if (!notes.length) return; // all good, stay silent
   const bar = document.createElement('div');
+  bar.id = 'readiness-bar';
   bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:70;background:#fffbeb;border-bottom:1px solid #fcd34d;'
     + 'color:#92400e;font-family:Arial;font-size:13px;padding:10px 16px;text-align:center;';
   bar.innerHTML = 'For the smoothest experience: ' + notes.join(' &nbsp;•&nbsp; ')
@@ -3207,7 +3380,7 @@ function showCalmScale(phase){
   if (document.getElementById('sam-card')) return;
   const card = document.createElement('div');
   card.id = 'sam-card';
-  card.style.cssText = 'position:fixed;top:80px;right:18px;z-index:60;max-width:200px;'
+  card.style.cssText = 'position:fixed;top:206px;right:18px;z-index:60;max-width:200px;'
     + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 16px;'
     + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
   card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">How are you feeling right now? (tap one, or ignore me)</div>'
@@ -3232,7 +3405,8 @@ let TAP_MS = Date.now();
   fetch('/api/zenisys/ambient').then(r=>r.json()).then(d=>{
     if (d.tracks && d.tracks.length){
       window._preloadedTracks = d.tracks;
-      const deck = document.getElementById('deckA') || document.querySelector('audio');
+      // Warm the REAL music deck (ambient-a) — never a stray audio element.
+      const deck = document.getElementById('ambient-a');
       if (deck){ deck.src = d.tracks[0].url; deck.preload='auto'; deck.load(); }
     }
   }).catch(()=>{});
@@ -3269,7 +3443,7 @@ async function startExperience() {
   try { startBioPing(); } catch(e){}
   // Start on a RANDOM real photograph each time — never the same one every login —
   // then rotate gently from there.
-  var _startScene = SCENE_ORDER[Math.floor(Math.random() * SCENE_ORDER.length)];
+  var _startScene = SCENE_POOL[Math.floor(Math.random() * SCENE_POOL.length)];
   currentScene = _startScene;
   setScene(_startScene, false);
   startSceneRotation();
@@ -3293,49 +3467,78 @@ async function startExperience() {
     try {
       initDecks();
       initVoices();
-      const res = await fetch('/api/zenisys/ambient');
-      const data = await res.json();
-      ambientTracks = data.tracks || [];
-      ambientIndex = 0;
-      if (ambientTracks.length) {
-        const deck = getActiveDeck();
-        if (window._preloadedTracks && !ambientTracks.length) ambientTracks = window._preloadedTracks;
-        if (deck.src !== ambientTracks[0].url) deck.src = ambientTracks[0].url;
-        // GENTLE ARRIVAL: enter soft, then rise smoothly into full rich volume —
-        // never an abrupt hit of sound in the ear.
-        deck.volume = TARGET_VOL * 0.08;  // enter nearly silent, rise very gently
-        deck.play().then(()=>metric('first_sound_ms', Date.now()-TAP_MS)).catch(()=>{});
-        (function arrivalRise(){
-          const RISE_MS = 16000; // sixteen calm seconds from near-silent to full
-          const start = performance.now(), from = deck.volume, to = TARGET_VOL;
-          function step(t){
-            const p = Math.min(1, (t - start) / RISE_MS);
-            const ease = p*p*(3-2*p); // smooth, no lurch
-            deck.volume = from + (to - from) * ease;
-            if (p < 1) requestAnimationFrame(step);
-          }
-          requestAnimationFrame(step);
-        })();
-        const now = $('music-now'); if (now) now.textContent = '\u266a ' + (ambientTracks[0].name || 'soft music');
-        try { reportTrackPlay(ambientTracks[0]); } catch(e){}   // track the arrival song
-        // If this arrival started on the SYMPHONY lane (person very upset),
-        // ease down into SPA after the proven ~3-minute attention window.
-        if (data.lane === 'symphony_to_spa' && data.then && data.then.length) {
-          scheduleSpaTransition(data.then, (data.transition_after_seconds || 180) * 1000);
-        }
-      } else {
-        const now = $('music-now'); if (now) now.textContent = 'music loading...';
-      }
+      await startAmbientMusic(1);
       // NOTE: the thin synth-tone layer is intentionally OFF now that real
       // calming instrumental audio is playing — real music leads, not tones.
       // startSynthPad('calm');  // (disabled by design)
     } catch (e) { console.log('[InnerLight] Music unavailable:', e); }
   }, 100);
 }
+
+// Fetch the arrival lane and start the music, gently. Retries on failure and
+// falls back to the tracks warmed up before the tap — the person is never
+// left in silence without the little music label saying so.
+async function startAmbientMusic(attempt) {
+  let data = null;
+  try {
+    const res = await fetch('/api/zenisys/ambient');
+    data = await res.json();
+  } catch (e) { data = null; }
+  let tracks = (data && data.tracks) || [];
+  if (!tracks.length && window._preloadedTracks && window._preloadedTracks.length) {
+    tracks = window._preloadedTracks;   // the fetch failed but the preload worked
+  }
+  if (!tracks.length) {
+    const now = $('music-now');
+    if (now) now.textContent = (attempt <= 1) ? 'music loading...' : 'music unavailable - still trying';
+    if (attempt <= 2) setTimeout(()=>{ startAmbientMusic(attempt + 1); }, 5000);  // quiet retry
+    return;
+  }
+  ambientTracks = tracks;
+  ambientIndex = 0;
+  const deck = getActiveDeck();
+  if (!deck) return;
+  // If the preloader already warmed this deck with the first track of the same
+  // lane, keep that list — the warmed-up track starts instantly.
+  if (window._preloadedTracks && window._preloadedTracks.length && deck.src
+      && deck.src.indexOf(window._preloadedTracks[0].url) !== -1) {
+    ambientTracks = window._preloadedTracks;
+  } else if (deck.src.indexOf(ambientTracks[0].url) === -1) {
+    deck.src = ambientTracks[0].url;
+  }
+  // GENTLE ARRIVAL: enter soft, then rise smoothly into full rich volume —
+  // never an abrupt hit of sound in the ear.
+  _riseGate = 0.08;                 // gates crossfades + nudges during the rise
+  deck.volume = userMuted ? 0 : TARGET_VOL * _riseGate;
+  deck.play().then(()=>metric('first_sound_ms', Date.now()-TAP_MS)).catch(()=>{
+    // Autoplay refused (rare after a real tap): one gentle retry.
+    setTimeout(()=>{ if (deck.paused) deck.play().catch(()=>{}); }, 700);
+  });
+  (function arrivalRise(){
+    const RISE_MS = 16000; // sixteen calm seconds from near-silent to full
+    const start = performance.now();
+    function step(t){
+      const p = Math.min(1, (t - start) / RISE_MS);
+      const ease = p*p*(3-2*p); // smooth, no lurch
+      _riseGate = 0.08 + (1 - 0.08) * ease;
+      // Follow the CURRENT active deck and never fight mute, duck, or a blend.
+      const d = getActiveDeck();
+      if (d && !crossfading && !_duckActive && !userMuted) d.volume = Math.min(1, TARGET_VOL * _riseGate);
+      if (p < 1) requestAnimationFrame(step); else _riseGate = 1;
+    }
+    requestAnimationFrame(step);
+  })();
+  const now = $('music-now'); if (now) now.textContent = '\u266a ' + (ambientTracks[0].name || 'soft music');
+  try { reportTrackPlay(ambientTracks[0]); } catch(e){}   // track the arrival song
+  // If this arrival started on the SYMPHONY lane (person very upset),
+  // ease down into SPA after the proven ~3-minute attention window.
+  if (data && data.lane === 'symphony_to_spa' && data.then && data.then.length) {
+    scheduleSpaTransition(data.then, (data.transition_after_seconds || 180) * 1000);
+  }
+}
 function changeMusic() {
   if (!ambientTracks.length) return;
-  crossfading = true;
-  playNextTrackBlended();
+  playNextTrackBlended();   // manages the crossfading flag itself
 }
 
 // Proven car method: when someone arrives very upset, symphony plays first to
@@ -3421,6 +3624,7 @@ function switchAmbient(url, name, vol) {
   crossfade(getActiveDeck(), inactive, CROSSFADE_MS);
   activeDeck = activeDeck === 'A' ? 'B' : 'A';
   const now = $('music-now'); if (now) now.textContent = '\u266a ' + (name || 'music');
+  try { reportTrackPlay({url: url, name: name}); } catch(e){}  // founder visibility
   beginTrackWatch(name);
   // (Synthetic layers disabled — only the real music tracks play.)
 }
@@ -3699,6 +3903,9 @@ function dgTouchActivity(){
     if (voiceRecognizer) { try { voiceRecognizer.stop(); } catch(e){} }
     stopDeepgramStream();
     stopMicStream();
+    // The mic ducked the music when listening began — ALWAYS give it back,
+    // or the person is left in silence forever after a quiet minute.
+    try { restoreMusicAfterVoice(); } catch(e){}
     const micBtn = document.querySelector('.story-mic');
     if (micBtn) micBtn.innerHTML = '&#127908; Speak';
     const lbl = $('listen-label');
@@ -4567,13 +4774,20 @@ async function continueInnerLight() { return continueConversation(); }
   function duckMusic(){
     ducked = true;
     ['ambient-a','ambient-b'].forEach(id=>{ const el=document.getElementById(id);
-      if(el && !el.paused){ el.dataset.fullvol = el.dataset.fullvol || el.volume; el.volume = Math.min(el.volume, 0.06); } });
+      if(el && !el.paused){ el.dataset.fullvol = String(el.volume); el.volume = Math.min(el.volume, 0.06); } });
     const note = document.getElementById('calm-music-note'); if(note) note.textContent = 'music softened - playing your sounds';
   }
   function restoreMusic(){
     ducked = false;
+    // Restore to the remembered level, but NEVER above the current ceiling
+    // (slider x arrival rise, zero when muted) — the music must never blast.
+    const ceil = (typeof userMuted !== 'undefined' && userMuted) ? 0
+      : ((typeof TARGET_VOL !== 'undefined' ? TARGET_VOL : 0.035) * (typeof _riseGate !== 'undefined' ? _riseGate : 1));
     ['ambient-a','ambient-b'].forEach(id=>{ const el=document.getElementById(id);
-      if(el){ const target = parseFloat(el.dataset.fullvol||'0.5'); fadeTo(el, target, 1500); } });
+      if(el && !el.paused){
+        const stored = parseFloat(el.dataset.fullvol || '');
+        fadeTo(el, Math.min(isNaN(stored) ? ceil : stored, ceil), 1500);
+      } });
     const note = document.getElementById('calm-music-note'); if(note) note.textContent = 'music softens while you play';
   }
   function fadeTo(el, target, ms){
@@ -6460,11 +6674,17 @@ def serve_audio(filename):
     """Serve the bundled, calming instrumental tracks (spa / symphony lanes).
     Real audio files streamed from the app itself — reliable on every device,
     no external service, no stutter."""
-    audio_dir = Path(__file__).resolve().parent.parent / "audio"
-    file_path = audio_dir / filename
+    audio_dir = (Path(__file__).resolve().parent.parent / "audio").resolve()
+    file_path = (audio_dir / filename).resolve()
+    try:
+        file_path.relative_to(audio_dir)   # stay inside the audio folder, always
+    except ValueError:
+        return ("audio not found", 404)
     if file_path.exists() and file_path.is_file():
         from flask import send_file
-        return send_file(str(file_path), mimetype="audio/mpeg")
+        # conditional=True enables byte-range requests — iPhone Safari needs
+        # them to stream and seek audio reliably.
+        return send_file(str(file_path), mimetype="audio/mpeg", conditional=True)
     return ("audio not found", 404)
 
 
