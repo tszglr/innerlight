@@ -477,23 +477,118 @@ PUBLIC_PAGE = """
     .video-preview { width:100%; max-height:190px; margin-top:8px; border:1px solid var(--line); border-radius:6px; background:#f4f1ee; object-fit:cover; }
     .emotion-status { color:var(--muted); font-size:13px; margin-top:8px; }
     .sound-status { color:var(--muted); font-size:13px; margin-top:8px; }
-    /* Calm welcome redesign — light, warm, inviting */
-    #welcome-gate { position:fixed; inset:0; z-index:50; display:flex; align-items:flex-start; justify-content:center;
-      overflow-y:auto; -webkit-overflow-scrolling:touch;
-      background:linear-gradient(160deg, #f7f3f0 0%, #f3ede9 30%, #fdf2f0 60%, #f6f2ee 100%); text-align:center; padding:24px; }
-    .gate-inner { max-width:440px; margin:auto; }
-    .gate-mark { font-size:46px; color:#c59771; opacity:.85; margin-bottom:6px; animation:breathe 4s ease-in-out infinite; }
-    @keyframes breathe { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
-    #welcome-gate h1 { font-size:30px; margin:6px 0 12px; font-weight:600; letter-spacing:.02em; color:#4a372d; }
-    #welcome-gate p { color:#99673e; font-size:15px; line-height:1.6; margin:0 0 22px; }
-    .gate-links { margin-top:22px; font-size:13px; color:#c59772; display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
-    .gate-links a { color:#9a8778; text-decoration:none; border-bottom:1px solid transparent; transition:border-color .2s; }
-    .gate-links a:hover { border-bottom-color:#c59771; }
-    .gate-links span { color:#ddd1c8; }
-    .gate-button { background:#b27849; color:#fff; border:0; border-radius:999px; padding:15px 38px;
-      font-size:16px; font-weight:600; cursor:pointer; box-shadow:0 12px 30px rgba(91,160,138,.35); transition:transform .15s; }
-    .gate-button:hover { transform:translateY(-2px); background:#9e6a40; }
-    .gate-sub { font-size:12px; color:#c59772; margin-top:18px !important; }
+    /* ============ CINEMATIC ARRIVAL — "Garden at Dusk" welcome gate ============
+       A time-of-day photograph (the founder's own, served from /scenes/) fills the
+       screen; a serif greeting arrives word by word; the disclosures rest in one
+       quiet translucent panel low on the screen. Warm by day, deep blue by night. */
+    #welcome-gate { position:fixed; inset:0; z-index:50; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      background:#170c03; color:#faf1e0; text-align:center;
+      --g-scrim:36,19,7; --g-glow:255,190,110; --g-core:255,204,130;
+      --g-cream:#faf1e0; --g-cream-soft:rgba(250,240,222,.86); --g-ink:rgba(28,14,4,.55);
+      --g-panel:rgba(38,21,9,.46); --g-line:rgba(255,220,170,.28);
+      --gp-x:32%; --gp-y:76%; --gp-size:78vmin; --gp-alpha:.55; --g-pos:50% 45%;
+      font-family:Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif; }
+    #welcome-gate[data-time="night"] { background:#070b14;
+      --g-scrim:10,14,26; --g-glow:214,226,255; --g-core:225,234,255;
+      --g-panel:rgba(13,18,34,.52); --g-line:rgba(214,226,255,.22); --g-ink:rgba(4,8,18,.6); }
+    .gate-stage { position:fixed; inset:0; overflow:hidden; pointer-events:none; }
+    .gate-photo { position:absolute; left:-6%; top:-6%; width:112%; height:112%; object-fit:cover;
+      object-position:var(--g-pos); transform-origin:50% 42%;
+      animation:gateKb 80s ease-in-out infinite alternate; will-change:transform; }
+    @keyframes gateKb { from { transform:scale(1.02) translate3d(.6%,.4%,0); } to { transform:scale(1.12) translate3d(-1.4%,-1.2%,0); } }
+    .gate-grade { position:absolute; inset:0;
+      background:radial-gradient(120% 85% at 72% 8%, rgba(var(--g-glow),.14), transparent 58%),
+                 radial-gradient(140% 100% at 20% 100%, rgba(var(--g-glow),.10), transparent 55%); }
+    .gate-scrim-top { position:absolute; inset:0;
+      background:linear-gradient(to bottom, rgba(var(--g-scrim),.5), rgba(var(--g-scrim),.14) 16%, transparent 30%); }
+    .gate-scrim-bottom { position:absolute; inset:0;
+      background:linear-gradient(to top, rgba(var(--g-scrim),.74), rgba(var(--g-scrim),.42) 22%, rgba(var(--g-scrim),.08) 48%, transparent 62%); }
+    .gate-vignette { position:absolute; inset:0;
+      background:radial-gradient(115% 115% at 50% 46%, transparent 58%, rgba(var(--g-scrim),.38) 100%); }
+    .gate-presence { position:absolute; left:var(--gp-x); top:var(--gp-y); width:var(--gp-size); height:var(--gp-size);
+      transform:translate(-50%,-50%); }
+    .gate-presence i { position:absolute; inset:0; border-radius:50%;
+      background:radial-gradient(circle, rgba(var(--g-core),.5) 0%, rgba(var(--g-core),.16) 38%, transparent 68%);
+      animation:gateBreath 7s ease-in-out infinite; will-change:transform,opacity; }
+    @keyframes gateBreath { 0%,100% { transform:scale(.92); opacity:calc(var(--gp-alpha)*.72); }
+      46% { transform:scale(1.12); opacity:var(--gp-alpha); }
+      62% { transform:scale(1.10); opacity:calc(var(--gp-alpha)*.95); } }
+    .gate-motes b { position:absolute; display:block; border-radius:50%;
+      background:radial-gradient(circle, rgba(var(--g-core),.9), rgba(var(--g-core),0) 70%);
+      animation:gateMote linear infinite; opacity:0; will-change:transform,opacity; }
+    @keyframes gateMote { 0% { transform:translate3d(0,4vh,0); opacity:0; } 12% { opacity:.5; }
+      80% { opacity:.28; } 100% { transform:translate3d(3.2vw,-30vh,0); opacity:0; } }
+    .gate-veil { position:fixed; inset:0; background:rgb(var(--g-scrim)); pointer-events:none; z-index:9;
+      animation:gateLift 3.2s ease-out .1s forwards; }
+    @keyframes gateLift { to { opacity:0; } }
+    .gate-content { position:relative; z-index:2; min-height:100%; display:flex; flex-direction:column;
+      align-items:center; padding:calc(env(safe-area-inset-top, 0px) + 14px) 18px calc(env(safe-area-inset-bottom, 0px) + 12px); }
+    .gate-top { width:100%; max-width:1080px; display:flex; justify-content:space-between; align-items:baseline;
+      opacity:0; animation:gateFade 2.4s ease .8s forwards; }
+    @keyframes gateFade { to { opacity:1; } }
+    .gate-brand { font-size:19px; font-weight:600; letter-spacing:.14em; margin:0; color:var(--g-cream);
+      text-shadow:0 1px 14px var(--g-ink); }
+    #lang-toggle { font-size:12.5px; letter-spacing:.05em; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+    #lang-toggle a { color:rgba(250,241,224,.88) !important; text-shadow:0 1px 10px var(--g-ink); }
+    #lang-toggle span { color:rgba(250,241,224,.4) !important; }
+    .gate-greeting { margin:auto; text-align:center; width:min(92vw,680px); position:relative; padding:20px 0; }
+    .gate-greeting::before { content:""; position:absolute; left:50%; top:50%; width:150%; height:170%;
+      transform:translate(-50%,-50%); pointer-events:none;
+      background:radial-gradient(closest-side, rgba(var(--g-scrim),.34), rgba(var(--g-scrim),.14) 55%, transparent 78%); }
+    .gate-line { position:relative; font-weight:500; font-size:clamp(1.85rem, 4.4vw + .8rem, 3.25rem); line-height:1.3;
+      letter-spacing:.012em; margin:0 0 .42em; color:var(--g-cream);
+      text-shadow:0 2px 34px var(--g-ink), 0 1px 8px var(--g-ink); }
+    .gate-line:last-child { font-style:italic; font-size:clamp(1.5rem, 3.6vw + .65rem, 2.65rem);
+      color:var(--g-cream-soft); margin-bottom:0; }
+    .gate-line .gw { display:inline-block; opacity:0; transform:translateY(.38em);
+      animation:gateWord 1.9s cubic-bezier(.2,.55,.2,1) both; will-change:transform,opacity; }
+    @keyframes gateWord { 0% { opacity:0; transform:translateY(.38em); } 60% { opacity:.92; }
+      100% { opacity:1; transform:translateY(0); } }
+    .gate-panel { width:min(94vw,620px); margin:26px auto 0; text-align:center;
+      background:var(--g-panel); border:1px solid var(--g-line); border-radius:24px;
+      -webkit-backdrop-filter:blur(16px) saturate(1.1); backdrop-filter:blur(16px) saturate(1.1);
+      box-shadow:0 12px 48px rgba(var(--g-scrim),.45), 0 0 46px rgba(var(--g-glow),.10);
+      padding:20px 22px 14px;
+      opacity:0; animation:gateRise 1.9s cubic-bezier(.2,.55,.2,1) 1.1s both; }
+    @keyframes gateRise { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    .gate-tagline { font-style:italic; font-size:14.5px; line-height:1.55; color:rgba(250,240,222,.92);
+      margin:0 0 14px; text-shadow:0 1px 10px var(--g-ink); }
+    .gate-button { display:inline-block; border:1px solid rgba(255,232,196,.55); border-radius:999px;
+      padding:15px 52px; font-size:17px; font-weight:600; letter-spacing:.04em; cursor:pointer;
+      font-family:inherit; color:#2b1608;
+      background:linear-gradient(180deg, #ffd9a0, #e8ab63);
+      box-shadow:0 10px 40px rgba(var(--g-scrim),.5), 0 0 52px rgba(var(--g-glow),.38);
+      transition:transform .3s ease, box-shadow .6s ease; }
+    .gate-button:hover { transform:translateY(-2px);
+      box-shadow:0 12px 44px rgba(var(--g-scrim),.5), 0 0 72px rgba(var(--g-glow),.55); }
+    #welcome-gate[data-time="night"] .gate-button { background:linear-gradient(180deg,#e6edff,#b9c8ef);
+      color:#101a30; border-color:rgba(226,235,255,.6); }
+    .gate-sub { font-size:11.5px; line-height:1.6; color:rgba(250,240,222,.74); margin:14px 0 0; }
+    .gate-sub span { color:inherit !important; }
+    .gate-sub b, .gate-panel b { color:rgba(var(--g-core),.95) !important; }
+    .gate-sub a, .gate-panel a { color:rgb(var(--g-glow)) !important; text-decoration:underline; text-underline-offset:2px; }
+    .gate-links { margin:14px auto 4px; font-size:11.5px; display:flex; gap:7px; justify-content:center;
+      align-items:center; flex-wrap:wrap; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+    .gate-links a { color:rgba(250,240,222,.78) !important; text-decoration:none !important;
+      border-bottom:1px solid rgba(250,240,222,.28); padding-bottom:1px; transition:border-color .2s; }
+    .gate-links a:hover { border-bottom-color:rgba(250,240,222,.7); }
+    .gate-links span { color:rgba(250,240,222,.32) !important; }
+    @media (prefers-reduced-motion: reduce) {
+      .gate-photo { animation:none; transform:scale(1.05); }
+      .gate-presence i { animation:none; opacity:var(--gp-alpha); }
+      .gate-motes { display:none; }
+      .gate-veil { animation-duration:1.2s; }
+      @keyframes gateWord { from { opacity:0; transform:none; } to { opacity:1; transform:none; } }
+      @keyframes gateRise { from { opacity:0; transform:none; } to { opacity:1; transform:none; } }
+    }
+    @media (max-width:480px) {
+      .gate-panel { width:min(96vw,620px); padding:16px 14px 10px; margin-top:20px; }
+      .gate-sub { font-size:10.8px; }
+      .gate-tagline { font-size:13.5px; margin-bottom:12px; }
+      .gate-button { width:100%; max-width:340px; padding:14px 40px; font-size:16.5px; }
+      .gate-greeting { padding:12px 0; }
+      .gate-links { font-size:11px; gap:6px; }
+    }
     .story-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:0 20px 40px;
       position:relative;
       background:transparent; }
@@ -666,36 +761,50 @@ PUBLIC_PAGE = """
   <main>
     <!-- TAP TO BEGIN -->
     <div id="welcome-gate">
-      <div class="gate-inner">
-        <div id="lang-toggle" style="text-align:right;margin-bottom:4px;font-size:12px;">
-          <a href="#" onclick="setLang('en');return false;" data-langbtn="en" style="color:#2e6e8e;text-decoration:none;">English</a>
-          <span style="color:#ddd1c8;">&middot;</span>
-          <a href="#" onclick="setLang('es');return false;" data-langbtn="es" style="color:#2e6e8e;text-decoration:none;">Espa&ntilde;ol</a>
-          <span style="color:#ddd1c8;">&middot;</span>
-          <a href="#" onclick="setLang('zh');return false;" data-langbtn="zh" style="color:#2e6e8e;text-decoration:none;">&#20013;&#25991;</a>
+      <div class="gate-stage" aria-hidden="true">
+        <img class="gate-photo" id="gate-photo" alt="">
+        <div class="gate-grade"></div>
+        <div class="gate-scrim-top"></div>
+        <div class="gate-scrim-bottom"></div>
+        <div class="gate-vignette"></div>
+        <div class="gate-presence"><i></i></div>
+        <div class="gate-motes" id="gate-motes"></div>
+      </div>
+      <div class="gate-veil" aria-hidden="true"></div>
+      <div class="gate-content">
+        <div class="gate-top">
+          <h1 class="gate-brand">InnerLight</h1>
+          <div id="lang-toggle">
+            <a href="#" onclick="setLang('en');return false;" data-langbtn="en" style="text-decoration:none;">English</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('es');return false;" data-langbtn="es" style="text-decoration:none;">Espa&ntilde;ol</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('zh');return false;" data-langbtn="zh" style="text-decoration:none;">&#20013;&#25991;</a>
+          </div>
         </div>
-        <div class="gate-mark" aria-hidden="true">&#9711;</div>
-        <h1>InnerLight</h1>
-        <p data-i18n="gate.tagline">A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
-        <button class="gate-button" onclick="startExperience()" data-i18n="gate.begin">Tap to begin</button>
-        <p class="gate-sub"><span data-i18n="gate.startnote">Soft music and your camera begin gently when you tap.</span><br>
-        <span data-i18n="gate.camera" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#bd885c;line-height:1.55;">
-        <b style="color:#99673e;">About your camera:</b> your video is analyzed <b>on your own device</b> &mdash;
-        for gentle expression and heart signals only. The video itself is <b>never sent to us or stored anywhere</b>.
-        Nothing leaves your device. You can decline the camera and still use everything else.</span><br>
-        <span data-i18n="gate.ainotice" style="display:inline-block;margin:8px auto 0;max-width:420px;font-size:12.5px;color:#bd885c;line-height:1.55;">
-        <b style="color:#99673e;">Please know:</b> InnerLight is an <b>artificial-intelligence program</b> &mdash; a computer,
-        not a human being. It is not a therapist, doctor, or lawyer, and it may not be suitable for some minors.
-        In an emergency, call or text <b>988</b> or call <b>911</b>. <a href="/safety" style="color:#2e6e8e;">How we respond in a crisis</a></span><br>
-        <span data-i18n="gate.adult" style="font-size:12px;color:#9a8778;">By continuing you confirm you are 18 or older.
-        <a href="#" onclick="showMinorBridge();return false;" style="color:#2e6e8e;">Under 18? We still have real help for you.</a></span></p>
-        <div class="gate-links">
-          <a href="/about">About</a><span>&middot;</span>
-          <a href="/how-it-works">How it works</a><span>&middot;</span>
-          <a href="/research">Research</a><span>&middot;</span>
-          <a href="/safety">Safety</a><span>&middot;</span>
-          <a href="/privacy">Your privacy</a><span>&middot;</span>
-          <a href="/contact">Contact</a>
+        <div class="gate-greeting" id="gate-greeting" aria-live="polite"></div>
+        <div class="gate-panel">
+          <p class="gate-tagline" data-i18n="gate.tagline">A quiet, private place to tell your story.<br>Nothing you share is shown to anyone &mdash; it is encrypted.</p>
+          <button class="gate-button" onclick="startExperience()" data-i18n="gate.begin">Tap to begin</button>
+          <p class="gate-sub"><span data-i18n="gate.startnote">Soft music and your camera begin gently when you tap.</span><br>
+          <span data-i18n="gate.camera" style="display:inline-block;margin:7px auto 0;max-width:520px;line-height:1.6;">
+          <b>About your camera:</b> your video is analyzed <b>on your own device</b> &mdash;
+          for gentle expression and heart signals only. The video itself is <b>never sent to us or stored anywhere</b>.
+          Nothing leaves your device. You can decline the camera and still use everything else.</span><br>
+          <span data-i18n="gate.ainotice" style="display:inline-block;margin:7px auto 0;max-width:520px;line-height:1.6;">
+          <b>Please know:</b> InnerLight is an <b>artificial-intelligence program</b> &mdash; a computer,
+          not a human being. It is not a therapist, doctor, or lawyer, and it may not be suitable for some minors.
+          In an emergency, call or text <b>988</b> or call <b>911</b>. <a href="/safety">How we respond in a crisis</a></span><br>
+          <span data-i18n="gate.adult" style="display:inline-block;margin:7px auto 0;max-width:520px;line-height:1.6;">By continuing you confirm you are 18 or older.
+          <a href="#" onclick="showMinorBridge();return false;">Under 18? We still have real help for you.</a></span></p>
+          <div class="gate-links">
+            <a href="/about">About</a><span>&middot;</span>
+            <a href="/how-it-works">How it works</a><span>&middot;</span>
+            <a href="/research">Research</a><span>&middot;</span>
+            <a href="/safety">Safety</a><span>&middot;</span>
+            <a href="/privacy">Your privacy</a><span>&middot;</span>
+            <a href="/contact">Contact</a>
+          </div>
         </div>
       </div>
     </div>
@@ -810,6 +919,8 @@ PUBLIC_PAGE = """
         // page is read aloud in that language, not English.
         try { if (typeof initVoices === 'function') initVoices(); } catch(e){}
         try { if (typeof populateVoicePicker === 'function') populateVoicePicker(); } catch(e){}
+        // the arrival greeting is rendered word-by-word in the chosen language
+        try { if (typeof renderGateGreeting === 'function') renderGateGreeting(false); } catch(e){}
         var btns = document.querySelectorAll('[data-langbtn]');
         for (var k=0;k<btns.length;k++){
           btns[k].style.fontWeight = (btns[k].getAttribute('data-langbtn')===code) ? '700' : '400';
@@ -830,6 +941,116 @@ PUBLIC_PAGE = """
       try { saved = sessionStorage.getItem('il_lang') || 'en'; } catch(e){}
       if (saved === 'en') { try { document.cookie = 'il_lang=en;path=/;max-age=0'; } catch(e){} }
       applyLang(saved);
+    })();
+
+    // ===================== CINEMATIC ARRIVAL (welcome gate) =====================
+    // A time-of-day scene built from the founder's own photographs, served by the
+    // app itself (/scenes/...). The story screen later starts on the SAME photo,
+    // so the single tap feels like walking further into the same place.
+    var GATE_SCENES = {
+      morning:   { key: 'g_horizon_dawn',     src: '/scenes/gen_photo_6_golden_horizon_dawn.jpg',
+                   pos: '50% 42%', p: { x: '22%', y: '28%', s: '84vmin', a: .5 } },
+      afternoon: { key: 'g_sunflower_golden', src: '/scenes/gen_photo_5_sunflower_golden.jpg',
+                   pos: '50% 55%', p: { x: '38%', y: '74%', s: '76vmin', a: .5 } },
+      evening:   { key: 'sunset',             src: '/scenes/photo_2_sunset_trees.jpg',
+                   pos: '50% 28%', p: { x: '32%', y: '86%', s: '96vmin', a: .75 } },
+      night:     { key: 'g_moonleaf_night',   src: '/scenes/gen_photo_7_moon_leaves_moonlight.jpg',
+                   pos: '50% 36%', p: { x: '49%', y: '35%', s: '58vmin', a: .55 } }
+    };
+    // Greeting lines per language and time of day. "|" separates the lines.
+    // English is always the safe fallback, like everywhere else on this page.
+    var GATE_GREETINGS = {
+      en: {
+        morning:   'You made it to morning.|That took something.|Rest here a moment — I’m with you.',
+        afternoon: 'You made it here.|That took something.|Rest a moment — I’m with you.',
+        evening:   'You made it to evening.|The light is going soft.|Rest here — I’m with you.',
+        night:     'You’re here, in the quiet.|The night can feel long.|Stay close — I’m with you.'
+      },
+      es: {
+        morning:   'Llegaste a la mañana.|Eso costó lo suyo.|Descansa aquí un momento — estoy contigo.',
+        afternoon: 'Llegaste hasta aquí.|Eso costó lo suyo.|Descansa un momento — estoy contigo.',
+        evening:   'Llegaste al atardecer.|La luz se vuelve suave.|Descansa aquí — estoy contigo.',
+        night:     'Estás aquí, en la quietud.|La noche puede hacerse larga.|Quédate cerca — estoy contigo.'
+      },
+      zh: {
+        morning:   '你走到了清晨。|这一路并不容易。|在这里歇一歇——我陪着你。',
+        afternoon: '你来到了这里。|这一路并不容易。|歇一会儿吧——我陪着你。',
+        evening:   '你走到了黄昏。|光正在变得柔和。|在这里歇一歇——我陪着你。',
+        night:     '你在这里，在这份安静里。|夜有时很长。|别走远——我陪着你。'
+      }
+    };
+    function gateSlot() {
+      var h = new Date().getHours();
+      if (h >= 5 && h < 12) return 'morning';
+      if (h >= 12 && h < 17) return 'afternoon';
+      if (h >= 17 && h < 22) return 'evening';
+      return 'night';
+    }
+    // Word-by-word cinematic fade, like a film title. Chinese fades character by
+    // character. Re-runs (faster) whenever the language changes.
+    function renderGateGreeting(first) {
+      var el = document.getElementById('gate-greeting');
+      if (!el || !window._gateSlot) return;
+      var slot = window._gateSlot;
+      var lang = window._ilLang || 'en';
+      var dict = GATE_GREETINGS[lang] || GATE_GREETINGS.en;
+      var text = dict[slot] || GATE_GREETINGS.en[slot];
+      var t = first ? 1.5 : 0.25;
+      var wordGap = (lang === 'zh') ? 0.24 : 0.48;
+      var lineGap = (lang === 'zh') ? 1.1 : 1.4;
+      if (!first) { wordGap = wordGap * 0.5; lineGap = lineGap * 0.5; }
+      el.innerHTML = '';
+      var lines = text.split('|');
+      for (var li = 0; li < lines.length; li++) {
+        var p = document.createElement('p');
+        p.className = 'gate-line';
+        var units = (lang === 'zh') ? lines[li].split('') : lines[li].split(' ');
+        for (var wi = 0; wi < units.length; wi++) {
+          var s = document.createElement('span');
+          s.className = 'gw';
+          s.textContent = units[wi];
+          s.style.animationDelay = t.toFixed(2) + 's';
+          p.appendChild(s);
+          if (lang !== 'zh') p.appendChild(document.createTextNode(' '));
+          t += wordGap;
+        }
+        el.appendChild(p);
+        t += lineGap;
+      }
+    }
+    (function initArrivalGate() {
+      try {
+        var gate = document.getElementById('welcome-gate');
+        if (!gate) return;
+        var slot = gateSlot();
+        window._gateSlot = slot;
+        var sc = GATE_SCENES[slot];
+        window._gateSceneKey = sc.key;   // startExperience opens the story on this same photo
+        gate.setAttribute('data-time', slot);
+        gate.style.setProperty('--g-pos', sc.pos);
+        gate.style.setProperty('--gp-x', sc.p.x);
+        gate.style.setProperty('--gp-y', sc.p.y);
+        gate.style.setProperty('--gp-size', sc.p.s);
+        gate.style.setProperty('--gp-alpha', sc.p.a);
+        var ph = document.getElementById('gate-photo');
+        if (ph) ph.src = sc.src;
+        // a few slow motes of light, drifting upward
+        var motes = document.getElementById('gate-motes');
+        if (motes) {
+          var M = [[12,72,26,3],[26,86,34,2],[44,78,30,4],[60,88,38,2.5],[74,70,28,3],[86,82,32,2],[34,92,42,3.5]];
+          for (var i = 0; i < M.length; i++) {
+            var b = document.createElement('b');
+            b.style.left = M[i][0] + '%';
+            b.style.top = M[i][1] + '%';
+            b.style.width = M[i][3] + 'px';
+            b.style.height = M[i][3] + 'px';
+            b.style.animationDuration = M[i][2] + 's';
+            b.style.animationDelay = (-i * 5.3) + 's';
+            motes.appendChild(b);
+          }
+        }
+        renderGateGreeting(true);
+      } catch(e){}
     })();
     </script>
 
@@ -3420,8 +3641,17 @@ async function startExperience() {
   try { const ac = new (window.AudioContext||window.webkitAudioContext)(); if (ac.state==='suspended') ac.resume(); window._warmCtx = ac; } catch(e){}
   setTimeout(()=>showCalmScale('arrival'), 9000);      // after the music has risen
   setTimeout(()=>showCalmScale('later'), 4*60*1000);   // the change measurement
-  // STEP 1: Show the conversation screen IMMEDIATELY (before anything else)
-  const gate = $('welcome-gate'); if (gate) gate.style.display = 'none';
+  // STEP 1: Show the conversation screen IMMEDIATELY (before anything else).
+  // The arrival gate dissolves slowly over the story screen instead of blinking
+  // away — one continuous place, not two pages.
+  const gate = $('welcome-gate');
+  if (gate) {
+    gate.style.transition = 'opacity 1.6s ease';
+    try { void gate.offsetWidth; } catch(e){}   // commit the transition before fading
+    gate.style.opacity = '0';
+    gate.style.pointerEvents = 'none';
+    setTimeout(function(){ gate.style.display = 'none'; }, 1700);
+  }
   const screen = $('story-screen'); if (screen) screen.style.display = 'flex';
   const msg = $('message'); if (msg) msg.focus({preventScroll:true});
   metric('session_start');
@@ -3429,9 +3659,11 @@ async function startExperience() {
   // face models, so an active session always shows up for the founder (even a
   // text-only, camera-off session). It's a no-op if it can't reach the server.
   try { startBioPing(); } catch(e){}
-  // Start on a RANDOM real photograph each time — never the same one every login —
-  // then rotate gently from there.
-  var _startScene = SCENE_POOL[Math.floor(Math.random() * SCENE_POOL.length)];
+  // Start on the SAME photograph the arrival gate was showing, so the tap feels
+  // continuous — one place, deeper in. (Random if the gate scene is unknown.)
+  var _startScene = (window._gateSceneKey && SCENE_PHOTOS[window._gateSceneKey])
+    ? window._gateSceneKey
+    : SCENE_POOL[Math.floor(Math.random() * SCENE_POOL.length)];
   currentScene = _startScene;
   setScene(_startScene, false);
   startSceneRotation();
@@ -7236,6 +7468,8 @@ def bio_ping():
     now = time.time()
     with _BIO_LOCK:
         rec = _BIO_LIVE.get(sid) or {"history": []}
+        if "start" not in rec:
+            rec["start"] = now   # when this session first appeared — powers ember size
         try:
             cam = 1 if int(data.get("cam", 0)) else 0
         except Exception:
@@ -7264,6 +7498,10 @@ def admin_bio_live():
             if now - v.get("last",0) > 90: continue
             active.append({
                 "who": "Person " + str(i+1),
+                # stable anonymous key (hash of the random session id) so the
+                # ember field can tell sessions apart without identifying anyone
+                "k": hashlib.sha1(("watch::" + sid).encode()).hexdigest()[:10],
+                "held_min": round(max(0.0, (now - v.get("start", v.get("last", now)))) / 60.0, 1),
                 "bpm": v.get("bpm"), "base": v.get("base"), "state": v.get("state"),
                 "tier": v.get("tier"), "face": v.get("face"),
                 "cam": v.get("cam", 0), "hasheart": v.get("hasheart", 0),
@@ -7603,6 +7841,7 @@ def metrics_event():
 
 LOGIN_PAGE = """
 <!doctype html><html><head><title>InnerLight — Founder Sign In</title>
+<link rel="icon" href="data:,">
 <meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -7739,14 +7978,14 @@ def admin_dashboard():
         avg = h_sum/h_n; ttot=sum(tiers.values()) or 1
         order=["measured","estimated","baseline-held"]
         bars="".join(
-            f'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eef2f8;">'
-            f'<span>{k.capitalize()}</span><b style="color:{"#2f6da8" if k=="measured" else "#d97706" if k=="estimated" else "#64748b"};">'
+            f'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(244,201,119,.14);">'
+            f'<span>{k.capitalize()}</span><b style="color:{"#f4c977" if k=="measured" else "#e8a34c" if k=="estimated" else "rgba(242,231,210,.55)"};">'
             f'{tiers.get(k,0)} ({100*tiers.get(k,0)/ttot:.0f}%)</b></div>'
             for k in order if tiers.get(k,0))
         meas_pct = 100*tiers.get("measured",0)/ttot
         heart_rows = (f'<div style="font-size:15px;margin-bottom:8px;">Average heart rate: <b>{avg:.0f} bpm</b> '
                       f'across <b>{h_n}</b> readings &mdash; <b style="color:#9a561f;">100% session coverage</b>, '
-                      f'{meas_pct:.0f}% high-confidence.</div>' + bars).replace("#9a561f","#2f6da8")
+                      f'{meas_pct:.0f}% high-confidence.</div>' + bars).replace("#9a561f","#f4c977")
     else:
         heart_rows = "<i>No heart readings recorded yet. They gather as people use the camera.</i>"
     # Experimental sub-zone accuracy across all shown days
@@ -7759,8 +7998,8 @@ def admin_dashboard():
               "mouthSideL":"Left of mouth","mouthSideR":"Right of mouth"}
     if zagg:
         subzone_rows = "".join(
-            f'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eef2f8;">'
-            f'<span>{ZLABEL.get(z, z)}</span><b style="color:#b24a2a;">{(a["sum"]/a["n"]):.0f}% agreement</b></div>'
+            f'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(244,201,119,.14);">'
+            f'<span>{ZLABEL.get(z, z)}</span><b style="color:#e8a34c;">{(a["sum"]/a["n"]):.0f}% agreement</b></div>'
             for z, a in sorted(zagg.items(), key=lambda x: -(x[1]["sum"]/max(1,x[1]["n"]))))
     else:
         subzone_rows = '<i>No experimental sub-zone data yet. It gathers as people use the camera.</i>'
@@ -7789,404 +8028,950 @@ def admin_dashboard():
         + _kpi((f"{_avg_heart:.0f}" if h_n else "&mdash;"), "Avg heart rate", "bpm seen", ocean=True)
         + _kpi(_tot_handoffs, "Human handoffs", "bridges to a person")
     )
+    # ---- THE WATCH: real numbers for the night room above the fold ----
+    _today_key = time.strftime("%Y-%m-%d")
+    _td = m.get(_today_key, {})
+    w_sessions = _tot_sessions                       # sessions held, last 14 days
+    w_handoffs = _tot_handoffs                       # handoff clicks, last 14 days
+    w_messages = _tot_messages                       # messages received, last 14 days
+    w_first = int(round(_avg_first)) if _fs_cnt else "&mdash;"   # avg seconds to first sound
+    _today_moves = [
+        ("the music shifted lanes to follow someone", _td.get("lane_switches", 0)),
+        ("a new sky was chosen", _td.get("scene_changes", 0)),
+        ("words were spoken into the room", _td.get("messages", 0)),
+        ("a thought was typed, then let go", _td.get("hesitations", 0)),
+    ]
+    _max_mv = max([v for _, v in _today_moves] + [1])
+    room_rows = "".join(
+        f'<div class="lane" style="margin-top:20px;"><div class="lane-head">'
+        f'<span class="lane-name">{lbl}</span>'
+        f'<span class="lane-count">{v} {"time" if v == 1 else "times"} today</span></div>'
+        f'<div class="band"><div class="band-fill" style="width:{(max(6, int(100 * v / _max_mv)) if v else 0)}%;animation-delay:-{i * 1.7}s"></div></div></div>'
+        for i, (lbl, v) in enumerate(_today_moves))
     return render_template_string("""
-<!doctype html><html><head><title>InnerLight — Operations</title>
+<!doctype html><html lang="en"><head><title>The Watch — InnerLight</title>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
 <meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
  :root{
-   --ink:#2a1e14; --ink2:#5c4636; --muted:#8a7a68;
-   --paper:#f4ecdf; --card:#ffffff; --line:#ece0d0;
-   --amber:#c56a2c; --amber-d:#a9531f; --terra:#b24a2a; --ocean:#2f6da8;
-   --shadow-s:0 6px 20px rgba(42,30,20,0.08);
+   --night:#17100a; --night-2:#211508; --field:#1d1309;
+   --ember:#e8a34c; --candle:#f4c977; --core:#ffe8bf;
+   --cream:#f2e7d2; --cream-dim:rgba(242,231,210,.62); --cream-faint:rgba(242,231,210,.38);
+   --hairline:rgba(232,163,76,.16);
+   --serif:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+   --sans:"Gill Sans","Gill Sans MT",Seravek,"Segoe UI","Trebuchet MS",Verdana,sans-serif;
  }
- *{box-sizing:border-box;}
- body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-   color:var(--ink2);background:var(--paper);
-   background-image:radial-gradient(1100px 380px at 50% -140px,#fff7ec 0%,rgba(255,247,236,0) 72%);}
- a{color:var(--ocean);}
- .topbar{position:sticky;top:0;z-index:50;background:rgba(42,30,20,0.97);
-   color:#f6ece0;display:flex;align-items:center;gap:14px;padding:12px 22px;
-   box-shadow:0 2px 18px rgba(0,0,0,0.18);flex-wrap:wrap;}
- .topbar .brand{font-family:Georgia,"Times New Roman",serif;font-size:16px;font-weight:700;color:#fff;white-space:nowrap;}
- .topbar .brand span{color:var(--amber);}
- .nav{display:flex;gap:2px;flex-wrap:wrap;flex:1;margin-left:6px;}
- .nav a{color:#e8d8c4;text-decoration:none;font-size:13px;padding:6px 12px;border-radius:999px;}
- .nav a:hover{background:rgba(255,255,255,0.12);color:#fff;}
- .act{display:flex;gap:8px;}
- .act a{color:#e8d8c4;font-size:12.5px;text-decoration:none;border:1px solid rgba(255,255,255,0.35);
-   padding:7px 14px;border-radius:999px;white-space:nowrap;} .act a:hover{background:rgba(255,255,255,0.12);}
- .act a.primary{background:var(--amber);border-color:var(--amber);color:#fff;}
- .wrap{max-width:1180px;margin:0 auto;padding:24px 22px 64px;}
- .lede{font-family:Georgia,serif;color:var(--ink);font-size:15px;margin:2px 0 20px;}
- .lede b{color:var(--amber-d);}
- .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:8px;}
- .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;
-   box-shadow:var(--shadow-s);position:relative;overflow:hidden;}
- .kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
-   background:linear-gradient(180deg,var(--amber),var(--terra));}
- .kpi.ocean:before{background:linear-gradient(180deg,#5aa0d8,var(--ocean));}
- .kpi-v{font-size:30px;font-weight:800;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums;}
- .kpi-l{font-size:13.5px;font-weight:700;color:var(--ink2);margin-top:9px;}
- .kpi-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
- .kpi .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ocean);
-   margin-right:6px;vertical-align:middle;animation:ilpulse 1.6s infinite;}
- @keyframes ilpulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
- h2{font-family:Georgia,serif;color:var(--ink);font-size:18px;margin:34px 0 12px;padding-left:14px;
-   border-left:5px solid var(--amber);line-height:1.25;scroll-margin-top:74px;}
- .card-like{background:var(--card)!important;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-s);}
- .tablewrap{background:var(--card);border:1px solid var(--line);border-radius:16px;
-   box-shadow:var(--shadow-s);overflow-x:auto;}
- table{border-collapse:collapse;width:100%;background:transparent;}
- th,td{padding:11px 13px;text-align:left;font-size:13px;border-bottom:1px solid var(--line);white-space:nowrap;}
- th{background:#f3e7d7;color:var(--ink);font-size:11px;letter-spacing:0.4px;text-transform:uppercase;}
- td{color:var(--ink2);} tr:hover td{background:#faf4ea;} tr:last-child td{border-bottom:0;}
- .note{margin-top:18px;font-size:12.8px;color:var(--ink2);background:var(--card);border:1px solid var(--line);
-   border-left:5px solid var(--amber);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow-s);line-height:1.7;}
- .graph{display:flex;align-items:flex-end;gap:8px;background:var(--card);border:1px solid var(--line);
-   padding:18px;border-radius:16px;box-shadow:var(--shadow-s);margin:6px 0 0;overflow-x:auto;}
+ *{margin:0;padding:0;box-sizing:border-box;}
+ html,body{min-height:100%;}
+ body{
+   background:
+     radial-gradient(1200px 700px at 50% -10%, rgba(232,163,76,.10), transparent 60%),
+     radial-gradient(900px 600px at 85% 110%, rgba(160,90,30,.10), transparent 55%),
+     linear-gradient(180deg,#140d07 0%, var(--night) 40%, #100a05 100%);
+   background-color:var(--night);
+   color:var(--cream); font-family:var(--sans);
+   -webkit-font-smoothing:antialiased; overflow-x:hidden; position:relative;
+ }
+ body::after{
+   content:""; position:fixed; inset:0; pointer-events:none; z-index:50; opacity:.035;
+   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+ }
+ .page{max-width:1160px;margin:0 auto;padding:0 44px 90px;}
+ a{color:var(--ember);}
+ header{display:flex;align-items:baseline;justify-content:space-between;padding:34px 6px 10px;}
+ .wordmark{font-family:var(--serif);font-size:30px;font-weight:400;letter-spacing:.14em;color:var(--cream);}
+ .wordmark .flame{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--candle);
+   margin:0 16px 3px 2px;box-shadow:0 0 12px 3px rgba(244,201,119,.55);animation:flamebreath 5.2s ease-in-out infinite;}
+ @keyframes flamebreath{0%,100%{transform:scale(1);opacity:.85;}50%{transform:scale(1.35);opacity:1;}}
+ .header-right{text-align:right;}
+ .clock{font-family:var(--serif);font-size:19px;color:var(--cream-dim);font-variant-numeric:tabular-nums;}
+ .status{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cream-faint);margin-top:7px;}
+ .status .quiet-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ember);
+   margin-right:9px;vertical-align:2px;box-shadow:0 0 8px 2px rgba(232,163,76,.5);animation:flamebreath 6.4s ease-in-out infinite;}
+ .quiet-nav{text-align:center;padding:6px 0 22px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;}
+ .quiet-nav a{color:var(--cream-faint);text-decoration:none;margin:0 11px;padding:4px 2px;}
+ .quiet-nav a:hover{color:var(--candle);}
+ .field-wrap{position:relative;margin-top:6px;}
+ .field-frame{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--hairline);
+   background:
+     radial-gradient(120% 90% at 50% 118%, rgba(190,110,40,.20), transparent 55%),
+     radial-gradient(90% 70% at 50% -20%, rgba(232,163,76,.09), transparent 60%),
+     linear-gradient(180deg,#1b1108 0%,#170e07 55%,#1e1207 100%);
+   box-shadow:inset 0 0 90px rgba(0,0,0,.55), 0 22px 60px -30px rgba(0,0,0,.8);}
+ canvas#field{display:block;width:100%;height:420px;}
+ .field-caption{position:absolute;top:22px;left:0;right:0;text-align:center;font-size:10.5px;
+   letter-spacing:.34em;text-transform:uppercase;color:rgba(242,231,210,.30);pointer-events:none;}
+ .field-empty{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);text-align:center;
+   font-family:var(--serif);font-style:italic;font-size:16px;color:rgba(242,231,210,.34);
+   pointer-events:none;transition:opacity 2s ease;}
+ .counter-lines{text-align:center;padding:30px 20px 8px;}
+ .counter-main{font-family:var(--serif);font-style:italic;font-size:25px;color:var(--cream);letter-spacing:.01em;}
+ .counter-main b{font-style:normal;font-weight:400;color:var(--candle);}
+ .counter-sub{font-family:var(--serif);font-size:15.5px;color:var(--cream-dim);margin-top:11px;font-style:italic;}
+ .counter-sub b{font-style:normal;color:rgba(244,201,119,.85);font-weight:400;}
+ .moments{display:grid;grid-template-columns:repeat(4,1fr);gap:34px;padding:74px 8px 0;text-align:center;}
+ .moment .num{font-family:var(--serif);font-weight:400;font-size:58px;line-height:1;color:var(--cream);
+   text-shadow:0 0 34px rgba(232,163,76,.22);font-variant-numeric:tabular-nums;}
+ .moment .num small{font-size:24px;color:var(--cream-dim);margin-left:4px;letter-spacing:.02em;}
+ .moment .cap{margin-top:15px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,201,119,.62);}
+ .moment .sub{margin-top:9px;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--cream-faint);line-height:1.5;}
+ .rule{height:1px;margin:70px auto 0;max-width:520px;
+   background:linear-gradient(90deg, transparent, rgba(232,163,76,.35), transparent);}
+ .room{padding-top:64px;}
+ h2.sect{font-family:var(--serif);font-weight:400;font-size:23px;color:var(--cream);text-align:center;letter-spacing:.03em;}
+ .sect-sub{text-align:center;margin-top:10px;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--cream-faint);}
+ .lanes{display:grid;grid-template-columns:1fr 1fr;gap:26px 90px;max-width:980px;margin:44px auto 0;padding:0 8px;}
+ .lane-col-title{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(244,201,119,.5);margin-bottom:4px;}
+ .lane-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+ .lane-name{font-family:var(--serif);font-size:16.5px;color:var(--cream-dim);font-style:italic;}
+ .lane-count{font-size:11px;letter-spacing:.14em;color:var(--cream-faint);text-transform:uppercase;}
+ .band{height:8px;border-radius:6px;background:rgba(232,163,76,.07);overflow:visible;position:relative;}
+ .band-fill{height:100%;border-radius:6px;width:0%;
+   background:linear-gradient(90deg, rgba(190,110,40,.55), var(--ember) 70%, var(--candle));
+   box-shadow:0 0 16px rgba(232,163,76,.45), 0 0 3px rgba(255,232,191,.6);
+   transition:width 4.5s cubic-bezier(.4,0,.2,1);animation:bandglow 7s ease-in-out infinite;}
+ @keyframes bandglow{0%,100%{filter:brightness(.92);}50%{filter:brightness(1.12);}}
+ .log{padding-top:82px;max-width:720px;margin:0 auto;}
+ .log-lines{margin-top:40px;}
+ .log-line{display:flex;gap:26px;align-items:baseline;padding:15px 4px;border-bottom:1px solid rgba(232,163,76,.09);
+   opacity:0;transform:translateY(10px);transition:opacity 1.9s ease, transform 1.9s ease;}
+ .log-line.shown{opacity:1;transform:none;}
+ .log-line.dimming{opacity:.35;}
+ .log-time{font-family:var(--serif);font-size:13px;color:rgba(244,201,119,.55);min-width:46px;font-variant-numeric:tabular-nums;}
+ .log-text{font-family:var(--serif);font-size:16.5px;line-height:1.65;color:var(--cream-dim);}
+ .log-text em{color:rgba(244,201,119,.9);font-style:normal;}
+ .vow{text-align:center;padding-top:88px;font-family:var(--serif);font-style:italic;font-size:13.5px;
+   color:rgba(242,231,210,.30);line-height:1.8;}
+ /* ---------- the ledgers (everything the operations room already had) ---------- */
+ .ledgers{margin-top:96px;}
+ .ledgers-title{font-family:var(--serif);font-weight:400;font-size:23px;color:var(--cream);text-align:center;letter-spacing:.03em;}
+ .ledgers-sub{text-align:center;margin-top:10px;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--cream-faint);}
+ h2.ledger{font-family:var(--serif);font-weight:400;font-size:19px;color:var(--cream);letter-spacing:.02em;
+   margin:58px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--hairline);scroll-margin-top:24px;}
+ h2.ledger::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ember);
+   margin-right:12px;vertical-align:4px;box-shadow:0 0 8px 2px rgba(232,163,76,.4);}
+ .panel{background:rgba(30,19,9,.72);border:1px solid var(--hairline);border-radius:14px;padding:18px;
+   box-shadow:0 18px 50px -34px rgba(0,0,0,.9);}
+ .hint{font-size:12px;color:var(--cream-faint);margin-bottom:10px;line-height:1.65;}
+ .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px;}
+ .kpi{background:rgba(30,19,9,.72);border:1px solid var(--hairline);border-radius:14px;padding:15px 16px;}
+ .kpi-v{font-family:var(--serif);font-size:27px;color:var(--cream);line-height:1;font-variant-numeric:tabular-nums;}
+ .kpi-l{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,201,119,.6);margin-top:9px;}
+ .kpi-s{font-size:11px;color:var(--cream-faint);margin-top:3px;}
+ .kpi .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ember);
+   margin-right:7px;vertical-align:3px;box-shadow:0 0 8px 2px rgba(232,163,76,.5);animation:flamebreath 3.2s ease-in-out infinite;}
+ .tablewrap{overflow-x:auto;background:rgba(30,19,9,.72);border:1px solid var(--hairline);border-radius:14px;}
+ table{border-collapse:collapse;width:100%;}
+ th,td{padding:10px 12px;text-align:left;font-size:12.5px;white-space:nowrap;}
+ th{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,201,119,.55);
+   background:rgba(232,163,76,.06);border-bottom:1px solid rgba(232,163,76,.22);}
+ td{color:var(--cream-dim);border-bottom:1px solid rgba(232,163,76,.09);}
+ tr:last-child td{border-bottom:0;}
+ tr:hover td{background:rgba(232,163,76,.04);}
+ .graph{display:flex;align-items:flex-end;gap:8px;background:rgba(30,19,9,.72);border:1px solid var(--hairline);
+   padding:18px;border-radius:14px;overflow-x:auto;}
  .bar-col{display:flex;flex-direction:column;align-items:center;min-width:44px;}
- .bar{width:26px;background:linear-gradient(180deg,#e0a458,var(--amber));border-radius:5px 5px 0 0;}
- .bar-lbl{font-size:10px;color:var(--muted);margin-top:4px;} .bar-num{font-size:11px;color:var(--amber-d);font-weight:700;}
+ .bar{width:22px;background:linear-gradient(180deg, rgba(244,201,119,.85), rgba(190,110,40,.45));
+   border-radius:5px 5px 0 0;box-shadow:0 0 14px rgba(232,163,76,.3);}
+ .bar-lbl{font-size:10px;color:var(--cream-faint);margin-top:5px;}
+ .bar-num{font-size:11px;color:var(--candle);}
  .sci-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;}
- .sci{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;font-size:12.8px;
-   line-height:1.62;color:var(--ink2);box-shadow:var(--shadow-s);border-top:3px solid var(--amber);}
- .sci b{color:var(--amber-d);font-size:13.2px;}
- @media(max-width:640px){ .wrap{padding:18px 14px 52px;} .topbar .brand{font-size:14px;} .kpi-v{font-size:26px;} }
+ .sci{background:rgba(30,19,9,.72);border:1px solid var(--hairline);border-top:2px solid rgba(232,163,76,.4);
+   border-radius:14px;padding:16px 18px;font-size:12.6px;line-height:1.62;color:var(--cream-dim);}
+ .sci b{color:var(--candle);font-size:13px;}
+ .note{margin-top:18px;font-size:12.6px;color:var(--cream-dim);background:rgba(30,19,9,.72);
+   border:1px solid var(--hairline);border-left:3px solid rgba(232,163,76,.5);border-radius:14px;
+   padding:16px 18px;line-height:1.7;}
+ @media (max-width:700px){
+   .page{padding:0 20px 70px;}
+   header{padding:24px 2px 6px;display:block;text-align:center;}
+   .header-right{text-align:center;margin-top:12px;}
+   .wordmark{font-size:24px;}
+   .quiet-nav a{margin:0 6px;}
+   canvas#field{height:300px;}
+   .counter-main{font-size:19px;}
+   .moments{grid-template-columns:1fr 1fr;gap:44px 20px;padding-top:58px;}
+   .moment .num{font-size:42px;}
+   .moment .num small{font-size:18px;}
+   .moment .sub{display:none;}
+   .lanes{grid-template-columns:1fr;gap:22px;}
+   .log{padding-top:64px;}
+   .log-line{gap:16px;}
+ }
 </style></head><body>
-<div class="topbar">
- <div class="brand">Inner<span>Light</span> · Operations Room</div>
- <nav class="nav">
-  <a href="#overview">Overview</a><a href="#live">Live</a><a href="#music">Music</a><a href="#people">People</a><a href="#research">Research</a>
- </nav>
- <div class="act"><a href="/admin/study">Founder's Study</a><a class="primary" href="/admin/logout">Sign out</a></div>
+<div class="page">
+
+  <header>
+    <div class="wordmark"><span class="flame"></span>THE WATCH</div>
+    <div class="header-right">
+      <div class="clock" id="clock">—</div>
+      <div class="status"><span class="quiet-dot"></span><span id="statusText">all quiet · the room is warm</span></div>
+    </div>
+  </header>
+
+  <nav class="quiet-nav" aria-label="Ledger sections">
+    <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
+  </nav>
+
+  <section class="field-wrap" aria-label="People being held right now">
+    <div class="field-frame">
+      <div class="field-caption">each light is a person, held anonymously</div>
+      <div class="field-empty" id="fieldEmpty" style="opacity:0;">no one needs carrying this minute. the room stays lit anyway.</div>
+      <canvas id="field"></canvas>
+    </div>
+    <div class="counter-lines">
+      <div class="counter-main"><b id="nowCount">0</b> <span id="nowWord">people are being carried right now.</span></div>
+      <div class="counter-sub"><b id="weekHandoffLine" data-n="{{ w_handoffs }}">0</b> times someone was carried toward human help, these fourteen days.</div>
+    </div>
+  </section>
+
+  <section class="moments" aria-label="The last fourteen days">
+    <div class="moment">
+      <div class="num" data-n="{{ w_sessions }}">0</div>
+      <div class="cap">held — fourteen days</div>
+      <div class="sub">every one of them anonymous,<br>every one of them met.</div>
+    </div>
+    <div class="moment">
+      <div class="num"><span data-n="{{ w_first|safe }}">{{ w_first|safe }}</span><small>s</small></div>
+      <div class="cap">from door to first sound</div>
+      <div class="sub">the silence before company arrives,<br>measured so it can shrink.</div>
+    </div>
+    <div class="moment">
+      <div class="num" data-n="{{ w_handoffs }}">0</div>
+      <div class="cap">handoffs toward human help</div>
+      <div class="sub">carried all the way<br>to a human hand.</div>
+    </div>
+    <div class="moment">
+      <div class="num" data-n="{{ w_messages }}">0</div>
+      <div class="cap">messages received</div>
+      <div class="sub">each one answered.<br>none of them kept.</div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section class="room">
+    <h2 class="sect">What the room is doing now</h2>
+    <div class="sect-sub">the sounds waiting for people, and the movement of the day so far</div>
+    <div class="lanes">
+      <div>
+        <div class="lane-col-title">music lanes — ready to play</div>
+        <div id="musicLanes"><div class="sect-sub" style="text-align:left;margin-top:20px;">listening to the library…</div></div>
+      </div>
+      <div>
+        <div class="lane-col-title">the room today</div>
+        {{ room_rows|safe }}
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section class="log">
+    <h2 class="sect">The night log</h2>
+    <div class="sect-sub">recent moments, told without names — from the live event feed</div>
+    <div class="log-lines" id="logLines"><div class="sect-sub" id="logEmpty" style="margin-top:26px;">the log is quiet. moments appear here as the night moves.</div></div>
+  </section>
+
+  <div class="vow">
+    Every light is a person. Nothing on this page can identify them.<br>
+    The Watch never scores distress — it only keeps company.
+  </div>
+
+  <!-- ==================== THE LEDGERS — the full operations room ==================== -->
+  <section class="ledgers" id="ledgers">
+    <div class="rule" style="margin-bottom:64px;"></div>
+    <div class="ledgers-title">The ledgers</div>
+    <div class="ledgers-sub">every count and control the operations room keeps — anonymous counts and clock-times only.<br>no words, names, faces, or voices are ever stored.</div>
+
+    <div class="hero">{{ kpi_cards|safe }}</div>
+
+    <h2 class="ledger" id="overview">The daily ledger — the last fourteen days</h2>
+    <div class="tablewrap">
+    <table>
+    <tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
+    <th>Expression shifts seen</th><th>Music lane shifts</th><th>Scene changes</th>
+    <th>Hesitations (typed then erased)</th><th>Avg time to open sound box</th>
+    <th>Handoff clicks</th><th>Tracks that drew dislike</th><th>Listening auto-stops</th>
+    <th>Gaze aversions (eyes fled)</th><th>Avg heart rate seen</th><th>Calm scale: arrival &rarr; later</th></tr>
+    {{ body|safe }}
+    </table>
+    </div>
+
+    <h2 class="ledger">People who asked for a human</h2>
+    <div class="panel" id="connects" style="font-size:13.5px;">Loading&hellip;</div>
+    <script>
+    fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
+      const el = document.getElementById('connects');
+      if(!d.connects || !d.connects.length){ el.textContent = 'No connection requests yet.'; return; }
+      el.innerHTML = d.connects.map(function(c){
+        return '<div style="border-bottom:1px solid rgba(232,163,76,.14);padding:9px 0;">'
+          + '<b style="color:#f4c977;">' + c.when + '</b> — ' + c.kind.toUpperCase() + ' — wants: <b style="color:#e8a34c;">' + c.pro + '</b> '
+          + '— <a href="' + c.room + '" target="_blank" style="color:#e8a34c;font-weight:700;">Join room</a>'
+          + (c.summary ? '<div style="color:rgba(242,231,210,.72);margin-top:4px;white-space:pre-wrap;">' + c.summary.replace(/</g,'&lt;') + '</div>' : '')
+          + '</div>';
+      }).join('');
+    }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
+    </script>
+
+    <h2 class="ledger">What people said — voices from real sessions</h2>
+    <div class="panel">
+    <div class="hint">Anonymous feedback from people who used InnerLight. Identifying details are automatically removed. This is the human evidence alongside the numbers.</div>
+    <div id="fb-report"><i style="color:rgba(242,231,210,.45);">Loading feedback…</i></div>
+    </div>
+    <script>
+    (function(){
+      async function load(){
+        try{
+          const r=await fetch('/api/admin/feedback'); if(!r.ok) return;
+          const d=await r.json();
+          const el=document.getElementById('fb-report'); if(!el) return;
+          if(!d.total){ el.innerHTML='<i style="color:rgba(242,231,210,.45);">No feedback yet. As people share, their words appear here.</i>'; return; }
+          const h=d.helped||{}, tot=d.total||1;
+          const pct=function(n){return Math.round(100*(n||0)/tot);};
+          let html='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:14px;">'
+            +'<div style="flex:1;min-width:120px;background:rgba(232,163,76,.09);border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#f4c977;">'+pct(h.yes)+'%</b><br>said it helped</div>'
+            +'<div style="flex:1;min-width:120px;background:rgba(232,163,76,.06);border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:rgba(242,231,210,.6);">'+pct(h.somewhat)+'%</b><br>somewhat</div>'
+            +'<div style="flex:1;min-width:120px;background:rgba(232,163,76,.06);border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:rgba(242,231,210,.6);">'+pct(h.no)+'%</b><br>not really</div>'
+            +'<div style="flex:1;min-width:120px;background:rgba(232,163,76,.09);border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#f4c977;">'+d.total+'</b><br>total responses</div>'
+            +'</div>';
+          if(d.quotes&&d.quotes.length){
+            html+='<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:6px 0;">In their own words</div>';
+            html+=d.quotes.map(function(q){
+              return '<div style="border-left:3px solid rgba(232,163,76,.5);background:rgba(232,163,76,.05);border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14px;color:rgba(242,231,210,.8);font-style:italic;">“'
+                +(q.words||'').replace(/</g,'&lt;')+'”<span style="display:block;font-style:normal;font-size:11px;color:rgba(242,231,210,.45);margin-top:4px;">'+(q.when||'')+(q.helped?' · '+q.helped:'')+'</span></div>';
+            }).join('');
+          }
+          el.innerHTML=html;
+        }catch(e){}
+      }
+      load();
+    })();
+    </script>
+
+    <h2 class="ledger">Crisis referrals — the count for the state report</h2>
+    <div class="panel">
+    <div class="hint">Each time the crisis protocol activates and 988 is put in front of a person, it is counted here — counts only, never content. This is the number for the state Office of Suicide Prevention report (due each July starting 2027).</div>
+    <div id="crisis-referrals"><i style="color:rgba(242,231,210,.45);">Loading&hellip;</i></div>
+    </div>
+    <script>
+    (async function(){
+      try{
+        var r = await fetch('/api/admin/crisisreferrals'); if(!r.ok) return;
+        var d = await r.json();
+        var el = document.getElementById('crisis-referrals'); if(!el) return;
+        var months = Object.keys(d.by_month || {}).sort().reverse();
+        if(!months.length){ el.innerHTML = '<i style="color:rgba(242,231,210,.45);">No crisis-protocol activations recorded yet. Counting began with this deploy.</i>'; return; }
+        var html = '<div style="font-weight:700;color:#f4c977;margin-bottom:8px;">' + d.total + ' total activation' + (d.total===1?'':'s') + ' since counting began</div>';
+        for (var i=0; i<months.length; i++){
+          html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(232,163,76,.12);"><span>' + months[i] + '</span><b style="color:#f4c977;">' + d.by_month[months[i]] + '</b></div>';
+        }
+        el.innerHTML = html;
+      }catch(e){}
+    })();
+    </script>
+
+    <h2 class="ledger" id="music">Music control — listen to any track, switch any track off</h2>
+    <div class="panel">
+    <div class="hint">Press <b style="color:#f4c977;">Listen</b> to hear any track right here. Press <b style="color:#f4c977;">Turn off</b> and that exact song stops being offered — no redeploy needed, and you can turn it back on any time. Honest note: someone already listening may still hear their current list until their music next shifts; every new playlist skips it.</div>
+    <div id="tc-status" style="font-size:12px;color:#e8a34c;font-weight:700;margin-bottom:6px;"></div>
+    <div id="track-control"><i style="color:rgba(242,231,210,.45);">Loading tracks&hellip;</i></div>
+    <audio id="tc-audio" preload="none"></audio>
+    </div>
+    <script>
+    (function(){
+      var LANE_NAMES = {calm:'Calm (gentle arrival)', deepcalm:'Deep calm (settles agitation)', lifting:'Lifting (raises low mood)'};
+      var playingFile = null;
+      function esc(s){ return String(s).replace(/</g,'&lt;'); }
+      async function loadTracks(){
+        try{
+          var r = await fetch('/api/admin/tracks'); if(!r.ok) return;
+          var d = await r.json();
+          var el = document.getElementById('track-control'); if(!el) return;
+          var lanes = d.lanes || {};
+          var html = '';
+          Object.keys(lanes).sort().forEach(function(lane){
+            html += '<div style="font-weight:700;color:#f4c977;margin:12px 0 4px;">' + esc(LANE_NAMES[lane] || lane) + '</div>';
+            lanes[lane].forEach(function(t){
+              var rowStyle = t.enabled ? '' : 'opacity:0.45;';
+              var btnBg = t.enabled ? 'rgba(169,83,31,.85)' : 'rgba(138,90,38,.85)';
+              var btnLabel = t.enabled ? 'Turn off' : 'Turn on';
+              html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(232,163,76,.1);' + rowStyle + '">'
+                + '<button data-listen="' + esc(t.file) + '" style="background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:66px;">Listen</button>'
+                + '<span style="flex:1;">' + esc(t.file) + (t.enabled ? '' : ' <b style="color:#e8a34c;">(off)</b>') + '</span>'
+                + '<span style="color:rgba(242,231,210,.45);font-size:12px;">' + (t.plays||0) + ' plays</span>'
+                + '<button data-toggle="' + esc(t.file) + '" data-en="' + (t.enabled ? '1' : '0') + '" style="background:' + btnBg + ';color:#ffe8bf;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:76px;">' + btnLabel + '</button>'
+                + '</div>';
+            });
+          });
+          el.innerHTML = html || '<i style="color:rgba(242,231,210,.45);">No tracks found.</i>';
+        }catch(e){}
+      }
+      var tcAudio = document.getElementById('tc-audio');
+      function resetListenButtons(){
+        var all = document.querySelectorAll('[data-listen]');
+        for (var i=0; i<all.length; i++){ all[i].textContent = 'Listen'; }
+      }
+      if (tcAudio) tcAudio.addEventListener('ended', function(){ playingFile = null; resetListenButtons(); });
+      document.addEventListener('click', async function(ev){
+        var b = ev.target;
+        if (!b || !b.getAttribute) return;
+        var listen = b.getAttribute('data-listen');
+        var toggle = b.getAttribute('data-toggle');
+        if (listen && tcAudio){
+          if (playingFile === listen){ tcAudio.pause(); playingFile = null; b.textContent = 'Listen'; return; }
+          resetListenButtons();
+          tcAudio.src = '/audio/' + listen;
+          tcAudio.currentTime = 0;
+          tcAudio.play().catch(function(){});
+          playingFile = listen;
+          b.textContent = 'Stop';
+        }
+        if (toggle){
+          var makeEnabled = b.getAttribute('data-en') !== '1';
+          b.disabled = true;
+          var status = document.getElementById('tc-status');
+          try{
+            var r = await fetch('/api/admin/tracks/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file: toggle, enabled: makeEnabled})});
+            var d = await r.json();
+            if (status) status.textContent = (d && d.status === 'refused') ? (d.reason || '') : '';
+          }catch(e){}
+          loadTracks();
+        }
+      });
+      loadTracks();
+    })();
+    </script>
+
+    <h2 class="ledger">Song play log — every track, every timestamp</h2>
+    <div class="panel">
+    <div class="hint">Exactly what played and when. Every play is stamped to the second, so you can see if a track repeats within an hour. Use this to spot any song that plays too often. <button onclick="loadPlays()" style="background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:8px;">Refresh</button></div>
+    <div id="plays-report"><i style="color:rgba(242,231,210,.45);">Loading play log…</i></div>
+    </div>
+    <script>
+    async function loadPlays(){
+      try{
+        var r = await fetch('/api/admin/plays'); if(!r.ok) return;
+        var d = await r.json();
+        var el = document.getElementById('plays-report'); if(!el) return;
+        if(!d.total_plays){ el.innerHTML='<i style="color:rgba(242,231,210,.45);">No plays recorded yet. As sessions run, every song play appears here with its timestamp.</i>'; return; }
+        var html = '<div style="font-weight:700;color:#f4c977;margin-bottom:8px;">' + d.total_plays + ' total plays recorded</div>';
+        html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
+        html += '<div style="flex:1;min-width:240px;"><div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,201,119,.6);margin-bottom:6px;">Plays per track (most played first)</div>'
+          + d.by_track.map(function(t){
+              var heavy = t.count >= 5 ? 'color:#f4c977;font-weight:800;' : 'color:rgba(242,231,210,.75);';
+              return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(232,163,76,.1);"><span>' + t.file + '</span><b style="' + heavy + '">' + t.count + '</b></div>';
+            }).join('') + '</div>';
+        html += '<div style="flex:1;min-width:240px;max-height:340px;overflow:auto;"><div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,201,119,.6);margin-bottom:6px;">Every play, newest first (with timestamp)</div>'
+          + d.recent.map(function(rr){
+              return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(232,163,76,.08);font-size:13px;"><span style="color:rgba(242,231,210,.7);">' + rr.file + '</span><span style="color:rgba(242,231,210,.45);font-variant-numeric:tabular-nums;">' + (rr.ts||'') + '</span></div>';
+            }).join('') + '</div>';
+        html += '</div>';
+        el.innerHTML = html;
+      }catch(e){}
+    }
+    loadPlays();
+    </script>
+
+    <h2 class="ledger" id="live">Live sessions — real-time biometric monitor</h2>
+    <div class="panel">
+    <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. <span id="bio-clock" style="float:right;"></span></div>
+    <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Waiting for a live session…</i></div>
+    </div>
+
+    <h2 class="ledger">Heart signal coverage — research integrity</h2>
+    <div class="panel" style="font-size:13.5px;">
+    <div class="hint">Every camera session records a heart value — never blank. Each reading is tagged by how it was obtained, so the data is complete AND honest. Measured = high-confidence true reading; Estimated = best inference from a weaker signal; Baseline-held = last good value briefly held. This is what lets you claim full coverage without overclaiming precision.</div>
+    {{ heart_rows|safe }}
+    </div>
+
+    <h2 class="ledger">Experimental biometric sub-zones — the frontier map</h2>
+    <div class="panel" id="subzones" style="font-size:13.5px;">
+    <div class="hint">How often each experimental skin zone (near eyes/mouth) agreed with the trusted forehead+cheek reading. Higher % = more trustworthy. This is your own data revealing which frontier zones can be read accurately.</div>
+    {{ subzone_rows|safe }}
+    </div>
+
+    <h2 class="ledger">Sessions per day</h2>
+    <div class="graph">{{ bars|safe }}</div>
+
+    <h2 class="ledger" id="people">Today, person by person — anonymous session breakdown</h2>
+    <div class="tablewrap">
+    <table>
+    <tr><th>Session</th><th>Expression shifts</th><th>Messages</th><th>Hesitations</th>
+    <th>Scene changes</th><th>Distractions (looked away)</th><th>Word plays</th><th>Music lane shifts</th></tr>
+    {{ sess_rows|safe }}
+    </table>
+    </div>
+
+    <h2 class="ledger">Track reactions — the research core (all days shown)</h2>
+    <div class="tablewrap">
+    <table>
+    <tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
+    {{ t_rows|safe }}
+    </table>
+    </div>
+
+    <h2 class="ledger" id="research">The scientific method — where this study stands</h2>
+    <div class="sci-grid">
+     <div class="sci"><b>1. Observation (complete)</b><br>Across ~2,500 rideshare trips, agitated passengers reliably settled when calm instrumental music was already playing on entry. Repeated, real-world, years-long observation.</div>
+     <div class="sci"><b>2. Question (framed)</b><br>Can adaptive calming sound, delivered during the crisis wait-gap, measurably reduce acute distress?</div>
+     <div class="sci"><b>3. Hypothesis (stated, falsifiable)</b><br>People using InnerLight will show measurably lower distress at the end of a session than at arrival — in heart rate, self-reported calm, and facial-expression volatility. If the numbers do not move, the hypothesis is rejected. We accept that outcome in advance.</div>
+     <div class="sci"><b>4. Predictions (specific)</b><br>(a) Heart rate drifts toward the person&rsquo;s own baseline during a session. (b) The wordless calm scale improves arrival &rarr; later. (c) Expression-shift frequency declines after music-lane responses. (d) Track &ldquo;liked&rdquo; verdicts exceed &ldquo;disliked&rdquo; as lanes adapt.</div>
+     <div class="sci"><b>5. Test (this instrument, now collecting)</b><br>Every column on this board is a measurement in service of the predictions above, recorded anonymously per session against each person&rsquo;s own baseline, on durable storage.</div>
+     <div class="sci"><b>6&ndash;7. Analysis &amp; conclusion (pending pilot)</b><br>No conclusion is claimed yet. InnerLight is unvalidated until a controlled pilot analyzes these measures. This board reports; it does not yet prove.</div>
+     <div class="sci"><b>8. Retest / replication (planned)</b><br>Pilot results, positive or negative, will be re-run before any claim is made. One result is an anecdote; a repeated result is evidence.</div>
+     <div class="sci"><b>9. Peer review (sought)</b><br>University research partnership in progress — independent eyes on the method, the data, and the conclusions.</div>
+    </div>
+
+    <h2 class="ledger">The research basis for every number</h2>
+    <div class="sci-grid">
+     <div class="sci"><b>Sessions &amp; uptake</b><br>
+     Meta-analytic reviews of digital mental-health trials converged on five reportable engagement checkpoints:
+     uptake, level of use, duration, adherence, and completion. &ldquo;Sessions&rdquo; is our uptake measure — the entry
+     point every published engagement framework requires. Without it, no other number can be interpreted.</div>
+     <div class="sci"><b>Time to first sound</b><br>
+     Music-medicine research on the Iso-Principle (meeting a person&rsquo;s state with sound, then guiding it) treats
+     stimulus onset timing as part of the intervention itself. InnerLight&rsquo;s clinical premise is sound arriving
+     during the crisis wait-gap — so seconds-to-sound is our fidelity measure: is the intervention actually
+     being delivered at the moment of need?</div>
+     <div class="sci"><b>Expression shifts</b><br>
+     Observational affect coding — a researcher watching and logging visible reactions — is a standard lens in
+     music-intervention studies. Automated expression tracking is our continuous version of that observer.
+     Shift frequency indicates emotional lability (rapid state change), a recognized marker of distress and of
+     responsiveness to stimulus change.</div>
+     <div class="sci"><b>Music lane shifts vs expression shifts</b><br>
+     The core hypothesis under test: adaptive sound answers the observed state (stimulus-response coupling).
+     Comparing these two columns is our first-order evidence of whether the system is responding — the
+     adherence checkpoint, in engagement-framework terms.</div>
+     <div class="sci"><b>Track reactions (liked / neutral / disliked)</b><br>
+     Published music-and-stress protocols log per-song participant reactions because affective response to
+     music is highly individual; preference moderates outcome. Our Track Guardian automates per-track reaction
+     logging against each person&rsquo;s own baseline — measured musical reception, per stimulus.</div>
+     <div class="sci"><b>Hesitations (typed, then erased)</b><br>
+     Behavioral research on help-seeking treats approach-avoidance behavior as a disclosure-readiness marker.
+     A composed-then-deleted message is an observable approach that stopped short — evidence of wanting to
+     speak without yet feeling safe. High hesitation with low messaging signals a trust barrier to fix.</div>
+     <div class="sci"><b>Distractions (looked away)</b><br>
+     Attention-orienting research uses gaze departure and head turning as disengagement markers. In our
+     grounding-based design (real scenes pulling a distressed mind back), sustained visual engagement is part
+     of the mechanism — so looking away is a mechanism-level measure, not housekeeping.</div>
+     <div class="sci"><b>Scene changes</b><br>
+     Perceived control and choice are established moderators of stress response. A person choosing their own
+     view is exercising agency; which realities people reach for (garden, moon, horizon) is itself preference
+     data for grounding-scene design.</div>
+     <div class="sci"><b>Handoff clicks</b><br>
+     The outcome that defines InnerLight: connection to human help (the completion checkpoint). Time-to-
+     resolution, not engagement time, is our success philosophy — this column is the bridge working, counted.</div>
+     <div class="sci"><b>Per-person session rows</b><br>
+     Aggregates hide individuals; research standards require unit-of-analysis clarity. The person-by-person
+     table preserves anonymous within-session structure so 149 shifts by one person is never mistaken for
+     74 by two — the difference between anecdote and data.</div>
+     <div class="sci"><b>Coming next, per the measurement model</b><br>
+     The strongest published protocols triangulate three lenses: physiological (heart rate and heart-rate
+     variability — the autonomic markers used across music-anxiety trials), observational (our camera), and
+     self-report (wordless calm scales like the Self-Assessment Manikin). InnerLight has lens two running,
+     lens one in build (webcam pulse reading), lens three queued — full triangulation is the destination.</div>
+    </div>
+    <div class="note"><b style="color:#f4c977;">Plain reading guide:</b> Sessions = entries that day. Avg time to first sound = tap until
+    music (lower is better; phones cannot legally start sound before a tap). Expression shifts = changes in the
+    silent face reading. Hesitations = typed a real thought, erased it unsent. Distractions = an engaged face
+    turned away for a couple of seconds. Track verdicts come from each song&rsquo;s opening minute judged against that
+    person&rsquo;s own baseline. All counts are anonymous — no words, names, faces, or voices are ever stored.</div>
+  </section>
+
+  <div class="vow">
+    The Watch — InnerLight&rsquo;s founder room.<br>
+    Anonymous counts and clock-times only. Nothing a person said is ever kept.
+  </div>
+
 </div>
-<main class="wrap">
-<div class="lede">Anonymous counts and clock-times only — <b>no words, names, faces, or voices are ever stored.</b></div>
-<div class="hero">{{ kpi_cards|safe }}</div>
-<h2 id="overview">Daily overview — the last 14 days</h2>
-<div class="tablewrap">
-<table>
-<tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
-<th>Expression shifts seen</th><th>Music lane shifts</th><th>Scene changes</th>
-<th>Hesitations (typed then erased)</th><th>Avg time to open sound box</th>
-<th>Handoff clicks</th><th>Tracks that drew dislike</th><th>Listening auto-stops</th>
-<th>Gaze aversions (eyes fled)</th><th>Avg heart rate seen</th><th>Calm scale: arrival &rarr; later</th></tr>
-{{ body|safe }}
-</table>
-</div>
-<h2>Incoming connection requests — people who asked for a human</h2>
-<div class="card-like" id="connects" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;">Loading&hellip;</div>
-<script>
-fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
-  const el = document.getElementById('connects');
-  if(!d.connects || !d.connects.length){ el.textContent = 'No connection requests yet.'; return; }
-  el.innerHTML = d.connects.map(function(c){
-    return '<div style="border-bottom:1px solid #efe4d6;padding:9px 0;">'
-      + '<b style="color:#7a3e1e;">' + c.when + '</b> — ' + c.kind.toUpperCase() + ' — wants: <b>' + c.pro + '</b> '
-      + '— <a href="' + c.room + '" target="_blank" style="color:#c56a2c;font-weight:700;">Join room</a>'
-      + (c.summary ? '<div style="color:#475569;margin-top:4px;white-space:pre-wrap;">' + c.summary.replace(/</g,'&lt;') + '</div>' : '')
-      + '</div>';
-  }).join('');
-}).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
-</script>
-<h2>What people said &mdash; voices from real sessions</h2>
-<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
-<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Anonymous feedback from people who used InnerLight. Identifying details are automatically removed. This is the human evidence alongside the numbers.</div>
-<div id="fb-report"><i style="color:#94a3b8;">Loading feedback\u2026</i></div>
-</div>
+
 <script>
 (function(){
-  async function load(){
-    try{
-      const r=await fetch('/api/admin/feedback'); if(!r.ok) return;
-      const d=await r.json();
-      const el=document.getElementById('fb-report'); if(!el) return;
-      if(!d.total){ el.innerHTML='<i style="color:#94a3b8;">No feedback yet. As people share, their words appear here.</i>'; return; }
-      const h=d.helped||{}, tot=d.total||1;
-      const pct=function(n){return Math.round(100*(n||0)/tot);};
-      let html='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:14px;">'
-        +'<div style="flex:1;min-width:120px;background:#edf3f8;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#2f6da8;">'+pct(h.yes)+'%</b><br>said it helped</div>'
-        +'<div style="flex:1;min-width:120px;background:#fbf7f1;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#64748b;">'+pct(h.somewhat)+'%</b><br>somewhat</div>'
-        +'<div style="flex:1;min-width:120px;background:#fdf5f5;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#9a6a6a;">'+pct(h.no)+'%</b><br>not really</div>'
-        +'<div style="flex:1;min-width:120px;background:#fbf3e9;border-radius:10px;padding:12px;text-align:center;"><b style="font-size:22px;color:#7a3e1e;">'+d.total+'</b><br>total responses</div>'
-        +'</div>';
-      if(d.quotes&&d.quotes.length){
-        html+='<div style="font-size:13px;color:#475569;font-weight:700;margin:6px 0;">In their own words:</div>';
-        html+=d.quotes.map(function(q){
-          return '<div style="border-left:3px solid #7fa8c9;background:#fbf7f1;border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14px;color:#334155;font-style:italic;">“'
-            +(q.words||'').replace(/</g,'&lt;')+'”<span style="display:block;font-style:normal;font-size:11px;color:#94a3b8;margin-top:4px;">'+(q.when||'')+(q.helped?' · '+q.helped:'')+'</span></div>';
-        }).join('');
+  "use strict";
+
+  /* ============ clock and status ============ */
+  var clockEl = document.getElementById('clock');
+  var statusEl = document.getElementById('statusText');
+  var liveCount = 0;
+  function fmtClock(d){
+    var h = d.getHours(), m = d.getMinutes();
+    var ap = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    return h + ':' + String(m).padStart(2,'0') + ' ' + ap;
+  }
+  function tickClock(){
+    clockEl.textContent = fmtClock(new Date());
+    if (liveCount > 0){
+      statusEl.textContent = 'the watch is on · ' + liveCount + (liveCount===1?' person':' people') + ' held';
+    } else {
+      statusEl.textContent = 'all quiet · the room is warm';
+    }
+  }
+  setInterval(tickClock, 1000);
+
+  /* ============ gentle number tweens ============ */
+  function tween(el, from, to, dur, fmt){
+    fmt = fmt || function(v){ return String(Math.round(v)); };
+    var t0 = performance.now();
+    function step(now){
+      var p = Math.min(1, (now - t0)/dur);
+      var e = 1 - Math.pow(1-p, 3);
+      el.textContent = fmt(from + (to-from)*e);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var counters = {};
+  function setCounterEl(el, to, dur){
+    if (!el) return;
+    var key = el.id || (el.dataset && el.dataset.n) || 'x';
+    var from = counters[key] || 0;
+    counters[key] = to;
+    tween(el, from, to, dur || 1800);
+  }
+
+  /* real fourteen-day numbers settle in slowly on load */
+  setTimeout(function(){
+    var nodes = document.querySelectorAll('[data-n]');
+    for (var i=0; i<nodes.length; i++){
+      var v = parseFloat(nodes[i].getAttribute('data-n'));
+      if (isFinite(v)) tween(nodes[i], 0, v, 2400 + i*280);
+    }
+  }, 500);
+
+  /* ============ the ember field ============ */
+  var canvas = document.getElementById('field');
+  var ctx = canvas.getContext('2d');
+  var W = 0, H = 0, DPR = 1;
+  function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function rand(a,b){ return a + Math.random()*(b-a); }
+
+  /* drifting motes — quiet dust in the room */
+  var motes = [];
+  for (var i=0;i<34;i++){
+    motes.push({ x:Math.random(), y:Math.random(), r:rand(.5,1.4),
+                 vy:rand(.004,.012), ph:rand(0,Math.PI*2), a:rand(.04,.11) });
+  }
+
+  /* embers = REAL active sessions, from /api/admin/bio/live */
+  var embers = [];
+  var emberMap = {};
+  function placeEmber(){
+    for (var tries=0; tries<24; tries++){
+      var x = rand(.08,.92), y = rand(.26,.84);
+      var ok = true;
+      for (var j=0;j<embers.length;j++){
+        var e = embers[j];
+        if (e.state==='gone') continue;
+        var dx=(e.x-x)*W, dy=(e.y-y)*H;
+        if (dx*dx+dy*dy < 120*120){ ok=false; break; }
       }
-      el.innerHTML=html;
+      if (ok) return {x:x,y:y};
+    }
+    return { x:rand(.1,.9), y:rand(.3,.8) };
+  }
+  function newEmber(heldMinutes){
+    var p = placeEmber();
+    return {
+      x:p.x, y:p.y,
+      born: performance.now() - (heldMinutes||0)*60000,
+      period: rand(3.8, 7.2),
+      phase: rand(0, Math.PI*2),
+      driftPh: rand(0, Math.PI*2),
+      driftPh2: rand(0, Math.PI*2),
+      state: 'alive',
+      fadeIn: performance.now(),
+      riseT: 0,
+      trail: []
+    };
+  }
+  function heldMin(e){ return (performance.now() - e.born)/60000; }
+
+  function syncEmbers(list){
+    var seen = {};
+    for (var i=0;i<list.length;i++){
+      var p = list[i];
+      var k = p.k || ('p'+i);
+      seen[k] = true;
+      var e = emberMap[k];
+      if (!e){
+        e = newEmber(p.held_min || 0);
+        emberMap[k] = e;
+        embers.push(e);
+      } else if (e.state === 'alive'){
+        /* the server knows the true held time — size follows it */
+        e.born = performance.now() - (p.held_min || 0)*60000;
+      }
+    }
+    var keys = Object.keys(emberMap);
+    for (var j=0;j<keys.length;j++){
+      var kk = keys[j];
+      var em = emberMap[kk];
+      if (!seen[kk] && em.state === 'alive'){ em.state = 'rising'; em.riseT = 0; }
+      if (em.state === 'gone'){ delete emberMap[kk]; }
+    }
+    for (var n=embers.length-1;n>=0;n--){ if (embers[n].state==='gone') embers.splice(n,1); }
+  }
+
+  function drawEmber(e, t){
+    var held = heldMin(e);
+    /* size reflects only time held — never emotion */
+    var base = 5.5 + Math.min(held/55, 1) * 6.5;
+    var breath = 1 + 0.16 * Math.sin(t/e.period*2*Math.PI + e.phase);
+    var r = base * breath;
+
+    var dx = Math.sin(t*0.05 + e.driftPh) * 7 + Math.sin(t*0.013 + e.driftPh2) * 11;
+    var dy = Math.cos(t*0.04 + e.driftPh2) * 5;
+
+    var px = e.x*W + dx, py = e.y*H + dy;
+
+    var alpha = 1;
+    var sinceBorn = (performance.now() - e.fadeIn)/1000;
+    if (sinceBorn < 3.5) alpha = sinceBorn/3.5;
+
+    if (e.state === 'rising'){
+      e.riseT += 1/60;
+      var rt = e.riseT;
+      var lift = Math.pow(rt/4.2, 1.8) * (py + 80);
+      py -= lift;
+      alpha *= Math.max(0, 1 - Math.max(0, rt-2.6)/1.6);
+      e.trail.push({x:px, y:py, t:t});
+      if (e.trail.length > 26) e.trail.shift();
+      if (py < -60 || alpha <= 0){ e.state='gone'; return; }
+      for (var i=0;i<e.trail.length;i++){
+        var tp = e.trail[i];
+        var ta = (i/e.trail.length) * 0.28 * alpha;
+        var tr = 2 + (i/e.trail.length)*3;
+        ctx.beginPath();
+        var gt = ctx.createRadialGradient(tp.x,tp.y,0,tp.x,tp.y,tr*3);
+        gt.addColorStop(0, 'rgba(255,225,175,'+ta+')');
+        gt.addColorStop(1, 'rgba(232,163,76,0)');
+        ctx.fillStyle = gt;
+        ctx.arc(tp.x,tp.y,tr*3,0,7); ctx.fill();
+      }
+    }
+
+    var glowA = (0.5 + 0.22*Math.sin(t/e.period*2*Math.PI + e.phase)) * alpha;
+
+    var g = ctx.createRadialGradient(px,py,0, px,py, r*5.2);
+    g.addColorStop(0,   'rgba(244,180,90,'+(0.34*glowA)+')');
+    g.addColorStop(0.4, 'rgba(220,140,55,'+(0.13*glowA)+')');
+    g.addColorStop(1,   'rgba(200,110,40,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(px,py,r*5.2,0,7); ctx.fill();
+
+    g = ctx.createRadialGradient(px,py,0, px,py, r*1.9);
+    g.addColorStop(0,   'rgba(255,236,200,'+(0.95*alpha)+')');
+    g.addColorStop(0.35,'rgba(250,196,110,'+(0.75*alpha)+')');
+    g.addColorStop(1,   'rgba(226,140,50,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(px,py,r*1.9,0,7); ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,246,225,'+(0.9*alpha)+')';
+    ctx.beginPath(); ctx.arc(px,py,r*0.42,0,7); ctx.fill();
+  }
+
+  function frame(now){
+    var t = now/1000;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation = 'lighter';
+
+    var hg = ctx.createLinearGradient(0,H,0,H*0.55);
+    hg.addColorStop(0,'rgba(196,112,40,'+(0.10+0.03*Math.sin(t/9*2*Math.PI))+')');
+    hg.addColorStop(1,'rgba(196,112,40,0)');
+    ctx.fillStyle = hg; ctx.fillRect(0,0,W,H);
+
+    for (var i=0;i<motes.length;i++){
+      var m = motes[i];
+      m.y -= m.vy/60;
+      if (m.y < -0.03){ m.y = 1.03; m.x = Math.random(); }
+      var mx = m.x*W + Math.sin(t*0.4 + m.ph)*8;
+      var ma = m.a * (0.6 + 0.4*Math.sin(t*0.7 + m.ph));
+      ctx.fillStyle = 'rgba(244,201,119,'+ma+')';
+      ctx.beginPath(); ctx.arc(mx, m.y*H, m.r, 0, 7); ctx.fill();
+    }
+
+    for (var j=0;j<embers.length;j++){ if (embers[j].state !== 'gone') drawEmber(embers[j], t); }
+
+    ctx.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  /* ============ live counts under the field ============ */
+  function refreshNow(n){
+    var el = document.getElementById('nowCount');
+    if (counters['nowCount'] !== n){ setCounterEl(el, n, 1400); }
+    document.getElementById('nowWord').textContent =
+      n === 1 ? 'person is being carried right now.' : 'people are being carried right now.';
+    var fe = document.getElementById('fieldEmpty');
+    if (fe) fe.style.opacity = (n === 0 && embers.length === 0) ? 1 : 0;
+  }
+
+  /* ============ the live biometric list (the ledger below) ============ */
+  function spark(vals){
+    if(!vals||vals.length<2) return '';
+    var w=180,h=34,min=Math.min.apply(null,vals),max=Math.max.apply(null,vals),rng=(max-min)||1;
+    var pts=vals.map(function(v,i){return (i/(vals.length-1)*w).toFixed(1)+','+(h-(v-min)/rng*h).toFixed(1);}).join(' ');
+    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="#e8a34c" stroke-width="2"/></svg>';
+  }
+  function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#f4c977':'rgba(242,231,210,.62)'); }
+  function stateWord(st){ return st==='rising'?'rising / activating':(st==='settling'?'settling / calming':'steady'); }
+  function renderBioList(d){
+    var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
+    var el=document.getElementById('bio-live-list'); if(!el) return;
+    if(!d.active||!d.active.length){ el.innerHTML='<i style="color:rgba(242,231,210,.45);">No live sessions right now. When someone is using InnerLight, they appear here live — with or without a heart reading.</i>'; return; }
+    el.innerHTML=d.active.map(function(p){
+      var heldTxt = (p.held_min != null) ? ('held ' + Math.max(1, Math.round(p.held_min)) + ' min') : '';
+      var left = '<div style="min-width:96px;"><b style="color:#f4c977;">'+p.who+'</b><div style="font-size:11px;color:rgba(242,231,210,.45);">'+p.ago+'s ago'+(heldTxt?' · '+heldTxt:'')+'</div></div>';
+      if (p.bpm && p.hasheart){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(232,163,76,.1);">'
+          + left
+          +'<div style="text-align:center;"><span style="font-size:26px;font-family:Georgia,serif;">'+p.bpm+'</span> <span style="font-size:12px;color:rgba(242,231,210,.55);">bpm</span>'
+          +'<div style="font-size:11px;color:rgba(242,231,210,.45);">baseline '+(p.base||p.bpm)+'</div></div>'
+          +'<div style="text-align:center;color:'+stateColor(p.state)+';font-size:13px;font-weight:700;min-width:120px;">'+stateWord(p.state)
+          +'<div style="font-size:10.5px;color:rgba(242,231,210,.45);font-weight:400;">'+(p.tier||'')+(p.face?' · '+p.face:'')+'</div></div>'
+          +'<div>'+spark(p.spark)+'</div>'
+          +'</div>';
+      }
+      var status = p.cam ? 'camera on — acquiring heart signal…' : 'text-only session (camera off)';
+      var scolor = p.cam ? '#f0a868' : 'rgba(242,231,210,.62)';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(232,163,76,.1);">'
+        + left
+        +'<div style="text-align:center;flex:1;color:'+scolor+';font-size:13px;font-weight:700;">'+status
+        + (p.face?'<div style="font-size:10.5px;color:rgba(242,231,210,.45);font-weight:400;">expression: '+p.face+'</div>':'')
+        +'</div>'
+        +'<div style="min-width:60px;text-align:right;color:rgba(242,231,210,.45);font-size:12px;">live</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  /* ============ one poll feeds the field, the counter, and the ledger ============ */
+  async function pollLive(){
+    try{
+      var r = await fetch('/api/admin/bio/live'); if(!r.ok) return;
+      var d = await r.json();
+      liveCount = (d.active && d.active.length) || 0;
+      syncEmbers(d.active || []);
+      refreshNow(liveCount);
+      var kln = document.getElementById('kpi-live-n'); if (kln) kln.textContent = liveCount;
+      renderBioList(d);
     }catch(e){}
   }
-  load();
-})();
-</script>
-<h2>Crisis referrals &mdash; the count for the state report</h2>
-<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
-<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Each time the crisis protocol activates and 988 is put in front of a person, it is counted here &mdash; counts only, never content. This is the number California's Office of Suicide Prevention report (due each July starting 2027) will be built from.</div>
-<div id="crisis-referrals"><i style="color:#94a3b8;">Loading&hellip;</i></div>
-</div>
-<script>
-(async function(){
-  try{
-    var r = await fetch('/api/admin/crisisreferrals'); if(!r.ok) return;
-    var d = await r.json();
-    var el = document.getElementById('crisis-referrals'); if(!el) return;
-    var months = Object.keys(d.by_month || {}).sort().reverse();
-    if(!months.length){ el.innerHTML = '<i style="color:#94a3b8;">No crisis-protocol activations recorded yet. Counting began with this deploy.</i>'; return; }
-    var html = '<div style="font-weight:700;margin-bottom:8px;">' + d.total + ' total activation' + (d.total===1?'':'s') + ' since counting began</div>';
-    for (var i=0; i<months.length; i++){
-      html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3eade;"><span>' + months[i] + '</span><b style="color:#2f6da8;">' + d.by_month[months[i]] + '</b></div>';
-    }
-    el.innerHTML = html;
-  }catch(e){}
-})();
-</script>
-<h2 id="music">Music control &mdash; listen to any track, switch any track off</h2>
-<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
-<div style="font-size:12px;color:#64748b;margin-bottom:6px;">Press <b>Listen</b> to hear any track right here. Press <b>Turn off</b> and that exact song stops being offered &mdash; no redeploy needed, and you can turn it back on any time. Honest note: someone already listening may still hear their current list until their music next shifts; every new playlist skips it.</div>
-<div id="tc-status" style="font-size:12px;color:#c0564e;font-weight:700;margin-bottom:6px;"></div>
-<div id="track-control"><i style="color:#94a3b8;">Loading tracks&hellip;</i></div>
-<audio id="tc-audio" preload="none"></audio>
-</div>
-<script>
-(function(){
-  var LANE_NAMES = {calm:'Calm (gentle arrival)', deepcalm:'Deep calm (settles agitation)', lifting:'Lifting (raises low mood)'};
-  var playingFile = null;
+  pollLive(); setInterval(pollLive, 3000);
+
+  /* ============ the night log — real events from the live feed ============ */
+  var logEl = document.getElementById('logLines');
+  var seenLog = {};
   function esc(s){ return String(s).replace(/</g,'&lt;'); }
-  async function loadTracks(){
+  var LOGMAP = {
+    session_start: function(){ return 'Someone arrived. The room made space.'; },
+    message_sent:  function(){ return 'Someone spoke, and was answered.'; },
+    hesitation:    function(){ return 'Someone typed a thought, then let it go unsent.'; },
+    lane_switch:   function(v){ return v ? 'The music shifted to <em>'+esc(v)+'</em> to follow someone.' : 'The music shifted lanes to follow someone.'; },
+    scene_change:  function(v){ return v ? 'Someone chose a new sky — <em>'+esc(v)+'</em>.' : 'Someone chose a new sky.'; },
+    handoff_click: function(v){ return 'Someone reached toward human help'+(v?' — <em>'+esc(v)+'</em>':'')+'. The bridge held.'; },
+    help_requested:function(){ return 'Someone asked for a human. The request is in the ledger below.'; },
+    first_sound_ms:function(v){ var s=Math.round(parseFloat(v)/1000); return isFinite(s)?('Sound arrived <em>'+s+' second'+(s===1?'':'s')+'</em> after the door opened.'):null; },
+    bloom:         function(){ return 'A small bloom — someone visibly eased.'; },
+    track_skip:    function(){ return 'A song was gently let go of.'; },
+    listen_autostop:function(){ return 'The room fell quiet on its own, as designed.'; },
+    lowlight_rescue:function(){ return 'The room brightened itself for someone sitting in the dark.'; },
+    selfreport:    function(){ return 'Someone marked, without words, how they feel.'; }
+  };
+  function addLog(text, hm){
+    var empty = document.getElementById('logEmpty');
+    if (empty) empty.remove();
+    var row = document.createElement('div');
+    row.className = 'log-line';
+    row.innerHTML = '<span class="log-time">' + hm + '</span>' +
+                    '<span class="log-text">' + text + '</span>';
+    logEl.insertBefore(row, logEl.firstChild);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ row.classList.add('shown'); }); });
+    var rows = logEl.querySelectorAll('.log-line');
+    rows.forEach(function(r0,i0){ if (i0>=4) r0.classList.add('dimming'); });
+    if (rows.length > 6) logEl.removeChild(rows[rows.length-1]);
+  }
+  async function pollLog(){
+    try{
+      var r = await fetch('/api/admin/live'); if(!r.ok) return;
+      var d = await r.json();
+      var feed = (d.feed || []).slice();
+      feed.reverse(); /* oldest first, so new lines land at the top in order */
+      var stagger = 0;
+      for (var i=0;i<feed.length;i++){
+        var ev = feed[i];
+        var map = LOGMAP[ev.type];
+        if (!map) continue;
+        var text = map(ev.val);
+        if (!text) continue;
+        var sig = ev.t + '|' + ev.type + '|' + (ev.val||'');
+        if (seenLog[sig]) continue;
+        seenLog[sig] = true;
+        (function(txt, hm, delay){ setTimeout(function(){ addLog(txt, hm); }, delay); })(text, (ev.t||'').slice(0,5), 300 + stagger*1100);
+        stagger++;
+      }
+    }catch(e){}
+  }
+  pollLog(); setInterval(pollLog, 12000);
+
+  /* ============ music lanes — the real library, honestly ============ */
+  var LANE_POETRY = {
+    calm:     'Calm — for the gentle arrival',
+    deepcalm: 'Deep calm — for the shaken',
+    lifting:  'Lifting — for the low and heavy'
+  };
+  async function loadLanes(){
     try{
       var r = await fetch('/api/admin/tracks'); if(!r.ok) return;
       var d = await r.json();
-      var el = document.getElementById('track-control'); if(!el) return;
+      var mount = document.getElementById('musicLanes'); if(!mount) return;
       var lanes = d.lanes || {};
-      var html = '';
-      Object.keys(lanes).sort().forEach(function(lane){
-        html += '<div style="font-weight:700;color:#2f6da8;margin:10px 0 4px;">' + esc(LANE_NAMES[lane] || lane) + '</div>';
-        lanes[lane].forEach(function(t){
-          var rowStyle = t.enabled ? '' : 'opacity:0.5;';
-          var btnBg = t.enabled ? '#c0564e' : '#2f6da8';
-          var btnLabel = t.enabled ? 'Turn off' : 'Turn on';
-          html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f3eade;' + rowStyle + '">'
-            + '<button data-listen="' + esc(t.file) + '" style="background:#2f6da8;color:#fff;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:66px;">Listen</button>'
-            + '<span style="flex:1;">' + esc(t.file) + (t.enabled ? '' : ' <b style="color:#c0564e;">(off)</b>') + '</span>'
-            + '<span style="color:#94a3b8;font-size:12px;">' + (t.plays||0) + ' plays</span>'
-            + '<button data-toggle="' + esc(t.file) + '" data-en="' + (t.enabled ? '1' : '0') + '" style="background:' + btnBg + ';color:#fff;border:0;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;min-width:76px;">' + btnLabel + '</button>'
-            + '</div>';
-        });
+      var names = Object.keys(lanes).sort();
+      if (!names.length){ mount.innerHTML = '<div class="sect-sub" style="text-align:left;margin-top:20px;">the library is resting.</div>'; return; }
+      var maxN = 1;
+      names.forEach(function(nm){
+        var on = lanes[nm].filter(function(t0){ return t0.enabled; }).length;
+        if (on > maxN) maxN = on;
       });
-      el.innerHTML = html || '<i style="color:#94a3b8;">No tracks found.</i>';
-    }catch(e){}
-  }
-  var tcAudio = document.getElementById('tc-audio');
-  function resetListenButtons(){
-    var all = document.querySelectorAll('[data-listen]');
-    for (var i=0; i<all.length; i++){ all[i].textContent = 'Listen'; }
-  }
-  if (tcAudio) tcAudio.addEventListener('ended', function(){ playingFile = null; resetListenButtons(); });
-  document.addEventListener('click', async function(ev){
-    var b = ev.target;
-    if (!b || !b.getAttribute) return;
-    var listen = b.getAttribute('data-listen');
-    var toggle = b.getAttribute('data-toggle');
-    if (listen && tcAudio){
-      if (playingFile === listen){ tcAudio.pause(); playingFile = null; b.textContent = 'Listen'; return; }
-      resetListenButtons();
-      tcAudio.src = '/audio/' + listen;
-      tcAudio.currentTime = 0;
-      tcAudio.play().catch(function(){});
-      playingFile = listen;
-      b.textContent = 'Stop';
-    }
-    if (toggle){
-      var makeEnabled = b.getAttribute('data-en') !== '1';
-      b.disabled = true;
-      var status = document.getElementById('tc-status');
-      try{
-        var r = await fetch('/api/admin/tracks/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file: toggle, enabled: makeEnabled})});
-        var d = await r.json();
-        if (status) status.textContent = (d && d.status === 'refused') ? (d.reason || '') : '';
-      }catch(e){}
-      loadTracks();
-    }
-  });
-  loadTracks();
-})();
-</script>
-<h2>Song play log &mdash; every track, every timestamp</h2>
-<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:14px;">
-<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Exactly what played and when. Every play is stamped to the second, so you can see if a track repeats within an hour. Use this to spot any song that plays too often. <button onclick="loadPlays()" style="background:#2f6da8;color:#fff;border:0;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:8px;">Refresh</button></div>
-<div id="plays-report"><i style="color:#94a3b8;">Loading play log\u2026</i></div>
-</div>
-<script>
-async function loadPlays(){
-  try{
-    var r = await fetch('/api/admin/plays'); if(!r.ok) return;
-    var d = await r.json();
-    var el = document.getElementById('plays-report'); if(!el) return;
-    if(!d.total_plays){ el.innerHTML='<i style="color:#94a3b8;">No plays recorded yet. As sessions run, every song play appears here with its timestamp.</i>'; return; }
-    var html = '<div style="font-weight:700;margin-bottom:8px;">' + d.total_plays + ' total plays recorded</div>';
-    // per-track totals
-    html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
-    html += '<div style="flex:1;min-width:240px;"><div style="font-weight:700;color:#2f6da8;margin-bottom:4px;">Plays per track (most played first)</div>'
-      + d.by_track.map(function(t){
-          var heavy = t.count >= 5 ? 'color:#c0564e;font-weight:800;' : 'color:#2f6da8;';
-          return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3eade;"><span>' + t.file + '</span><b style="' + heavy + '">' + t.count + '</b></div>';
-        }).join('') + '</div>';
-    // full timestamp list
-    html += '<div style="flex:1;min-width:240px;max-height:340px;overflow:auto;"><div style="font-weight:700;color:#334155;margin-bottom:4px;">Every play, newest first (with timestamp)</div>'
-      + d.recent.map(function(r){
-          return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5efe6;font-size:13px;"><span style="color:#475569;">' + r.file + '</span><span style="color:#94a3b8;font-variant-numeric:tabular-nums;">' + (r.ts||'') + '</span></div>';
-        }).join('') + '</div>';
-    html += '</div>';
-    el.innerHTML = html;
-  }catch(e){}
-}
-loadPlays();
-</script>
-<h2 id="live">Live sessions &mdash; real-time biometric monitor</h2>
-<div class="card-like" style="background:#2a1e14;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.2);margin-bottom:14px;color:#f3e9db;">
-<div style="font-size:12px;color:#c9b79f;margin-bottom:10px;">Anonymous, live. Each person currently using InnerLight with their camera on appears here \u2014 heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the biometric signal. <span id="bio-clock" style="float:right;"></span></div>
-<div id="bio-live-list"><i style="color:#b7a084;">Waiting for a live session\u2026</i></div>
-</div>
-<script>
-(function(){
-  function spark(vals){
-    if(!vals||!vals.length) return '';
-    const w=180,h=34,min=Math.min.apply(null,vals),max=Math.max.apply(null,vals),rng=(max-min)||1;
-    const pts=vals.map(function(v,i){return (i/(vals.length-1)*w).toFixed(1)+','+(h-(v-min)/rng*h).toFixed(1);}).join(' ');
-    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="#7fa8c9" stroke-width="2"/></svg>';
-  }
-  function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#7fa8c9':'#c9b79f'); }
-  function stateWord(st){ return st==='rising'?'rising / activating':(st==='settling'?'settling / calming':'steady'); }
-  async function poll(){
-    try{
-      const r=await fetch('/api/admin/bio/live'); if(!r.ok) return;
-      const d=await r.json();
-      var kln=document.getElementById('kpi-live-n'); if(kln) kln.textContent=((d.active&&d.active.length)||0);
-      var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
-      var el=document.getElementById('bio-live-list'); if(!el) return;
-      if(!d.active||!d.active.length){ el.innerHTML='<i style="color:#b7a084;">No live sessions right now. When someone is using InnerLight, they appear here live \u2014 with or without a heart reading.</i>'; return; }
-      el.innerHTML=d.active.map(function(p){
-        var left = '<div style="min-width:80px;"><b>'+p.who+'</b><div style="font-size:11px;color:#b7a084;">'+p.ago+'s ago</div></div>';
-        if (p.bpm && p.hasheart){
-          // Full heart reading available
-          return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">'
-            + left
-            +'<div style="text-align:center;"><span style="font-size:26px;font-weight:800;">'+p.bpm+'</span> <span style="font-size:12px;color:#c9b79f;">bpm</span>'
-            +'<div style="font-size:11px;color:#b7a084;">baseline '+(p.base||p.bpm)+'</div></div>'
-            +'<div style="text-align:center;color:'+stateColor(p.state)+';font-size:13px;font-weight:700;min-width:120px;">'+stateWord(p.state)
-            +'<div style="font-size:10.5px;color:#b7a084;font-weight:400;">'+(p.tier||'')+(p.face?' \u00b7 '+p.face:'')+'</div></div>'
-            +'<div>'+spark(p.spark)+'</div>'
-            +'</div>';
-        }
-        // Live session but no heart reading yet \u2014 show honest status.
-        var status = p.cam ? 'camera on \u2014 acquiring heart signal\u2026' : 'text-only session (camera off)';
-        var scolor = p.cam ? '#f0a868' : '#c9b79f';
-        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">'
-          + left
-          +'<div style="text-align:center;flex:1;color:'+scolor+';font-size:13px;font-weight:700;">'+status
-          + (p.face?'<div style="font-size:10.5px;color:#b7a084;font-weight:400;">expression: '+p.face+'</div>':'')
-          +'</div>'
-          +'<div style="min-width:60px;text-align:right;color:#b7a084;font-size:12px;">live</div>'
-          +'</div>';
+      mount.innerHTML = names.map(function(nm, i){
+        var on = lanes[nm].filter(function(t0){ return t0.enabled; }).length;
+        var w = on ? Math.max(8, Math.round(100*on/maxN)) : 0;
+        return '<div class="lane" style="margin-top:20px;">'
+          + '<div class="lane-head"><span class="lane-name">' + esc(LANE_POETRY[nm] || nm) + '</span>'
+          + '<span class="lane-count">' + on + (on===1?' song ready':' songs ready') + '</span></div>'
+          + '<div class="band"><div class="band-fill" style="animation-delay:-' + (i*1.7) + 's"></div></div>'
+          + '</div>';
       }).join('');
+      /* let the 0-width paint once, then ease open */
+      setTimeout(function(){
+        var fills = mount.querySelectorAll('.band-fill');
+        names.forEach(function(nm, i){
+          var on = lanes[nm].filter(function(t0){ return t0.enabled; }).length;
+          var w = on ? Math.max(8, Math.round(100*on/maxN)) : 0;
+          if (fills[i]) fills[i].style.width = w + '%';
+        });
+      }, 80);
     }catch(e){}
   }
-  poll(); setInterval(poll, 3000);
+  loadLanes(); setInterval(loadLanes, 60000);
+
+  tickClock();
 })();
 </script>
-<h2>Heart signal coverage &mdash; research integrity</h2>
-<div class="card-like" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;margin-bottom:8px;">
-<div style="font-size:12px;color:#64748b;margin-bottom:10px;">Every camera session records a heart value &mdash; never blank. Each reading is tagged by how it was obtained, so the data is complete AND honest. "Measured" = high-confidence true reading; "Estimated" = best inference from a weaker signal; "Baseline-held" = last good value briefly held. This is what lets you claim full coverage without overclaiming precision.</div>
-{{ heart_rows|safe }}
-</div>
-<h2>Experimental biometric sub-zones — the frontier map</h2>
-<div class="card-like" id="subzones" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 28px rgba(15,36,71,0.14);font-size:13.5px;margin-bottom:8px;">
-<div style="font-size:12px;color:#64748b;margin-bottom:10px;">How often each experimental skin zone (near eyes/mouth) agreed with the trusted forehead+cheek reading. Higher % = more trustworthy. This is your own data revealing which frontier zones can be read accurately.</div>
-{{ subzone_rows|safe }}
-</div>
-<h2>Sessions per day</h2>
-<div class="graph">{{ bars|safe }}</div>
-<h2 id="people">Today, person by person — anonymous session breakdown</h2>
-<table>
-<tr><th>Session</th><th>Expression shifts</th><th>Messages</th><th>Hesitations</th>
-<th>Scene changes</th><th>Distractions (looked away)</th><th>Word plays</th><th>Music lane shifts</th></tr>
-{{ sess_rows|safe }}
-</table>
-<h2>Track reactions — the research core (all days shown)</h2>
-<table>
-<tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
-{{ t_rows|safe }}
-</table>
-<h2 id="research">The scientific method — where this study stands</h2>
-<div class="sci-grid">
- <div class="sci"><b>1. Observation (complete)</b><br>Across ~2,500 rideshare trips, agitated passengers reliably settled when calm instrumental music was already playing on entry. Repeated, real-world, years-long observation.</div>
- <div class="sci"><b>2. Question (framed)</b><br>Can adaptive calming sound, delivered during the crisis wait-gap, measurably reduce acute distress?</div>
- <div class="sci"><b>3. Hypothesis (stated, falsifiable)</b><br>People using InnerLight will show measurably lower distress at the end of a session than at arrival — in heart rate, self-reported calm, and facial-expression volatility. If the numbers do not move, the hypothesis is rejected. We accept that outcome in advance.</div>
- <div class="sci"><b>4. Predictions (specific)</b><br>(a) Heart rate drifts toward the person's own baseline during a session. (b) The wordless calm scale improves arrival &rarr; later. (c) Expression-shift frequency declines after music-lane responses. (d) Track "liked" verdicts exceed "disliked" as lanes adapt.</div>
- <div class="sci"><b>5. Test (this instrument, now collecting)</b><br>Every column on this board is a measurement in service of the predictions above, recorded anonymously per session against each person's own baseline, on durable storage.</div>
- <div class="sci"><b>6&ndash;7. Analysis &amp; conclusion (pending pilot)</b><br>No conclusion is claimed yet. InnerLight is unvalidated until a controlled pilot analyzes these measures. This board reports; it does not yet prove.</div>
- <div class="sci"><b>8. Retest / replication (planned)</b><br>Pilot results, positive or negative, will be re-run before any claim is made. One result is an anecdote; a repeated result is evidence.</div>
- <div class="sci"><b>9. Peer review (sought)</b><br>University research partnership in progress — independent eyes on the method, the data, and the conclusions.</div>
-</div>
-<h2>The research basis for every number</h2>
-<div class="sci-grid">
- <div class="sci"><b>Sessions &amp; uptake</b><br>
- Meta-analytic reviews of digital mental-health trials converged on five reportable engagement checkpoints:
- uptake, level of use, duration, adherence, and completion. "Sessions" is our uptake measure — the entry
- point every published engagement framework requires. Without it, no other number can be interpreted.</div>
- <div class="sci"><b>Time to first sound</b><br>
- Music-medicine research on the Iso-Principle (meeting a person's state with sound, then guiding it) treats
- stimulus onset timing as part of the intervention itself. InnerLight's clinical premise is sound arriving
- during the crisis wait-gap — so seconds-to-sound is our fidelity measure: is the intervention actually
- being delivered at the moment of need?</div>
- <div class="sci"><b>Expression shifts</b><br>
- Observational affect coding — a researcher watching and logging visible reactions — is a standard lens in
- music-intervention studies. Automated expression tracking is our continuous version of that observer.
- Shift frequency indicates emotional lability (rapid state change), a recognized marker of distress and of
- responsiveness to stimulus change.</div>
- <div class="sci"><b>Music lane shifts vs expression shifts</b><br>
- The core hypothesis under test: adaptive sound answers the observed state (stimulus-response coupling).
- Comparing these two columns is our first-order evidence of whether the system is responding — the
- adherence checkpoint, in engagement-framework terms.</div>
- <div class="sci"><b>Track reactions (liked / neutral / disliked)</b><br>
- Published music-and-stress protocols log per-song participant reactions because affective response to
- music is highly individual; preference moderates outcome. Our Track Guardian automates per-track reaction
- logging against each person's own baseline — measured musical reception, per stimulus.</div>
- <div class="sci"><b>Hesitations (typed, then erased)</b><br>
- Behavioral research on help-seeking treats approach-avoidance behavior as a disclosure-readiness marker.
- A composed-then-deleted message is an observable approach that stopped short — evidence of wanting to
- speak without yet feeling safe. High hesitation with low messaging signals a trust barrier to fix.</div>
- <div class="sci"><b>Distractions (looked away)</b><br>
- Attention-orienting research uses gaze departure and head turning as disengagement markers. In our
- grounding-based design (real scenes pulling a distressed mind back), sustained visual engagement is part
- of the mechanism — so looking away is a mechanism-level measure, not housekeeping.</div>
- <div class="sci"><b>Scene changes</b><br>
- Perceived control and choice are established moderators of stress response. A person choosing their own
- view is exercising agency; which realities people reach for (garden, moon, horizon) is itself preference
- data for grounding-scene design.</div>
- <div class="sci"><b>Handoff clicks</b><br>
- The outcome that defines InnerLight: connection to human help (the completion checkpoint). Time-to-
- resolution, not engagement time, is our success philosophy — this column is the bridge working, counted.</div>
- <div class="sci"><b>Per-person session rows</b><br>
- Aggregates hide individuals; research standards require unit-of-analysis clarity. The person-by-person
- table preserves anonymous within-session structure so 149 shifts by one person is never mistaken for
- 74 by two — the difference between anecdote and data.</div>
- <div class="sci"><b>Coming next, per the measurement model</b><br>
- The strongest published protocols triangulate three lenses: physiological (heart rate and heart-rate
- variability — the autonomic markers used across music-anxiety trials), observational (our camera), and
- self-report (wordless calm scales like the Self-Assessment Manikin). InnerLight has lens two running,
- lens one in build (webcam pulse reading), lens three queued — full triangulation is the destination.</div>
-</div>
-<div class="note"><b>Plain reading guide:</b> Sessions = entries that day. Avg time to first sound = tap until
-music (lower is better; phones cannot legally start sound before a tap). Expression shifts = changes in the
-silent face reading. Hesitations = typed a real thought, erased it unsent. Distractions = an engaged face
-turned away for a couple of seconds. Track verdicts come from each song's opening minute judged against that
-person's own baseline. All counts are anonymous — no words, names, faces, or voices are ever stored.</div>
-</main></body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows, subzone_rows=subzone_rows, heart_rows=heart_rows, kpi_cards=kpi_cards)
+</body></html>""", body=body, bars=bars, t_rows=t_rows, sess_rows=sess_rows, subzone_rows=subzone_rows, heart_rows=heart_rows, kpi_cards=kpi_cards, room_rows=room_rows, w_sessions=w_sessions, w_handoffs=w_handoffs, w_messages=w_messages, w_first=w_first)
 
 
 # ===========================================================================
