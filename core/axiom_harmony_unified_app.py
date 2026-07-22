@@ -1601,22 +1601,13 @@ function mpTick(){
     };
     window._heartFaceBox = window._heartRegions.forehead;
 
-    // DISTANCE GUIDANCE: if the face is too small for a trustworthy reading,
-    // gently ask the person to come closer. Works on phone and computer.
+    // PRINCIPLE 14 \u2014 NEVER MORE THAN THEY CAN BEAR. We do not instruct the
+    // person to serve the technology ("lean in", "come closer"). If the face is
+    // far away, the reading simply carries lower confidence and the app quietly
+    // leans on its other signals. The person is never corrected.
     (function distanceNudge(){
-      let tip = document.getElementById('hr-distance-tip');
-      const tooFar = faceFrac >= 0.02 && faceFrac < 0.20; // ignore faceFrac==0 (no face this frame)
-      if (tooFar){
-        if (!tip){
-          tip = document.createElement('div');
-          tip.id = 'hr-distance-tip';
-          tip.style.cssText = 'position:fixed;bottom:120px;right:22px;z-index:56;max-width:210px;'
-            + 'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;'
-            + 'padding:11px 15px;border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);';
-          tip.textContent = 'Lean in a little \u2014 move closer to your camera so I can read your heart clearly.';
-          document.body.appendChild(tip);
-        }
-      } else if (tip){ tip.remove(); }
+      var tip = document.getElementById('hr-distance-tip');
+      if (tip) tip.remove();   // remove any tip from an earlier version
     })();
   }
 }
@@ -1659,29 +1650,17 @@ function heartTick(){
   }
   const luma = lumaCnt ? lumaSum/lumaCnt : 128;
   window._faceLuma = Math.round(luma);
-  // Very dark AND sustained -> offer ONE gentle, optional light suggestion.
+  // PRINCIPLE 14 \u2014 NEVER MORE THAN THEY CAN BEAR. We no longer ask the person
+  // to find better light. In dim light the frames are brightened automatically
+  // (adaptive gamma below) and the reading simply carries lower confidence;
+  // the app quietly leans on its other signals instead of asking for anything.
   if (luma < 55){
     window._darkStreak = (window._darkStreak||0) + 1;
-    if (window._darkStreak === 40 && !window._lightTipShown){   // ~ sustained
-      window._lightTipShown = true;
-      window._lightTipEl = null;
-      const t = document.createElement('div');
-      t.id = 'il-light-tip';
-      t.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:56;max-width:230px;'
-        +'background:rgba(46,110,142,0.96);color:#fff;font-family:Arial;font-size:13px;padding:11px 15px;'
-        +'border-radius:14px;box-shadow:0 6px 22px rgba(20,40,60,0.3);text-align:center;';
-      t.innerHTML='A little more light on your face helps me read your calm \u2014 only if you can. '
-        +'<button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;background:#fff;color:#2e6e8e;border:0;border-radius:999px;padding:5px 14px;font-size:12px;cursor:pointer;">Okay</button>';
-      window._lightTipEl = t;
-      document.body.appendChild(t);
-      setTimeout(()=>{ if(t.isConnected) t.remove(); }, 12000);
-    }
   } else {
     window._darkStreak = 0;
-    // Light came back -> clear the tip and allow it again later if needed.
-    if (window._lightTipEl && window._lightTipEl.isConnected) window._lightTipEl.remove();
-    window._lightTipShown = false;
   }
+  // Remove any light-tip left over from an earlier version of the app.
+  if (window._lightTipEl && window._lightTipEl.isConnected){ window._lightTipEl.remove(); window._lightTipEl = null; }
   // ---- Choose an adaptive gamma. Bright face -> 1.0 (no change).
   // Dark face -> up to ~2.6 lift (research uses ~2.5 for low light). ----
   let gamma = 1.0, lowLight = false;
@@ -2506,11 +2485,18 @@ window.ilCheckinPick=ilCheckinPick; window.closeCheckin=closeCheckin; window.sho
 function ilMaybeInvite(){ try{
   var ss=document.getElementById('story-screen'); if(!ss || ss.style.display==='none') return;
   if(document.getElementById('il-checkin')) return;
+  // PRINCIPLE 14 — NEVER MORE THAN THEY CAN BEAR. An interruption is an ask.
+  // Never interrupt a person who is writing or speaking — their outpouring is
+  // sacred. And ask far less often: the program reads; the person is carried.
+  var typedRecently = (window._lastTypedAt && (performance.now() - window._lastTypedAt) < 45000);
+  var writingNow = (document.activeElement && document.activeElement.id === 'message' && (document.getElementById('message')||{}).value);
+  var speakingNow = (typeof voiceListening !== 'undefined' && voiceListening);
+  if (typedRecently || writingNow || speakingNow) return;
   var now=Date.now(); var since=now-_ilCheckinLast;
   var conf=(window.ATT?ATT.confidence():1);
-  var firstDue=(_ilCheckinLast===0 && (now-_ilSessionStart)>60000);
-  var lowConf=(conf<0.45 && since>180000);
-  var periodic=(_ilCheckinLast>0 && since>270000);
+  var firstDue=(_ilCheckinLast===0 && (now-_ilSessionStart)>240000);
+  var lowConf=(conf<0.45 && since>360000);
+  var periodic=(_ilCheckinLast>0 && since>480000);
   if(firstDue||lowConf||periodic) showCheckin();
 }catch(e){} }
 
@@ -2597,6 +2583,8 @@ function ilMaybeAnchor(){ try{
   var ss=document.getElementById('story-screen'); if(!ss || ss.style.display==='none') return;
   if(document.getElementById('il-anchor')) return;
   if(!_ilEngaged) return;
+  // Principle 14: never rise up over someone who is speaking aloud.
+  if (typeof voiceListening !== 'undefined' && voiceListening) return;
   var now=Date.now();
   if((now-_ilLastInteract) > 45000 && (now-_ilAnchorLast) > 150000) showAnchor();
 }catch(e){} }
@@ -3739,7 +3727,7 @@ async function testMic() {
     micRecorder.start();
     setTimeout(() => { try { micRecorder.stop(); } catch(e){} }, 3000);
   } catch (e) {
-    if (status) status.textContent = 'Could not open the microphone. Please allow mic access in your browser, then try again.';
+    if (status) status.textContent = 'The microphone is not available right now — that is okay. Typing works just as well.';
   }
 }
 async function startVoiceCapture() {
@@ -3758,7 +3746,7 @@ async function startVoiceCapture() {
     await ensureMicStream();
   } catch (e) {
     const lbl = $('listen-label');
-    if (lbl) lbl.textContent = 'Could not open the microphone. Please allow mic access in your browser. You can also type.';
+    if (lbl) lbl.textContent = 'The microphone is not available right now — that is okay. Typing works just as well.';
     const panel = $('live-transcript'); if (panel) panel.style.display = 'block';
     return;
   }

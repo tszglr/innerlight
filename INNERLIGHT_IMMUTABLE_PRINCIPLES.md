@@ -171,3 +171,27 @@
   not cross legal lines to pursue vigilance — but within those lines, we pursue
   it relentlessly, because one time is all it takes and we intend to be there
   that one time.
+
+## 14. NEVER MORE THAN THEY CAN BEAR (set by the founder, July 2026)
+- Every single thing we ask of a person — a tap, a question, a permission, an
+  instruction, a decision — adds weight. The people who come to us have no
+  capacity left for weight. Asks create anxiety; anxiety is the opposite of our
+  purpose.
+- We are a CONDUIT to the next step, never a checkpoint. The program carries the
+  burden; the person is carried. If something can be done for them, sensed
+  instead of asked, defaulted instead of chosen, or skipped instead of required,
+  it MUST be.
+- We NEVER instruct the person to serve the technology ("lean in," "find better
+  light," "allow access and try again"). If a sensor cannot work with the person
+  exactly as they are, the technology adapts or quietly steps aside — the person
+  is never corrected to make our reading easier.
+- Interruptions are asks. Prompts, check-ins, and invitations must be rare,
+  gentle, always skippable in one motion, and NEVER appear while a person is
+  writing or speaking. Their outpouring is sacred; nothing we want may
+  interrupt it.
+- The measure of every screen is: what does this demand of a person at the worst
+  moment of their life? If the answer is more than "almost nothing," it is too
+  much, and it must be redesigned.
+- This principle was born from the founder's own experience of being burdened by
+  a machine at the worst possible time. It is not a preference; it is the law of
+  this product.
