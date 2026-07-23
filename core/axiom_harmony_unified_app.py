@@ -418,6 +418,10 @@ PUBLIC_PAGE = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="creator" content="Toshay S. Zeigler">
   <meta name="company" content="God's Love for Us LLC">
+  <meta name="theme-color" content="#2a1e14">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/scenes/app_icon_192.png">
+  <link rel="apple-touch-icon" href="/scenes/app_icon_192.png">
   <title>InnerLight &mdash; a calm, private place while you wait for real help</title>
   <meta name="description" content="InnerLight is a free, private, calming AI companion for the hardest wait: the gap between reaching out and real human help arriving. Soft music, a quiet place to tell your story, and a gentle bridge to 988 and real people. Not therapy — a bridge. Adults 18+.">
   <meta property="og:title" content="InnerLight — a calm, private place while you wait for real help">
@@ -432,7 +436,17 @@ PUBLIC_PAGE = """
   <!-- Creator imprint: God's Love for Us LLC, Axiom Harmony Protocol, InnerLight, VEIL, EDEN, and the Zenisys Sound System are created by Toshay S. Zeigler. -->
   <style>
   @keyframes listenpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
-    :root { --page:#faf5ec; --ink:#2a1e14; --muted:#8a7a68; --panel:#ffffff; --line:#ece0d0; --teal:#b24a2a; --leaf:#c56a2c; --coral:#c85c54; --gold:#b7791f; }
+    :root { --page:#faf5ec; --ink:#2a1e14; --muted:#74624d; --panel:#ffffff; --line:#ece0d0; --teal:#b24a2a; --leaf:#c56a2c; --coral:#c85c54; --gold:#b7791f; }
+    /* Screen-reader-only text: visually hidden, fully announced */
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+      clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+    /* A warm, clearly visible keyboard focus ring (never the default blue) */
+    :focus-visible { outline:3px solid #b7791f; outline-offset:2px;
+      box-shadow:0 0 0 6px rgba(255,217,160,0.5); border-radius:6px; }
+    #welcome-gate :focus-visible, #il-anchor :focus-visible, #activities-overlay :focus-visible {
+      outline-color:#ffd9a0; box-shadow:0 0 0 6px rgba(42,30,20,0.6); }
+    .story-input:focus-visible { outline:none; border-color:#b27849;
+      box-shadow:0 0 0 3px rgba(183,121,31,0.5); }
     * { box-sizing:border-box; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--page); color:var(--ink); line-height:1.5; }
     a { color:var(--teal); text-decoration:none; }
@@ -495,12 +509,12 @@ PUBLIC_PAGE = """
       background:#170c03; color:#faf1e0; text-align:center;
       --g-scrim:36,19,7; --g-glow:255,190,110; --g-core:255,204,130;
       --g-cream:#faf1e0; --g-cream-soft:rgba(250,240,222,.86); --g-ink:rgba(28,14,4,.55);
-      --g-panel:rgba(38,21,9,.46); --g-line:rgba(255,220,170,.28);
+      --g-panel:rgba(38,21,9,.62); --g-line:rgba(255,220,170,.28);
       --gp-x:32%; --gp-y:76%; --gp-size:78vmin; --gp-alpha:.55; --g-pos:50% 45%;
       font-family:Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif; }
     #welcome-gate[data-time="night"] { background:#070b14;
       --g-scrim:10,14,26; --g-glow:214,226,255; --g-core:225,234,255;
-      --g-panel:rgba(13,18,34,.52); --g-line:rgba(214,226,255,.22); --g-ink:rgba(4,8,18,.6); }
+      --g-panel:rgba(13,18,34,.66); --g-line:rgba(214,226,255,.22); --g-ink:rgba(4,8,18,.6); }
     .gate-stage { position:fixed; inset:0; overflow:hidden; pointer-events:none; }
     .gate-photo { position:absolute; left:-6%; top:-6%; width:112%; height:112%; object-fit:cover;
       object-position:var(--g-pos); transform-origin:50% 42%;
@@ -539,7 +553,7 @@ PUBLIC_PAGE = """
     .gate-brand { font-size:19px; font-weight:600; letter-spacing:.14em; margin:0; color:var(--g-cream);
       text-shadow:0 1px 14px var(--g-ink); }
     #lang-toggle { font-size:12.5px; letter-spacing:.05em; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
-    #lang-toggle a { color:rgba(250,241,224,.88) !important; text-shadow:0 1px 10px var(--g-ink); }
+    #lang-toggle a { color:rgba(250,241,224,.96) !important; text-shadow:0 1px 10px var(--g-ink); }
     #lang-toggle span { color:rgba(250,241,224,.4) !important; }
     .gate-greeting { margin:auto; text-align:center; width:min(92vw,680px); position:relative; padding:20px 0; }
     .gate-greeting::before { content:""; position:absolute; left:50%; top:50%; width:150%; height:170%;
@@ -573,14 +587,14 @@ PUBLIC_PAGE = """
       box-shadow:0 12px 44px rgba(var(--g-scrim),.5), 0 0 72px rgba(var(--g-glow),.55); }
     #welcome-gate[data-time="night"] .gate-button { background:linear-gradient(180deg,#e6edff,#b9c8ef);
       color:#101a30; border-color:rgba(226,235,255,.6); }
-    .gate-sub { font-size:11.5px; line-height:1.6; color:rgba(250,240,222,.74); margin:14px 0 0; }
+    .gate-sub { font-size:11.5px; line-height:1.6; color:rgba(250,240,222,.95); margin:14px 0 0; }
     .gate-sub span { color:inherit !important; }
     .gate-sub b, .gate-panel b { color:rgba(var(--g-core),.95) !important; }
     .gate-sub a, .gate-panel a { color:rgb(var(--g-glow)) !important; text-decoration:underline; text-underline-offset:2px; }
     .gate-links { margin:14px auto 4px; font-size:11.5px; display:flex; gap:7px; justify-content:center;
       align-items:center; flex-wrap:wrap; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
-    .gate-links a { color:rgba(250,240,222,.78) !important; text-decoration:none !important;
-      border-bottom:1px solid rgba(250,240,222,.28); padding-bottom:1px; transition:border-color .2s; }
+    .gate-links a { color:rgba(250,240,222,.95) !important; text-decoration:none !important;
+      border-bottom:1px solid rgba(250,240,222,.38); padding-bottom:1px; transition:border-color .2s; }
     .gate-links a:hover { border-bottom-color:rgba(250,240,222,.7); }
     .gate-links span { color:rgba(250,240,222,.32) !important; }
     @media (prefers-reduced-motion: reduce) {
@@ -590,6 +604,14 @@ PUBLIC_PAGE = """
       .gate-veil { animation-duration:1.2s; }
       @keyframes gateWord { from { opacity:0; transform:none; } to { opacity:1; transform:none; } }
       @keyframes gateRise { from { opacity:0; transform:none; } to { opacity:1; transform:none; } }
+      /* Story screen: no continuous motion — scenes swap instantly, the
+         presence light holds still (set in JS), pulses stop. */
+      .bar { animation:none; }
+      #listen-dot { animation:none !important; }
+      #calm-photo-a, #calm-photo-b { transition:none !important; }
+      .story-video, .story-video-bar { transition:none !important; }
+      .gate-button { transition:none; }
+      #il-presence .il-bloom, #il-presence .il-vignette { transition:none; }
     }
     @media (max-width:480px) {
       .gate-panel { width:min(96vw,620px); padding:16px 14px 10px; margin-top:20px; }
@@ -653,7 +675,7 @@ PUBLIC_PAGE = """
     .story-input { width:100%; min-height:130px; box-sizing:border-box; padding:18px; border-radius:16px;
       border:1px solid #ddd1c8; background:#ffffff; color:#4a372d; font-size:16px; line-height:1.6; resize:vertical;
       font-family:inherit; }
-    .story-input::placeholder { color:#d2ae90; }
+    .story-input::placeholder { color:#8a6a48; }
     .story-input:focus { outline:none; border-color:#b27849; box-shadow:0 0 0 3px rgba(91,160,138,.15); }
     .story-actions { display:flex; gap:12px; justify-content:center; margin:18px 0 10px; }
     .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
@@ -742,7 +764,7 @@ PUBLIC_PAGE = """
       opacity:0 !important; pointer-events:none !important; }
     .story-mic { background:#fff; color:#99673e; border:1px solid #ddd1c8; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
-    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#9a8778; font-size:13px; }
+    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#736049; font-size:13px; }
     .music-change { background:#fff; border:1px solid #ddd1c8; color:#99673e; border-radius:999px; padding:6px 16px;
       font-size:12px; cursor:pointer; }
     .emotion-badge { display:inline-block; background:#f3ede9; color:#6c412c; font-size:12px; padding:4px 12px;
@@ -810,9 +832,12 @@ PUBLIC_PAGE = """
           <div class="gate-links">
             <a href="/about">About</a><span>&middot;</span>
             <a href="/how-it-works">How it works</a><span>&middot;</span>
+            <a href="/stories">How a visit goes</a><span>&middot;</span>
+            <a href="/resources">Real help</a><span>&middot;</span>
             <a href="/research">Research</a><span>&middot;</span>
             <a href="/safety">Safety</a><span>&middot;</span>
             <a href="/privacy">Your privacy</a><span>&middot;</span>
+            <a href="/updates">Updates</a><span>&middot;</span>
             <a href="/contact">Contact</a>
           </div>
         </div>
@@ -920,6 +945,10 @@ PUBLIC_PAGE = """
           } else if (phs[j].getAttribute('data-en-ph') != null){
             phs[j].setAttribute('placeholder', phs[j].getAttribute('data-en-ph'));
           }
+          // the accessible name follows the placeholder into the same language
+          if (phs[j].getAttribute('aria-label') != null){
+            phs[j].setAttribute('aria-label', phs[j].getAttribute('placeholder')||'');
+          }
         }
         try { document.documentElement.lang = code; } catch(e){}
         window._ilLang = code;
@@ -1011,9 +1040,17 @@ PUBLIC_PAGE = """
       if (!first) { wordGap = wordGap * 0.5; lineGap = lineGap * 0.5; }
       el.innerHTML = '';
       var lines = text.split('|');
+      // Screen readers hear the greeting as ONE calm sentence (not word-by-word
+      // fragments): a visually-hidden copy carries the full text, and the
+      // animated word spans are hidden from assistive tech.
+      var srp = document.createElement('p');
+      srp.className = 'sr-only';
+      srp.textContent = lines.join(' ');
+      el.appendChild(srp);
       for (var li = 0; li < lines.length; li++) {
         var p = document.createElement('p');
         p.className = 'gate-line';
+        p.setAttribute('aria-hidden', 'true');
         var units = (lang === 'zh') ? lines[li].split('') : lines[li].split(' ');
         for (var wi = 0; wi < units.length; wi++) {
           var s = document.createElement('span');
@@ -1067,49 +1104,49 @@ PUBLIC_PAGE = """
     <!-- CALM STORY SCREEN -->
     <section id="story-screen" class="story-screen" style="display:none;">
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
-      <div id="calm-photo-a" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+      <div id="calm-photo-a" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
         <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
       </div>
-      <div id="calm-photo-b" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
+      <div id="calm-photo-b" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
         <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
       </div>
-      <div id="scene-veil"></div>
-      <div id="il-presence"><div class="il-bloom"></div><div class="il-vignette"></div></div>
-      <div id="il-presence-word"></div>
-      <div class="scene-picker" id="scene-picker">
-        <button class="scene-btn active" data-scene="garden" onclick="setScene('garden')" title="Garden">&#127807;</button>
-        <button class="scene-btn" data-scene="sunflower" onclick="setScene('sunflower')" title="Sunflower">&#127803;</button>
-        <button class="scene-btn" data-scene="sunset" onclick="setScene('sunset')" title="Sunset trees">&#127749;</button>
-        <button class="scene-btn" data-scene="horizon" onclick="setScene('horizon')" title="Golden horizon">&#127748;</button>
-        <button class="scene-btn" data-scene="moon" onclick="setScene('moon')" title="Night moon">&#127765;</button>
-        <button class="scene-btn" data-scene="daymoon" onclick="setScene('daymoon')" title="Day moon">&#127761;</button>
-        <button class="scene-btn" data-scene="moonleaf" onclick="setScene('moonleaf')" title="Moon through leaves">&#127769;</button>
-        <button class="scene-btn" data-scene="sunflowers" onclick="setScene('sunflowers')" title="Sunflowers">&#127804;</button>
-        <button class="scene-btn" data-scene="wave" onclick="setScene('wave')" title="Ocean wave">&#127754;</button>
-        <button class="scene-btn" data-scene="lettuce" onclick="setScene('lettuce')" title="Garden greens">&#129382;</button>
-        <button class="scene-btn" data-scene="pepper" onclick="setScene('pepper')" title="Green pepper">&#129681;</button>
-        <button class="scene-btn" data-scene="redpepper" onclick="setScene('redpepper')" title="Red pepper">&#127798;</button>
+      <div id="scene-veil" aria-hidden="true"></div>
+      <div id="il-presence" aria-hidden="true"><div class="il-bloom"></div><div class="il-vignette"></div></div>
+      <div id="il-presence-word" aria-hidden="true"></div>
+      <div class="scene-picker" id="scene-picker" role="group" aria-label="Background scene">
+        <button class="scene-btn active" data-scene="garden" onclick="setScene('garden')" title="Garden" aria-label="Garden scene">&#127807;</button>
+        <button class="scene-btn" data-scene="sunflower" onclick="setScene('sunflower')" title="Sunflower" aria-label="Sunflower scene">&#127803;</button>
+        <button class="scene-btn" data-scene="sunset" onclick="setScene('sunset')" title="Sunset trees" aria-label="Sunset trees scene">&#127749;</button>
+        <button class="scene-btn" data-scene="horizon" onclick="setScene('horizon')" title="Golden horizon" aria-label="Golden horizon scene">&#127748;</button>
+        <button class="scene-btn" data-scene="moon" onclick="setScene('moon')" title="Night moon" aria-label="Night moon scene">&#127765;</button>
+        <button class="scene-btn" data-scene="daymoon" onclick="setScene('daymoon')" title="Day moon" aria-label="Day moon scene">&#127761;</button>
+        <button class="scene-btn" data-scene="moonleaf" onclick="setScene('moonleaf')" title="Moon through leaves" aria-label="Moon through leaves scene">&#127769;</button>
+        <button class="scene-btn" data-scene="sunflowers" onclick="setScene('sunflowers')" title="Sunflowers" aria-label="Sunflowers scene">&#127804;</button>
+        <button class="scene-btn" data-scene="wave" onclick="setScene('wave')" title="Ocean wave" aria-label="Ocean wave scene">&#127754;</button>
+        <button class="scene-btn" data-scene="lettuce" onclick="setScene('lettuce')" title="Garden greens" aria-label="Garden greens scene">&#129382;</button>
+        <button class="scene-btn" data-scene="pepper" onclick="setScene('pepper')" title="Green pepper" aria-label="Green pepper scene">&#129681;</button>
+        <button class="scene-btn" data-scene="redpepper" onclick="setScene('redpepper')" title="Red pepper" aria-label="Red pepper scene">&#127798;</button>
       </div>
       <div class="story-video-bar">
-        <video id="visual-preview" class="story-video" autoplay muted playsinline></video>
+        <video id="visual-preview" class="story-video" autoplay muted playsinline aria-hidden="true"></video>
               </div>
       <div class="story-wrap">
         <h2 class="story-title" data-i18n="story.title">Tell me your story.</h2>
         <p class="story-sub"><span data-i18n="story.sub">Take your time. Say whatever feels true. I am listening.</span> &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;" data-i18n="story.resume">Been here before? Continue your story</a></p>
         <p style="font-size:12px;color:#6a402b;font-weight:500;margin:-6px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
-        <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
+        <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" aria-label="Start wherever you would like... (press Enter to send)" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
           <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
           <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
         </div>
         <div class="music-bar">
-          <button type="button" id="mute-btn" onclick="toggleMute()" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="24" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
+          <button type="button" id="mute-btn" onclick="toggleMute()" aria-label="Mute music" aria-pressed="false" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="24" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume" aria-label="Music volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
           <button class="music-change" type="button" onclick="changeMusic()" data-i18n="music.change">Change music</button>
           <button class="music-change" type="button" id="entrain-toggle" onclick="toggleEntrainment()" data-i18n="music.pulseon">&#10041; Calm pulse: on</button>
           <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()" data-i18n="music.voiceoff">&#128263; Spoken voice: Off</button>
-          <select id="voice-picker" onchange="selectVoice(this.value)" style="display:none;"><option value="">Voice: default</option></select>
+          <select id="voice-picker" onchange="selectVoice(this.value)" aria-label="Spoken voice" style="display:none;"><option value="">Voice: default</option></select>
         </div>
         <div id="calm-player" style="display:none; margin:18px auto 6px; max-width:560px; background:rgba(20,30,48,0.92); border-radius:20px; padding:14px 14px 12px; box-shadow:0 8px 30px rgba(0,0,0,0.22); transition:max-width 0.5s ease;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -1122,11 +1159,11 @@ PUBLIC_PAGE = """
             <button type="button" class="calm-tab" data-mode="call" onclick="setCalmMode('call')" style="background:rgba(255,255,255,0.10);color:#cfe3f2;border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;">Call &amp; Answer</button>
             <button type="button" class="calm-tab" data-mode="words" onclick="setCalmMode('words')" style="background:rgba(255,255,255,0.10);color:#cfe3f2;border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;">Word Play</button>
           </div>
-          <canvas id="calm-touch" style="width:100%;height:240px;display:block;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;cursor:pointer;transition:height 0.5s ease;"></canvas>
+          <canvas id="calm-touch" tabindex="0" role="application" aria-label="Calm space. Touch and move, or use the arrow keys and Enter, to make gentle light and sound." style="width:100%;height:240px;display:block;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;cursor:pointer;transition:height 0.5s ease;"></canvas>
         </div>
-        <div id="conversation-thread" style="margin-top:22px;"></div>
-        <div id="help-rail">
-          <a href="tel:988" class="rail-btn rail-988" title="Call 988 now">&#128222; 988</a>
+        <div id="conversation-thread" role="log" aria-live="polite" style="margin-top:22px;"></div>
+        <div id="help-rail" role="group" aria-label="Reach real help">
+          <a href="tel:988" class="rail-btn rail-988" title="Call 988 now" aria-label="Call 988, the Suicide and Crisis Lifeline, now">&#128222; 988</a>
           <button type="button" class="rail-btn" onclick="openHelp('telehealth')" title="Talk to a provider" data-i18n="rail.provider">Provider</button>
           <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help" data-i18n="rail.legal">Legal</button>
           <button type="button" class="rail-btn" onclick="openFacilities()" title="Find nearby help" data-i18n="rail.nearby">Nearby help</button>
@@ -1136,7 +1173,7 @@ PUBLIC_PAGE = """
         <div id="urgent-help" style="display:none;margin:6px auto;max-width:560px;text-align:center;padding:12px;background:rgba(232,83,78,0.1);border:1px solid rgba(232,83,78,0.4);border-radius:14px;color:#b3322e;font-weight:600;"></div>
         <div id="live-transcript" style="display:none;margin-top:14px;padding:14px 16px;background:rgba(111,179,212,0.12);border:1px solid rgba(111,179,212,0.4);border-radius:14px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span id="listen-dot" style="width:11px;height:11px;border-radius:50%;background:#e05a5a;display:inline-block;animation:listenpulse 1.1s ease-in-out infinite;"></span>
+            <span id="listen-dot" aria-hidden="true" style="width:11px;height:11px;border-radius:50%;background:#e05a5a;display:inline-block;animation:listenpulse 1.1s ease-in-out infinite;"></span>
             <span id="listen-label" style="font-size:13px;color:#5a7a96;font-weight:600;">Listening\u2026</span>
           </div>
           <div id="transcript-text" style="font-size:17px;line-height:1.5;color:#1a3a5c;min-height:24px;">&nbsp;</div>
@@ -1153,12 +1190,11 @@ PUBLIC_PAGE = """
         </div>
         <div class="sound-status" id="sound-status"></div>
         <div class="emotion-status" id="emotion-status" style="display:none;"></div>
-        <textarea id="voice_transcript" style="display:none;"></textarea>
+        <textarea id="voice_transcript" aria-hidden="true" tabindex="-1" style="display:none;"></textarea>
         <audio id="ambient-a" preload="auto" playsinline webkit-playsinline></audio>
         <audio id="ambient-b" preload="auto" playsinline webkit-playsinline></audio>
       </div>
     </section>
-  </main>
   </main>
   <footer>
     Created by Toshay S. Zeigler for God's Love for Us LLC.
@@ -1256,6 +1292,9 @@ function setScene(scene, byUser=true) {
 function startSceneRotation() {
   // Slow, gentle rotation through the real photographs — until the person
   // picks one themselves; their choice always wins.
+  // prefers-reduced-motion: no automatic scene changes at all — the person can
+  // still change scenes by hand, but nothing moves on its own.
+  try { if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch(e){}
   if (sceneAutoTimer) clearInterval(sceneAutoTimer);
   sceneAutoTimer = setInterval(() => {
     if (sceneUserChose) { clearInterval(sceneAutoTimer); sceneAutoTimer = null; return; }
@@ -2295,7 +2334,7 @@ function applyProviderSuggestion(){
     if (!s) return;
     const tip = document.getElementById('pro-suggestion');
     if (tip){ tip.style.display='block'; tip.innerHTML = s.why +
-      ' <span style="color:#9a8778;">You can choose any option below \u2014 this is only a suggestion.</span>'; }
+      ' <span style="color:#736049;">You can choose any option below \u2014 this is only a suggestion.</span>'; }
     document.querySelectorAll('.pro-btn').forEach(function(b){
       if (b.getAttribute('data-pro') === s.pro){ b.classList.add('suggested'); }
     });
@@ -2424,7 +2463,7 @@ function openFacilities(){
     + '<div style="display:flex;justify-content:space-between;align-items:center;">'
     + '<h3 style="margin:0;color:#1e3a5c;">'+_ilfac("title")+'</h3>'
     + '<button onclick="closeFacilities()" style="background:rgba(0,0,0,0.06);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;">'+_ilfac("close")+'</button></div>'
-    + '<p style="font-size:13px;color:#9a8778;line-height:1.5;">'+_ilfac("intro")+'</p>'
+    + '<p style="font-size:13px;color:#736049;line-height:1.5;">'+_ilfac("intro")+'</p>'
     + '<div style="display:flex;gap:8px;">'
     + '<input id="fac-place" placeholder="'+_ilfac("ph")+'" style="flex:1;padding:11px;border:1px solid #ddd1c8;border-radius:10px;font-size:15px;">'
     + '<button onclick="doFacilities()" style="background:#2e6e8e;color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer;">'+_ilfac("search")+'</button></div>'
@@ -2439,7 +2478,7 @@ async function doFacilities(){
   const place=(document.getElementById('fac-place')||{}).value||'';
   const box=document.getElementById('fac-results');
   if (place.trim().length<2){ if(box) box.innerHTML='<span style="color:#c0564e;font-size:13px;">'+_ilfac("enter")+'</span>'; return; }
-  if (box) box.innerHTML='<span style="color:#9a8778;font-size:14px;">'+_ilfac("looking")+'</span>';
+  if (box) box.innerHTML='<span style="color:#736049;font-size:14px;">'+_ilfac("looking")+'</span>';
   try {
     const r=await fetch('/api/facilities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place:place})});
     const d=await r.json();
@@ -2481,7 +2520,7 @@ function offerFeedback(){
    +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #ddd1c8;background:#fff;color:#99673e;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Somewhat</button>'
    +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Not really</button>'
    + '</div>'
-   + '<textarea id="fb-words" placeholder="Anything you want to share about how you feel, or what helped? (optional)" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
+   + '<textarea id="fb-words" aria-label="Anything you want to share about how you feel, or what helped? (optional)" placeholder="Anything you want to share about how you feel, or what helped? (optional)" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
    + '<div style="text-align:center;margin-top:8px;">'
    +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">Share</button>'
    +   '<button onclick="closeFb()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">No thanks</button>'
@@ -2687,9 +2726,12 @@ window.ATT = ATT;
 // the personal read which of their signals to trust. Gentle, optional, dismissible.
 var _ilCheckinLast = 0, _ilSessionStart = Date.now();
 var _IL_CT = {
-  en:{q:'How are you feeling right now?', a:'Settled', b:'Overwhelmed', thanks:'Thank you.', skip:'Not now'},
-  es:{q:'¿Cómo te sientes ahora mismo?', a:'En calma', b:'Abrumado/a', thanks:'Gracias.', skip:'Ahora no'},
-  zh:{q:'你现在感觉怎么样？', a:'平静', b:'不知所措', thanks:'谢谢你。', skip:'暂不'}
+  en:{q:'How are you feeling right now?', a:'Settled', b:'Overwhelmed', thanks:'Thank you.', skip:'Not now',
+      scale:['Settled','Mostly settled','In between','Mostly overwhelmed','Overwhelmed']},
+  es:{q:'¿Cómo te sientes ahora mismo?', a:'En calma', b:'Abrumado/a', thanks:'Gracias.', skip:'Ahora no',
+      scale:['En calma','Bastante en calma','Entre medio','Bastante abrumado','Abrumado']},
+  zh:{q:'你现在感觉怎么样？', a:'平静', b:'不知所措', thanks:'谢谢你。', skip:'暂不',
+      scale:['平静','比较平静','中间','比较不知所措','不知所措']}
 };
 function _ilct(k){ var lg=(window._ilLang||'en'); return (_IL_CT[lg]||_IL_CT.en)[k]; }
 function showCheckin(){ if(document.getElementById('il-checkin')) return;
@@ -2697,15 +2739,15 @@ function showCheckin(){ if(document.getElementById('il-checkin')) return;
   wrap.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:92vw;'
     +'background:#faf5ec;border:1px solid #e7dccc;border-radius:18px;box-shadow:0 12px 40px rgba(42,30,20,0.22);'
     +'padding:16px 18px 14px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
-  var dots=''; var i;
+  var dots=''; var i; var scale=_ilct('scale')||[];
   for(i=0;i<5;i++){ var sz=14+i*3; var col=['#5f8bb6','#7f97b0','#b9a58f','#cf8a5e','#c56a2c'][i];
-    dots+='<button aria-label="'+i+'" onclick="ilCheckinPick('+(i/4)+')" style="border:0;background:'+col+';'
+    dots+='<button aria-label="'+(scale[i]||i)+'" onclick="ilCheckinPick('+(i/4)+')" style="border:0;background:'+col+';'
       +'width:'+sz+'px;height:'+sz+'px;border-radius:50%;margin:0 9px;cursor:pointer;padding:0;vertical-align:middle;opacity:.92;"></button>'; }
   wrap.innerHTML='<div style="font-size:15px;color:#2b2620;margin-bottom:12px;">'+_ilct('q')+'</div>'
     +'<div style="display:flex;align-items:center;justify-content:center;">'
-    +'<span style="font-size:12px;color:#8a7d6c;margin-right:6px;">'+_ilct('a')+'</span>'+dots
-    +'<span style="font-size:12px;color:#8a7d6c;margin-left:6px;">'+_ilct('b')+'</span></div>'
-    +'<div style="margin-top:8px;"><a href="#" onclick="closeCheckin();return false;" style="font-size:12px;color:#8a7d6c;text-decoration:none;">'+_ilct('skip')+'</a></div>';
+    +'<span style="font-size:12px;color:#6b5f4e;margin-right:6px;">'+_ilct('a')+'</span>'+dots
+    +'<span style="font-size:12px;color:#6b5f4e;margin-left:6px;">'+_ilct('b')+'</span></div>'
+    +'<div style="margin-top:8px;"><a href="#" onclick="closeCheckin();return false;" style="font-size:12px;color:#6b5f4e;text-decoration:none;">'+_ilct('skip')+'</a></div>';
   document.body.appendChild(wrap); _ilCheckinLast=Date.now();
 }
 function ilCheckinPick(v){ try{ if(window.ATT) ATT.report(v); }catch(e){}
@@ -2757,7 +2799,7 @@ function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAncho
   ov.style.cssText='position:fixed;inset:0;z-index:9500;opacity:0;transition:opacity 1.2s ease;overflow:hidden;'
     +'background:radial-gradient(60% 60% at 50% 42%,#2a1d12 0%,#1c140d 55%,#140e09 100%);'
     +'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
-  ov.innerHTML='<canvas id="il-anchor-c" style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>'
+  ov.innerHTML='<canvas id="il-anchor-c" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>'
     +'<div id="il-anchor-w" style="position:absolute;left:0;right:0;top:42%;transform:translateY(-50%);text-align:center;'
     +'font-size:28px;color:#f3e9dc;opacity:0;pointer-events:none;text-shadow:0 2px 20px rgba(0,0,0,.6);"></div>'
     +'<div style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#a8917c;pointer-events:none;">'+A.hint+'</div>'
@@ -2766,10 +2808,24 @@ function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAncho
     +'padding:9px 18px;font-size:13px;cursor:pointer;">'+A.close+'</button>';
   document.body.appendChild(ov);
   document.getElementById('il-anchor-x').addEventListener('click', function(ev){ ev.stopPropagation(); hideAnchor(); });
+  // Keyboard path: Enter or Space taps the light (same rhythm logic as touch);
+  // Escape closes. The close button receives focus so the overlay never traps.
+  ov._key = function(ev){
+    if (ev.key === 'Escape'){ ev.preventDefault(); hideAnchor(); return; }
+    if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar'){
+      if (document.activeElement && document.activeElement.id === 'il-anchor-x') return;
+      ev.preventDefault();
+      ov.dispatchEvent(new Event('pointerdown'));
+    }
+  };
+  document.addEventListener('keydown', ov._key);
+  try { document.getElementById('il-anchor-x').focus({preventScroll:true}); } catch(e){}
   requestAnimationFrame(function(){ ov.style.opacity=1; });
   ilAnchorRun(ov, A);
 }
-function hideAnchor(){ var o=document.getElementById('il-anchor'); if(o){ o._stop=true; try{o.remove();}catch(e){} } _ilAnchorLast=Date.now(); }
+function hideAnchor(){ var o=document.getElementById('il-anchor'); if(o){ o._stop=true;
+  try{ if(o._key) document.removeEventListener('keydown', o._key); }catch(e){}
+  try{o.remove();}catch(e){} } _ilAnchorLast=Date.now(); }
 function ilAnchorRun(ov, A){
   var c=ov.querySelector('#il-anchor-c'), ctx=c.getContext('2d'), wordEl=ov.querySelector('#il-anchor-w');
   var DPR=Math.min(2,window.devicePixelRatio||1), W=0,H=0;
@@ -2956,6 +3012,15 @@ function startPresence(){
   var bloom = document.querySelector("#il-presence .il-bloom");
   var vig = document.querySelector("#il-presence .il-vignette");
   if (!bloom || !vig) return;
+  // prefers-reduced-motion: the presence becomes a still, gentle glow —
+  // present but not breathing, no frame loop at all.
+  try {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      bloom.style.opacity = "0.20";
+      bloom.style.transform = "translate(-50%,-50%) scale(1)";
+      return;
+    }
+  } catch(e){}
   _presStart = performance.now();
   function frame(now){
     // ease our display values toward the live read (which the adaptive loop keeps fresh)
@@ -3515,6 +3580,8 @@ function toggleMute(){
   userMuted = !userMuted;
   const b = document.getElementById('mute-btn');
   if (b) b.innerHTML = userMuted ? '&#128263;' : '&#128266;';
+  if (b){ b.setAttribute('aria-pressed', userMuted ? 'true' : 'false');
+    b.setAttribute('aria-label', userMuted ? 'Unmute music' : 'Mute music'); }
   ['ambient-a','ambient-b'].forEach(id=>{ const d=document.getElementById(id); if(d) d.volume = 0; });
   if (!userMuted && !_duckActive){
     const d = (typeof getActiveDeck === 'function' && getActiveDeck()) || document.getElementById('ambient-a');
@@ -3602,10 +3669,11 @@ function showCalmScale(phase){
   card.style.cssText = 'position:fixed;top:206px;right:18px;z-index:60;max-width:200px;'
     + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 16px;'
     + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
+  var samNames = ['Very distressed','Uneasy','In between','Okay','Calm'];
   card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">How are you feeling right now? (tap one, or ignore me)</div>'
-    + '<div style="font-size:30px;letter-spacing:14px;cursor:pointer;">'
+    + '<div style="font-size:30px;letter-spacing:14px;">'
     + ['&#128551;','&#128533;','&#128528;','&#128578;','&#128522;'].map(function(f,i){
-        return '<span data-v="'+(i+1)+'" style="cursor:pointer;">'+f+'</span>';
+        return '<button type="button" data-v="'+(i+1)+'" aria-label="'+samNames[i]+'" style="cursor:pointer;background:none;border:0;padding:0;font-size:inherit;letter-spacing:inherit;">'+f+'</button>';
       }).join('')
     + '</div>';
   card.addEventListener('click', function(ev){
@@ -4549,7 +4617,7 @@ async function doSaveStory(){
     if (d.status === 'ok'){
       if (offer) offer.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:8px;">Saved. This is your return code \u2014 keep it somewhere safe:</div>'
         + '<div style="font-size:22px;font-weight:800;letter-spacing:1px;color:#1e3a5c;margin:6px 0;">' + d.code + '</div>'
-        + '<div style="font-size:12px;color:#9a8778;margin-bottom:10px;">Only this code can reopen your story \u2014 not even we can read it without the code.</div>'
+        + '<div style="font-size:12px;color:#736049;margin-bottom:10px;">Only this code can reopen your story \u2014 not even we can read it without the code.</div>'
         + '<button onclick="copyReturnCode(this)" data-code="' + d.code + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">Copy code</button>'
         + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">Done</button>';
     } else if (offer){ offer.querySelector('div').textContent = 'There was nothing saved yet \u2014 share a little first.'; }
@@ -4561,8 +4629,8 @@ function openResume(){
   box.style.cssText = 'position:fixed;inset:0;z-index:95;background:rgba(10,18,30,0.75);display:flex;align-items:center;justify-content:center;padding:20px;';
   box.innerHTML = '<div style="background:#fff;border-radius:18px;padding:26px;max-width:360px;width:100%;font-family:Arial;text-align:center;">'
     + '<h3 style="margin:0 0 6px;color:#1e3a5c;">Continue your story</h3>'
-    + '<p style="font-size:13px;color:#9a8778;margin:0 0 16px;">Enter the return code you saved last time.</p>'
-    + '<input id="resume-code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd1c8;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
+    + '<p style="font-size:13px;color:#736049;margin:0 0 16px;">Enter the return code you saved last time.</p>'
+    + '<input id="resume-code" aria-label="Your return code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd1c8;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
     + '<div id="resume-msg" style="font-size:13px;color:#c0564e;min-height:18px;margin:8px 0;"></div>'
     + '<button onclick="doResume()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;">Continue</button> '
     + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
@@ -4862,7 +4930,7 @@ function appendExchange(thread, reply, question, safetyHtml) {
   replyBox.className = 'reply-box';
   replyBox.style.cssText = 'margin-top:16px;';
   replyBox.innerHTML = `
-    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="Take your time... or tap Speak (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
+    <textarea id="conv-answer" class="story-input" style="min-height:80px;" aria-label="Take your time... or tap Speak (press Enter to send)" placeholder="Take your time... or tap Speak (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="story-send" onclick="continueConversation()">Reply</button>
       <button class="story-mic" type="button" onclick="startVoiceCapture()">&#127908; Speak</button>
@@ -5113,6 +5181,35 @@ async function continueInnerLight() { return continueConversation(); }
   canvas.addEventListener('mousemove', move);
   canvas.addEventListener('touchstart', press, {passive:false});
   canvas.addEventListener('touchmove', move, {passive:false});
+  // Keyboard path: a virtual touch point moved with the arrow keys; Enter or
+  // Space presses it — same light, same tones, no pointer needed.
+  let kx = null, ky = null;
+  function kbTouch(playTone){
+    if (kx === null){ kx = W/2; ky = H/2; }
+    kx = Math.max(8, Math.min(W-8, kx)); ky = Math.max(8, Math.min(H-8, ky));
+    addRipple(kx, ky);
+    if (playTone){
+      if (calmMode === 'call'){ callAnswer(kx, ky); }
+      else if (calmMode === 'trace'){ traceMove(kx, ky); }
+      else { tone(kx, ky); }
+    }
+    activity();
+  }
+  canvas.addEventListener('keydown', function(e){
+    const step = 26;
+    if (e.key === 'ArrowLeft'){ if (kx === null){ kx = W/2; ky = H/2; } kx -= step; }
+    else if (e.key === 'ArrowRight'){ if (kx === null){ kx = W/2; ky = H/2; } kx += step; }
+    else if (e.key === 'ArrowUp'){ if (kx === null){ kx = W/2; ky = H/2; } ky -= step; }
+    else if (e.key === 'ArrowDown'){ if (kx === null){ kx = W/2; ky = H/2; } ky += step; }
+    else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); kbTouch(true); return; }
+    else { return; }
+    e.preventDefault();
+    const now = performance.now();
+    const playNow = (calmMode === 'trace') || (now - lastTone > 130);
+    if (playNow && calmMode === 'anchor') lastTone = now;
+    kbTouch(playNow);
+  });
+  canvas.addEventListener('blur', function(){ if (calmMode === 'trace') traceRelease(); });
 
   let calmRAF = null;
   let calmIdleSince = performance.now();
@@ -5791,6 +5888,31 @@ def index():
     return render_template_string(PUBLIC_PAGE)
 
 
+@app.route("/manifest.json")
+def manifest_json():
+    # PWA manifest: exists ONLY so that a person who chooses "Add to Home
+    # Screen" gets a beautiful, full-screen InnerLight with a proper icon.
+    # No install prompts, no notifications, no engagement machinery — ever.
+    from flask import jsonify
+    return jsonify({
+        "name": "InnerLight",
+        "short_name": "InnerLight",
+        "description": "A calm, private place to wait, with a gentle bridge to real human help.",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#faf5ec",
+        "theme_color": "#2a1e14",
+        "icons": [
+            {"src": "/scenes/app_icon_192.png", "sizes": "192x192",
+             "type": "image/png", "purpose": "any"},
+            {"src": "/scenes/app_icon_512.png", "sizes": "512x512",
+             "type": "image/png", "purpose": "any"},
+            {"src": "/scenes/app_icon_512.png", "sizes": "512x512",
+             "type": "image/png", "purpose": "maskable"},
+        ],
+    })
+
+
 # ---------------------------------------------------------------------------
 # INFORMATION PAGES — About, How It Works, Privacy, Contact.
 # For a mental-health product, people won't trust it without knowing who is
@@ -5811,9 +5933,9 @@ def _load_page_i18n():
 _load_page_i18n()
 
 _INFO_CHROME = {
-    "en": {"back": "&larr; Back to InnerLight", "about": "About", "how": "How it works", "research": "Research", "safety": "Safety &amp; crisis protocol", "privacy": "Your privacy", "contact": "Contact"},
-    "es": {"back": "&larr; Volver a InnerLight", "about": "Acerca de", "how": "C&oacute;mo funciona", "research": "Investigaci&oacute;n", "safety": "Seguridad y protocolo de crisis", "privacy": "Tu privacidad", "contact": "Contacto"},
-    "zh": {"back": "&larr; 返回 InnerLight", "about": "关于", "how": "如何运作", "research": "研究", "safety": "安全与危机处理协议", "privacy": "你的隐私", "contact": "联系我们"},
+    "en": {"back": "&larr; Back to InnerLight", "about": "About", "how": "How it works", "research": "Research", "safety": "Safety &amp; crisis protocol", "privacy": "Your privacy", "contact": "Contact", "resources": "Real help", "stories": "How a visit goes", "updates": "Updates"},
+    "es": {"back": "&larr; Volver a InnerLight", "about": "Acerca de", "how": "C&oacute;mo funciona", "research": "Investigaci&oacute;n", "safety": "Seguridad y protocolo de crisis", "privacy": "Tu privacidad", "contact": "Contacto", "resources": "Ayuda real", "stories": "C&oacute;mo es una visita", "updates": "Novedades"},
+    "zh": {"back": "&larr; 返回 InnerLight", "about": "关于", "how": "如何运作", "research": "研究", "safety": "安全与危机处理协议", "privacy": "你的隐私", "contact": "联系我们", "resources": "真实的帮助", "stories": "一次访问的样子", "updates": "最新进展"},
 }
 
 def _info_lang():
@@ -5831,6 +5953,10 @@ def _info_page(title, inner, page_key=None):
     return render_template_string("""<!DOCTYPE html>
 <html lang="{{ lang }}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#faf5ec">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/scenes/app_icon_192.png">
+<link rel="apple-touch-icon" href="/scenes/app_icon_192.png">
 <title>{{ title }} &mdash; InnerLight</title>
 <meta name="description" content="{{ title }} — InnerLight, a free, private, calming companion for the gap between reaching out and real human help arriving. Not therapy — a bridge. Adults 18+.">
 <meta property="og:title" content="{{ title }} — InnerLight">
@@ -5839,8 +5965,11 @@ def _info_page(title, inner, page_key=None):
 <meta property="og:image" content="https://getinnerlight.com/scenes/photo_2_sunset_trees.jpg">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root{ --ink:#2b2620; --body:#4a4235; --muted:#8a7d6c; --blue:#33567c; --blue-d:#25405e;
+  :root{ --ink:#2b2620; --body:#4a4235; --muted:#6b5f4e; --blue:#33567c; --blue-d:#25405e;
          --amber:#c56a2c; --amber-d:#a9531f; --line:#e7dccc; }
+  :focus-visible { outline:3px solid #b7791f; outline-offset:2px; border-radius:4px;
+                   box-shadow:0 0 0 6px rgba(255,217,160,0.5); }
+  @media (prefers-reduced-motion: reduce){ .breathe { animation:none; } }
   body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:var(--body);
          background:linear-gradient(168deg,#eef2f6 0%,#f3ece0 55%,#f7efe4 100%);
          line-height:1.75; min-height:100vh; -webkit-font-smoothing:antialiased; }
@@ -5859,7 +5988,7 @@ def _info_page(title, inner, page_key=None):
   p { font-size:16.5px; color:var(--body); margin-bottom:15px; }
   .lead { font-size:19px; color:#3a3428; margin-bottom:22px; line-height:1.6; }
   ul { margin:0 0 15px 22px; } li { font-size:16px; color:var(--body); margin-bottom:8px; }
-  .cite { font-size:12.5px; color:#5f7d8c; margin:2px 0 10px; padding-left:12px; border-left:2px solid var(--line); }
+  .cite { font-size:12.5px; color:#4a6472; margin:2px 0 10px; padding-left:12px; border-left:2px solid var(--line); }
   .soft { background:rgba(255,255,255,.62); border:1px solid var(--line); border-left:4px solid var(--amber);
           border-radius:0 14px 14px 0; padding:18px 22px; margin:22px 0; }
   .soft p { margin:0; }
@@ -5870,7 +5999,7 @@ def _info_page(title, inner, page_key=None):
   .back { display:inline-block; margin-top:38px; color:var(--muted); text-decoration:none; font-size:15px;
           border-bottom:1px solid transparent; }
   .back:hover { border-bottom-color:var(--amber); }
-  .footer { margin-top:46px; padding-top:20px; border-top:1px solid var(--line); font-size:13px; color:#a79a88; text-align:center; }
+  .footer { margin-top:46px; padding-top:20px; border-top:1px solid var(--line); font-size:13px; color:#746753; text-align:center; }
   .footer a { color:var(--blue); text-decoration:none; margin:0 7px; }
 </style></head><body>
   <div class="wrap">
@@ -5883,21 +6012,27 @@ def _info_page(title, inner, page_key=None):
     </div>
     <div class="orb breathe" aria-hidden="true"></div>
     <div class="brand">InnerLight</div>
+    <main>
     {{ inner|safe }}
+    </main>
     <a class="back" href="/">{{ back|safe }}</a>
     <div class="footer">
       <a href="/about{{ q }}">{{ c_about|safe }}</a>&middot;
       <a href="/how-it-works{{ q }}">{{ c_how|safe }}</a>&middot;
+      <a href="/stories{{ q }}">{{ c_stories|safe }}</a>&middot;
+      <a href="/resources{{ q }}">{{ c_resources|safe }}</a>&middot;
       <a href="/research{{ q }}">{{ c_research|safe }}</a>&middot;
       <a href="/safety{{ q }}">{{ c_safety|safe }}</a>&middot;
       <a href="/privacy{{ q }}">{{ c_privacy|safe }}</a>&middot;
+      <a href="/updates{{ q }}">{{ c_updates|safe }}</a>&middot;
       <a href="/contact{{ q }}">{{ c_contact|safe }}</a>
       <div style="margin-top:10px;">&copy; 2026 God's Love For Us LLC &middot; Created by Toshay S. Zeigler</div>
     </div>
   </div>
 </body></html>""", title=title, inner=inner, lang=lang, q=_q, back=_ch["back"],
     c_about=_ch["about"], c_how=_ch["how"], c_research=_ch["research"], c_safety=_ch["safety"],
-    c_privacy=_ch["privacy"], c_contact=_ch["contact"])
+    c_privacy=_ch["privacy"], c_contact=_ch["contact"], c_resources=_ch["resources"],
+    c_stories=_ch["stories"], c_updates=_ch["updates"])
 
 
 @app.route("/about")
@@ -5930,8 +6065,22 @@ def page_about():
     <h2>Our standards and ethics</h2>
     <p>We hold ourselves to explicit, published rules: technology should <strong>strengthen</strong> human decision-making, not replace it; a mental-health tool should <strong>complement</strong> human care, never pretend to be it; privacy is the foundation, not a feature to trade away; and no one reaching out for help should have their first response be a waitlist. InnerLight never diagnoses, never names a clinical condition, never practices medicine or law, and uses <strong>no engagement tricks</strong> &mdash; no streaks, no badges, no pressure to stay. We operate strictly within the law, and we will report results honestly, including negative ones.</p>
 
-    <h2>For clinicians, researchers, and partners</h2>
-    <p>We are actively looking for people who can help us sharpen and validate this work &mdash; clinicians, crisis-service providers, researchers, and technologists. We do not claim InnerLight is proven; it is built on established principles and is itself untested, and independent evaluation is exactly what we want. Our methods, technologies, and honest limitations are documented for review on the <a href="/research">Research &amp; Methods</a> page, our privacy and data handling on the <a href="/privacy">Your privacy</a> page, and our crisis protocol on the <a href="/safety">Safety</a> page. If you can help &mdash; or challenge us &mdash; please <a href="/contact">get in touch</a>.</p>
+    <h2 id="partners">For clinicians, researchers, and crisis organizations</h2>
+    <p>We are actively looking for people who can help us sharpen and validate this work &mdash; clinicians, crisis-service providers, researchers, and technologists. We do not claim InnerLight is proven; it is built on established principles and is itself untested, and independent evaluation is exactly what we want. To be concrete about it:</p>
+    <h3>What we are looking for</h3>
+    <ul>
+      <li><strong>Pilot partners</strong> &mdash; clinics, crisis services, legal-aid offices, and community organizations willing to try InnerLight with the adults they serve, on their terms, and tell us plainly what works and what does not.</li>
+      <li><strong>Independent evaluation</strong> &mdash; researchers willing to design and run a real study of whether this tool helps, with full access to our methods and the standing commitment that we publish the results either way, including negative ones.</li>
+      <li><strong>Challenge and criticism</strong> &mdash; if you believe part of this design is wrong, unsafe, or overstated, we want that conversation most of all. A hard question now is worth far more to us than a compliment later.</li>
+    </ul>
+    <h3>What we offer in return</h3>
+    <ul>
+      <li><strong>Full methods transparency</strong> &mdash; every technique, algorithm, and honest limitation is documented on the <a href="/research">Research &amp; Methods</a> page, with citations, and we will answer any question about how the system works.</li>
+      <li><strong>A published safety protocol</strong> &mdash; exactly what InnerLight does when someone may be in danger is written out, step by step, on the <a href="/safety">Safety &amp; crisis protocol</a> page.</li>
+      <li><strong>Data-handling documentation</strong> &mdash; what is stored, what is never stored, and how encryption works is on the <a href="/privacy">Your privacy</a> and <a href="/research">Research</a> pages, in both plain and technical language.</li>
+    </ul>
+    <h3>How to reach us</h3>
+    <p>Write to us through the <a href="/contact">contact page</a> &mdash; it reaches the founder directly, and a message that challenges us is as welcome as one that offers help.</p>
 
     <div class="soft">
       <p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a place to be heard and steadied, and a bridge to the right human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p>
@@ -6099,24 +6248,24 @@ def page_research():
       <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#714c2e"/></marker></defs>
       <rect x="8" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#c59771" stroke-width="1.5"/>
       <text x="78" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#453127">Your return code</text>
-      <text x="78" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">(only you have it)</text>
+      <text x="78" y="90" text-anchor="middle" font-size="11" fill="#4a6472">(only you have it)</text>
       <line x1="150" y1="75" x2="212" y2="75" stroke="#714c2e" stroke-width="2" marker-end="url(#ah)"/>
       <text x="181" y="40" text-anchor="middle" font-size="10.5" fill="#C56A2C" font-weight="700">390,000 rounds</text>
       <text x="181" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">PBKDF2</text>
       <rect x="214" y="45" width="140" height="60" rx="10" fill="#fff" stroke="#c59771" stroke-width="1.5"/>
       <text x="284" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#453127">256-bit key</text>
-      <text x="284" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">never stored</text>
+      <text x="284" y="90" text-anchor="middle" font-size="11" fill="#4a6472">never stored</text>
       <line x1="356" y1="75" x2="418" y2="75" stroke="#714c2e" stroke-width="2" marker-end="url(#ah)"/>
       <text x="387" y="40" text-anchor="middle" font-size="10.5" fill="#C56A2C" font-weight="700">AES-256-GCM</text>
       <text x="387" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">+ random nonce</text>
       <rect x="420" y="45" width="150" height="60" rx="10" fill="#fff" stroke="#c59771" stroke-width="1.5"/>
       <text x="495" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#453127">Your words, locked</text>
-      <text x="495" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">reads as noise</text>
+      <text x="495" y="90" text-anchor="middle" font-size="11" fill="#4a6472">reads as noise</text>
       <line x1="572" y1="75" x2="628" y2="75" stroke="#714c2e" stroke-width="2" marker-end="url(#ah)"/>
       <rect x="630" y="45" width="82" height="60" rx="10" fill="#453127"/>
       <text x="671" y="72" text-anchor="middle" font-size="20">&#128274;</text>
       <text x="671" y="94" text-anchor="middle" font-size="10" fill="#e0d7cf">stored</text>
-      <text x="360" y="132" text-anchor="middle" font-size="11" fill="#5f7d8c">Without your code, the key cannot be rebuilt &mdash; so no one, not even InnerLight, can reverse this.</text>
+      <text x="360" y="132" text-anchor="middle" font-size="11" fill="#4a6472">Without your code, the key cannot be rebuilt &mdash; so no one, not even InnerLight, can reverse this.</text>
     </svg>
     </div>
 
@@ -6168,24 +6317,24 @@ def page_how():
       <defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#33567c"/></marker></defs>
       <rect x="8" y="45" width="140" height="60" rx="12" fill="#fff" stroke="#6f97c0" stroke-width="1.5"/>
       <text x="78" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2620">Your return code</text>
-      <text x="78" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">(only you have it)</text>
+      <text x="78" y="90" text-anchor="middle" font-size="11" fill="#4a6472">(only you have it)</text>
       <line x1="150" y1="75" x2="212" y2="75" stroke="#33567c" stroke-width="2" marker-end="url(#ah2)"/>
       <text x="181" y="40" text-anchor="middle" font-size="10.5" fill="#a9531f" font-weight="700">390,000 rounds</text>
       <text x="181" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">PBKDF2</text>
       <rect x="214" y="45" width="140" height="60" rx="12" fill="#fff" stroke="#6f97c0" stroke-width="1.5"/>
       <text x="284" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2620">256-bit key</text>
-      <text x="284" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">never stored</text>
+      <text x="284" y="90" text-anchor="middle" font-size="11" fill="#4a6472">never stored</text>
       <line x1="356" y1="75" x2="418" y2="75" stroke="#33567c" stroke-width="2" marker-end="url(#ah2)"/>
       <text x="387" y="40" text-anchor="middle" font-size="10.5" fill="#a9531f" font-weight="700">AES-256-GCM</text>
       <text x="387" y="66" text-anchor="middle" font-size="9.5" fill="#8a929a">+ random nonce</text>
       <rect x="420" y="45" width="150" height="60" rx="12" fill="#fff" stroke="#6f97c0" stroke-width="1.5"/>
       <text x="495" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2620">Your words, locked</text>
-      <text x="495" y="90" text-anchor="middle" font-size="11" fill="#5f7d8c">reads as noise</text>
+      <text x="495" y="90" text-anchor="middle" font-size="11" fill="#4a6472">reads as noise</text>
       <line x1="572" y1="75" x2="628" y2="75" stroke="#33567c" stroke-width="2" marker-end="url(#ah2)"/>
       <rect x="630" y="45" width="82" height="60" rx="12" fill="#2b2620"/>
       <text x="671" y="72" text-anchor="middle" font-size="20">&#128274;</text>
       <text x="671" y="94" text-anchor="middle" font-size="10" fill="#e0d7cf">stored</text>
-      <text x="360" y="132" text-anchor="middle" font-size="11" fill="#5f7d8c">Without your code, the key cannot be rebuilt &mdash; so no one, not even InnerLight, can reverse this.</text>
+      <text x="360" y="132" text-anchor="middle" font-size="11" fill="#4a6472">Without your code, the key cannot be rebuilt &mdash; so no one, not even InnerLight, can reverse this.</text>
     </svg>
     </div>
 
@@ -6247,8 +6396,8 @@ def robots_txt():
 def sitemap_xml():
     """A simple sitemap of every public page, so the site can actually be
     found by the caregivers and crisis workers searching for tools like it."""
-    pages = ["/", "/about", "/how-it-works", "/research", "/safety",
-             "/privacy", "/contact"]
+    pages = ["/", "/about", "/how-it-works", "/stories", "/resources",
+             "/research", "/safety", "/privacy", "/updates", "/contact"]
     urls = "".join(
         '<url><loc>https://getinnerlight.com%s</loc></url>' % p for p in pages)
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
@@ -6335,6 +6484,230 @@ def page_safety():
     </div>
     """
     return _info_page("Safety & crisis protocol", inner, "safety")
+
+
+@app.route("/resources")
+def page_resources():
+    """Real help, by need. A plain directory of established national services —
+    who they are, what they actually do, how to reach them. Every number here
+    is a nationally known service; where we are not certain of a number, we
+    give the organization and its website instead. Getting people to real
+    human help is the whole point of InnerLight (Immutable Principle 1)."""
+    inner = """
+    <h1>Real help, by need</h1>
+    <p class="lead">InnerLight exists to get you to real people. This page is a plain list of established services &mdash; who they are, what they actually do, and how to reach them. All are free or low-cost unless noted.</p>
+
+    <div class="soft"><p style="margin:0;">We list these because getting people to real human help is the whole point of InnerLight. None of these organizations pays to be here, and we are not affiliated with any of them. Numbers can change; each organization&rsquo;s own website is always the surest path.</p></div>
+
+    <h2>If you are in danger right now</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">988 Suicide &amp; Crisis Lifeline</h3>
+      <p style="margin-bottom:0;">Trained crisis counselors who will talk with anyone in suicidal crisis or overwhelming distress &mdash; free, confidential, 24/7. <strong>Call or text 988</strong>, or chat at <a href="https://988lifeline.org" rel="noopener">988lifeline.org</a>. If a life is in immediate danger, call <strong>911</strong>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Crisis Text Line</h3>
+      <p style="margin-bottom:0;">Real, trained crisis counselors over text message, for any kind of crisis &mdash; free, 24/7. <strong>Text HOME to 741741</strong>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Veterans Crisis Line</h3>
+      <p style="margin-bottom:0;">Crisis support from responders who understand military life &mdash; for veterans, service members, and the people who love them. You do not need to be enrolled in VA care. <strong>Call 988, then press 1</strong>, or text <strong>838255</strong>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">The Trevor Project</h3>
+      <p style="margin-bottom:0;">Crisis counselors for LGBTQ+ young people, around the clock. <strong>Call 1-866-488-7386</strong>, or text and chat through <a href="https://www.thetrevorproject.org" rel="noopener">thetrevorproject.org</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Trans Lifeline</h3>
+      <p style="margin-bottom:0;">A peer-support hotline run by and for trans people &mdash; someone who understands, no judgment, no forced intervention. <strong>Call 877-565-8860</strong>.</p>
+    </div>
+
+    <h2>Mental health &amp; substance support</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">SAMHSA National Helpline</h3>
+      <p style="margin-bottom:0;">The federal government&rsquo;s free, confidential, 24/7 referral line for mental-health and substance-use treatment &mdash; they connect you to local programs, support groups, and community organizations. <strong>Call 1-800-662-4357</strong> (1-800-662-HELP).</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">FindTreatment.gov</h3>
+      <p style="margin-bottom:0;">The federal directory of licensed mental-health and substance-use treatment facilities, searchable by location. <a href="https://findtreatment.gov" rel="noopener">findtreatment.gov</a> &mdash; it is the same source InnerLight&rsquo;s own nearby-help finder uses.</p>
+    </div>
+
+    <h2>Housing &amp; eviction</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">211</h3>
+      <p style="margin-bottom:0;">A nationwide line, run through United Way, that connects you with local help of nearly every kind &mdash; emergency shelter, rent and utility assistance, food, and more. <strong>Dial 211</strong>, or search at <a href="https://www.211.org" rel="noopener">211.org</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">HUD Housing Counseling</h3>
+      <p style="margin-bottom:0;">The U.S. Department of Housing and Urban Development connects you to approved housing counselors who help with eviction, foreclosure, renting, and homelessness &mdash; free or low-cost. <strong>Call 800-569-4287</strong>, or find a counselor at <a href="https://www.hud.gov" rel="noopener">hud.gov</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">National Coalition for the Homeless</h3>
+      <p style="margin-bottom:0;">An advocacy organization with practical directories of local shelters and services for people facing homelessness. <a href="https://nationalhomeless.org" rel="noopener">nationalhomeless.org</a>.</p>
+    </div>
+
+    <h2>Legal help</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Legal aid &mdash; the LSC finder</h3>
+      <p style="margin-bottom:0;">The Legal Services Corporation funds free civil legal aid offices across the country &mdash; help with eviction, benefits, family law, debt, and more for people with low incomes. Find your local office at <a href="https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help" rel="noopener">lsc.gov</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">National Immigration Legal Services Directory</h3>
+      <p style="margin-bottom:0;">A directory of free and low-cost immigration legal help, searchable by state and county, maintained by the Immigration Advocates Network. <a href="https://www.immigrationadvocates.org/legaldirectory/" rel="noopener">immigrationadvocates.org/legaldirectory</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Your state bar association</h3>
+      <p style="margin-bottom:0;">Most state bar associations run free lawyer-referral services and can point you to pro bono help. Search your state&rsquo;s name plus &ldquo;bar association lawyer referral&rdquo; &mdash; the American Bar Association keeps a directory at <a href="https://www.americanbar.org" rel="noopener">americanbar.org</a>.</p>
+    </div>
+
+    <h2>Food &amp; essentials</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Feeding America</h3>
+      <p style="margin-bottom:0;">The national network of food banks &mdash; their finder shows the food bank and pantries nearest you, no paperwork needed to ask. <a href="https://www.feedingamerica.org" rel="noopener">feedingamerica.org</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">211 (again, on purpose)</h3>
+      <p style="margin-bottom:0;">For food, diapers, clothing, utility help, and almost any essential need, 211 remains the fastest local door. <strong>Dial 211</strong>.</p>
+    </div>
+
+    <h2>Domestic violence</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">National Domestic Violence Hotline</h3>
+      <p style="margin-bottom:0;">Advocates who listen, help you plan for safety, and connect you to local shelters and services &mdash; confidential, 24/7, in many languages. <strong>Call 800-799-7233</strong>, <strong>text START to 88788</strong>, or chat at <a href="https://www.thehotline.org" rel="noopener">thehotline.org</a>. If it is not safe to talk, the website explains safer ways to reach out.</p>
+    </div>
+
+    <h2>Veterans</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Veterans Crisis Line</h3>
+      <p style="margin-bottom:0;">Listed above and worth repeating: <strong>call 988 and press 1</strong>, or text <strong>838255</strong> &mdash; 24/7, whether or not you are enrolled in VA care. <a href="https://www.veteranscrisisline.net" rel="noopener">veteranscrisisline.net</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">U.S. Department of Veterans Affairs</h3>
+      <p style="margin-bottom:0;">Health care, mental-health services, benefits, and housing help for veterans &mdash; including same-day mental-health care at many VA facilities. <a href="https://www.va.gov" rel="noopener">va.gov</a>.</p>
+    </div>
+
+    <h2>Older adults &amp; caregivers</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Eldercare Locator</h3>
+      <p style="margin-bottom:0;">A free federal service that connects older adults and caregivers to local aging services &mdash; meals, in-home help, transportation, caregiver support, and reporting concerns about an older person&rsquo;s safety. <strong>Call 800-677-1116</strong>, or search at <a href="https://eldercare.acl.gov" rel="noopener">eldercare.acl.gov</a>.</p>
+    </div>
+
+    <h2>Disability rights</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">ADA Information Line</h3>
+      <p style="margin-bottom:0;">The U.S. Department of Justice answers questions about rights under the Americans with Disabilities Act &mdash; work, housing, services, and access. <strong>Call 800-514-0301</strong>, or read at <a href="https://www.ada.gov" rel="noopener">ada.gov</a>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">National Disability Rights Network</h3>
+      <p style="margin-bottom:0;">Every state has a federally mandated protection-and-advocacy agency that defends the rights of people with disabilities; this network helps you find yours. <a href="https://www.ndrn.org" rel="noopener">ndrn.org</a>.</p>
+    </div>
+
+    <div class="soft">
+      <p style="margin:0;">If your need is not listed here, <strong>211</strong> is the best first call for almost anything local, and a session with InnerLight can help you find licensed mental-health care near you. And always: if you are in immediate danger, call or text <strong>988</strong>, or call <strong>911</strong>.</p>
+    </div>
+    """
+    return _info_page("Real help, by need", inner, "resources")
+
+
+@app.route("/stories")
+def page_stories():
+    """How a visit goes — illustrative, clearly-labeled hypothetical
+    walkthroughs. We have no published user studies and we say so plainly;
+    these compositions show only what the program is actually built to do,
+    and every one ends in a handoff to humans (Immutable Principle 1)."""
+    inner = """
+    <h1>How a visit goes</h1>
+    <p class="lead">Four short walkthroughs of what actually happens in an InnerLight session &mdash; from the moment someone arrives to the moment we hand them to real people.</p>
+
+    <div class="soft"><p style="margin:0;"><strong>Please read this first:</strong> the four visits below are <strong>illustrative compositions, not real user accounts</strong>. We wrote them to show how a session works; no real person&rsquo;s story appears on this page. InnerLight has no published user studies yet &mdash; we say that plainly rather than imply otherwise. What <em>is</em> real is the behavior described: this is what the program is built to do, every time.</p></div>
+
+    <h2>Three weeks until the first appointment</h2>
+    <p><strong>What he arrives carrying:</strong> a man finally called a therapist &mdash; the hardest call of his year &mdash; and was given an appointment three weeks out. Tonight the wait feels longer than he can hold, and it is 11 p.m., and there is no one he wants to wake.</p>
+    <p><strong>What InnerLight does:</strong> the page opens into a quiet evening scene &mdash; the light matches the hour, soft instrumental music is already playing, and nothing asks him for anything. He starts typing, stops, starts again; nothing interrupts him. When he is ready, the companion reflects back what he actually said &mdash; it never tells him what he is feeling, and it never uses a canned line. The 988 path stays visible the whole time, quietly, whether or not he ever needs it.</p>
+    <p><strong>Where it hands him off:</strong> his own appointment is the destination, and InnerLight treats it that way &mdash; it helps him get through tonight, mentions that the SAMHSA helpline (1-800-662-4357) exists for the days in between, and lets him go. The therapist is the help. InnerLight is the wait made survivable.</p>
+
+    <h2>2 a.m., an eviction notice on the table</h2>
+    <p><strong>What she arrives carrying:</strong> a woman who cannot sleep. The notice came today. She types only, &ldquo;my landlord is ending my lease,&rdquo; because saying more feels like making it real.</p>
+    <p><strong>What InnerLight does:</strong> the arrival is dark and quiet like the hour, the music low. Her short sentence is not waved past and not treated as an alarm &mdash; it gets one caring, specific question that opens the door the rest of the way, because shorthand is how frightened people test whether it is safe to say more. She tells it in pieces. The companion keeps pace with her state without ever labeling it, and never asks her to do anything for the technology&rsquo;s sake.</p>
+    <p><strong>Where it hands her off:</strong> to the people who can actually change her situation &mdash; 211 for local housing help, HUD&rsquo;s housing counselors at 800-569-4287, and the legal-aid finder at lsc.gov, because an eviction is a legal event and she may have more rights than the notice implies. She leaves with two calls to make at 9 a.m. Not fixed &mdash; steadier, and pointed at the right doors.</p>
+
+    <h2>A sister who did not come home</h2>
+    <p><strong>What she arrives carrying:</strong> a caregiver whose adult sister &mdash; the one she has looked after for years &mdash; has been missing since morning. She has already called everyone she knows. It is the panic, and under the panic, the guilt.</p>
+    <p><strong>What InnerLight does:</strong> it lets her pour it out without one interruption &mdash; her outpouring is treated as sacred, and no prompt or invitation ever appears while she is writing. It does not pretend it can find her sister, and it does not offer false comfort. It stays present, steady, and honest about what it is.</p>
+    <p><strong>Where it hands her off:</strong> quickly &mdash; to 911 and the local police, because a missing vulnerable adult is exactly what they exist for; and to 988 for <em>her</em>, because the person searching needs holding too. When the phone finally rings, InnerLight&rsquo;s job is already over. It was never the rescuer &mdash; only the company kept while the rescuers worked.</p>
+
+    <h2>Waiting for the VA to call back</h2>
+    <p><strong>What he arrives carrying:</strong> a veteran who did the right thing &mdash; he asked the VA for mental-health support &mdash; and is now in the in-between, waiting for the callback, which is its own kind of exposed.</p>
+    <p><strong>What InnerLight does:</strong> the calm arrival, the music that meets him where he is before easing toward quiet, a companion that listens for what he means and answers him &mdash; him, not a category. It never plays the veteran card back at him with scripted empathy; there are no scripted lines here at all.</p>
+    <p><strong>Where it hands him off:</strong> the Veterans Crisis Line &mdash; 988, press 1, or text 838255 &mdash; sits within reach the entire session, staffed by people who understand military life. When the VA calls back, that call is the point. InnerLight held the space between reaching out and being reached.</p>
+
+    <h2>What all four have in common</h2>
+    <p>No visit ends in InnerLight. Every one ends in a handoff &mdash; a therapist, a counselor, a housing office, a crisis line, a callback &mdash; because we measure success by connection to a human, never by time spent with us. InnerLight helps people survive the wait. The humans do the helping.</p>
+
+    <div class="soft">
+      <p style="margin:0;">InnerLight is a program, not a person, and these walkthroughs are illustrations, not evidence. If you are in immediate danger, call or text <strong>988</strong>, or call <strong>911</strong>.</p>
+    </div>
+    """
+    return _info_page("How a visit goes", inner, "stories")
+
+
+@app.route("/updates")
+def page_updates():
+    """Building in the open — a plain-language changelog of real improvements.
+    Transparency is a founding value; we publish what we change."""
+    inner = """
+    <h1>Building in the open</h1>
+    <p class="lead">We publish what we change, in plain language, because transparency is a founding value. Here is what has actually improved recently &mdash; and what we are working on next.</p>
+
+    <h2>July 2026</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Three languages, spoken and written</h3>
+      <p style="margin-bottom:0;">The whole visitor experience &mdash; the pages, the conversation, and the spoken voice &mdash; now works in English, Spanish, and Chinese, with a language switcher and English as the always-safe fallback.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">A companion that never labels your feelings</h3>
+      <p style="margin-bottom:0;">We rebuilt the way InnerLight reads how a person is doing. It responds to your state without ever announcing it &mdash; no &ldquo;you seem anxious,&rdquo; no scores, no clinical words. It also no longer treats a fast heartbeat as distress, because beats-per-minute is too ambiguous a signal to judge anyone by.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">The arrival now matches the hour</h3>
+      <p style="margin-bottom:0;">Arriving at InnerLight is now a slow, cinematic opening &mdash; and the scene knows what time it is where you are, so a 2 a.m. visit opens into night, not noon.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">A law against scripted lines</h3>
+      <p style="margin-bottom:0;">The founder made it a standing rule: no standardized, pre-written lines in any user conversation, ever. Every response is composed for the person in front of it, because canned comfort is not comfort.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Never more than you can bear</h3>
+      <p style="margin-bottom:0;">We adopted a new founding principle &mdash; Principle 14 &mdash; and then went through the product removing every ask we could: fewer taps, fewer questions, fewer decisions. The program carries the burden; the person is carried.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">No more camera instructions</h3>
+      <p style="margin-bottom:0;">InnerLight no longer tells anyone to lean in, find better light, or adjust themselves for a sensor. If the camera cannot work with you exactly as you are, the technology adapts or quietly steps aside. You are never corrected to make our reading easier.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Music that recovers itself</h3>
+      <p style="margin-bottom:0;">The calming sound now arrives slow and gentle every time, varies between visits instead of repeating the same song, and picks itself back up if the connection stumbles &mdash; without you touching anything.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Backgrounds grown from the founder&rsquo;s own photographs</h3>
+      <p style="margin-bottom:0;">The scenes behind a session are generated from photographs the founder took himself &mdash; real places, real light &mdash; so the ground under a hard night is something true.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">The Watch</h3>
+      <p style="margin-bottom:0;">A private founder&rsquo;s room that shows, in anonymous counts only &mdash; sessions held, music shifts, bridges to a human &mdash; that the program is doing its work. Never words, never identities, and it never scores anyone&rsquo;s distress. It only keeps company.</p>
+    </div>
+
+    <h2>What we are working on next</h2>
+    <ul>
+      <li><strong>Research page translations</strong> &mdash; the Research &amp; Methods page is the last one still English-only; Spanish and Chinese are coming.</li>
+      <li><strong>An accessibility audit</strong> &mdash; a careful pass so that screen readers, low vision, and motor limitations are met with the same gentleness as everything else.</li>
+      <li><strong>The provider network</strong> &mdash; building the vetted, categorized network of clinicians and services that the bridge hands people to, with the scrutiny our principles demand.</li>
+    </ul>
+
+    <div class="soft">
+      <p style="margin:0;">A note on honesty: these are improvements to how InnerLight works, not claims that it works. InnerLight is built on established principles and is itself untested; independent evaluation is what we are seeking, and we will publish the results either way.</p>
+    </div>
+    """
+    return _info_page("Building in the open", inner, "updates")
 
 
 @app.route("/console")
