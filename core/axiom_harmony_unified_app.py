@@ -4638,8 +4638,11 @@ async function sendCheckin() {
   // --- CONVERSATION THREAD (flat, never nests, never stops) ---
   const thread = document.getElementById('conversation-thread');
   const allQ = data.questions || [];
-  const firstQ = allQ.length ? allQ[0] : 'Can you tell me a little more about that?';
-  const warmReply = data.response || 'I hear you.';
+  // FOUNDER DECREE: no canned lines, ever. If there is no question, there is
+  // no question — the reply itself carries the conversation. If the reply is
+  // missing entirely, say honestly what happened instead of faking warmth.
+  const firstQ = allQ.length ? allQ[0] : '';
+  const warmReply = data.response || 'Something interrupted the connection for a moment — please say that again.';
   const safetyBlock = data.needs_immediate_support
     ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">You are not alone. If you need immediate support, you can reach the 988 Suicide and Crisis Lifeline anytime by calling or texting 988. I am staying right here with you.</p>'
     : '';
@@ -4934,7 +4937,8 @@ async function continueConversation() {
   // inside the reply — so we do NOT tack on a separate canned question.
   const rawQ = (data.questions || [])[0] || '';
   const nextQ = rawQ && rawQ.trim() ? rawQ : '';
-  const reply = data.response || 'Thank you for sharing that with me.';
+  // No canned gratitude line — if the reply is missing, be honest about it.
+  const reply = data.response || 'Something interrupted the connection for a moment — please say that again.';
   logTurn('innerlight', reply);
   const safety = data.needs_immediate_support
     ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">You are not alone. The 988 Lifeline is available anytime — call or text 988. I am right here.</p>'
@@ -7163,13 +7167,18 @@ def api_checkin():
 
     threading.Thread(target=_persist_in_background, daemon=True).start()
 
-    # --- PRINCIPLE 13: THE ASYMMETRY OF FAILURE — attempt EVERY time. ---
-    # No response may EVER dead-end. If, for any reason, no follow-up question
-    # was produced, we still leave an open door — silence is never an option.
+    # --- FOUNDER DECREE (Principle 14 spirit): NO STANDARDIZED LINES, EVER. ---
+    # Warmth must come from the actual response to THIS person, never from a
+    # recorded line. People in pain recognize a script instantly, and a script
+    # that repeats kills trust. We never inject canned text into a reply.
+    # Principle 13's open door is structural, not scripted: the input stays
+    # open, and the human bridge (988) is on every response below.
     conv_questions = [q for q in (conv_questions or []) if q and q.strip()]
-    if not conv_questions:
-        conv_questions = ["I'm right here with you. What feels most important to "
-                          "say right now — even a few words is enough."]
+    # ONE question discipline: when the comprehension engine wrote the reply,
+    # its single deeper question is already inside the response text. Never
+    # stack a second question on top of it.
+    if conv_response and "?" in conv_response:
+        conv_questions = []
     # The human bridge is a PERMANENT fixture, present on every single response
     # at every risk level, not something that appears only in an emergency.
     human_help = {

@@ -47,6 +47,11 @@ HOW TO TALK:
 - Keep going, one caring question at a time, building a fuller understanding across the whole conversation: what happened, how long, how it's affecting them, what support they have, what they need most. Aim to genuinely understand before anything else.
 - You may quietly let established clinical frameworks inform WHICH deeper question is most useful next — but NEVER show this, never use clinical labels, never sound like an intake form. It must feel like a caring human conversation.
 
+NO STANDARDIZED LINES — FOUNDER'S LAW (absolute):
+- Never use stock comfort phrases. Banned outright: "I'm right here with you", "I hear you", "Thank you for sharing", "I'm here for you", "You're not alone" as a reflex, "That sounds really hard" as a reflex, or ANY phrase that could be pasted under any other person's message unchanged. If a sentence would fit anyone, it fits no one — delete it and say something that could only be said to THIS person about THIS situation.
+- Never reuse a sentence, opening, or closing you have already used earlier in this conversation. Vary your rhythm, length, and structure naturally, the way a real person does.
+- Warmth must be carried by specificity: name what they actually told you (the missing person, the medication, the eviction date), not by ritual phrases about your presence. Your presence is shown by how precisely you heard them.
+
 PACING AND ROUTING (critical):
 - If the person is engaging and answering, you may gently build understanding over up to about ten exchanges — one caring question at a time — before pointing toward a direction.
 - BUT the moment the person asks for help, asks to speak with a provider, therapist, counselor, doctor, or attorney, or says they want to be connected — STOP ASKING QUESTIONS IMMEDIATELY. Do not ask even one more question. Do not say "okay, but first tell me how you feel." Acknowledge warmly in ONE short sentence, and tell them InnerLight is opening the connection for them now. The app itself opens the right handoff page — you do not need to give them any phone number or website.
@@ -71,16 +76,16 @@ def available() -> bool:
     return bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())
 
 
-def _soften_if_over_line(text: str) -> str:
-    """Last-resort guard: if the model produced diagnostic/prescriptive wording,
-    replace it with a safe, supportive line instead of shipping it."""
+def _over_the_line(text: str) -> bool:
+    """True if the model produced diagnostic/prescriptive wording. We never
+    replace such a reply with a canned line (founder's law: no standardized
+    lines, ever) — the caller retries the model with a correction instead,
+    and falls back to the local engine only if that also fails."""
     low = text.lower()
     for pat in _DIAGNOSTIC_PATTERNS:
         if re.search(pat, low):
-            return ("I hear how much you're carrying, and what you're feeling is real. "
-                    "I'm right here with you. Can you tell me more about what's been "
-                    "weighing on you most right now?")
-    return text
+            return True
+    return False
 
 
 def respond(
@@ -115,35 +120,49 @@ def respond(
     if face_emotion:
         system += f"\n\n(Their facial expression currently reads as: {face_emotion}. Use gently, do not announce it.)"
 
-    body = json.dumps({
-        "model": MODEL,
-        "max_tokens": 300,
-        "system": system,
-        "messages": messages,
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        ANTHROPIC_URL,
-        data=body,
-        method="POST",
-        headers={
-            "x-api-key": key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-    )
-    try:
+    def _call(msgs):
+        body = json.dumps({
+            "model": MODEL,
+            "max_tokens": 300,
+            "system": system,
+            "messages": msgs,
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            ANTHROPIC_URL,
+            data=body,
+            method="POST",
+            headers={
+                "x-api-key": key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
         with urllib.request.urlopen(req, timeout=20) as r:
             data = json.loads(r.read().decode("utf-8"))
-        parts = data.get("content", [])
         text = ""
-        for p in parts:
+        for p in data.get("content", []):
             if p.get("type") == "text":
                 text += p.get("text", "")
-        text = text.strip()
+        return text.strip()
+
+    try:
+        text = _call(messages)
         if not text:
             return None
-        text = _soften_if_over_line(text)
+        if _over_the_line(text):
+            # Never ship diagnostic wording, and never substitute a canned
+            # line. Ask the model to say the same care without crossing the
+            # line; if it cannot, fall back to the local engine.
+            retry = messages + [
+                {"role": "assistant", "content": text},
+                {"role": "user", "content": "[system correction — not from the person: your last reply "
+                 "crossed into diagnosis or prescription. Rewrite it now with the same specific warmth, "
+                 "without naming any condition or giving any medical or legal instruction. Return only "
+                 "the rewritten reply.]"},
+            ]
+            text = _call(retry)
+            if not text or _over_the_line(text):
+                return None
         return {"response": text, "question": ""}
     except Exception as e:
         print(f"[comprehension] falling back (model call failed): {str(e)[:120]}")
