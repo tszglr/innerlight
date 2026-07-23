@@ -418,7 +418,17 @@ PUBLIC_PAGE = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="creator" content="Toshay S. Zeigler">
   <meta name="company" content="God's Love for Us LLC">
-  <title>God's Love for Us LLC | Axiom Harmony</title>
+  <title>InnerLight &mdash; a calm, private place while you wait for real help</title>
+  <meta name="description" content="InnerLight is a free, private, calming AI companion for the hardest wait: the gap between reaching out and real human help arriving. Soft music, a quiet place to tell your story, and a gentle bridge to 988 and real people. Not therapy — a bridge. Adults 18+.">
+  <meta property="og:title" content="InnerLight — a calm, private place while you wait for real help">
+  <meta property="og:description" content="A free, private, calming companion for the gap between reaching out and help arriving. Soft music, a quiet place to tell your story, a gentle bridge to real human help.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://getinnerlight.com/">
+  <meta property="og:image" content="https://getinnerlight.com/scenes/photo_2_sunset_trees.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="InnerLight — a calm, private place while you wait for real help">
+  <meta name="twitter:description" content="A free, private, calming companion for the gap between reaching out and help arriving.">
+  <meta name="twitter:image" content="https://getinnerlight.com/scenes/photo_2_sunset_trees.jpg">
   <!-- Creator imprint: God's Love for Us LLC, Axiom Harmony Protocol, InnerLight, VEIL, EDEN, and the Zenisys Sound System are created by Toshay S. Zeigler. -->
   <style>
   @keyframes listenpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
@@ -5818,6 +5828,11 @@ def _info_page(title, inner, page_key=None):
 <html lang="{{ lang }}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ title }} &mdash; InnerLight</title>
+<meta name="description" content="{{ title }} — InnerLight, a free, private, calming companion for the gap between reaching out and real human help arriving. Not therapy — a bridge. Adults 18+.">
+<meta property="og:title" content="{{ title }} — InnerLight">
+<meta property="og:description" content="InnerLight: a free, private, calming companion for the gap between reaching out and real human help arriving.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://getinnerlight.com/scenes/photo_2_sunset_trees.jpg">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   :root{ --ink:#2b2620; --body:#4a4235; --muted:#8a7d6c; --blue:#33567c; --blue-d:#25405e;
@@ -6212,6 +6227,30 @@ def page_privacy():
     </div>
     """
     return _info_page("Your privacy", inner, "privacy")
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    """Search engines are welcome on public pages; the founder's console and
+    the private APIs are not for indexing."""
+    return app.response_class(
+        "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n"
+        "Sitemap: https://getinnerlight.com/sitemap.xml\n",
+        mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    """A simple sitemap of every public page, so the site can actually be
+    found by the caregivers and crisis workers searching for tools like it."""
+    pages = ["/", "/about", "/how-it-works", "/research", "/safety",
+             "/privacy", "/contact"]
+    urls = "".join(
+        '<url><loc>https://getinnerlight.com%s</loc></url>' % p for p in pages)
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+           + urls + "</urlset>")
+    return app.response_class(xml, mimetype="application/xml")
 
 
 @app.route("/contact")
