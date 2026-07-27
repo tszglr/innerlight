@@ -152,6 +152,7 @@ def _ensure_schema(conn) -> None:
         "CREATE TABLE IF NOT EXISTS learning_events (id INTEGER PRIMARY KEY, created_at TEXT, session_reference TEXT, event_fingerprint TEXT, encrypted_json TEXT)",
         "CREATE TABLE IF NOT EXISTS emotion_events (id INTEGER PRIMARY KEY, created_at TEXT, event_fingerprint TEXT, primary_emotion TEXT, distress_score REAL, encrypted_json TEXT)",
         "CREATE TABLE IF NOT EXISTS system_imprints (id INTEGER PRIMARY KEY, created_at TEXT, creator_name TEXT, company_name TEXT, imprint_hash TEXT, public_imprint TEXT, encrypted_imprint_json TEXT)",
+        "CREATE TABLE IF NOT EXISTS provider_availability (id INTEGER PRIMARY KEY, side TEXT, role TEXT, available INTEGER, updated_at TEXT)",
     ]
     for s in stmts:
         conn.execute(s)
@@ -226,6 +227,17 @@ def init_db() -> None:
                 primary_emotion TEXT NOT NULL,
                 distress_score INTEGER NOT NULL,
                 encrypted_json TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS provider_availability (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                side TEXT NOT NULL,
+                role TEXT NOT NULL,
+                available INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT NOT NULL
             )
             """
         )
@@ -5412,6 +5424,7 @@ CLINICAL_HANDOFF_PAGE = r"""
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to a Care Professional</title>
   <style>
     :root { --ink:#2a1e14; --muted:#8a7a68; --line:#ece0d0; --soft:#faf5ec; --urgent:#b84a44; --green:#b24a2a; --blue:#2f6da8; }
@@ -5448,25 +5461,31 @@ CLINICAL_HANDOFF_PAGE = r"""
     .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
     .pro-btn.picked { border-color:var(--green); background:#fbf2ea; box-shadow:0 0 0 2px rgba(178,74,42,0.18); }
     .pro-btn.suggested { border-color:#2e6e8e; box-shadow:0 0 0 2px rgba(46,110,142,0.25); }
+    /* FOUNDER RULE: provider buttons stay hidden until the server confirms a
+       real person is available behind them. No ghost buttons, ever. */
+    #pro-choices .pro-btn { display:none; color:var(--ink); }
+    .gate-res { display:block; text-decoration:none; border:1px solid var(--line); border-radius:12px; padding:12px 15px; background:#fff; color:var(--ink); margin:8px 0; }
+    .gate-res span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
+    .gate-empty { border:1.5px solid #e6d6c8; background:#fbf7f1; border-radius:12px; padding:16px 18px; }
     .disclaimer { font-size:12.5px; color:#8794a0; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
 </head>
 <body>
   <header>
     <div class="tag">Connecting you to mental-health care</div>
-    <h1>You're being connected to a care professional</h1>
+    <h1>Reaching a real person for your care</h1>
     <p>Before anything is shared, here is exactly who you may reach and what is protected. Nothing leaves this page until you read it and choose to send it.</p>
   </header>
   <main>
     <section class="panel who">
-      <h2>Choose who you want to reach</h2>
-      <p>You pick. Tap the kind of professional you want &mdash; your summary goes to them, and only when you say send.</p>
+      <h2 id="chooser-title">Choose who you want to reach</h2>
+      <p id="chooser-sub">You pick. Tap the kind of professional you want &mdash; your summary goes to them, and only when you say send.</p>
       <div id="pro-choices">
         <div id="pro-suggestion" style="display:none;background:#f8f5f2;border:1px solid #e6d6c8;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#6a402c;margin-bottom:12px;"></div>
-        <button type="button" class="pro-btn" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
-        <button type="button" class="pro-btn" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
-        <button type="button" class="pro-btn" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
-        <button type="button" class="pro-btn" data-pro="Nurse practitioner" onclick="pickPro(this)"><b>Nurse practitioner</b><span>Can assess symptoms and, in many states, manage medication.</span></button>
+        <button type="button" class="pro-btn" data-role="crisis_counselor" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
+        <button type="button" class="pro-btn" data-role="therapist" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
+        <button type="button" class="pro-btn" data-role="psychiatrist" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
+        <button type="button" class="pro-btn" data-role="nurse_practitioner" data-pro="Nurse practitioner" onclick="pickPro(this)"><b>Nurse practitioner</b><span>Can assess symptoms and, in many states, manage medication.</span></button>
       </div>
       <p id="pro-picked" style="font-weight:700;color:var(--green);"></p>
     </section>
@@ -5496,8 +5515,8 @@ CLINICAL_HANDOFF_PAGE = r"""
     </details>
 
     <section class="panel">
-      <h2>Ready when you are</h2>
-      <p>When you send this, InnerLight notifies the care side and prepares your approved summary so the professional can read it <i>before</i> they speak with you &mdash; so you don't have to start from the beginning.</p>
+      <h2 id="ready-title">Ready when you are</h2>
+      <p id="ready-sub">When you send this, InnerLight notifies the care side and prepares your approved summary so the professional can read it <i>before</i> they speak with you &mdash; so you don't have to start from the beginning.</p>
       <p id="status" style="font-weight:700;color:var(--green);"></p>
       <button id="send-btn" onclick="sendToCare()">Send my summary &amp; connect me</button>
       <a class="button secondary" href="/" onclick="if(history.length>1){history.back();return false;}">Go back</a>
@@ -5528,25 +5547,30 @@ CLINICAL_HANDOFF_PAGE = r"""
       if (send) send.textContent = 'Send my summary & connect me to a ' + pickedPro.toLowerCase();
     }
     function sendToCare(){
-      if (!pickedPro){
+      if (!pickedPro && !LEAVE_WORD){
         document.getElementById('status').textContent = 'First, tap who you want to reach above \u2014 you choose, always.';
         return;
       }
+      const proName = LEAVE_WORD ? GATE_T.leaveWho : pickedPro;
       const clarify = document.getElementById('clarify').value.trim();
       const add = document.getElementById('addnote').value.trim();
       let log=[]; try{ log=JSON.parse(sessionStorage.getItem('innerlight_convo')||'[]'); }catch(e){}
       const said = log.filter(t=>t.role==='user').map(t=>t.text).join(' \u2022 ');
-      const summaryText = ['WHO THIS GOES TO: ' + pickedPro,
+      const summaryText = ['WHO THIS GOES TO: ' + proName,
         said ? 'IN THEIR OWN WORDS: ' + said : '',
         clarify ? 'THEY CLARIFIED: ' + clarify : '',
         add ? 'THEY ADDED: ' + add : ''].filter(Boolean).join('\n\n');
       const box = document.getElementById('convo-summary');
-      box.innerHTML = '<p class="a"><b>The exact summary that goes to your ' + esc(pickedPro.toLowerCase()) + '</b></p>'
+      box.innerHTML = '<p class="a"><b>' + (LEAVE_WORD ? GATE_T.leaveSumLabel : ('The exact summary that goes to your ' + esc(pickedPro.toLowerCase()))) + '</b></p>'
         + '<p class="u" style="white-space:pre-wrap;">' + esc(summaryText) + '</p>';
-      document.getElementById('status').innerHTML = 'Reaching a human for you\u2026';
+      document.getElementById('status').innerHTML = LEAVE_WORD ? GATE_T.leaveSending : 'Reaching a human for you\u2026';
       fetch('/api/connect/request', {method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({kind:'care', pro: pickedPro, summary: summaryText, hp:'', elapsed: (Date.now()-PAGE_OPEN_TS)})})
+        body: JSON.stringify({kind:'care', pro: (LEAVE_WORD ? 'Left word (care, no one on call)' : pickedPro), summary: summaryText, hp:'', elapsed: (Date.now()-PAGE_OPEN_TS)})})
       .then(r=>r.json()).then(function(d){
+        if (LEAVE_WORD){
+          document.getElementById('status').innerHTML = GATE_T.leaveDone;
+          return;
+        }
         document.getElementById('status').innerHTML =
           'Your request for a <b>' + esc(pickedPro.toLowerCase()) + '</b> is in, and a human has been alerted. '
           + 'While our professional network grows, an <b>InnerLight responder</b> \u2014 our founder, not a licensed '
@@ -5560,8 +5584,63 @@ CLINICAL_HANDOFF_PAGE = r"""
         document.getElementById('status').textContent = 'The connection request could not go through. If you need someone now, call or text 988.';
       });
       try{ fetch('/api/metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({type:'handoff_click', value:'care:'+pickedPro, sid: sessionStorage.getItem('innerlight_sid')||'page'})}); }catch(e){}
+        body: JSON.stringify({type:'handoff_click', value:'care:'+(LEAVE_WORD ? 'leaveword' : pickedPro), sid: sessionStorage.getItem('innerlight_sid')||'page'})}); }catch(e){}
     }
+    // ---- FOUNDER RULE GATE: only providers who are truly there are shown.
+    // The buttons above start hidden; the server says who is really on call.
+    // If no one is, the chooser becomes an honest, dead-end-free block. ----
+    var GATE_SIDE = 'clinical';
+    var LEAVE_WORD = false;
+    var GATE_T = {
+      onlyHere: 'Only who is truly here right now is shown.',
+      emptyTitle: 'No care professional is connected at this moment',
+      emptyLead: 'We will not pretend otherwise. Right now no counselor, therapist, psychiatrist, or nurse practitioner is on call here \u2014 and we will never show you a button with no one behind it. The doors below are open and staffed by real people at this very moment.',
+      resources: '<a class="gate-res" href="tel:988"><b>988 Suicide &amp; Crisis Lifeline</b><span>Call or text 988 \u2014 free, 24/7, a trained human answers.</span></a>'
+        + '<a class="gate-res" href="sms:741741"><b>Crisis Text Line</b><span>Text HOME to 741741 \u2014 a live, trained counselor, any hour.</span></a>'
+        + '<a class="gate-res" href="https://findtreatment.gov/" target="_blank" rel="noopener"><b>Find licensed care near you</b><span>FindTreatment.gov \u2014 the federal directory of licensed mental-health facilities.</span></a>',
+      leaveNote: 'Below, you can also leave word. A real person will see this. This is not an instant connection, and we will never pretend it is.',
+      leaveTitle: 'Leave word for the next real person',
+      leaveLead: 'Review your words below and send them when you are ready. They will be waiting for the next real person who comes on call \u2014 not an instant connection, and we will never pretend it is.',
+      leaveBtn: 'Leave word for the next real person',
+      leaveWho: 'the next available care professional',
+      leaveSumLabel: 'The exact summary the next care professional will read',
+      leaveSending: 'Placing your words where the next real person will find them\u2026',
+      leaveDone: 'Your words are safely in. <b>A real person will see this.</b> This is not an instant connection, and we will never pretend it is. If you need someone this minute, call or text <b>988</b> \u2014 a trained human is there right now, around the clock.'
+    };
+    function gateProviders(avail){
+      var box = document.getElementById('pro-choices');
+      if (!box) return;
+      var btns = box.querySelectorAll('.pro-btn');
+      var shown = 0;
+      for (var i = 0; i < btns.length; i++){
+        var role = btns[i].getAttribute('data-role') || '';
+        if (avail.indexOf(role) >= 0){ btns[i].style.display = 'block'; shown++; }
+        else if (btns[i].parentNode){ btns[i].parentNode.removeChild(btns[i]); }
+      }
+      if (shown > 0){
+        var note = document.createElement('p');
+        note.style.cssText = 'font-size:13px;color:var(--muted);margin:10px 0 0;';
+        note.textContent = GATE_T.onlyHere;
+        box.appendChild(note);
+        return;
+      }
+      LEAVE_WORD = true;
+      var t = document.getElementById('chooser-title'); if (t) t.textContent = GATE_T.emptyTitle;
+      var s = document.getElementById('chooser-sub'); if (s) s.textContent = GATE_T.emptyLead;
+      var inner = GATE_T.resources
+        + '<p style="margin:12px 0 0;font-size:13.5px;color:var(--muted);">' + GATE_T.leaveNote + '</p>';
+      if (!t){ inner = '<p style="font-weight:700;font-size:17px;color:var(--ink);margin:0 0 8px;">' + GATE_T.emptyTitle + '</p>'
+        + '<p style="margin:0 0 12px;color:var(--muted);">' + GATE_T.emptyLead + '</p>' + inner; }
+      box.innerHTML = '<div class="gate-empty">' + inner + '</div>';
+      var rt = document.getElementById('ready-title'); if (rt) rt.textContent = GATE_T.leaveTitle;
+      var rs = document.getElementById('ready-sub'); if (rs) rs.textContent = GATE_T.leaveLead;
+      var sb = document.getElementById('send-btn'); if (sb) sb.textContent = GATE_T.leaveBtn;
+      var cs = document.getElementById('choose-section'); if (cs) cs.style.display = 'none';
+    }
+    fetch('/api/providers/available').then(function(r){ return r.json(); }).then(function(d){
+      var arr = (d && d[GATE_SIDE]) || [];
+      gateProviders(Object.prototype.toString.call(arr) === '[object Array]' ? arr : []);
+    }).catch(function(){ gateProviders([]); });
     loadConvo();
   </script>
 </body>
@@ -5575,6 +5654,7 @@ LEGAL_HANDOFF_PAGE = r"""
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to Legal Help</title>
   <style>
     :root { --ink:#2a1e14; --muted:#8a7a68; --line:#ece0d0; --soft:#faf5ec; --urgent:#b84a44; --legal:#b24a2a; --legal2:#c56a2c; }
@@ -5608,20 +5688,26 @@ LEGAL_HANDOFF_PAGE = r"""
                border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
     .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
     .pro-btn.picked { border-color:var(--green); background:#fbf2ea; box-shadow:0 0 0 2px rgba(178,74,42,0.18); }
+    /* FOUNDER RULE: provider buttons stay hidden until the server confirms a
+       real person is available behind them. No ghost buttons, ever. */
+    #pro-choices .pro-btn { display:none; color:var(--ink); }
+    .gate-res { display:block; text-decoration:none; border:1px solid var(--line); border-radius:12px; padding:12px 15px; background:#fff; color:var(--ink); margin:8px 0; }
+    .gate-res span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
+    .gate-empty { border:1.5px solid #e6d6c8; background:#fbf7f1; border-radius:12px; padding:16px 18px; }
     .disclaimer { font-size:12.5px; color:#8a929a; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
   </style>
 </head>
 <body>
   <header>
     <div class="tag">Connecting you to legal help &mdash; this is a legal handoff</div>
-    <h1>You're being connected to legal support</h1>
-    <p>This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want &mdash; your summary goes there only when you say send.</p>
+    <h1>Reaching real legal help</h1>
+    <p id="chooser-sub">This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want &mdash; your summary goes there only when you say send.</p>
     <div id="pro-choices">
-      <button type="button" class="pro-btn" data-pro="Housing / tenant attorney" onclick="pickPro(this)"><b>Housing / tenant attorney</b><span>Evictions, landlord disputes, unsafe conditions.</span></button>
-      <button type="button" class="pro-btn" data-pro="Family law attorney" onclick="pickPro(this)"><b>Family law attorney</b><span>Custody, divorce, protective orders.</span></button>
-      <button type="button" class="pro-btn" data-pro="Criminal defense attorney" onclick="pickPro(this)"><b>Criminal defense attorney</b><span>Charges, warrants, court dates.</span></button>
-      <button type="button" class="pro-btn" data-pro="Consumer / civil attorney" onclick="pickPro(this)"><b>Consumer / civil attorney</b><span>Debt, fraud claims, insurance disputes, benefits denials.</span></button>
-      <button type="button" class="pro-btn" data-pro="Legal aid office" onclick="pickPro(this)"><b>Legal aid office</b><span>Free or low-cost help when money is tight.</span></button>
+      <button type="button" class="pro-btn" data-role="housing_attorney" data-pro="Housing / tenant attorney" onclick="pickPro(this)"><b>Housing / tenant attorney</b><span>Evictions, landlord disputes, unsafe conditions.</span></button>
+      <button type="button" class="pro-btn" data-role="family_attorney" data-pro="Family law attorney" onclick="pickPro(this)"><b>Family law attorney</b><span>Custody, divorce, protective orders.</span></button>
+      <button type="button" class="pro-btn" data-role="criminal_attorney" data-pro="Criminal defense attorney" onclick="pickPro(this)"><b>Criminal defense attorney</b><span>Charges, warrants, court dates.</span></button>
+      <button type="button" class="pro-btn" data-role="civil_attorney" data-pro="Consumer / civil attorney" onclick="pickPro(this)"><b>Consumer / civil attorney</b><span>Debt, fraud claims, insurance disputes, benefits denials.</span></button>
+      <button type="button" class="pro-btn" data-role="legal_aid" data-pro="Legal aid office" onclick="pickPro(this)"><b>Legal aid office</b><span>Free or low-cost help when money is tight.</span></button>
     </div>
     <p id="pro-picked" style="font-weight:700;color:#2e6e8e;"></p>
   </header>
@@ -5660,7 +5746,7 @@ LEGAL_HANDOFF_PAGE = r"""
       <p style="font-size:12.5px;color:#8a929a;">Clinics accept clients by their own eligibility rules (often income-based and by region). Even when a clinic can't take your case, its public guides and Know-Your-Rights materials are free to read. Every state's flagship law-school clinic is listed &mdash; choose your state above.</p>
     </section>
 
-    <section class="panel who">
+    <section class="panel who" id="choose-section">
       <h2>Choose who you want to reach</h2>
       <p>When you're ready for a person, you pick. Your summary goes only where you choose, only when you press send.</p>
     </section>
@@ -5685,10 +5771,10 @@ LEGAL_HANDOFF_PAGE = r"""
     </details>
 
     <section class="panel">
-      <h2>Ready when you are</h2>
-      <p>When you send this, InnerLight prepares your approved summary so the legal professional can review it before speaking with you.</p>
+      <h2 id="ready-title">Ready when you are</h2>
+      <p id="ready-sub">When you send this, InnerLight prepares your approved summary so the legal professional can review it before speaking with you.</p>
       <p id="status" style="font-weight:700;color:var(--legal);"></p>
-      <button onclick="sendToLegal()">Send my summary &amp; connect me to legal help</button>
+      <button id="send-btn" onclick="sendToLegal()">Send my summary &amp; connect me to legal help</button>
       <a class="button secondary" href="/" onclick="if(history.length>1){history.back();return false;}">Go back</a>
     </section>
 
@@ -5842,14 +5928,29 @@ LEGAL_HANDOFF_PAGE = r"""
       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
     }
     function sendToLegal(){
-      if (typeof pickedPro !== 'undefined' && !pickedPro){
+      if (typeof pickedPro !== 'undefined' && !pickedPro && !LEAVE_WORD){
         document.getElementById('status').textContent='First, tap the kind of legal help you want above \u2014 you choose, always.';
         return;
       }
-      document.getElementById('status').innerHTML='Reaching a human for you\u2026';
+      var summaryText = '';
+      if (LEAVE_WORD){
+        var clarify = document.getElementById('clarify') ? document.getElementById('clarify').value.trim() : '';
+        var addw = document.getElementById('addnote') ? document.getElementById('addnote').value.trim() : '';
+        var lg=[]; try{ lg=JSON.parse(sessionStorage.getItem('innerlight_convo')||'[]'); }catch(e){}
+        var said = lg.filter(function(t){ return t.role==='user'; }).map(function(t){ return t.text; }).join(' \u2022 ');
+        summaryText = ['WHO THIS GOES TO: ' + GATE_T.leaveWho,
+          said ? 'IN THEIR OWN WORDS: ' + said : '',
+          clarify ? 'THEY CLARIFIED: ' + clarify : '',
+          addw ? 'THEY ADDED: ' + addw : ''].filter(Boolean).join('\n\n');
+      }
+      document.getElementById('status').innerHTML = LEAVE_WORD ? GATE_T.leaveSending : 'Reaching a human for you\u2026';
       fetch('/api/connect/request', {method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({kind:'legal', pro: pickedPro||'legal help', summary: ''})})
+        body: JSON.stringify({kind:'legal', pro: (LEAVE_WORD ? 'Left word (legal, no one on call)' : (pickedPro||'legal help')), summary: summaryText})})
       .then(r=>r.json()).then(function(d){
+        if (LEAVE_WORD){
+          document.getElementById('status').innerHTML = GATE_T.leaveDone;
+          return;
+        }
         document.getElementById('status').innerHTML =
           'Your request for a <b>' + (pickedPro||'legal professional').toLowerCase() + '</b> is in, and a human has been alerted. '
           + 'While our network grows, an <b>InnerLight responder</b> \u2014 our founder, not an attorney \u2014 will meet you first '
@@ -5860,6 +5961,59 @@ LEGAL_HANDOFF_PAGE = r"""
         document.getElementById('status').textContent='The connection request could not go through right now.';
       });
     }
+    // ---- FOUNDER RULE GATE: only providers who are truly there are shown.
+    // The buttons above start hidden; the server says who is really on call.
+    // If no one is, the chooser becomes an honest, dead-end-free block. ----
+    var GATE_SIDE = 'legal';
+    var LEAVE_WORD = false;
+    var GATE_T = {
+      onlyHere: 'Only who is truly here right now is shown.',
+      emptyTitle: 'No legal-aid partner is connected at this moment',
+      emptyLead: 'We will not pretend otherwise. Right now no attorney or legal-aid office is on call here \u2014 a button only appears when a real person is truly behind it. Everything else on this page \u2014 your state directories and the law-school clinics \u2014 is real and open right now, and so are the doors below.',
+      resources: '<a class="gate-res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Find your local legal-aid office</b><span>LSC.gov \u2014 the federal Legal Services Corporation directory of free legal-aid offices, always open.</span></a>'
+        + '<a class="gate-res" href="tel:211"><b>211 \u2014 free local help line</b><span>Call 211 (or visit 211.org) \u2014 free, confidential help finding local legal and social services, 24/7.</span></a>',
+      leaveNote: 'Below, you can also leave word. A real person will see this. This is not an instant connection, and we will never pretend it is.',
+      leaveTitle: 'Leave word for the next real person',
+      leaveLead: 'Review your words below and send them when you are ready. They will be waiting for the next real person who comes on call \u2014 not an instant connection, and we will never pretend it is.',
+      leaveBtn: 'Leave word for the next real person',
+      leaveWho: 'the next available legal-aid partner',
+      leaveSending: 'Placing your words where the next real person will find them\u2026',
+      leaveDone: 'Your words are safely in. <b>A real person will see this.</b> This is not an instant connection, and we will never pretend it is. The directories above are open right now \u2014 and if your situation involves immediate danger, call 911.'
+    };
+    function gateProviders(avail){
+      var box = document.getElementById('pro-choices');
+      if (!box) return;
+      var btns = box.querySelectorAll('.pro-btn');
+      var shown = 0;
+      for (var i = 0; i < btns.length; i++){
+        var role = btns[i].getAttribute('data-role') || '';
+        if (avail.indexOf(role) >= 0){ btns[i].style.display = 'block'; shown++; }
+        else if (btns[i].parentNode){ btns[i].parentNode.removeChild(btns[i]); }
+      }
+      if (shown > 0){
+        var note = document.createElement('p');
+        note.style.cssText = 'font-size:13px;color:var(--muted);margin:10px 0 0;';
+        note.textContent = GATE_T.onlyHere;
+        box.appendChild(note);
+        return;
+      }
+      LEAVE_WORD = true;
+      var t = document.getElementById('chooser-title'); if (t) t.textContent = GATE_T.emptyTitle;
+      var s = document.getElementById('chooser-sub'); if (s) s.textContent = GATE_T.emptyLead;
+      var inner = GATE_T.resources
+        + '<p style="margin:12px 0 0;font-size:13.5px;color:var(--muted);">' + GATE_T.leaveNote + '</p>';
+      if (!t){ inner = '<p style="font-weight:700;font-size:17px;color:var(--ink);margin:0 0 8px;">' + GATE_T.emptyTitle + '</p>'
+        + '<p style="margin:0 0 12px;color:var(--muted);">' + GATE_T.emptyLead + '</p>' + inner; }
+      box.innerHTML = '<div class="gate-empty">' + inner + '</div>';
+      var rt = document.getElementById('ready-title'); if (rt) rt.textContent = GATE_T.leaveTitle;
+      var rs = document.getElementById('ready-sub'); if (rs) rs.textContent = GATE_T.leaveLead;
+      var sb = document.getElementById('send-btn'); if (sb) sb.textContent = GATE_T.leaveBtn;
+      var cs = document.getElementById('choose-section'); if (cs) cs.style.display = 'none';
+    }
+    fetch('/api/providers/available').then(function(r){ return r.json(); }).then(function(d){
+      var arr = (d && d[GATE_SIDE]) || [];
+      gateProviders(Object.prototype.toString.call(arr) === '[object Array]' ? arr : []);
+    }).catch(function(){ gateProviders([]); });
     loadConvo();
   </script>
 </body>
@@ -8737,6 +8891,68 @@ def admin_dashboard():
     }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
     </script>
 
+    <h2 class="ledger" id="oncall">On call right now</h2>
+    <div class="panel">
+    <div class="hint">The founder rule, kept: <b style="color:#f4c977;">for anyone to click on a provider, they must be there and available.</b>
+    Every role below starts off. Turn a role on only while a real person is truly reachable behind it &mdash;
+    the clinical and legal handoff pages show exactly what is lit here, and nothing else. When everything is off,
+    those pages say so honestly and hold people with 988, Crisis Text Line, legal aid, and 211 instead.</div>
+    <div id="oncall-list"><i style="color:rgba(242,231,210,.45);">Loading the on-call board&hellip;</i></div>
+    </div>
+    <script>
+    (function(){
+      var SIDE_NAMES = {clinical: 'The care side', legal: 'The legal side'};
+      function esc2(s){ return String(s == null ? '' : s).replace(/</g,'&lt;'); }
+      function whenText(iso){
+        if (!iso) return '';
+        var t = String(iso).replace('T',' ');
+        var cut = t.indexOf('.'); if (cut > 0) t = t.slice(0, cut);
+        return 'set ' + t.slice(0, 16) + ' UTC';
+      }
+      async function loadOncall(){
+        try{
+          var r = await fetch('/api/admin/oncall'); if (!r.ok) return;
+          var d = await r.json();
+          var el = document.getElementById('oncall-list'); if (!el) return;
+          var roles = d.roles || [];
+          var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;">';
+          ['clinical','legal'].forEach(function(side){
+            html += '<div><div style="font-family:var(--serif);font-style:italic;font-size:16px;color:rgba(244,201,119,.8);'
+              + 'padding-bottom:8px;border-bottom:1px solid rgba(232,163,76,.2);margin-bottom:4px;">' + SIDE_NAMES[side] + '</div>';
+            roles.filter(function(x){ return x.side === side; }).forEach(function(x){
+              var onStyle = 'background:linear-gradient(90deg,#b06a2a,#e8a34c);color:#ffe8bf;border:1px solid rgba(255,232,191,.5);'
+                + 'box-shadow:0 0 14px rgba(232,163,76,.45);';
+              var offStyle = 'background:rgba(232,163,76,.08);color:rgba(242,231,210,.5);border:1px solid rgba(232,163,76,.3);';
+              html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid rgba(232,163,76,.1);">'
+                + '<span style="flex:1;color:' + (x.available ? '#ffe8bf' : 'rgba(242,231,210,.62)') + ';">' + esc2(x.label)
+                + '<span style="display:block;font-size:10.5px;color:rgba(242,231,210,.38);margin-top:3px;font-variant-numeric:tabular-nums;">' + whenText(x.updated_at) + '</span></span>'
+                + '<button data-oncall-role="' + esc2(x.role) + '" data-oncall-side="' + esc2(x.side) + '" data-oncall-on="' + (x.available ? '1' : '0') + '"'
+                + ' style="border-radius:999px;padding:7px 16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;min-width:96px;'
+                + (x.available ? onStyle : offStyle) + '">' + (x.available ? 'On call' : 'Off') + '</button>'
+                + '</div>';
+            });
+            html += '</div>';
+          });
+          html += '</div>';
+          el.innerHTML = html;
+        }catch(e){}
+      }
+      document.addEventListener('click', async function(ev){
+        var b = ev.target;
+        if (!b || !b.getAttribute || !b.getAttribute('data-oncall-role')) return;
+        b.disabled = true;
+        try{
+          await fetch('/api/admin/oncall', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({role: b.getAttribute('data-oncall-role'),
+                                  side: b.getAttribute('data-oncall-side'),
+                                  available: b.getAttribute('data-oncall-on') !== '1'})});
+        }catch(e){}
+        loadOncall();
+      });
+      loadOncall();
+    })();
+    </script>
+
     <h2 class="ledger">What people said — voices from real sessions</h2>
     <div class="panel">
     <div class="hint">Anonymous feedback from people who used InnerLight. Identifying details are automatically removed. This is the human evidence alongside the numbers.</div>
@@ -9730,6 +9946,132 @@ def admin_tracks_toggle():
                                           "Turn another song on first."}), 200
         _tracks_off_save(off)
     return jsonify({"status": "ok", "file": file, "enabled": file not in off})
+
+
+# ===========================================================================
+# WHO IS ON CALL — the founder rule, hardened:
+#   "In order for anyone to click on a provider they must be there and
+#    available." A person may only ever be offered a provider who is truly
+# there. Availability lives in the provider_availability sqlite table
+# (id, side, role, available, updated_at) — the same schema declared in
+# init_db()/_ensure_schema(). Because the main database is a throwaway
+# in-memory store in keep-nothing privacy mode, this registry keeps its own
+# small sqlite file on the persistent disk: it holds ZERO user data — it is
+# founder operational state only (which roles are staffed right now) — so
+# persisting it never touches the privacy promise. Every role is seeded
+# available=0: the HONEST default. No one is offered until the founder
+# says a real person is there.
+# ===========================================================================
+_ONCALL_DB_FILE = os.environ.get("ONCALL_DB_FILE", _DATA_DIR + "/innerlight_oncall.db")
+_ONCALL_LOCK = threading.Lock()
+# (side, role key, founder-facing label) — role keys are language-neutral;
+# the handoff pages carry the same keys in data-role attributes.
+_PROVIDER_ROLES = [
+    ("clinical", "crisis_counselor",   "Crisis-trained counselor"),
+    ("clinical", "therapist",          "Therapist / licensed counselor"),
+    ("clinical", "psychiatrist",       "Psychiatrist"),
+    ("clinical", "nurse_practitioner", "Nurse practitioner"),
+    ("legal",    "housing_attorney",   "Housing / tenant attorney"),
+    ("legal",    "family_attorney",    "Family law attorney"),
+    ("legal",    "criminal_attorney",  "Criminal defense attorney"),
+    ("legal",    "civil_attorney",     "Consumer / civil attorney"),
+    ("legal",    "legal_aid",          "Legal aid office"),
+]
+
+def _oncall_db() -> sqlite3.Connection:
+    """Open the on-call registry, creating and seeding it (all OFF) if new.
+    Mirrors connect_db(): row factory + ensured schema, but always on disk."""
+    conn = sqlite3.connect(_ONCALL_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS provider_availability ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, side TEXT NOT NULL, "
+        "role TEXT NOT NULL, available INTEGER NOT NULL DEFAULT 0, "
+        "updated_at TEXT NOT NULL)"
+    )
+    have = {(r["side"], r["role"]) for r in
+            conn.execute("SELECT side, role FROM provider_availability")}
+    for _side, _role, _label in _PROVIDER_ROLES:
+        if (_side, _role) not in have:
+            conn.execute(
+                "INSERT INTO provider_availability (side, role, available, updated_at)"
+                " VALUES (?, ?, 0, ?)", (_side, _role, utc_now()))
+    conn.commit()
+    return conn
+
+_ONCALL_CACHE = {"t": 0.0, "data": None}  # light cache for the public endpoint
+
+@app.route("/api/providers/available")
+def providers_available():
+    """PUBLIC, no auth. The honest availability picture the handoff pages
+    gate on. Never errors: any failure returns empty lists, because empty
+    is the truthful fallback — no one gets offered a button with nobody
+    behind it."""
+    out = {"clinical": [], "legal": []}
+    try:
+        now = time.time()
+        if _ONCALL_CACHE["data"] is not None and (now - _ONCALL_CACHE["t"]) < 10:
+            return jsonify(_ONCALL_CACHE["data"])
+        with _ONCALL_LOCK:
+            conn = _oncall_db()
+            try:
+                rows = conn.execute(
+                    "SELECT side, role FROM provider_availability WHERE available = 1"
+                ).fetchall()
+            finally:
+                conn.close()
+        for r in rows:
+            if r["side"] in out:
+                out[r["side"]].append(r["role"])
+        _ONCALL_CACHE["data"] = out
+        _ONCALL_CACHE["t"] = now
+    except Exception as e:
+        print("[InnerLight] providers/available issue (returning honest-empty):", e)
+        return jsonify({"clinical": [], "legal": []})
+    return jsonify(out)
+
+@app.route("/api/admin/oncall")
+def admin_oncall_list():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    labels = {(s, r): lb for s, r, lb in _PROVIDER_ROLES}
+    with _ONCALL_LOCK:
+        conn = _oncall_db()
+        try:
+            rows = conn.execute(
+                "SELECT side, role, available, updated_at FROM provider_availability"
+                " ORDER BY id").fetchall()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok", "roles": [
+        {"side": r["side"], "role": r["role"],
+         "label": labels.get((r["side"], r["role"]), r["role"]),
+         "available": bool(r["available"]), "updated_at": r["updated_at"]}
+        for r in rows]})
+
+@app.route("/api/admin/oncall", methods=["POST"])
+def admin_oncall_set():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    side = str(data.get("side", ""))[:12]
+    role = str(data.get("role", ""))[:40]
+    available = 1 if data.get("available") else 0
+    if (side, role) not in {(s, r) for s, r, _lb in _PROVIDER_ROLES}:
+        return jsonify({"error": "unknown role"}), 400
+    with _ONCALL_LOCK:
+        conn = _oncall_db()
+        try:
+            conn.execute(
+                "UPDATE provider_availability SET available = ?, updated_at = ?"
+                " WHERE side = ? AND role = ?",
+                (available, utc_now(), side, role))
+            conn.commit()
+        finally:
+            conn.close()
+    _ONCALL_CACHE["data"] = None  # the public picture updates immediately
+    return jsonify({"status": "ok", "side": side, "role": role,
+                    "available": bool(available), "updated_at": utc_now()})
 
 
 @app.route("/api/admin/policy/patterns")
