@@ -5602,7 +5602,7 @@ CLINICAL_HANDOFF_PAGE = r"""
         body: JSON.stringify({kind:'care', pro: (LEAVE_WORD ? 'Left word (care, no one on call)' : pickedPro), summary: summaryText, hp:'', elapsed: (Date.now()-PAGE_OPEN_TS)})})
       .then(r=>r.json()).then(function(d){
         if (LEAVE_WORD){
-          document.getElementById('status').innerHTML = GATE_T.leaveDone;
+          document.getElementById('status').innerHTML = GATE_T.leaveDone + '<br><br><span style="font-family:Georgia,serif;font-style:italic;color:#99673E;font-size:15px;display:inline-block;margin-top:2px;">' + BLESS + '</span>';
           return;
         }
         document.getElementById('status').innerHTML =
@@ -5613,7 +5613,8 @@ CLINICAL_HANDOFF_PAGE = r"""
           + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#c56a2c;color:#fff;'
           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>'
           + '<br><span style="font-size:12.5px;color:#8794a0;">The room is private to this request. If no one joins within a few minutes, '
-          + 'call or text 988 anytime \u2014 you never have to wait alone.</span>';
+          + 'call or text 988 anytime \u2014 you never have to wait alone.</span>'
+          + '<br><br><span style="font-family:Georgia,serif;font-style:italic;color:#99673E;font-size:15px;display:inline-block;margin-top:2px;">' + BLESS + '</span>';
       }).catch(function(){
         document.getElementById('status').textContent = 'The connection request could not go through. If you need someone now, call or text 988.';
       });
@@ -5625,6 +5626,7 @@ CLINICAL_HANDOFF_PAGE = r"""
     // If no one is, the chooser becomes an honest, dead-end-free block. ----
     var GATE_SIDE = 'clinical';
     var LEAVE_WORD = false;
+    var BLESS = "You are the best there is, the best there was, and the best there ever could be.";
     var GATE_T = {
       promise: 'They have read nothing \u2014 your story stays yours to tell.',
       promiseRole: 'Your {role} has read nothing \u2014 your story stays yours to tell.',
@@ -6042,7 +6044,7 @@ LEGAL_HANDOFF_PAGE = r"""
         body: JSON.stringify({kind:'legal', pro: (LEAVE_WORD ? 'Left word (legal, no one on call)' : (pickedPro||'legal help')), summary: summaryText})})
       .then(r=>r.json()).then(function(d){
         if (LEAVE_WORD){
-          document.getElementById('status').innerHTML = GATE_T.leaveDone;
+          document.getElementById('status').innerHTML = GATE_T.leaveDone + '<br><br><span style="font-family:Georgia,serif;font-style:italic;color:#99673E;font-size:15px;display:inline-block;margin-top:2px;">' + BLESS + '</span>';
           return;
         }
         document.getElementById('status').innerHTML =
@@ -6050,7 +6052,8 @@ LEGAL_HANDOFF_PAGE = r"""
           + 'While our network grows, an <b>InnerLight responder</b> \u2014 our founder, not an attorney \u2014 will meet you first '
           + 'and help arrange the right legal help.<br><br>'
           + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#c56a2c;color:#fff;'
-          + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>';
+          + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>'
+          + '<br><br><span style="font-family:Georgia,serif;font-style:italic;color:#99673E;font-size:15px;display:inline-block;margin-top:2px;">' + BLESS + '</span>';
       }).catch(function(){
         document.getElementById('status').textContent='The connection request could not go through right now.';
       });
@@ -6060,6 +6063,7 @@ LEGAL_HANDOFF_PAGE = r"""
     // If no one is, the chooser becomes an honest, dead-end-free block. ----
     var GATE_SIDE = 'legal';
     var LEAVE_WORD = false;
+    var BLESS = "You are the best there is, the best there was, and the best there ever could be.";
     var GATE_T = {
       promise: 'They have read nothing \u2014 your story stays yours to tell.',
       promiseRole: 'Your {role} has read nothing \u2014 your story stays yours to tell.',
@@ -6307,6 +6311,8 @@ def page_about():
     inner = """
     <h1>Why InnerLight exists</h1>
     <p class="lead">InnerLight holds the hardest space in the mental-health system: the gap between the moment a person reaches out and the moment real human help actually arrives.</p>
+
+    <p style="font-family:Georgia,serif;font-style:italic;">And beneath everything, one founding belief about every person who enters &mdash; regardless of their pain, their loss, or their trouble: <strong>you are the best there is, the best there was, and the best there ever could be.</strong></p>
 
     <p>Across the country, that gap is measured in waitlists, transfers, and hold music. When someone is in crisis, help usually does exist &mdash; a clinician, a counselor, a legal-aid office, a crisis line &mdash; but reaching it means navigating hospitals, insurance, county agencies, schools, and courts, often during the hardest hours of a person&rsquo;s life. In the space between &ldquo;I need help&rdquo; and &ldquo;help has arrived,&rdquo; people wait, and too often they wait alone. National crisis systems themselves report answer and dispatch times measured in many minutes to hours; mobile crisis and appointment waits are far longer. InnerLight was built to hold that specific interval &mdash; to keep a person company and steady while a bridge to the right human help is built.</p>
 
