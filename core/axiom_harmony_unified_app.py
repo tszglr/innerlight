@@ -5427,70 +5427,101 @@ CLINICAL_HANDOFF_PAGE = r"""
   <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to a Care Professional</title>
   <style>
-    :root { --ink:#2a1e14; --muted:#8a7a68; --line:#ece0d0; --soft:#faf5ec; --urgent:#b84a44; --green:#b24a2a; --blue:#2f6da8; }
+    :root { --ink:#2a1e14; --muted:#99673e; --line:#e8dcc8; --soft:#f5eddc; --cream:#faf5ec; --card:#fffdf8;
+            --urgent:#b84a44; --amber:#c56a2c; --dusk:#33567c;
+            --green:#c56a2c; --blue:#33567c; --legal:#c56a2c; --legal2:#c56a2c; }
     * { box-sizing:border-box; }
-    body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:#fdfcfb; }
-    header { padding:26px 6vw; border-bottom:1px solid var(--line); background:white; }
-    main { padding:24px 6vw 60px; max-width:920px; margin:0 auto; }
-    h1 { margin:0 0 6px; font-size:clamp(26px, 4.5vw, 44px); line-height:1.05; }
-    h2 { margin:0 0 10px; font-size:20px; }
-    p { color:var(--muted); line-height:1.55; }
-    .tag { display:inline-block; padding:5px 12px; border-radius:999px; background:#eaf3f7; border:1px solid #cfe3ec; color:var(--blue); font-weight:700; font-size:13px; margin-bottom:10px; }
-    .panel { border:1px solid var(--line); border-radius:12px; background:white; padding:20px; margin:16px 0; }
-    .who { background:#f4f9fb; border-color:#d6e8ef; }
+    html { background:#faf5ec; }
+    body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:var(--cream); position:relative; }
+    /* FOUNDER DESIGN: his photograph as a faint warm glow behind the opening,
+       fading to solid cream before the working sections, so reading is easy. */
+    .glow { position:absolute; top:0; left:0; right:0; height:min(92vh, 860px); overflow:hidden; z-index:0; pointer-events:none; }
+    .glow .ph { position:absolute; top:0; left:0; right:0; bottom:0; background:url('/scenes/photo_2_sunset_trees.jpg') center top / cover no-repeat; opacity:0.25; }
+    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(250,245,236,0) 0%, rgba(250,245,236,0.2) 45%, rgba(250,245,236,0.7) 72%, rgba(250,245,236,1) 94%); }
+    header, main { position:relative; z-index:1; }
+    main { padding:10px 6vw 30px; max-width:820px; margin:0 auto; }
+    h1, h2, .whisper { font-family:Georgia, 'Times New Roman', serif; font-weight:400; }
+    h2 { margin:0 0 10px; font-size:21px; }
+    p { color:var(--muted); line-height:1.6; }
+    a { color:var(--dusk); }
+    .tag { display:inline-block; padding:5px 14px; border-radius:999px; background:rgba(255,253,248,0.6); border:1px solid var(--line); color:var(--muted); font-size:12.5px; }
+    .intro { text-align:center; padding:8vh 6vw 44px; max-width:820px; margin:0 auto; }
+    .intro .tag { margin-bottom:7vh; }
+    .whisper { margin:0 0 26px; font-size:16.5px; font-style:italic; color:var(--muted); }
+    .whisper[hidden] { display:none; }
+    h1.promise { margin:0 auto; max-width:600px; font-size:clamp(26px, 6.2vw, 40px); line-height:1.25; color:var(--ink); }
+    h1.promise.quiet-title { font-size:clamp(22px, 5vw, 30px); }
+    .intro-sub { max-width:540px; margin:20px auto 0; font-size:14.5px; }
+    #pro-choices { max-width:480px; margin:6vh auto 0; text-align:left; }
+    .panel { border:1px solid var(--line); border-radius:16px; background:var(--card); padding:22px; margin:18px 0; }
+    .who { background:var(--card); border-color:var(--line); }
     .who ul { margin:8px 0 0; padding-left:0; list-style:none; }
-    .who li { padding:9px 0; border-bottom:1px solid #e4eef2; color:var(--ink); }
+    .who li { padding:9px 0; border-bottom:1px solid var(--soft); color:var(--ink); }
     .who li:last-child { border-bottom:0; }
-    .who b { color:var(--blue); }
-    .rights { background:#fbf9f7; border-color:#e9e0d9; }
-    .rights summary { cursor:pointer; font-weight:700; color:var(--green); }
+    .who b { color:var(--amber); }
+    .rights { background:var(--soft); border-color:var(--line); }
+    .rights summary { cursor:pointer; font-weight:700; color:var(--amber); }
     .rights p { font-size:14px; }
-    .urgent-note { background:#fff7f6; border:1px solid #e5b5b1; border-radius:12px; padding:14px 16px; }
+    .urgent-note { background:#fdf3f0; border:1px solid #e5b5a5; border-radius:16px; padding:14px 16px; margin:18px 0; }
     .urgent-note b { color:var(--urgent); }
     label { display:block; font-weight:700; color:var(--ink); margin:14px 0 6px; }
-    textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:12px; font:inherit; min-height:90px; }
-    .convo { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:14px; max-height:280px; overflow:auto; }
+    textarea { width:100%; border:1px solid var(--line); border-radius:10px; padding:12px; font:inherit; min-height:90px; background:#fffefb; }
+    .convo { background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:14px; max-height:280px; overflow:auto; }
     .convo .u { color:var(--ink); margin:0 0 10px; }
-    .convo .a { color:var(--blue); margin:0 0 10px; }
-    .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; }
-    button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--green); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
-    .secondary { background:#f1ece8; color:var(--ink); }
+    .convo .a { color:var(--dusk); margin:0 0 10px; }
+    .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; opacity:0.7; }
+    button, a.button { display:inline-block; border:0; border-radius:999px; padding:15px 30px; background:var(--amber); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:16px; }
+    .secondary { background:var(--soft); color:var(--ink); }
     .locked { font-size:13px; color:var(--muted); margin-top:8px; }
-    .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
-               border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
-    .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
-    .pro-btn.picked { border-color:var(--green); background:#fbf2ea; box-shadow:0 0 0 2px rgba(178,74,42,0.18); }
-    .pro-btn.suggested { border-color:#2e6e8e; box-shadow:0 0 0 2px rgba(46,110,142,0.25); }
+    /* HIS ONE AMBER PILL: alone, centered, room to breathe. */
+    .ready { text-align:center; padding:9vh 4vw 10px; }
+    .ready p { max-width:560px; margin-left:auto; margin-right:auto; }
+    .ready #send-btn { display:inline-block; margin-top:26px; min-width:min(320px, 100%); }
+    /* HIS "NOT YET" LINE: a real door back, never a gray afterthought. */
+    .notyet { text-align:center; margin:40px 0 0; }
+    .notyet a { color:var(--dusk); font-family:Georgia, 'Times New Roman', serif; font-size:16px; text-decoration:underline; text-underline-offset:3px; }
+    /* HIS QUIET 988 EMBER at the very bottom, always present. */
+    .ember { text-align:center; margin:56px 0 14px; }
+    .ember a { color:var(--amber); text-decoration:none; font-family:Georgia, 'Times New Roman', serif; font-size:16px; letter-spacing:0.12em; opacity:0.85; }
+    .pro-btn { display:block; width:100%; text-align:left; margin:10px 0; padding:15px 18px; border-radius:16px;
+               border:1px solid #e3d2ba; background:var(--card); cursor:pointer; font-size:15.5px; font-weight:400; color:var(--ink); }
+    .pro-btn b { font-family:Georgia, 'Times New Roman', serif; font-weight:700; }
+    .pro-btn span { display:block; font-size:13px; color:var(--muted); margin-top:3px; font-weight:400; }
+    .pro-btn.picked { border-color:var(--amber); background:#fbf1e4; box-shadow:0 0 0 2px rgba(197,106,44,0.22); }
+    .pro-btn.suggested { border-color:var(--dusk); box-shadow:0 0 0 2px rgba(51,86,124,0.20); }
     /* FOUNDER RULE: provider buttons stay hidden until the server confirms a
        real person is available behind them. No ghost buttons, ever. */
     #pro-choices .pro-btn { display:none; color:var(--ink); }
-    .gate-res { display:block; text-decoration:none; border:1px solid var(--line); border-radius:12px; padding:12px 15px; background:#fff; color:var(--ink); margin:8px 0; }
+    .gate-res { display:block; text-decoration:none; border:1px solid var(--line); border-radius:14px; padding:12px 15px; background:var(--card); color:var(--ink); margin:8px 0; }
+    .gate-res b { font-family:Georgia, 'Times New Roman', serif; }
     .gate-res span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
-    .gate-empty { border:1.5px solid #e6d6c8; background:#fbf7f1; border-radius:12px; padding:16px 18px; }
-    .disclaimer { font-size:12.5px; color:#8794a0; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
+    .gate-empty { border:1px solid #e3d2ba; background:rgba(255,253,248,0.9); border-radius:16px; padding:18px 20px; text-align:left; max-width:520px; margin:0 auto; }
+    .disclaimer { font-size:12.5px; color:#9c8a74; line-height:1.5; border-top:1px solid var(--line); margin-top:34px; padding-top:16px; }
+    @media (prefers-reduced-motion: no-preference){
+      .intro { animation:il-fade 0.9s ease; }
+      @keyframes il-fade { from { opacity:0; } to { opacity:1; } }
+    }
   </style>
 </head>
 <body>
-  <header>
+  <div class="glow" aria-hidden="true"><div class="ph"></div><div class="fade"></div></div>
+  <header class="intro">
     <div class="tag">Connecting you to mental-health care</div>
-    <h1>Reaching a real person for your care</h1>
-    <p>Before anything is shared, here is exactly who you may reach and what is protected. Nothing leaves this page until you read it and choose to send it.</p>
-  </header>
-  <main>
-    <section class="panel who">
-      <h2 id="chooser-title">Choose who you want to reach</h2>
-      <p id="chooser-sub">You pick. Tap the kind of professional you want &mdash; your summary goes to them, and only when you say send.</p>
-      <div id="pro-choices">
+    <p class="whisper" id="intro-whisper" hidden>Someone real is ready for you,</p>
+    <h1 class="promise" id="chooser-title">Reaching a real person for your care</h1>
+    <p class="intro-sub" id="chooser-sub">Before anything is shared, here is exactly who you may reach and what is protected. Nothing leaves this page until you read it and choose to send it.</p>
+    <div id="pro-choices">
         <div id="pro-suggestion" style="display:none;background:#f8f5f2;border:1px solid #e6d6c8;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#6a402c;margin-bottom:12px;"></div>
         <button type="button" class="pro-btn" data-role="crisis_counselor" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
         <button type="button" class="pro-btn" data-role="therapist" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
         <button type="button" class="pro-btn" data-role="psychiatrist" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
         <button type="button" class="pro-btn" data-role="nurse_practitioner" data-pro="Nurse practitioner" onclick="pickPro(this)"><b>Nurse practitioner</b><span>Can assess symptoms and, in many states, manage medication.</span></button>
       </div>
-      <p id="pro-picked" style="font-weight:700;color:var(--green);"></p>
-    </section>
-
-    <section class="urgent-note" id="urgent-note" style="display:none;">
+    <p id="pro-picked" style="font-weight:700;color:var(--amber);"></p>
+    <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
+  </header>
+  <main>
+        <section class="urgent-note" id="urgent-note" style="display:none;">
       <p><b>If you are in immediate danger right now, call or text 988, or call 911.</b> You can do that while this page stays open. Connecting to a professional here does not replace emergency help in a life-threatening moment.</p>
     </section>
 
@@ -5514,17 +5545,18 @@ CLINICAL_HANDOFF_PAGE = r"""
       <p><b>Quality review.</b> De-identified notes about conversations &mdash; with names, numbers, and contact details removed &mdash; may be reviewed by InnerLight's founder to improve how people are routed to help. These notes are never sold, never advertised with, and never shown publicly.</p>
     </details>
 
-    <section class="panel">
+    <section class="ready">
       <h2 id="ready-title">Ready when you are</h2>
       <p id="ready-sub">When you send this, InnerLight notifies the care side and prepares your approved summary so the professional can read it <i>before</i> they speak with you &mdash; so you don't have to start from the beginning.</p>
       <p id="status" style="font-weight:700;color:var(--green);"></p>
-      <button id="send-btn" onclick="sendToCare()">Send my summary &amp; connect me</button>
-      <a class="button secondary" href="/" onclick="if(history.length>1){history.back();return false;}">Go back</a>
+      <button id="send-btn" onclick="sendToCare()">I&rsquo;m ready to meet them.</button>
+      <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
     </section>
 
     <p class="disclaimer">
       InnerLight, a service of God's Love For Us LLC, provides crisis support and connection to care. It is not a medical provider and does not provide medical diagnosis or treatment. We work to follow U.S. health-privacy standards including HIPAA, and your information is encrypted and shared only with your consent. In an emergency, call or text 988 or call 911. This summary is prepared for a licensed professional and reflects what you chose to share.
     </p>
+  <p class="ember"><a href="tel:988" aria-label="Call 988, the Suicide and Crisis Lifeline">988</a></p>
   </main>
   <script>
     function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
@@ -5544,7 +5576,9 @@ CLINICAL_HANDOFF_PAGE = r"""
       pickedPro = btn.dataset.pro;
       document.getElementById('pro-picked').textContent = 'You chose: ' + pickedPro + '. Your summary will go to a ' + pickedPro.toLowerCase() + ' \u2014 nobody else.';
       const send = document.getElementById('send-btn');
-      if (send) send.textContent = 'Send my summary & connect me to a ' + pickedPro.toLowerCase();
+      var lbl = proLabel(btn);
+      if (send) send.textContent = GATE_T.readyRole.replace('{role}', lbl.toLowerCase());
+      setPromise(lbl);
     }
     function sendToCare(){
       if (!pickedPro && !LEAVE_WORD){
@@ -5576,7 +5610,7 @@ CLINICAL_HANDOFF_PAGE = r"""
           + 'While our professional network grows, an <b>InnerLight responder</b> \u2014 our founder, not a licensed '
           + 'provider \u2014 will meet you first, stay with you, and help arrange the ' + esc(pickedPro.toLowerCase()) + ' you chose. '
           + 'Above is the exact summary they will read.<br><br>'
-          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#7d522e;color:#fff;'
+          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#c56a2c;color:#fff;'
           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>'
           + '<br><span style="font-size:12.5px;color:#8794a0;">The room is private to this request. If no one joins within a few minutes, '
           + 'call or text 988 anytime \u2014 you never have to wait alone.</span>';
@@ -5592,6 +5626,10 @@ CLINICAL_HANDOFF_PAGE = r"""
     var GATE_SIDE = 'clinical';
     var LEAVE_WORD = false;
     var GATE_T = {
+      promise: 'They have read nothing \u2014 your story stays yours to tell.',
+      promiseRole: 'Your {role} has read nothing \u2014 your story stays yours to tell.',
+      introSub: 'You pick. Tap the kind of professional you want \u2014 your summary goes to them, and only when you say send.',
+      readyRole: 'I\u2019m ready to meet my {role}.',
       onlyHere: 'Only who is truly here right now is shown.',
       emptyTitle: 'No care professional is connected at this moment',
       emptyLead: 'We will not pretend otherwise. Right now no counselor, therapist, psychiatrist, or nurse practitioner is on call here \u2014 and we will never show you a button with no one behind it. The doors below are open and staffed by real people at this very moment.',
@@ -5607,6 +5645,18 @@ CLINICAL_HANDOFF_PAGE = r"""
       leaveSending: 'Placing your words where the next real person will find them\u2026',
       leaveDone: 'Your words are safely in. <b>A real person will see this.</b> This is not an instant connection, and we will never pretend it is. If you need someone this minute, call or text <b>988</b> \u2014 a trained human is there right now, around the clock.'
     };
+    // ---- FOUNDER DESIGN: the introduction moment. The privacy promise is the
+    // loudest line on the page, and it personalizes to the person they chose. ----
+    function proLabel(btn){
+      var b0 = btn && btn.querySelector ? btn.querySelector('b') : null;
+      return (b0 && b0.textContent) || (btn && btn.getAttribute('data-pro')) || '';
+    }
+    function setPromise(roleLabel){
+      var t0 = document.getElementById('chooser-title');
+      if (t0){ t0.textContent = roleLabel ? GATE_T.promiseRole.replace('{role}', String(roleLabel).toLowerCase()) : GATE_T.promise; }
+      var s0 = document.getElementById('chooser-sub');
+      if (s0) s0.textContent = GATE_T.introSub;
+    }
     function gateProviders(avail){
       var box = document.getElementById('pro-choices');
       if (!box) return;
@@ -5618,6 +5668,9 @@ CLINICAL_HANDOFF_PAGE = r"""
         else if (btns[i].parentNode){ btns[i].parentNode.removeChild(btns[i]); }
       }
       if (shown > 0){
+        var w = document.getElementById('intro-whisper'); if (w) w.hidden = false;
+        var only = (shown === 1) ? box.querySelector('.pro-btn') : null;
+        setPromise(only ? proLabel(only) : '');
         var note = document.createElement('p');
         note.style.cssText = 'font-size:13px;color:var(--muted);margin:10px 0 0;';
         note.textContent = GATE_T.onlyHere;
@@ -5625,7 +5678,7 @@ CLINICAL_HANDOFF_PAGE = r"""
         return;
       }
       LEAVE_WORD = true;
-      var t = document.getElementById('chooser-title'); if (t) t.textContent = GATE_T.emptyTitle;
+      var t = document.getElementById('chooser-title'); if (t){ t.textContent = GATE_T.emptyTitle; t.classList.add('quiet-title'); }
       var s = document.getElementById('chooser-sub'); if (s) s.textContent = GATE_T.emptyLead;
       var inner = GATE_T.resources
         + '<p style="margin:12px 0 0;font-size:13.5px;color:var(--muted);">' + GATE_T.leaveNote + '</p>';
@@ -5657,51 +5710,89 @@ LEGAL_HANDOFF_PAGE = r"""
   <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to Legal Help</title>
   <style>
-    :root { --ink:#2a1e14; --muted:#8a7a68; --line:#ece0d0; --soft:#faf5ec; --urgent:#b84a44; --legal:#b24a2a; --legal2:#c56a2c; }
+    :root { --ink:#2a1e14; --muted:#99673e; --line:#e8dcc8; --soft:#f5eddc; --cream:#faf5ec; --card:#fffdf8;
+            --urgent:#b84a44; --amber:#c56a2c; --dusk:#33567c;
+            --green:#c56a2c; --blue:#33567c; --legal:#c56a2c; --legal2:#c56a2c; }
     * { box-sizing:border-box; }
-    body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:#fbfbfd; }
-    header { padding:26px 6vw; border-bottom:1px solid var(--line); background:white; }
-    main { padding:24px 6vw 60px; max-width:920px; margin:0 auto; }
-    h1 { margin:0 0 6px; font-size:clamp(26px, 4.5vw, 44px); line-height:1.05; }
-    h2 { margin:0 0 10px; font-size:20px; }
-    p { color:var(--muted); line-height:1.55; }
-    .tag { display:inline-block; padding:5px 12px; border-radius:999px; background:#f6f1ed; border:1px solid #ecddd1; color:var(--legal); font-weight:700; font-size:13px; margin-bottom:10px; }
-    .panel { border:1px solid var(--line); border-radius:12px; background:white; padding:20px; margin:16px 0; }
-    .who { background:#faf8f7; border-color:#f0e4da; }
+    html { background:#faf5ec; }
+    body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:var(--cream); position:relative; }
+    /* FOUNDER DESIGN: his photograph as a faint warm glow behind the opening,
+       fading to solid cream before the working sections, so reading is easy. */
+    .glow { position:absolute; top:0; left:0; right:0; height:min(92vh, 860px); overflow:hidden; z-index:0; pointer-events:none; }
+    .glow .ph { position:absolute; top:0; left:0; right:0; bottom:0; background:url('/scenes/photo_6_golden_horizon.jpg') center top / cover no-repeat; opacity:0.25; }
+    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(250,245,236,0) 0%, rgba(250,245,236,0.2) 45%, rgba(250,245,236,0.7) 72%, rgba(250,245,236,1) 94%); }
+    header, main { position:relative; z-index:1; }
+    main { padding:10px 6vw 30px; max-width:820px; margin:0 auto; }
+    h1, h2, .whisper { font-family:Georgia, 'Times New Roman', serif; font-weight:400; }
+    h2 { margin:0 0 10px; font-size:21px; }
+    p { color:var(--muted); line-height:1.6; }
+    a { color:var(--dusk); }
+    .tag { display:inline-block; padding:5px 14px; border-radius:999px; background:rgba(255,253,248,0.6); border:1px solid var(--line); color:var(--muted); font-size:12.5px; }
+    .intro { text-align:center; padding:8vh 6vw 44px; max-width:820px; margin:0 auto; }
+    .intro .tag { margin-bottom:7vh; }
+    .whisper { margin:0 0 26px; font-size:16.5px; font-style:italic; color:var(--muted); }
+    .whisper[hidden] { display:none; }
+    h1.promise { margin:0 auto; max-width:600px; font-size:clamp(26px, 6.2vw, 40px); line-height:1.25; color:var(--ink); }
+    h1.promise.quiet-title { font-size:clamp(22px, 5vw, 30px); }
+    .intro-sub { max-width:540px; margin:20px auto 0; font-size:14.5px; }
+    #pro-choices { max-width:480px; margin:6vh auto 0; text-align:left; }
+    .panel { border:1px solid var(--line); border-radius:16px; background:var(--card); padding:22px; margin:18px 0; }
+    .who { background:var(--card); border-color:var(--line); }
     .who ul { margin:8px 0 0; padding-left:0; list-style:none; }
-    .who li { padding:9px 0; border-bottom:1px solid #f2ece8; color:var(--ink); }
+    .who li { padding:9px 0; border-bottom:1px solid var(--soft); color:var(--ink); }
     .who li:last-child { border-bottom:0; }
-    .who b { color:var(--legal); }
-    .rights { background:#f7f9fb; border-color:#dde2e6; }
-    .rights summary { cursor:pointer; font-weight:700; color:var(--legal); }
+    .who b { color:var(--amber); }
+    .rights { background:var(--soft); border-color:var(--line); }
+    .rights summary { cursor:pointer; font-weight:700; color:var(--amber); }
     .rights p { font-size:14px; }
+    .urgent-note { background:#fdf3f0; border:1px solid #e5b5a5; border-radius:16px; padding:14px 16px; margin:18px 0; }
+    .urgent-note b { color:var(--urgent); }
     label { display:block; font-weight:700; color:var(--ink); margin:14px 0 6px; }
-    textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:12px; font:inherit; min-height:90px; }
-    .convo { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:14px; max-height:280px; overflow:auto; }
+    textarea { width:100%; border:1px solid var(--line); border-radius:10px; padding:12px; font:inherit; min-height:90px; background:#fffefb; }
+    .convo { background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:14px; max-height:280px; overflow:auto; }
     .convo .u { color:var(--ink); margin:0 0 10px; }
-    .convo .a { color:var(--legal2); margin:0 0 10px; }
-    .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; }
-    button, a.button { display:inline-block; border:0; border-radius:8px; padding:13px 18px; background:var(--legal); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:15px; }
-    .secondary { background:#f3eeea; color:var(--ink); }
+    .convo .a { color:var(--dusk); margin:0 0 10px; }
+    .convo .u b, .convo .a b { display:block; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; opacity:0.7; }
+    button, a.button { display:inline-block; border:0; border-radius:999px; padding:15px 30px; background:var(--amber); color:white; font-weight:700; text-decoration:none; cursor:pointer; font-size:16px; }
+    .secondary { background:var(--soft); color:var(--ink); }
     .locked { font-size:13px; color:var(--muted); margin-top:8px; }
-    .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
-               border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; }
-    .pro-btn span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
-    .pro-btn.picked { border-color:var(--green); background:#fbf2ea; box-shadow:0 0 0 2px rgba(178,74,42,0.18); }
+    /* HIS ONE AMBER PILL: alone, centered, room to breathe. */
+    .ready { text-align:center; padding:9vh 4vw 10px; }
+    .ready p { max-width:560px; margin-left:auto; margin-right:auto; }
+    .ready #send-btn { display:inline-block; margin-top:26px; min-width:min(320px, 100%); }
+    /* HIS "NOT YET" LINE: a real door back, never a gray afterthought. */
+    .notyet { text-align:center; margin:40px 0 0; }
+    .notyet a { color:var(--dusk); font-family:Georgia, 'Times New Roman', serif; font-size:16px; text-decoration:underline; text-underline-offset:3px; }
+    /* HIS QUIET 988 EMBER at the very bottom, always present. */
+    .ember { text-align:center; margin:56px 0 14px; }
+    .ember a { color:var(--amber); text-decoration:none; font-family:Georgia, 'Times New Roman', serif; font-size:16px; letter-spacing:0.12em; opacity:0.85; }
+    .pro-btn { display:block; width:100%; text-align:left; margin:10px 0; padding:15px 18px; border-radius:16px;
+               border:1px solid #e3d2ba; background:var(--card); cursor:pointer; font-size:15.5px; font-weight:400; color:var(--ink); }
+    .pro-btn b { font-family:Georgia, 'Times New Roman', serif; font-weight:700; }
+    .pro-btn span { display:block; font-size:13px; color:var(--muted); margin-top:3px; font-weight:400; }
+    .pro-btn.picked { border-color:var(--amber); background:#fbf1e4; box-shadow:0 0 0 2px rgba(197,106,44,0.22); }
+    .pro-btn.suggested { border-color:var(--dusk); box-shadow:0 0 0 2px rgba(51,86,124,0.20); }
     /* FOUNDER RULE: provider buttons stay hidden until the server confirms a
        real person is available behind them. No ghost buttons, ever. */
     #pro-choices .pro-btn { display:none; color:var(--ink); }
-    .gate-res { display:block; text-decoration:none; border:1px solid var(--line); border-radius:12px; padding:12px 15px; background:#fff; color:var(--ink); margin:8px 0; }
+    .gate-res { display:block; text-decoration:none; border:1px solid var(--line); border-radius:14px; padding:12px 15px; background:var(--card); color:var(--ink); margin:8px 0; }
+    .gate-res b { font-family:Georgia, 'Times New Roman', serif; }
     .gate-res span { display:block; font-size:12.5px; color:var(--muted); margin-top:3px; font-weight:400; }
-    .gate-empty { border:1.5px solid #e6d6c8; background:#fbf7f1; border-radius:12px; padding:16px 18px; }
-    .disclaimer { font-size:12.5px; color:#8a929a; line-height:1.5; border-top:1px solid var(--line); margin-top:30px; padding-top:16px; }
+    .gate-empty { border:1px solid #e3d2ba; background:rgba(255,253,248,0.9); border-radius:16px; padding:18px 20px; text-align:left; max-width:520px; margin:0 auto; }
+    .disclaimer { font-size:12.5px; color:#9c8a74; line-height:1.5; border-top:1px solid var(--line); margin-top:34px; padding-top:16px; }
+    @media (prefers-reduced-motion: no-preference){
+      .intro { animation:il-fade 0.9s ease; }
+      @keyframes il-fade { from { opacity:0; } to { opacity:1; } }
+    }
   </style>
 </head>
 <body>
-  <header>
+  <div class="glow" aria-hidden="true"><div class="ph"></div><div class="fade"></div></div>
+  <header class="intro">
     <div class="tag">Connecting you to legal help &mdash; this is a legal handoff</div>
-    <h1>Reaching real legal help</h1>
-    <p id="chooser-sub">This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want &mdash; your summary goes there only when you say send.</p>
+    <p class="whisper" id="intro-whisper" hidden>Someone real is ready for you,</p>
+    <h1 class="promise" id="chooser-title">Reaching real legal help</h1>
+    <p class="intro-sub" id="chooser-sub">This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want &mdash; your summary goes there only when you say send.</p>
     <div id="pro-choices">
       <button type="button" class="pro-btn" data-role="housing_attorney" data-pro="Housing / tenant attorney" onclick="pickPro(this)"><b>Housing / tenant attorney</b><span>Evictions, landlord disputes, unsafe conditions.</span></button>
       <button type="button" class="pro-btn" data-role="family_attorney" data-pro="Family law attorney" onclick="pickPro(this)"><b>Family law attorney</b><span>Custody, divorce, protective orders.</span></button>
@@ -5709,7 +5800,8 @@ LEGAL_HANDOFF_PAGE = r"""
       <button type="button" class="pro-btn" data-role="civil_attorney" data-pro="Consumer / civil attorney" onclick="pickPro(this)"><b>Consumer / civil attorney</b><span>Debt, fraud claims, insurance disputes, benefits denials.</span></button>
       <button type="button" class="pro-btn" data-role="legal_aid" data-pro="Legal aid office" onclick="pickPro(this)"><b>Legal aid office</b><span>Free or low-cost help when money is tight.</span></button>
     </div>
-    <p id="pro-picked" style="font-weight:700;color:#2e6e8e;"></p>
+    <p id="pro-picked" style="font-weight:700;color:var(--amber);"></p>
+    <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
   </header>
   <main>
     <section class="panel who" id="state-panel">
@@ -5770,28 +5862,26 @@ LEGAL_HANDOFF_PAGE = r"""
       <p><b>What we are not.</b> InnerLight provides legal <i>information</i> and <i>connection</i> to legal help. InnerLight itself does not provide legal advice or represent you. Legal advice comes only from the attorney or legal-aid professional you connect with.</p>
     </details>
 
-    <section class="panel">
+    <section class="ready">
       <h2 id="ready-title">Ready when you are</h2>
       <p id="ready-sub">When you send this, InnerLight prepares your approved summary so the legal professional can review it before speaking with you.</p>
       <p id="status" style="font-weight:700;color:var(--legal);"></p>
-      <button id="send-btn" onclick="sendToLegal()">Send my summary &amp; connect me to legal help</button>
-      <a class="button secondary" href="/" onclick="if(history.length>1){history.back();return false;}">Go back</a>
+      <button id="send-btn" onclick="sendToLegal()">I&rsquo;m ready to reach legal help.</button>
+      <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
     </section>
 
     <p class="disclaimer">
       InnerLight, a service of God's Love For Us LLC, provides legal information and connection to legal resources. It is not a law firm and does not provide legal advice or representation. No attorney-client relationship is formed with InnerLight. Attorney-client privilege applies once you engage a licensed attorney. Your information is encrypted and shared only with your consent. If your legal issue involves immediate danger to your safety, call 911.
     </p>
+  <p class="ember"><a href="tel:988" aria-label="Call 988, the Suicide and Crisis Lifeline">988</a></p>
   </main>
   <style>
-    .pro-btn { display:block; width:100%; text-align:left; margin:8px 0; padding:13px 16px; border-radius:12px;
-               border:1.5px solid #d5e2ec; background:#fff; cursor:pointer; font-size:15px; }
-    .pro-btn span { display:block; font-size:12.5px; color:#7b8b99; margin-top:3px; font-weight:400; }
-    .pro-btn.picked { border-color:#2e6e8e; background:#f0f7fb; box-shadow:0 0 0 2px rgba(46,110,142,0.18); }
     .reslib { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-top:12px; }
-    .res { display:block; text-decoration:none; border:1px solid #d5e2ec; border-radius:12px; padding:13px 15px;
-           background:#fff; color:#1e3a5c; transition:all 0.2s ease; }
-    .res:hover { border-color:#2e6e8e; box-shadow:0 4px 14px rgba(46,110,142,0.15); transform:translateY(-1px); }
-    .res span { display:block; font-size:12.5px; color:#7b8b99; margin-top:4px; }
+    .res { display:block; text-decoration:none; border:1px solid #e3d2ba; border-radius:14px; padding:13px 15px;
+           background:#fffdf8; color:#33567c; transition:border-color 0.2s ease, box-shadow 0.2s ease; }
+    .res:hover { border-color:#c56a2c; box-shadow:0 4px 14px rgba(197,106,44,0.14); }
+    .res span { display:block; font-size:12.5px; color:#99673e; margin-top:4px; }
+    @media (prefers-reduced-motion: reduce){ .res { transition:none; } }
   </style>
   <script>
     let pickedPro = '';
@@ -5800,6 +5890,10 @@ LEGAL_HANDOFF_PAGE = r"""
       document.querySelectorAll('.pro-btn').forEach(b=>b.classList.remove('picked'));
       btn.classList.add('picked'); pickedPro = btn.dataset.pro;
       document.getElementById('pro-picked').textContent = 'You chose: ' + pickedPro + '.';
+      var lbl = proLabel(btn);
+      var send = document.getElementById('send-btn');
+      if (send && !LEAVE_WORD) send.textContent = GATE_T.readyRole.replace('{role}', lbl.toLowerCase());
+      setPromise(lbl);
     }
   </script>
   <script>
@@ -5955,7 +6049,7 @@ LEGAL_HANDOFF_PAGE = r"""
           'Your request for a <b>' + (pickedPro||'legal professional').toLowerCase() + '</b> is in, and a human has been alerted. '
           + 'While our network grows, an <b>InnerLight responder</b> \u2014 our founder, not an attorney \u2014 will meet you first '
           + 'and help arrange the right legal help.<br><br>'
-          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#2e6e8e;color:#fff;'
+          + '<a href="' + d.room + '" target="_blank" style="display:inline-block;background:#c56a2c;color:#fff;'
           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>';
       }).catch(function(){
         document.getElementById('status').textContent='The connection request could not go through right now.';
@@ -5967,6 +6061,10 @@ LEGAL_HANDOFF_PAGE = r"""
     var GATE_SIDE = 'legal';
     var LEAVE_WORD = false;
     var GATE_T = {
+      promise: 'They have read nothing \u2014 your story stays yours to tell.',
+      promiseRole: 'Your {role} has read nothing \u2014 your story stays yours to tell.',
+      introSub: 'This is not a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want \u2014 your summary goes there only when you say send.',
+      readyRole: 'I\u2019m ready to reach my {role}.',
       onlyHere: 'Only who is truly here right now is shown.',
       emptyTitle: 'No legal-aid partner is connected at this moment',
       emptyLead: 'We will not pretend otherwise. Right now no attorney or legal-aid office is on call here \u2014 a button only appears when a real person is truly behind it. Everything else on this page \u2014 your state directories and the law-school clinics \u2014 is real and open right now, and so are the doors below.',
@@ -5980,6 +6078,18 @@ LEGAL_HANDOFF_PAGE = r"""
       leaveSending: 'Placing your words where the next real person will find them\u2026',
       leaveDone: 'Your words are safely in. <b>A real person will see this.</b> This is not an instant connection, and we will never pretend it is. The directories above are open right now \u2014 and if your situation involves immediate danger, call 911.'
     };
+    // ---- FOUNDER DESIGN: the introduction moment. The privacy promise is the
+    // loudest line on the page, and it personalizes to the person they chose. ----
+    function proLabel(btn){
+      var b0 = btn && btn.querySelector ? btn.querySelector('b') : null;
+      return (b0 && b0.textContent) || (btn && btn.getAttribute('data-pro')) || '';
+    }
+    function setPromise(roleLabel){
+      var t0 = document.getElementById('chooser-title');
+      if (t0){ t0.textContent = roleLabel ? GATE_T.promiseRole.replace('{role}', String(roleLabel).toLowerCase()) : GATE_T.promise; }
+      var s0 = document.getElementById('chooser-sub');
+      if (s0) s0.textContent = GATE_T.introSub;
+    }
     function gateProviders(avail){
       var box = document.getElementById('pro-choices');
       if (!box) return;
@@ -5991,6 +6101,9 @@ LEGAL_HANDOFF_PAGE = r"""
         else if (btns[i].parentNode){ btns[i].parentNode.removeChild(btns[i]); }
       }
       if (shown > 0){
+        var w = document.getElementById('intro-whisper'); if (w) w.hidden = false;
+        var only = (shown === 1) ? box.querySelector('.pro-btn') : null;
+        setPromise(only ? proLabel(only) : '');
         var note = document.createElement('p');
         note.style.cssText = 'font-size:13px;color:var(--muted);margin:10px 0 0;';
         note.textContent = GATE_T.onlyHere;
@@ -5998,7 +6111,7 @@ LEGAL_HANDOFF_PAGE = r"""
         return;
       }
       LEAVE_WORD = true;
-      var t = document.getElementById('chooser-title'); if (t) t.textContent = GATE_T.emptyTitle;
+      var t = document.getElementById('chooser-title'); if (t){ t.textContent = GATE_T.emptyTitle; t.classList.add('quiet-title'); }
       var s = document.getElementById('chooser-sub'); if (s) s.textContent = GATE_T.emptyLead;
       var inner = GATE_T.resources
         + '<p style="margin:12px 0 0;font-size:13.5px;color:var(--muted);">' + GATE_T.leaveNote + '</p>';
