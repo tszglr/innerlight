@@ -6314,6 +6314,8 @@ def page_about():
 
     <p style="font-family:Georgia,serif;font-style:italic;">And beneath everything, one founding belief about every person who enters &mdash; regardless of their pain, their loss, or their trouble: <strong>you are the best there is, the best there was, and the best there ever could be.</strong></p>
 
+    <p style="font-size:14px;color:#74624d;">Credit where credit is due: those words began as the mantra of professional wrestler Bret &ldquo;The Hitman&rdquo; Hart &mdash; <em>the best there is, the best there was, the best there ever will be</em>. In our founder&rsquo;s family they became a call-and-response, and the ending changed from &ldquo;will be&rdquo; to &ldquo;could be&rdquo; &mdash; from a champion&rsquo;s declaration to a door held open. We honor the man who said it first.</p>
+
     <p>Across the country, that gap is measured in waitlists, transfers, and hold music. When someone is in crisis, help usually does exist &mdash; a clinician, a counselor, a legal-aid office, a crisis line &mdash; but reaching it means navigating hospitals, insurance, county agencies, schools, and courts, often during the hardest hours of a person&rsquo;s life. In the space between &ldquo;I need help&rdquo; and &ldquo;help has arrived,&rdquo; people wait, and too often they wait alone. National crisis systems themselves report answer and dispatch times measured in many minutes to hours; mobile crisis and appointment waits are far longer. InnerLight was built to hold that specific interval &mdash; to keep a person company and steady while a bridge to the right human help is built.</p>
 
     <h2>The gap we target, precisely</h2>

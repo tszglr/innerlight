@@ -214,6 +214,13 @@
 - The structure of the blessing matters: it starts the sentence and the
   person finishes it. InnerLight begins the belief; the person's own life
   completes it. We never finish it for them.
-- Origin: a call-and-response the founder spoke with his own children, given
-  now to every person the program serves. The details of that family are
-  private (Principle 5); the gift is public.
+- Origin, with credit where credit is due: the words began as the mantra of
+  professional wrestler Bret "The Hitman" Hart — "the best there is, the best
+  there was, the best there ever will be" — and InnerLight honors him as
+  their source. In the founder's home the mantra became a call-and-response
+  with his children, and its ending changed: "will be" became "COULD be" —
+  from a champion's declaration to a door held open. That adapted form, and
+  the practice of letting the person finish the sentence, is what InnerLight
+  carries. The founder insists on this credit; taking without crediting
+  would break the honesty this program is built on. The details of the
+  founder's family remain private (Principle 5); the gift is public.
