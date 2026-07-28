@@ -886,6 +886,7 @@ PUBLIC_PAGE = """
         "rail.legal": "Ayuda legal",
         "rail.nearby": "Ayuda cercana",
         "rail.activities": "Actividades",
+        "rail.save": "&#128278; Guardar",
         "rail.testmic": "Probar micr&oacute;fono"
       },
       zh: {
@@ -911,6 +912,7 @@ PUBLIC_PAGE = """
         "rail.legal": "法律帮助",
         "rail.nearby": "附近的帮助",
         "rail.activities": "活动",
+        "rail.save": "&#128278; 保存",
         "rail.testmic": "测试麦克风"
       }
     };
@@ -1180,6 +1182,7 @@ PUBLIC_PAGE = """
           <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help" data-i18n="rail.legal">Legal</button>
           <button type="button" class="rail-btn" onclick="openFacilities()" title="Find nearby help" data-i18n="rail.nearby">Nearby help</button>
           <button type="button" class="rail-btn" onclick="openActivities()" title="Calming activities" data-i18n="rail.activities">Activities</button>
+          <button type="button" class="rail-btn" onclick="openSaveNow()" title="Save the conversation with a private return code" data-i18n="rail.save">&#128278; Save</button>
           <button type="button" class="rail-btn" onclick="testMic()" title="Test my microphone" data-i18n="rail.testmic">Test mic</button>
         </div>
         <div id="urgent-help" style="display:none;margin:6px auto;max-width:560px;text-align:center;padding:12px;background:rgba(232,83,78,0.1);border:1px solid rgba(232,83,78,0.4);border-radius:14px;color:#b3322e;font-weight:600;"></div>
@@ -4604,6 +4607,28 @@ function collectStory(){
   return msg && msg.value ? msg.value.trim().slice(0,5500) : '';
 }
 let _memOffered = false;
+// The person can ALWAYS save on demand from the Save button on the help rail.
+// If there is not enough to save yet, we say so honestly instead of failing.
+function openSaveNow(){
+  var existing = document.getElementById('save-offer');
+  if (existing){ existing.remove(); }
+  _memOffered = true;
+  var story = collectStory();
+  var bar = document.createElement('div');
+  bar.id = 'save-offer';
+  bar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:75;'
+    + 'background:rgba(255,255,255,0.97);border:1px solid #e0d7cf;border-radius:16px;padding:14px 18px;'
+    + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
+  if (story.length < 40){
+    bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">There is not much to save yet. Share a little of your story first, then tap Save again and I will give you a private return code.</div>'
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">Okay</button>';
+  } else {
+    bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">Save where you are? You will get a private return code only you hold.</div>'
+      + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">Save my place</button>'
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
+  }
+  document.body.appendChild(bar);
+}
 function maybeOfferSave(){
   if (_memOffered) return;
   const story = collectStory();

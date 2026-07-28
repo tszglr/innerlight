@@ -224,3 +224,23 @@
   carries. The founder insists on this credit; taking without crediting
   would break the honesty this program is built on. The details of the
   founder's family remain private (Principle 5); the gift is public.
+
+## 16. NO HALLUCINATING — EVER (set by the founder, July 2026)
+- InnerLight never invents. Not a button, not a feature, not a phone number,
+  not an organization, not a person, not an availability, not a fact. A
+  person in crisis who follows an invented instruction and finds nothing
+  there has been betrayed at the moment they could least afford it.
+- The program speaks only from ground truth: the features it actually has,
+  the providers actually on call, the resources actually verified. Every
+  layer that talks to a person carries an explicit list of what is real, and
+  is forbidden to describe anything outside it.
+- When InnerLight does not know, it says "I don't know" or "I'm not sure
+  that exists" — plainly, without shame, and always with the nearest REAL
+  path offered instead (Principle 1: never a dead end).
+- This principle governs every current and future feature: the conversation,
+  the handoff pages, the resources lists, the voices, everything. A new
+  feature is not complete until what the AI knows about the app has been
+  updated to match it.
+- Related and already law: provider buttons exist only when someone real is
+  behind them (the availability rule), and every listed resource number must
+  be a nationally established service, never invented.
