@@ -244,3 +244,31 @@
 - Related and already law: provider buttons exist only when someone real is
   behind them (the availability rule), and every listed resource number must
   be a nationally established service, never invented.
+
+## 17. HARDEN AXIOM HARMONY PROTOCOL, ALWAYS — LAWFUL ACTIVE DEFENSE (set by the founder, July 2026)
+- Axiom Harmony Protocol (AHP) — the encryption and security core of InnerLight
+  (core/ahp_encryption.py: AES-256-GCM with PBKDF2-HMAC-SHA256 key derivation)
+  — is never "finished." EVERY backend change is an occasion to harden it:
+  review it, strengthen it, and watch for newer, stronger technology. The
+  founder expects the day an attacker comes, and intends to be ready before it.
+- The security posture is DETER, DECEIVE, WITHSTAND, and DELIVER-TO-JUSTICE —
+  the fiercest defense the law allows:
+  - DETER: make an attack costly and slow to even attempt — rate limits,
+    lockouts, tarpits, and defenses that waste an attacker's time and money.
+  - DECEIVE: honeypots and decoys that draw an intruder onto fake targets,
+    burning their effort while recording everything they do.
+  - WITHSTAND: harden AHP so that even a successful breach yields only
+    unreadable, unusable encrypted noise — the user is never exposed.
+  - DELIVER-TO-JUSTICE: capture clean, complete forensic evidence and hand it
+    to law enforcement, so the STATE brings the consequence, lawfully.
+- THE LINE (bounded absolutely by Principle 11): InnerLight NEVER "hacks back."
+  No destroying, damaging, disabling, or planting anything on an attacker's
+  system; no retaliatory intrusion; no offensive malware — not even against
+  someone who attacked us first. Counter-hacking is itself a crime (e.g. the
+  U.S. Computer Fraud and Abuse Act) with no self-defense exception, and one
+  such act would expose the founder to prosecution and hand opponents the
+  weapon to destroy the mission. We are punishing to attackers only through
+  lawful defense and lawful referral — up to the line, never over it.
+- This is not a lawyer's opinion and security is adversarial; significant
+  security work should be reviewed by a qualified security professional and,
+  where retaliation or evidence-sharing is contemplated, by counsel.
