@@ -272,3 +272,17 @@
 - This is not a lawyer's opinion and security is adversarial; significant
   security work should be reviewed by a qualified security professional and,
   where retaliation or evidence-sharing is contemplated, by counsel.
+- THE STANDING LAW OF UPDATES: the moment the founder gives ANY new command —
+  a new feature, a new program, a change of any kind — is the moment AHP must
+  be reviewed and hardened. Hardening AHP is not a separate task to schedule;
+  it rides along with every change, every time, without being asked.
+- THE HORIZON — QUANTUM SECURITY: the founder's aim is to reach genuine
+  quantum-era security through AHP in a way that is unique and groundbreaking.
+  This is a long research effort — founder and builder testing hypotheses,
+  new avenues, and tuning parameters over many iterations — pursued WHILE AHP
+  runs in production. Bound by Principle 16 (no hallucinating): we build toward
+  it honestly, we never CLAIM quantum resistance we have not actually achieved,
+  and we state our real posture plainly at each step. Concretely this means
+  moving toward modern memory-hard key derivation (Argon2id/scrypt) and a
+  hybrid path ready for post-quantum key exchange (e.g. ML-KEM/Kyber) as the
+  libraries and our testing mature.

@@ -6179,6 +6179,54 @@ def _block_operator_paths():
             403,
         )
 
+
+# ---------------------------------------------------------------------------
+# SECURITY HEADERS (WITHSTAND / DETER — Principle 17).
+# Added as a SEPARATE after_request so the existing before_request above is
+# untouched. Every header here was checked against what InnerLight actually
+# loads (cdn.jsdelivr.net for face-api / MediaPipe / Tone.js, plus the video
+# rooms on Daily.co and Jitsi) and against the camera/microphone heart-rate
+# feature, so none of it breaks the site. The Content-Security-Policy keeps
+# 'unsafe-inline' for scripts/styles ONLY because the app renders inline
+# script and style blocks throughout; it is otherwise as tight as the app allows.
+# ---------------------------------------------------------------------------
+_CSP = "; ".join([
+    "default-src 'self'",
+    # inline scripts are used across the templates; wasm-unsafe-eval is required
+    # by the on-device MediaPipe/face-api heart-rate reader (WebAssembly).
+    "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://storage.googleapis.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "media-src 'self' data: blob:",
+    "font-src 'self' data:",
+    # the on-device model fetches wasm/weights from jsdelivr AND the MediaPipe
+    # face models from storage.googleapis.com; blob: for workers.
+    "connect-src 'self' https://cdn.jsdelivr.net https://storage.googleapis.com https://api.daily.co https://*.daily.co https://meet.jit.si blob:",
+    # video rooms may be framed by their own SDKs.
+    "frame-src https://*.daily.co https://meet.jit.si",
+    "worker-src 'self' blob:",
+    "child-src blob: https://*.daily.co https://meet.jit.si",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+])
+
+
+@app.after_request
+def _security_headers(resp):
+    resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "no-referrer")
+    # X-XSS-Protection 0: the legacy filter is itself an XSS vector; CSP replaces it.
+    resp.headers.setdefault("X-XSS-Protection", "0")
+    # Only the camera and microphone are used, and only by this origin (the
+    # on-device heart-rate reader and voice). Everything else is denied.
+    resp.headers.setdefault("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(), payment=()")
+    resp.headers.setdefault("Content-Security-Policy", _CSP)
+    return resp
+
 @app.route("/")
 def index():
     return render_template_string(PUBLIC_PAGE)
@@ -8314,6 +8362,261 @@ def admin_abuse():
                     "budget_used": counts, "budget_caps": _BUDGET_CAPS})
 
 
+# ===========================================================================
+# LAWFUL ACTIVE DEFENSE — DETER · DECEIVE · WITHSTAND · DELIVER-TO-JUSTICE
+# ---------------------------------------------------------------------------
+# THE LINE (Principle 17, bounded by Principle 11): everything below is PURELY
+# LOCAL defense and lawful logging. It NEVER hacks back, retaliates, scans,
+# probes, or touches an attacker's system in any way. Counter-hacking is itself
+# a crime (e.g. the U.S. Computer Fraud and Abuse Act) with no self-defense
+# exception; we punish attackers only by wasting their time (tarpit/lockout),
+# feeding them decoys (honeypots), withstanding them (AHP encryption), and
+# handing clean forensic evidence to law enforcement — up to the line, never over.
+#
+# SAFETY OUTRANKS SECURITY: none of this is ever applied to a person in crisis.
+# The tarpit/lockout is invoked ONLY on auth endpoints and honeypots. The crisis
+# and conversation paths (/api/checkin, /api/connect/request, /handoff/*, the
+# 988-bearing pages) never call _defend(), so a real person is never delayed.
+# ===========================================================================
+
+# A believable-but-fake credential planted in the decoys. If it ever comes BACK
+# to us in a later request, only someone who scraped a honeypot could know it —
+# so its reappearance instantly flags the client as hostile.
+_HONEYTOKEN = "il_pay_rk_7Qd2Fv8xR1nKpB3wYt6ZmA9uH4cJ0eL"
+
+_HOSTILE = {}            # ip -> {"offenses": int, "first": ts, "last": ts, "block_until": ts, "reason": str}
+_HOSTILE_LOCK = threading.Lock()
+
+_SECURITY_LOG_FILE = os.environ.get("SECURITY_LOG_FILE", _DATA_DIR + "/innerlight_security.jsonl")
+_SECURITY_LOG_LOCK = threading.Lock()
+_SECURITY_LOG_MAX = 5000     # keep at most this many lines; rotate (halve) when exceeded
+_SECURITY_COUNTS = {"attacks": 0, "honeypots": 0, "paths": {}}  # in-memory quick readout
+
+
+def _security_log(reason, path=None, extra=None):
+    """Append one security event to the forensic JSONL evidence file.
+    Records ONLY attacker/security metadata — never any user content, message,
+    or conversation. This is the package handed to law enforcement."""
+    try:
+        ua = request.headers.get("User-Agent", "")[:300]
+        xff = request.headers.get("X-Forwarded-For", "")[:200]
+        rec = {
+            "ts": utc_now(),
+            "reason": str(reason)[:120],
+            "path": (path if path is not None else request.path)[:300],
+            "method": request.method,
+            "ip": _client_ip(),
+            "xff": xff,
+            "ua": ua,
+        }
+        if extra:
+            rec["note"] = str(extra)[:200]
+        line = json.dumps(rec, ensure_ascii=False)
+    except Exception:
+        return
+    # update the in-memory quick counters
+    try:
+        _SECURITY_COUNTS["attacks"] += 1
+        if str(reason).startswith("honeypot"):
+            _SECURITY_COUNTS["honeypots"] += 1
+        pk = rec.get("path", "?")
+        _SECURITY_COUNTS["paths"][pk] = _SECURITY_COUNTS["paths"].get(pk, 0) + 1
+    except Exception:
+        pass
+    with _SECURITY_LOG_LOCK:
+        try:
+            os.makedirs(os.path.dirname(_SECURITY_LOG_FILE), exist_ok=True)
+        except Exception:
+            pass
+        try:
+            with open(_SECURITY_LOG_FILE, "a", encoding="utf-8") as f:
+                f.write(line + "\n")
+            # cheap size-cap rotation: if the file grew past the cap, keep the
+            # most recent half so it can never fill the ops disk.
+            try:
+                with open(_SECURITY_LOG_FILE, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                if len(lines) > _SECURITY_LOG_MAX:
+                    keep = lines[-(_SECURITY_LOG_MAX // 2):]
+                    with open(_SECURITY_LOG_FILE, "w", encoding="utf-8") as f:
+                        f.writelines(keep)
+            except Exception:
+                pass
+        except Exception as e:
+            print("[InnerLight] security log write failed:", e)
+
+
+def _flag_hostile(reason, hard=False):
+    """Mark the current client hostile, growing its offense count. Progressive:
+    early offenses only slow the client (via _defend's sleep); after a handful
+    it is temporarily hard-blocked (429). Always logs to the forensic file."""
+    ip = _client_ip()
+    now = time.time()
+    with _HOSTILE_LOCK:
+        h = _HOSTILE.get(ip)
+        if h is None:
+            h = {"offenses": 0, "first": now, "block_until": 0.0, "reason": str(reason)[:80]}
+            _HOSTILE[ip] = h
+        h["offenses"] += 1
+        h["last"] = now
+        h["reason"] = str(reason)[:80]
+        # after 5 strikes (or an explicit hard flag), lock out for a growing
+        # window, capped at 15 minutes so an innocent shared IP recovers.
+        if hard or h["offenses"] >= 5:
+            h["block_until"] = now + min(900.0, 60.0 * (h["offenses"] - 4))
+        # opportunistic cleanup so the map cannot grow without bound
+        if len(_HOSTILE) > 10000:
+            for k in list(_HOSTILE.keys())[:3000]:
+                _HOSTILE.pop(k, None)
+    _abuse_mark()
+    _security_log(reason)
+
+
+def _defend():
+    """Tarpit + lockout gate for hostile clients. Returns a Flask response to
+    send IMMEDIATELY (hard block) or None to let the request proceed after a
+    small deterrent delay. MUST NEVER be called on a crisis/conversation path —
+    safety outranks security (see the section banner above)."""
+    ip = _client_ip()
+    now = time.time()
+    with _HOSTILE_LOCK:
+        h = _HOSTILE.get(ip)
+        if not h:
+            return None
+        offenses = h.get("offenses", 0)
+        block_until = h.get("block_until", 0.0)
+    if block_until and now < block_until:
+        _security_log("lockout-hit")
+        return _gentle_429()
+    # progressive real server-side delay that grows with offense count, capped
+    # at a few seconds: cheap for us, expensive for an automated attacker.
+    if offenses > 0:
+        time.sleep(min(3.0, 0.5 * offenses))
+    return None
+
+
+def _fake_env_body():
+    """A plausible-looking but entirely fake .env, seeded with the honeytoken."""
+    return (
+        "# production environment\n"
+        "APP_ENV=production\n"
+        "DB_HOST=10.0.0.14\n"
+        "DB_USER=iladmin\n"
+        "DB_PASSWORD=Str0ng-Pg-2026!\n"
+        "SECRET_KEY=9f2c1a7e4b6d8c0f13579bdf2468ace0\n"
+        "API_KEY=" + _HONEYTOKEN + "\n"
+        "PAYMENT_SECRET=il_pay_rk_4Tz9Xb2Qv7Dm1Ns8Wc6Yg0Hf3Jp5Lr\n"
+    )
+
+
+# --- HONEYPOTS (DECEIVE): routes no legitimate user ever visits. Each returns
+#     a believable fake, flags the caller hostile, and logs the attempt. ---
+@app.route("/wp-login.php", methods=["GET", "POST"])
+@app.route("/wp-admin", methods=["GET", "POST"])
+def _honeypot_wp():
+    _flag_hostile("honeypot:wordpress")
+    blocked = _defend()
+    if blocked is not None:
+        return blocked
+    return ("<!DOCTYPE html><html><head><title>Log In</title></head><body>"
+            "<form method='post' action='/wp-login.php'>"
+            "<p><label>Username<br><input name='log'></label></p>"
+            "<p><label>Password<br><input name='pwd' type='password'></label></p>"
+            "<p><input type='submit' value='Log In'></p></form></body></html>"), 200
+
+
+@app.route("/.env", methods=["GET"])
+def _honeypot_env():
+    _flag_hostile("honeypot:dotenv")
+    blocked = _defend()
+    if blocked is not None:
+        return blocked
+    return app.response_class(_fake_env_body(), mimetype="text/plain")
+
+
+@app.route("/admin.php", methods=["GET", "POST"])
+@app.route("/phpmyadmin", methods=["GET", "POST"])
+@app.route("/phpmyadmin/index.php", methods=["GET", "POST"])
+def _honeypot_php():
+    _flag_hostile("honeypot:phpmyadmin")
+    blocked = _defend()
+    if blocked is not None:
+        return blocked
+    return ("<!DOCTYPE html><html><head><title>phpMyAdmin</title></head><body>"
+            "<h1>phpMyAdmin</h1><form method='post'>"
+            "<p>Username <input name='pma_username'></p>"
+            "<p>Password <input name='pma_password' type='password'></p>"
+            "<p><input type='submit' value='Go'></p></form></body></html>"), 200
+
+
+@app.route("/api/v1/keys", methods=["GET"])
+@app.route("/api/keys", methods=["GET"])
+def _honeypot_keys():
+    _flag_hostile("honeypot:api-keys")
+    blocked = _defend()
+    if blocked is not None:
+        return blocked
+    # a believable JSON key listing carrying the honeytoken
+    return jsonify({"keys": [
+        {"id": "key_1", "name": "production", "secret": _HONEYTOKEN, "created": "2026-01-04T09:11:00Z"},
+        {"id": "key_2", "name": "backup", "secret": "il_pay_rk_" + "0" * 32, "created": "2026-02-19T14:02:00Z"},
+    ]})
+
+
+@app.before_request
+def _honeytoken_watch():
+    """DECEIVE follow-through: if the honeytoken planted in a decoy ever appears
+    in a later request (query string or any header), only someone who scraped a
+    honeypot could know it — flag them hostile at once. Cheap: scans metadata
+    only, never the request body, so it can never touch real user content and
+    never delays a normal request."""
+    try:
+        if _HONEYTOKEN in (request.query_string or b"").decode("latin-1", "ignore"):
+            _flag_hostile("honeytoken-replay:query", hard=True)
+            return _gentle_429()
+        for _v in request.headers.values():
+            if _HONEYTOKEN in _v:
+                _flag_hostile("honeytoken-replay:header", hard=True)
+                return _gentle_429()
+    except Exception:
+        pass
+    return None
+
+
+@app.route("/api/admin/security")
+def admin_security():
+    """FOUNDER-ONLY forensic readout: recent security events + quick counts.
+    Metadata only — never any user content. This is the evidence view."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    events = []
+    try:
+        with _SECURITY_LOG_LOCK:
+            if os.path.exists(_SECURITY_LOG_FILE):
+                with open(_SECURITY_LOG_FILE, "r", encoding="utf-8") as f:
+                    lines = f.readlines()[-200:]
+        for ln in reversed(lines):
+            try:
+                events.append(json.loads(ln))
+            except Exception:
+                continue
+    except Exception:
+        events = []
+    top_paths = sorted(_SECURITY_COUNTS.get("paths", {}).items(), key=lambda x: -x[1])[:8]
+    with _HOSTILE_LOCK:
+        now = time.time()
+        locked = sum(1 for h in _HOSTILE.values() if h.get("block_until", 0) > now)
+        hostile_ips = len(_HOSTILE)
+    return jsonify({
+        "attacks_total": _SECURITY_COUNTS.get("attacks", 0),
+        "honeypot_hits": _SECURITY_COUNTS.get("honeypots", 0),
+        "hostile_ips": hostile_ips,
+        "locked_out_now": locked,
+        "top_paths": [{"path": p, "count": c} for p, c in top_paths],
+        "recent": events[:120],
+    })
+
+
 _MEMORY_FILE = os.environ.get("MEMORY_FILE", _DATA_DIR + "/innerlight_memory.json")
 _MEMORY_LOCK = threading.Lock()
 _CODE_WORDS = ["MOON","CALM","LEAF","WAVE","STAR","DAWN","FERN","TIDE","SAGE","GLOW","PINE","REST"]
@@ -8592,6 +8895,11 @@ LOGIN_PAGE = """
 
 @app.route("/admin/login", methods=["POST"])
 def admin_login():
+    # DETER: an auth endpoint is a prime brute-force target. Tarpit/lock out
+    # clients that have already earned it before doing any work.
+    blocked = _defend()
+    if blocked is not None:
+        return blocked
     admin_key = os.environ.get("ADMIN_KEY", "")
     admin_user = os.environ.get("ADMIN_USER", "founder")
     u = request.form.get("username", "")
@@ -8600,6 +8908,9 @@ def admin_login():
         session["founder_ok"] = True
         session.permanent = False
         return redirect("/admin")
+    # A failed admin login is a security event: flag + log so repeated attempts
+    # progressively slow and then lock the attacker out.
+    _flag_hostile("admin-login-fail")
     return render_template_string(LOGIN_PAGE, err="That username or password is not right."), 401
 
 @app.route("/admin/logout")
@@ -8933,7 +9244,7 @@ def admin_dashboard():
   </header>
 
   <nav class="quiet-nav" aria-label="Ledger sections">
-    <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
+    <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#security">security</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
   </nav>
 
   <section class="field-wrap" aria-label="People being held right now">
@@ -9153,6 +9464,60 @@ def admin_dashboard():
         }
         el.innerHTML = html;
       }catch(e){}
+    })();
+    </script>
+
+    <h2 class="ledger" id="security">Security — the watch on the walls</h2>
+    <div class="panel">
+    <div class="hint">Lawful active defense only &mdash; <b style="color:#f4c977;">deter, deceive, withstand, deliver-to-justice</b>.
+    InnerLight never hacks back. These are attacker/security metadata counts pulled from the forensic evidence log &mdash;
+    <b>never any person's words, session, or content</b>. The crisis and conversation paths are never delayed or blocked by this.</div>
+    <div id="sec-readout"><i style="color:rgba(242,231,210,.45);">Loading the watch&hellip;</i></div>
+    </div>
+    <script>
+    (function(){
+      function esc3(s){ return String(s == null ? '' : s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function tile(v, lbl, warm){
+        var col = warm ? '#e8534e' : '#f4c977';
+        return '<div style="flex:1;min-width:120px;background:rgba(232,163,76,.07);border:1px solid rgba(232,163,76,.18);border-radius:12px;padding:14px;text-align:center;">'
+          + '<b style="font-size:24px;color:' + col + ';font-variant-numeric:tabular-nums;">' + v + '</b>'
+          + '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,201,119,.6);margin-top:6px;">' + lbl + '</div></div>';
+      }
+      async function load(){
+        try{
+          var r = await fetch('/api/admin/security'); if(!r.ok) return;
+          var d = await r.json();
+          var el = document.getElementById('sec-readout'); if(!el) return;
+          var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">'
+            + tile(d.attacks_total||0, 'attacks deterred', (d.attacks_total||0)>0)
+            + tile(d.honeypot_hits||0, 'honeypot hits', (d.honeypot_hits||0)>0)
+            + tile(d.hostile_ips||0, 'flagged clients', false)
+            + tile(d.locked_out_now||0, 'locked out now', (d.locked_out_now||0)>0)
+            + '</div>';
+          var tp = d.top_paths || [];
+          if(tp.length){
+            html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:10px 0 4px;">Top offending paths</div>';
+            html += tp.map(function(p){
+              return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(232,163,76,.12);">'
+                + '<span style="color:rgba(242,231,210,.78);">' + esc3(p.path) + '</span>'
+                + '<b style="color:#e8a34c;">' + (p.count||0) + '</b></div>';
+            }).join('');
+          }
+          var rec = d.recent || [];
+          if(rec.length){
+            html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:16px 0 4px;">Recent events (metadata only)</div>';
+            html += rec.slice(0,40).map(function(e){
+              return '<div style="border-left:3px solid rgba(232,83,78,.5);background:rgba(232,163,76,.04);border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:12.5px;color:rgba(242,231,210,.78);">'
+                + '<b style="color:#e8534e;">' + esc3(e.reason) + '</b> &middot; ' + esc3(e.method) + ' ' + esc3(e.path)
+                + '<span style="display:block;font-size:11px;color:rgba(242,231,210,.45);margin-top:3px;">' + esc3(e.ip) + ' &middot; ' + esc3(e.ts) + '</span></div>';
+            }).join('');
+          } else {
+            html += '<div style="color:rgba(242,231,210,.45);font-style:italic;margin-top:10px;">No attempts recorded. The walls are quiet.</div>';
+          }
+          el.innerHTML = html;
+        }catch(e){}
+      }
+      load(); setInterval(load, 30000);
     })();
     </script>
 
