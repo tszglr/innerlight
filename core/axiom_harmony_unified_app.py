@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -7081,13 +7082,91 @@ def _load_handoff_i18n():
             _HANDOFF_I18N[lg] = {}
 _load_handoff_i18n()
 
+# ===========================================================================
+# DEMONSTRATION MODE — founder-only, session-scoped. (Part 2)
+#   SAFETY IS PARAMOUNT (Principle 16). A REAL person in crisis must NEVER see
+#   sample providers as real. The ONLY ways demo is ever turned on:
+#     (a) the founder POSTs /api/admin/demo (guarded by founder_ok), or
+#     (b) a visitor opens /demo/<token> where token is a stable HMAC of
+#         ADMIN_KEY (never the admin key itself).
+#   Both set session["demo_mode"] — an in-cookie, per-visitor flag. A fresh
+#   browser with no such session sees the honest, real-only product. Nothing
+#   else in the codebase reads sample data; the sample rows are only ever
+#   surfaced inside an `if session.get("demo_mode")` gate. That gate is the
+#   entire isolation boundary, and it is verifiable in one place.
+# ===========================================================================
+def _demo_token():
+    """A stable, shareable token derived from ADMIN_KEY via HMAC-SHA256. It is
+    NOT the admin key and cannot be reversed into it. Visiting /demo/<token>
+    turns on demo mode for THAT visitor's session only."""
+    key = os.environ.get("ADMIN_KEY", "").encode("utf-8")
+    return hmac.new(key, b"innerlight-demo-link::v1", hashlib.sha256).hexdigest()[:40]
+
+def _demo_sides():
+    """Return the set of sides ('clinical'/'legal') live for demo in THIS
+    session, or an empty set. Empty for every real visitor, always."""
+    raw = session.get("demo_mode")
+    if not raw:
+        return set()
+    if raw is True:
+        return {"clinical", "legal"}
+    try:
+        return {s for s in raw if s in ("clinical", "legal")}
+    except Exception:
+        return set()
+
+# The persistent, unmissable SAMPLE banner. Trilingual (en / es / zh) in one
+# fixed bar so it is unmistakable regardless of the visitor's language. Amber
+# warning styling, fixed to the top, always visible, cannot be scrolled away.
+_DEMO_BANNER_HTML = (
+    '<div id="il-demo-banner" role="alert" style="position:fixed;top:0;left:0;right:0;'
+    'z-index:2147483647;background:#7a3c00;background:linear-gradient(90deg,#8a4300,#c56a2c);'
+    'color:#fff;border-bottom:3px solid #ffd28a;box-shadow:0 3px 14px rgba(0,0,0,.35);'
+    'padding:9px 14px 10px;text-align:center;font-family:Arial,Helvetica,sans-serif;'
+    'font-size:13px;line-height:1.35;letter-spacing:.01em;">'
+    '<span style="font-size:15px;">&#9888;</span> '
+    '<b style="text-transform:uppercase;letter-spacing:.06em;">Sample &mdash; Demonstration mode</b> '
+    '&mdash; these are not real providers. '
+    '<span style="opacity:.92;">Muestra &mdash; modo de demostraci&oacute;n: estos no son proveedores reales. '
+    '&#26679;&#26412; &mdash; &#28436;&#31034;&#27169;&#24335;&#65306;&#36825;&#20123;&#19981;&#26159;&#30495;&#23454;&#30340;&#25552;&#20379;&#32773;&#12290;</span>'
+    '</div>'
+    '<div style="height:52px;"></div>'
+)
+
+def _inject_demo(html):
+    """Insert the SAMPLE banner right after <body>, and a small override script
+    right before </body> so the send flow shows a demo confirmation and creates
+    NOTHING real — in every language, since the override replaces the global
+    send handlers by name after the page has defined them."""
+    override = '''<script>window.IL_DEMO={on:true};(function(){function demoSend(){var chosen='';try{chosen=(typeof pickedPro!=='undefined'&&pickedPro)?pickedPro:'';}catch(e){}var who=chosen?('a '+String(chosen).toLowerCase()):'a real person';var el=document.getElementById('status');if(el){el.textContent='SAMPLE - DEMONSTRATION MODE. In a live network, '+who+' would be reaching you now. Nothing real was sent: no room was opened, no one was paged. This is a demonstration of the full flow only.';}}window.sendToCare=demoSend;window.sendToLegal=demoSend;})();</script>'''
+    out = html
+    idx = out.find("<body")
+    if idx >= 0:
+        gt = out.find(">", idx)
+        if gt >= 0:
+            out = out[:gt + 1] + _DEMO_BANNER_HTML + out[gt + 1:]
+    else:
+        out = _DEMO_BANNER_HTML + out
+    cidx = out.rfind("</body>")
+    if cidx >= 0:
+        out = out[:cidx] + override + out[cidx:]
+    else:
+        out = out + override
+    return out
+
 def _handoff_page(page_key, en_tpl):
     lang = _info_lang()
+    tpl = en_tpl
     if lang != "en":
         t = _HANDOFF_I18N.get(lang, {}).get(page_key)
         if t:
-            return render_template_string(t)
-    return render_template_string(en_tpl)
+            tpl = t
+    html = render_template_string(tpl)
+    # DEMO ONLY: never for a real visitor. Sample data + banner appear solely
+    # when this session was explicitly put in demo mode for this side.
+    if page_key in _demo_sides():
+        html = _inject_demo(html)
+    return html
 
 
 @app.route("/handoff/clinical")
@@ -9248,7 +9327,7 @@ def admin_dashboard():
   </header>
 
   <nav class="quiet-nav" aria-label="Ledger sections">
-    <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#partners">partners</a><a href="#security">security</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
+    <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#vetting">vetting</a><a href="#partners">partners</a><a href="#demo">demo</a><a href="#security">security</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
   </nav>
 
   <section class="field-wrap" aria-label="People being held right now">
@@ -9411,6 +9490,214 @@ def admin_dashboard():
         loadOncall();
       });
       loadOncall();
+    })();
+    </script>
+
+    <h2 class="ledger" id="vetting">Vetting — scrutinize a provider before anyone reaches them</h2>
+    <div class="panel">
+    <div class="hint">Principle 4, kept: we do not toss a person to just any provider. Enter a provider here, check their credential and record, and categorize them &mdash; nothing is exposed to anyone by this. A new provider starts <b style="color:#f4c977;">pending</b>. Review, then mark <b style="color:#f4c977;">Vetted</b> or <b>Rejected</b>. Only after that can you (separately, by choice) promote a vetted provider into Partners or light their role on the On-Call board. This engine holds provider records only &mdash; never any person&rsquo;s words or identity.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin:14px 0 14px;">
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Organization</div>
+        <input id="vt-org" placeholder="e.g. Harbor Family Law" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:210px;"></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Contact name</div>
+        <input id="vt-contact" placeholder="optional" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:150px;"></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Side</div>
+        <select id="vt-side" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;">
+          <option value="clinical">Clinical</option><option value="legal">Legal</option></select></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Role</div>
+        <select id="vt-role" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:190px;"></select></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Credential type</div>
+        <select id="vt-ctype" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;"></select></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Credential ID</div>
+        <input id="vt-cid" placeholder="license / NPI / bar #" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:150px;"></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">State</div>
+        <input id="vt-cstate" placeholder="e.g. CA" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;width:80px;"></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Category</div>
+        <input id="vt-category" placeholder="e.g. Housing / trauma" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:160px;"></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Specialty / fit</div>
+        <input id="vt-specialty" placeholder="e.g. eviction defense, EMDR" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:180px;"></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(242,231,210,.8);cursor:pointer;">
+        <input type="checkbox" id="vt-disc"> Discipline history checked</label>
+      <div style="flex-basis:100%;height:0;"></div>
+      <div style="flex:1;min-width:260px;"><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Discipline notes (auto-scrubbed of identifiers)</div>
+        <textarea id="vt-notes" placeholder="What the license / bar record showed. Any identifiers are scrubbed before saving." style="width:100%;background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-height:52px;"></textarea></div>
+      <button id="vt-create" style="background:linear-gradient(90deg,#b06a2a,#e8a34c);color:#ffe8bf;border:0;border-radius:999px;padding:11px 24px;font-size:13px;font-weight:700;cursor:pointer;">Add for vetting</button>
+    </div>
+    <div id="vt-code" style="display:none;background:rgba(232,163,76,.1);border:1px solid rgba(232,163,76,.35);border-radius:12px;padding:16px 18px;margin-bottom:16px;"></div>
+    <div id="vt-list"><i style="color:rgba(242,231,210,.45);">Loading the vetting board&hellip;</i></div>
+    </div>
+    <script>
+    (function(){
+      var ROLES = [];
+      var CTYPES = {clinical: [['License #','License #'],['NPI','NPI (National Provider Identifier)']],
+                    legal: [['State bar #','State bar #']]};
+      function esc(s){ return String(s == null ? '' : s).replace(/</g,'&lt;'); }
+      function fillRoles(){
+        var side = document.getElementById('vt-side').value;
+        var sel = document.getElementById('vt-role'); sel.innerHTML = '';
+        ROLES.filter(function(r){ return r.side === side; }).forEach(function(r){
+          var o = document.createElement('option'); o.value = r.role; o.textContent = r.label; sel.appendChild(o);
+        });
+        var cs = document.getElementById('vt-ctype'); cs.innerHTML = '';
+        (CTYPES[side]||[]).forEach(function(pair){
+          var o = document.createElement('option'); o.value = pair[0]; o.textContent = pair[1]; cs.appendChild(o);
+        });
+      }
+      function statusPill(st, sample){
+        var col = st === 'vetted' ? 'background:rgba(232,163,76,.18);color:#f4c977;'
+          : st === 'rejected' ? 'background:rgba(150,150,150,.16);color:rgba(242,231,210,.5);'
+          : 'background:rgba(197,106,44,.2);color:#e8a34c;';
+        var s = '<span style="border-radius:999px;padding:4px 12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;' + col + '">' + esc(st) + '</span>';
+        if (sample) s = '<span style="border-radius:999px;padding:4px 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:rgba(197,106,44,.28);color:#ffd28a;border:1px solid rgba(255,210,138,.6);margin-right:6px;">Sample</span>' + s;
+        return s;
+      }
+      async function loadVetting(){
+        try{
+          var r = await fetch('/api/admin/vetting/list'); if(!r.ok) return;
+          var d = await r.json();
+          ROLES = d.roles || [];
+          if(!document.getElementById('vt-role').options.length) fillRoles();
+          var el = document.getElementById('vt-list'); if(!el) return;
+          var ps = d.providers || [];
+          if(!ps.length){ el.innerHTML = '<i style="color:rgba(242,231,210,.45);">No providers yet. Add one above.</i>'; return; }
+          el.innerHTML = ps.map(function(p){
+            var cred = [p.credential_type, p.credential_id, p.credential_state].filter(Boolean).join(' &middot; ');
+            var cat = [p.category, p.specialty].filter(Boolean).join(' &mdash; ');
+            var disc = p.discipline_checked ? 'discipline checked' : 'discipline not yet checked';
+            var actions = '';
+            if(p.status === 'pending'){
+              actions = '<button data-vt-decide="' + p.id + '" data-vt-to="vetted" style="background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Mark vetted</button>'
+                + '<button data-vt-decide="' + p.id + '" data-vt-to="rejected" style="background:rgba(150,150,150,.12);color:rgba(242,231,210,.6);border:1px solid rgba(150,150,150,.3);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Reject</button>';
+            } else if(p.status === 'vetted' && !p.is_sample){
+              actions = '<button data-vt-promote="' + p.id + '" data-vt-target="partner" style="background:linear-gradient(90deg,#b06a2a,#e8a34c);color:#ffe8bf;border:0;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Promote to partner</button>'
+                + '<button data-vt-promote="' + p.id + '" data-vt-target="oncall" style="background:rgba(232,163,76,.14);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Light on-call</button>';
+            } else if(p.status === 'vetted' && p.is_sample){
+              actions = '<span style="font-size:11px;color:rgba(242,231,210,.4);margin-left:8px;">sample &mdash; not promotable</span>';
+            }
+            return '<div style="padding:12px 0;border-bottom:1px solid rgba(232,163,76,.12);">'
+              + '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
+              + '<div style="flex:1;min-width:240px;"><b style="color:#ffe8bf;">' + esc(p.org) + '</b>'
+              + '<span style="color:rgba(242,231,210,.5);font-size:12px;"> &mdash; ' + esc(p.role_label) + (p.contact ? ' &middot; ' + esc(p.contact) : '') + '</span>'
+              + (cred ? '<div style="font-size:12px;color:rgba(242,231,210,.6);margin-top:3px;">' + cred + '</div>' : '')
+              + (cat ? '<div style="font-size:12px;color:rgba(244,201,119,.65);margin-top:2px;">' + esc(cat) + '</div>' : '')
+              + '<div style="font-size:11px;color:rgba(242,231,210,.4);margin-top:2px;">' + disc + '</div></div>'
+              + '<div style="text-align:right;">' + statusPill(p.status, p.is_sample) + '<div style="margin-top:8px;">' + actions + '</div></div>'
+              + '</div></div>';
+          }).join('');
+        }catch(e){}
+      }
+      document.addEventListener('change', function(ev){
+        if(ev.target && ev.target.id === 'vt-side') fillRoles();
+      });
+      document.addEventListener('click', async function(ev){
+        var b = ev.target;
+        if(b && b.id === 'vt-create'){
+          var org = document.getElementById('vt-org').value.trim();
+          var role = document.getElementById('vt-role').value;
+          if(!org){ return; }
+          b.disabled = true;
+          var payload = {org: org, contact: document.getElementById('vt-contact').value.trim(),
+            role: role, credential_type: document.getElementById('vt-ctype').value,
+            credential_id: document.getElementById('vt-cid').value.trim(),
+            credential_state: document.getElementById('vt-cstate').value.trim(),
+            category: document.getElementById('vt-category').value.trim(),
+            specialty: document.getElementById('vt-specialty').value.trim(),
+            discipline_checked: document.getElementById('vt-disc').checked,
+            discipline_notes: document.getElementById('vt-notes').value.trim()};
+          try{
+            await fetch('/api/admin/vetting/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+            ['vt-org','vt-contact','vt-cid','vt-cstate','vt-category','vt-specialty','vt-notes'].forEach(function(id){ var e0 = document.getElementById(id); if(e0) e0.value = ''; });
+            document.getElementById('vt-disc').checked = false;
+          }catch(e){}
+          b.disabled = false; loadVetting(); return;
+        }
+        if(b && b.getAttribute && b.getAttribute('data-vt-decide')){
+          b.disabled = true;
+          try{ await fetch('/api/admin/vetting/decide', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: parseInt(b.getAttribute('data-vt-decide'),10), decision: b.getAttribute('data-vt-to')})}); }catch(e){}
+          loadVetting(); return;
+        }
+        if(b && b.getAttribute && b.getAttribute('data-vt-promote')){
+          b.disabled = true;
+          try{
+            var r = await fetch('/api/admin/vetting/promote', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: parseInt(b.getAttribute('data-vt-promote'),10), to: b.getAttribute('data-vt-target')})});
+            var d = await r.json();
+            if(d && d.code){
+              var box = document.getElementById('vt-code'); box.style.display = 'block'; box.innerHTML = '';
+              var line = document.createElement('div');
+              line.style.cssText = 'font-size:13px;color:rgba(242,231,210,.78);margin-bottom:9px;';
+              line.textContent = 'Partner access code for ' + d.org + ' (' + d.role_label + ') — shown once. Copy it now and give it to them privately.';
+              var codeEl = document.createElement('span');
+              codeEl.style.cssText = 'font-family:var(--serif);font-size:26px;letter-spacing:.12em;color:#ffe8bf;';
+              codeEl.textContent = d.code;
+              var copyBtn = document.createElement('button');
+              copyBtn.textContent = 'Copy';
+              copyBtn.style.cssText = 'margin-left:16px;background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:6px 16px;font-size:12px;cursor:pointer;';
+              copyBtn.addEventListener('click', function(){ try{ navigator.clipboard.writeText(codeEl.textContent); copyBtn.textContent = 'Copied'; }catch(e){} });
+              box.appendChild(line); box.appendChild(codeEl); box.appendChild(copyBtn);
+            }
+          }catch(e){}
+          b.disabled = false; loadVetting(); return;
+        }
+      });
+      loadVetting();
+    })();
+    </script>
+
+    <h2 class="ledger" id="demo">Demonstration mode — show the whole flow, safely</h2>
+    <div class="panel">
+    <div class="hint">Turn on a <b style="color:#f4c977;">sample</b> network so you can show how InnerLight works start to finish &mdash; even when nobody real is on call. <b>This only affects your own session (or a visitor who opens your demo link).</b> Real people are never touched: while demo is on for you, anyone else opening a handoff page still sees the honest empty state. Every demo page carries a fixed <b style="color:#e8a34c;">SAMPLE &mdash; DEMONSTRATION MODE</b> banner, and a demo send opens no room and pages no one. Turn it off and your session returns to the real, honest product.</div>
+    <div id="demo-state" style="font-size:14px;color:rgba(242,231,210,.8);margin:12px 0;">Loading&hellip;</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0 4px;">
+      <button data-demo-side="clinical" style="background:rgba(232,163,76,.14);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:9px 18px;font-size:13px;cursor:pointer;">Turn on clinical sample network</button>
+      <button data-demo-side="legal" style="background:rgba(232,163,76,.14);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:9px 18px;font-size:13px;cursor:pointer;">Turn on legal sample network</button>
+      <button data-demo-side="both" style="background:linear-gradient(90deg,#b06a2a,#e8a34c);color:#ffe8bf;border:0;border-radius:999px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">Turn on both</button>
+      <button data-demo-off="1" style="background:rgba(150,150,150,.14);color:rgba(242,231,210,.75);border:1px solid rgba(150,150,150,.35);border-radius:999px;padding:9px 18px;font-size:13px;cursor:pointer;">Turn demo OFF</button>
+    </div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(232,163,76,.14);">
+      <div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">Shareable demo link (for a class or investors, from their own device)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <input id="demo-link" readonly style="flex:1;min-width:280px;background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:13px;">
+        <button id="demo-copy" style="background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:8px 18px;font-size:12px;cursor:pointer;">Copy demo link</button>
+      </div>
+      <div style="font-size:12px;color:rgba(242,231,210,.5);margin-top:8px;">This link carries a one-way code derived from your admin key &mdash; it is not the key itself, and it turns on demo mode only in the browser that opens it.</div>
+    </div>
+    </div>
+    <script>
+    (function(){
+      var LINKPATH = '';
+      function render(d){
+        var el = document.getElementById('demo-state'); if(!el) return;
+        if(d.on){
+          el.innerHTML = '<b style="color:#e8a34c;">Demonstration mode is ON</b> for your session &mdash; sample network(s): <b style="color:#f4c977;">' + (d.sides||[]).join(', ') + '</b>. Open <a href="/handoff/clinical" target="_blank" style="color:#e8a34c;">/handoff/clinical</a> or <a href="/handoff/legal" target="_blank" style="color:#e8a34c;">/handoff/legal</a> to walk the flow. Real visitors are unaffected.';
+        } else {
+          el.innerHTML = 'Demonstration mode is <b>off</b> for your session. You are seeing the real, honest product &mdash; exactly what every visitor sees.';
+        }
+        LINKPATH = d.link || '';
+        var li = document.getElementById('demo-link');
+        if(li && LINKPATH){ li.value = window.location.origin + LINKPATH; }
+      }
+      async function loadDemo(){
+        try{ var r = await fetch('/api/admin/demo'); if(!r.ok) return; render(await r.json()); }catch(e){}
+      }
+      document.addEventListener('click', async function(ev){
+        var b = ev.target;
+        if(b && b.getAttribute && b.getAttribute('data-demo-side')){
+          b.disabled = true;
+          try{ var r = await fetch('/api/admin/demo', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({on: true, side: b.getAttribute('data-demo-side')})}); render(await r.json()); }catch(e){}
+          b.disabled = false; loadDemo(); return;
+        }
+        if(b && b.getAttribute && b.getAttribute('data-demo-off')){
+          b.disabled = true;
+          try{ var r2 = await fetch('/api/admin/demo', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({on: false})}); render(await r2.json()); }catch(e){}
+          b.disabled = false; loadDemo(); return;
+        }
+        if(b && b.id === 'demo-copy'){
+          var li = document.getElementById('demo-link');
+          if(li){ try{ navigator.clipboard.writeText(li.value); b.textContent = 'Copied'; }catch(e){ li.select(); } }
+          return;
+        }
+      });
+      loadDemo();
     })();
     </script>
 
@@ -10667,6 +10954,24 @@ def providers_available():
     gate on. Never errors: any failure returns empty lists, because empty
     is the truthful fallback — no one gets offered a button with nobody
     behind it."""
+    # DEMO ONLY (Principle 16 isolation): if THIS session was explicitly put in
+    # demo mode, return the SAMPLE vetted providers for the enabled side(s),
+    # flagged sample:true. This branch is NEVER reached without the founder-set
+    # session flag, and it never reads or writes the shared cache — so a real
+    # visitor's honest-empty picture can never be polluted by a demo session.
+    _dsides = _demo_sides()
+    if _dsides:
+        demo_out = {"clinical": [], "legal": []}
+        try:
+            roles = _vetting_sample_roles()  # {side: [role, ...]} from is_sample rows
+            for side in ("clinical", "legal"):
+                if side in _dsides:
+                    demo_out[side] = roles.get(side, [])
+        except Exception as e:
+            print("[InnerLight] demo availability issue:", e)
+        demo_out["demo"] = True
+        demo_out["sample"] = True
+        return jsonify(demo_out)
     out = {"clinical": [], "legal": []}
     try:
         now = time.time()
@@ -11225,6 +11530,15 @@ _CONNECT_LOCK = threading.Lock()
 
 @app.route("/api/connect/request", methods=["POST"])
 def connect_request():
+    # DEMO ONLY (Principle 16): a session in demo mode never creates a real
+    # video room, never pages the founder via ntfy, and never writes real
+    # partner transfer events or connect-log rows. It returns a demo marker so
+    # the page shows its own demonstration confirmation. A real visitor (no
+    # demo_mode in session) never reaches this branch and behaves exactly as
+    # before. This runs before rate limits/bot traps so a live demo is smooth.
+    if _demo_sides():
+        return jsonify({"status": "ok", "demo": True, "room": None,
+                        "notified": False})
     if not _rate_ok("connect", 3, 3600) or not _budget_ok("connect"):
         return _gentle_429()
     _cd = request.get_json(silent=True) or {}
@@ -11998,3 +12312,294 @@ def admin_partner_suggestions_read():
         finally:
             conn.close()
     return jsonify({"status": "ok"})
+
+
+# ===========================================================================
+# PROVIDER VETTING ENGINE — founder-only (Part 1). Principle 4: scrutinize and
+# categorize providers carefully; we do not toss a person to just any provider.
+#   * Lives in the SAME persistent ops sqlite as the on-call board and partners
+#     (founder operational state only — ZERO user data, ever). It records who a
+#     provider is, their credential, their category/specialty, and the vetting
+#     decision — nothing about any person we serve.
+#   * Marking a provider Vetted does NOT expose them to anyone. The founder then
+#     explicitly promotes a vetted (non-sample) provider into Partners (issuing
+#     a one-time access code) and/or lights their role on the On-Call board.
+#   * SAMPLE rows (is_sample=1) are unmistakably fictitious and can NEVER be
+#     promoted to a real system (Principle 16). They exist only to populate the
+#     board for the founder and to drive Demonstration Mode.
+# ===========================================================================
+_VETTING_LOCK = threading.Lock()
+
+_VETTING_SAMPLES = [
+    # (org, contact, side, role, credential_type, credential_id, credential_state,
+    #  category, specialty, discipline_notes)
+    ("SAMPLE Clinic", "Dr. A. Rivera, LMFT", "clinical", "therapist",
+     "License #", "LMFT-000000 (SAMPLE)", "CA", "Anxiety & trauma",
+     "Adults, EMDR, grief", "Sample record for demonstration only."),
+    ("SAMPLE Behavioral Health", "Dr. M. Chen, MD", "clinical", "psychiatrist",
+     "NPI", "0000000000 (SAMPLE)", "NY", "Medication management",
+     "Mood & anxiety disorders", "Sample record for demonstration only."),
+    ("SAMPLE Legal Aid", "J. Okafor, Housing", "legal", "housing_attorney",
+     "State bar #", "BAR-000000 (SAMPLE)", "TX", "Housing / eviction defense",
+     "Tenant rights, unsafe conditions", "Sample record for demonstration only."),
+    ("SAMPLE Defenders", "R. Santos, Esq.", "legal", "criminal_attorney",
+     "State bar #", "BAR-111111 (SAMPLE)", "IL", "Criminal defense",
+     "Arraignments, misdemeanors", "Sample record for demonstration only."),
+]
+
+def _vetting_db() -> sqlite3.Connection:
+    """Open the ops sqlite and ensure the vetted_providers table + seed the
+    fictitious SAMPLE rows once. Shares the on-call DB file (founder state only,
+    zero user data)."""
+    conn = sqlite3.connect(_ONCALL_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS vetted_providers ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, org TEXT NOT NULL, "
+        "contact_name TEXT, side TEXT NOT NULL, role TEXT NOT NULL, "
+        "credential_type TEXT, credential_id TEXT, credential_state TEXT, "
+        "category TEXT, specialty TEXT, discipline_checked INTEGER DEFAULT 0, "
+        "discipline_notes TEXT, status TEXT NOT NULL DEFAULT 'pending', "
+        "is_sample INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, "
+        "decided_at TEXT)")
+    # Seed the SAMPLE rows exactly once (only if none are present yet).
+    have = conn.execute(
+        "SELECT COUNT(*) c FROM vetted_providers WHERE is_sample=1").fetchone()
+    if not have or not have["c"]:
+        now = utc_now()
+        for (org, contact, side, role, ctype, cid, cstate, cat, spec, notes) in _VETTING_SAMPLES:
+            conn.execute(
+                "INSERT INTO vetted_providers (org, contact_name, side, role, "
+                "credential_type, credential_id, credential_state, category, "
+                "specialty, discipline_checked, discipline_notes, status, "
+                "is_sample, created_at, decided_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,1,?,'vetted',1,?,?)",
+                (org, contact, side, role, ctype, cid, cstate, cat, spec,
+                 notes, now, now))
+        conn.commit()
+    return conn
+
+def _vetting_sample_roles():
+    """{side: [role, ...]} for the fictitious, VETTED sample providers. Used by
+    Demonstration Mode only (never by the real availability path)."""
+    out = {"clinical": [], "legal": []}
+    with _VETTING_LOCK:
+        conn = _vetting_db()
+        try:
+            rows = conn.execute(
+                "SELECT DISTINCT side, role FROM vetted_providers "
+                "WHERE is_sample=1 AND status='vetted'").fetchall()
+        finally:
+            conn.close()
+    for r in rows:
+        if r["side"] in out and r["role"] not in out[r["side"]]:
+            out[r["side"]].append(r["role"])
+    return out
+
+@app.route("/api/admin/vetting/list")
+def admin_vetting_list():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    with _VETTING_LOCK:
+        conn = _vetting_db()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM vetted_providers ORDER BY "
+                "CASE status WHEN 'pending' THEN 0 WHEN 'vetted' THEN 1 ELSE 2 END, "
+                "id DESC").fetchall()
+        finally:
+            conn.close()
+    out = []
+    for p in rows:
+        out.append({
+            "id": p["id"], "org": p["org"], "contact": p["contact_name"] or "",
+            "side": p["side"], "role": p["role"],
+            "role_label": _PARTNER_ROLE_LABELS.get(p["role"], p["role"]),
+            "credential_type": p["credential_type"] or "",
+            "credential_id": p["credential_id"] or "",
+            "credential_state": p["credential_state"] or "",
+            "category": p["category"] or "", "specialty": p["specialty"] or "",
+            "discipline_checked": bool(p["discipline_checked"]),
+            "discipline_notes": p["discipline_notes"] or "",
+            "status": p["status"], "is_sample": bool(p["is_sample"]),
+            "created_at": (p["created_at"] or "")[:10],
+            "decided_at": (p["decided_at"] or "")[:10]})
+    return jsonify({"status": "ok", "providers": out,
+                    "roles": [{"side": s, "role": r, "label": lb}
+                              for s, r, lb in _PROVIDER_ROLES]})
+
+@app.route("/api/admin/vetting/create", methods=["POST"])
+def admin_vetting_create():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    org = _partner_scrub(data.get("org", ""), 120).strip()
+    contact = _partner_scrub(data.get("contact", ""), 120).strip()
+    role = str(data.get("role", ""))[:40]
+    if role not in _PARTNER_ROLE_SIDE:
+        return jsonify({"error": "unknown role"}), 400
+    if not org:
+        return jsonify({"error": "org required"}), 400
+    side = _PARTNER_ROLE_SIDE[role]
+    ctype = str(data.get("credential_type", ""))[:40].strip()
+    # Credential id is provider data (a license/NPI/bar number), NOT user data,
+    # so it is stored as entered (capped) — the digit-scrub would destroy it.
+    cid = str(data.get("credential_id", ""))[:60].strip()
+    cstate = str(data.get("credential_state", ""))[:24].strip()
+    category = _partner_scrub(data.get("category", ""), 80).strip()
+    specialty = _partner_scrub(data.get("specialty", ""), 120).strip()
+    disc_checked = 1 if data.get("discipline_checked") else 0
+    disc_notes = _partner_scrub(data.get("discipline_notes", ""), 500).strip()
+    with _VETTING_LOCK:
+        conn = _vetting_db()
+        try:
+            cur = conn.execute(
+                "INSERT INTO vetted_providers (org, contact_name, side, role, "
+                "credential_type, credential_id, credential_state, category, "
+                "specialty, discipline_checked, discipline_notes, status, "
+                "is_sample, created_at, decided_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,'pending',0,?,NULL)",
+                (org, contact, side, role, ctype, cid, cstate, category,
+                 specialty, disc_checked, disc_notes, utc_now()))
+            pid = cur.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok", "id": pid, "org": org,
+                    "role_label": _PARTNER_ROLE_LABELS.get(role, role)})
+
+@app.route("/api/admin/vetting/decide", methods=["POST"])
+def admin_vetting_decide():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    try:
+        pid = int(data.get("id"))
+    except Exception:
+        return jsonify({"error": "bad id"}), 400
+    decision = "vetted" if data.get("decision") == "vetted" else "rejected"
+    with _VETTING_LOCK:
+        conn = _vetting_db()
+        try:
+            conn.execute(
+                "UPDATE vetted_providers SET status=?, decided_at=? WHERE id=?",
+                (decision, utc_now(), pid))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok", "id": pid, "new_status": decision})
+
+@app.route("/api/admin/vetting/promote", methods=["POST"])
+def admin_vetting_promote():
+    """Founder explicitly promotes a VETTED, NON-SAMPLE provider into a real
+    system: 'partner' issues a one-time access code (reuses the partner-create
+    flow); 'oncall' lights their role on the On-Call board. SAMPLE providers can
+    never be promoted — a fictitious provider must never reach a real user."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    try:
+        pid = int(data.get("id"))
+    except Exception:
+        return jsonify({"error": "bad id"}), 400
+    to = str(data.get("to", ""))
+    with _VETTING_LOCK:
+        conn = _vetting_db()
+        try:
+            row = conn.execute(
+                "SELECT * FROM vetted_providers WHERE id=?", (pid,)).fetchone()
+        finally:
+            conn.close()
+    if not row:
+        return jsonify({"error": "not found"}), 404
+    if row["is_sample"]:
+        return jsonify({"error": "sample cannot be promoted"}), 400
+    if row["status"] != "vetted":
+        return jsonify({"error": "only vetted providers can be promoted"}), 400
+    role = row["role"]
+    side = row["side"]
+    if to == "partner":
+        code = _partner_gen_code()
+        ch = _partner_hash_code(code)
+        with _PARTNER_LOCK:
+            conn = _partner_db()
+            try:
+                conn.execute(
+                    "INSERT INTO partners (org, contact_name, side, role, code_hash, "
+                    "status, created_at) VALUES (?, ?, ?, ?, ?, 'active', ?)",
+                    (row["org"], row["contact_name"], side, role, ch, utc_now()))
+                conn.commit()
+            finally:
+                conn.close()
+        return jsonify({"status": "ok", "promoted": "partner", "code": code,
+                        "org": row["org"],
+                        "role_label": _PARTNER_ROLE_LABELS.get(role, role)})
+    if to == "oncall":
+        with _ONCALL_LOCK:
+            conn = _oncall_db()
+            try:
+                conn.execute(
+                    "UPDATE provider_availability SET available=1, updated_at=? "
+                    "WHERE side=? AND role=?", (utc_now(), side, role))
+                conn.commit()
+            finally:
+                conn.close()
+        _ONCALL_CACHE["data"] = None  # real availability updates immediately
+        return jsonify({"status": "ok", "promoted": "oncall", "side": side,
+                        "role": role,
+                        "role_label": _PARTNER_ROLE_LABELS.get(role, role)})
+    return jsonify({"error": "unknown target"}), 400
+
+
+# ===========================================================================
+# DEMONSTRATION MODE endpoints — founder-only (Part 2). See the isolation note
+# above _demo_token(). demo_mode lives ONLY in the visitor's signed session.
+# ===========================================================================
+@app.route("/api/admin/demo", methods=["GET"])
+def admin_demo_state():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    sides = sorted(_demo_sides())
+    return jsonify({"status": "ok", "on": bool(sides), "sides": sides,
+                    "token": _demo_token(), "link": "/demo/" + _demo_token()})
+
+@app.route("/api/admin/demo", methods=["POST"])
+def admin_demo_set():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    if not data.get("on"):
+        session.pop("demo_mode", None)
+        return jsonify({"status": "ok", "on": False, "sides": []})
+    side = str(data.get("side", "both"))
+    if side == "clinical":
+        sides = ["clinical"]
+    elif side == "legal":
+        sides = ["legal"]
+    else:
+        sides = ["clinical", "legal"]
+    session["demo_mode"] = sides
+    return jsonify({"status": "ok", "on": True, "sides": sides})
+
+@app.route("/demo/<token>")
+def demo_link(token):
+    """A shareable demonstration link. The token is a stable HMAC of ADMIN_KEY
+    (NOT the admin key). A valid token turns on demo mode for THIS visitor's
+    session only, so the founder can show a class or investors from their own
+    device without signing anyone in as founder. An invalid token does nothing
+    — a real person can never stumble into sample data."""
+    good = _demo_token()
+    if not good or not secrets.compare_digest(str(token or ""), good):
+        return ("<!doctype html><html lang=en><head><meta charset=utf-8>"
+                "<meta name=viewport content='width=device-width,initial-scale=1'>"
+                "<title>InnerLight</title></head>"
+                "<body style='font-family:Arial;background:#faf5ec;color:#2a1e14;"
+                "padding:12vh 8vw;text-align:center;'>"
+                "<h2 style='font-family:Georgia,serif;font-weight:400;'>"
+                "This demonstration link is not valid.</h2>"
+                "<p style='color:#99673e;'>If you came here for support, InnerLight "
+                "is right here.</p>"
+                "<p><a href='/' style='color:#33567c;'>Go to InnerLight</a></p>"
+                "</body></html>"), 404
+    session["demo_mode"] = ["clinical", "legal"]
+    return redirect("/")
