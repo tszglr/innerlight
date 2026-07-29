@@ -11178,11 +11178,66 @@ def admin_study_page():
  select{padding:10px;border:1px solid #cbd5e1;border-radius:9px;font-size:14px;margin-right:10px;}
  button{padding:11px 26px;border:0;border-radius:9px;font-size:15px;font-weight:700;color:#fff;
         background:linear-gradient(90deg,#c56a2c,#b24a2a);cursor:pointer;margin-top:12px;}
- #out{white-space:pre-wrap;font-size:14.5px;line-height:1.7;color:#1e293b;display:none;}
+ #out{font-size:14.5px;line-height:1.7;color:#1e293b;display:none;}
  .stamp{display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;
         font-weight:700;border-radius:6px;padding:4px 10px;margin-bottom:12px;letter-spacing:0.4px;}
  .wait{display:none;color:#c56a2c;font-weight:700;font-size:13px;margin-top:12px;}
+ /* Rendered study text: real headings, bold, lists — never raw asterisks. */
+ .md-body{font-size:14.5px;line-height:1.7;color:#1e293b;}
+ .md-body p{margin:0 0 11px;}
+ .md-body strong{font-weight:700;color:#3a2a1c;}
+ .md-body em{font-style:italic;}
+ .md-body code{background:#f4ede3;padding:1px 6px;border-radius:5px;font-size:13px;}
+ .md-body ul,.md-body ol{margin:8px 0 14px 22px;padding:0;}
+ .md-body li{margin:5px 0;}
+ .md-body hr{border:0;border-top:1px solid #e7dccc;margin:16px 0;}
+ .md-h{font-weight:800;color:#7a3e1e;margin:18px 0 9px;line-height:1.3;}
+ .md-h1{font-size:19px;} .md-h2{font-size:17px;} .md-h3{font-size:15.5px;color:#8a4a24;}
+ .md-h4{font-size:14px;color:#8a4a24;text-transform:none;}
+ .md-body:first-child .md-h,.md-body>.md-h:first-child{margin-top:2px;}
 </style></head><body>
+<script>
+/* Turn the study engine's Markdown into real formatting. HTML is escaped
+   FIRST, then formatting tags are added, so nothing user- or model-supplied
+   can inject markup. This is why asterisks now become bold instead of literal.
+   NOTE: this lives inside a NON-raw Python template string, so JS strings here
+   use single quotes and NO backslash escapes (no newline/return/quote escapes)
+   — newlines are matched via String.fromCharCode to survive Python. */
+function mdEsc(s){ return String(s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;'); }
+function mdInline(s){
+  s = s.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__([^_]+?)__/g, '<strong>$1</strong>');
+  s = s.replace(/(^|[^*])\*(?!\s)([^*]+?)\*(?!\*)/g, '$1<em>$2</em>');
+  s = s.replace(/`([^`]+?)`/g, '<code>$1</code>');
+  return s;
+}
+function mdToHtml(src){
+  if(!src) return '';
+  var norm = mdEsc(src).split(String.fromCharCode(13)).join('');
+  var lines = norm.split(String.fromCharCode(10));
+  var html = '', list = null, para = [];
+  function closeList(){ if(list){ html += '</'+list+'>'; list=null; } }
+  function flushPara(){ if(para.length){ html += '<p>'+mdInline(para.join('<br>'))+'</p>'; para=[]; } }
+  for (var i=0;i<lines.length;i++){
+    var ln = lines[i], t = ln.trim();
+    if (t === ''){ flushPara(); closeList(); continue; }
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)){ flushPara(); closeList(); html += '<hr>'; continue; }
+    var h = t.match(/^(#{1,6})\s+(.*)$/);
+    if (h){ flushPara(); closeList(); var lvl = Math.min(h[1].length,4);
+      html += '<div class="md-h md-h'+lvl+'">'+mdInline(h[2])+'</div>'; continue; }
+    var ul = t.match(/^[-*+]\s+(.*)$/);
+    if (ul){ flushPara(); if(list!=='ul'){ closeList(); html += '<ul>'; list='ul'; }
+      html += '<li>'+mdInline(ul[1])+'</li>'; continue; }
+    var ol = t.match(/^\d+[.)]\s+(.*)$/);
+    if (ol){ flushPara(); if(list!=='ol'){ closeList(); html += '<ol>'; list='ol'; }
+      html += '<li>'+mdInline(ol[1])+'</li>'; continue; }
+    para.push(t);
+  }
+  flushPara(); closeList();
+  return html;
+}
+window.mdToHtml = mdToHtml;
+</script>
 <div class="top"><div>
 <h1>Founder's Study</h1>
 <div class="sub">Your private learning wing. Describe any hypothetical scenario and receive an educational
@@ -11241,7 +11296,7 @@ async function loadShelf(){
       return '<details style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">'
         + '<summary style="cursor:pointer;font-weight:700;color:#c56a2c;">' + st.when + ' &mdash; ' + st.focus
         + ' &mdash; ' + (st.scenario||'').slice(0,90).replace(/</g,'&lt;') + '&hellip;</summary>'
-        + '<div style="white-space:pre-wrap;margin-top:10px;line-height:1.65;">' + (st.walkthrough||'').replace(/</g,'&lt;') + '</div></details>';
+        + '<div class="md-body" style="margin-top:10px;">' + mdToHtml(st.walkthrough||'') + '</div></details>';
     }).join('');
   }catch(e){ document.getElementById('shelf').textContent = 'Could not load saved studies.'; }
 }
@@ -11306,9 +11361,9 @@ async function runPolicyStudy(){
     var r = await fetch('/api/admin/policy/study', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({pattern: pattern})});
     var d = await r.json();
     if (wait) wait.style.display='none';
-    if (out){ out.style.display='block'; out.textContent = d.text || 'No result.'; }
+    if (out){ out.style.display='block'; out.className='md-body'; out.style.whiteSpace='normal'; out.innerHTML = mdToHtml(d.text || 'No result.'); }
     if (typeof loadShelf==='function') loadShelf();
-  }catch(e){ if(wait) wait.style.display='none'; if(out){ out.style.display='block'; out.textContent='Study call failed. Try again.'; } }
+  }catch(e){ if(wait) wait.style.display='none'; if(out){ out.style.display='block'; out.className=''; out.textContent='Study call failed. Try again.'; } }
 }
 
 loadPolicyPatterns(); // auto-identify recurring patterns on load
@@ -11328,8 +11383,8 @@ async function runStudy(){
         + 'Press "Study it" once more — a retry usually lands. If this keeps happening, the server patience setting needs raising (Render > Settings > Start Command).';
       wait.style.display='none'; out.style.display='block'; return;
     }
-    out.textContent = (d && d.text) ? d.text : 'No response.';
-  }catch(e){ out.textContent = 'Could not reach the study engine. Check the connection and press "Study it" again.'; }
+    out.className = 'md-body'; out.innerHTML = mdToHtml((d && d.text) ? d.text : 'No response.');
+  }catch(e){ out.className=''; out.textContent = 'Could not reach the study engine. Check the connection and press "Study it" again.'; }
   wait.style.display='none'; out.style.display='block';
   if (typeof loadShelf==='function') loadShelf();
 }
@@ -11359,12 +11414,12 @@ async function runAllLenses(){
       try { const d = JSON.parse(raw); text = (d && d.text) ? d.text : 'No response.'; }
       catch(pe){ text = 'This lens took longer than the server allowed and was cut off. Run it alone with the dropdown to retry.'; }
     }catch(e){ text = 'Could not reach the study engine for the ' + L[0] + ' lens.'; }
-    html += '<div style="margin:0 0 20px;border-left:5px solid ' + L[2] + ';padding:6px 0 6px 16px;">'
+    html += '<div style="margin:0 0 22px;border-left:5px solid ' + L[2] + ';padding:6px 0 6px 16px;">'
       + '<div style="font-weight:800;color:' + L[2] + ';font-size:15px;margin-bottom:8px;">' + L[1] + '</div>'
-      + '<div style="white-space:pre-wrap;line-height:1.65;">' + text.replace(/</g,'&lt;') + '</div></div>';
+      + '<div class="md-body">' + mdToHtml(text) + '</div></div>';
   }
   wait.style.display='none'; wait.textContent = origWait;
-  out.innerHTML = html; out.style.display='block';
+  out.className=''; out.innerHTML = html; out.style.display='block';
   if (typeof loadShelf==='function') loadShelf();
 }
 </script>
