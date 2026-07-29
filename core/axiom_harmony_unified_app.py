@@ -6782,9 +6782,10 @@ def page_contact():
 
 @app.route("/safety")
 def page_safety():
-    """Published crisis-response protocol. Written to satisfy California
-    SB 243's documentation expectations and, more importantly, to tell people
-    the truth about what this tool is and does. Immutable Principle 11."""
+    """Published crisis-response protocol. Meets the documentation standards
+    that govern tools like this nationwide (California's SB 243 is the leading
+    example we already follow) and, more importantly, tells people the truth
+    about what this tool is and does. Immutable Principle 11."""
     inner = """
     <h1>Safety &amp; crisis protocol</h1>
     <p class="lead">What InnerLight is, what it does when someone may be in danger, and where its limits are &mdash; in plain words.</p>
@@ -6820,10 +6821,13 @@ def page_safety():
 
     <h2>Our accountability</h2>
     <p>InnerLight counts how often its crisis protocol activates &mdash; counts only, never the content of what anyone
-    shared &mdash; so its safety behavior can be reviewed and reported responsibly, including to the State of
-    California's Office of Suicide Prevention as required by law. InnerLight is operated by God's Love For Us LLC and
-    is designed to comply with the laws that govern tools like it, including California's companion-chatbot law
-    (Senate Bill 243). Questions about this protocol are welcome through the <a href="/contact">contact page</a>.</p>
+    shared &mdash; so its safety behavior can be reviewed and reported responsibly. InnerLight is operated by God's Love
+    For Us LLC and is designed to follow the federal and state laws that govern tools like it in the places it serves.
+    Where a state sets a specific standard for companion or mental-health software &mdash; such as California's
+    companion-chatbot law (Senate Bill 243), one of the first and strictest in the country &mdash; we follow it; and
+    where any law is stricter than our own principles, the law governs. As we expand state by state, we study each new
+    requirement before we operate there. Questions about this protocol are welcome through the
+    <a href="/contact">contact page</a>.</p>
 
     <div class="soft">
       <p style="margin:0;"><strong>The short version:</strong> InnerLight is a program, not a person. When it sees
