@@ -8,7 +8,7 @@ import secrets
 import sqlite3
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -9248,7 +9248,7 @@ def admin_dashboard():
   </header>
 
   <nav class="quiet-nav" aria-label="Ledger sections">
-    <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#security">security</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
+    <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#partners">partners</a><a href="#security">security</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
   </nav>
 
   <section class="field-wrap" aria-label="People being held right now">
@@ -9731,6 +9731,151 @@ def admin_dashboard():
     silent face reading. Hesitations = typed a real thought, erased it unsent. Distractions = an engaged face
     turned away for a couple of seconds. Track verdicts come from each song&rsquo;s opening minute judged against that
     person&rsquo;s own baseline. All counts are anonymous — no words, names, faces, or voices are ever stored.</div>
+
+    <h2 class="ledger" id="partners">Partners — the providers and attorneys who receive people</h2>
+    <div class="panel">
+    <div class="hint">The back-of-house program for real providers and attorneys. They sign in at <b style="color:#f4c977;">/partner</b> &mdash; a separate, warm portal with <b>zero access</b> to The Watch or the Study. They can never see or submit any person&rsquo;s identity, words, or clinical records. Here you create them, pause them, and read what they send back. When you create a partner, a one-time access code shows once &mdash; copy it and give it to them privately; only its hash is stored.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin:12px 0 14px;">
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Organization</div>
+        <input id="pt-org" placeholder="e.g. Harbor Family Law" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:220px;"></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Contact name</div>
+        <input id="pt-contact" placeholder="optional" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:170px;"></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Side</div>
+        <select id="pt-side" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;">
+          <option value="clinical">Clinical</option><option value="legal">Legal</option></select></div>
+      <div><div style="font-size:11px;color:rgba(244,201,119,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Role</div>
+        <select id="pt-role" style="background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.3);border-radius:9px;color:#ffe8bf;padding:9px 12px;font-size:14px;min-width:200px;"></select></div>
+      <button id="pt-create" style="background:linear-gradient(90deg,#b06a2a,#e8a34c);color:#ffe8bf;border:0;border-radius:999px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer;">Create partner</button>
+    </div>
+    <div id="pt-code" style="display:none;background:rgba(232,163,76,.1);border:1px solid rgba(232,163,76,.35);border-radius:12px;padding:16px 18px;margin-bottom:16px;"></div>
+    <div id="pt-list"><i style="color:rgba(242,231,210,.45);">Loading partners&hellip;</i></div>
+    </div>
+    <script>
+    (function(){
+      var ROLES = [];
+      function esc(s){ return String(s == null ? '' : s).replace(/</g,'&lt;'); }
+      function fillRoles(){
+        var side = document.getElementById('pt-side').value;
+        var sel = document.getElementById('pt-role');
+        sel.innerHTML = '';
+        ROLES.filter(function(r){ return r.side === side; }).forEach(function(r){
+          var o = document.createElement('option');
+          o.value = r.role; o.textContent = r.label; sel.appendChild(o);
+        });
+      }
+      async function loadPartners(){
+        try{
+          var r = await fetch('/api/admin/partners'); if(!r.ok) return;
+          var d = await r.json();
+          ROLES = d.roles || [];
+          if(!document.getElementById('pt-role').options.length) fillRoles();
+          var el = document.getElementById('pt-list'); if(!el) return;
+          var ps = d.partners || [];
+          if(!ps.length){ el.innerHTML = '<i style="color:rgba(242,231,210,.45);">No partners yet. Create one above.</i>'; return; }
+          el.innerHTML = ps.map(function(p){
+            var on = p.status === 'active';
+            var badge = on ? 'background:rgba(232,163,76,.16);color:#f4c977;' : 'background:rgba(150,150,150,.14);color:rgba(242,231,210,.5);';
+            var btnLbl = on ? 'Pause' : 'Reactivate';
+            var newStatus = on ? 'paused' : 'active';
+            return '<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(232,163,76,.12);">'
+              + '<div style="flex:1;"><b style="color:#ffe8bf;">' + esc(p.org) + '</b>'
+              + '<span style="color:rgba(242,231,210,.5);font-size:12px;"> &mdash; ' + esc(p.role_label) + (p.contact ? ' &middot; ' + esc(p.contact) : '') + '</span>'
+              + '<div style="font-size:12px;color:rgba(242,231,210,.62);margin-top:3px;">transfers toward them: <b style="color:#e8a34c;">' + p.transfers + '</b> &middot; arrivals they confirmed: <b style="color:#e8a34c;">' + p.received + '</b></div></div>'
+              + '<span style="border-radius:999px;padding:4px 12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;' + badge + '">' + esc(p.status) + '</span>'
+              + '<button data-pt-id="' + p.id + '" data-pt-status="' + newStatus + '" style="background:rgba(232,163,76,.14);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;">' + btnLbl + '</button>'
+              + '</div>';
+          }).join('');
+        }catch(e){}
+      }
+      document.addEventListener('change', function(ev){
+        if(ev.target && ev.target.id === 'pt-side') fillRoles();
+      });
+      document.addEventListener('click', async function(ev){
+        var b = ev.target;
+        if(b && b.id === 'pt-create'){
+          var org = document.getElementById('pt-org').value.trim();
+          var contact = document.getElementById('pt-contact').value.trim();
+          var role = document.getElementById('pt-role').value;
+          if(!org) return;
+          b.disabled = true;
+          try{
+            var r = await fetch('/api/admin/partners/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({org: org, contact: contact, role: role})});
+            var d = await r.json();
+            if(d && d.code){
+              var box = document.getElementById('pt-code');
+              box.style.display = 'block';
+              box.innerHTML = '';
+              var line = document.createElement('div');
+              line.style.cssText = 'font-size:13px;color:rgba(242,231,210,.78);margin-bottom:9px;';
+              line.textContent = 'Access code for ' + d.org + ' (' + d.role_label + ') — shown once. Copy it now and give it to them privately.';
+              var codeEl = document.createElement('span');
+              codeEl.id = 'pt-code-val';
+              codeEl.style.cssText = 'font-family:var(--serif);font-size:26px;letter-spacing:.12em;color:#ffe8bf;';
+              codeEl.textContent = d.code;
+              var copyBtn = document.createElement('button');
+              copyBtn.textContent = 'Copy';
+              copyBtn.style.cssText = 'margin-left:16px;background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:6px 16px;font-size:12px;cursor:pointer;';
+              copyBtn.addEventListener('click', function(){
+                try{ navigator.clipboard.writeText(codeEl.textContent).then(function(){ copyBtn.textContent = 'Copied'; }, function(){}); }catch(e){}
+              });
+              box.appendChild(line); box.appendChild(codeEl); box.appendChild(copyBtn);
+              document.getElementById('pt-org').value = '';
+              document.getElementById('pt-contact').value = '';
+            }
+          }catch(e){}
+          b.disabled = false;
+          loadPartners();
+          return;
+        }
+        if(b && b.getAttribute && b.getAttribute('data-pt-id')){
+          b.disabled = true;
+          try{
+            await fetch('/api/admin/partners/status', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: parseInt(b.getAttribute('data-pt-id'),10), status: b.getAttribute('data-pt-status')})});
+          }catch(e){}
+          loadPartners();
+        }
+      });
+      loadPartners();
+    })();
+    </script>
+
+    <h2 class="ledger">Partner voices — suggestions from the field</h2>
+    <div class="panel">
+    <div class="hint">What partners send back about the handoff process &mdash; never anything about a person. The founder reads each one. Mark it read once you have taken it in.</div>
+    <div id="pt-suggestions"><i style="color:rgba(242,231,210,.45);">Loading&hellip;</i></div>
+    </div>
+    <script>
+    (function(){
+      function esc(s){ return String(s == null ? '' : s).replace(/</g,'&lt;'); }
+      async function load(){
+        try{
+          var r = await fetch('/api/admin/partners/suggestions'); if(!r.ok) return;
+          var d = await r.json();
+          var el = document.getElementById('pt-suggestions'); if(!el) return;
+          var ss = d.suggestions || [];
+          if(!ss.length){ el.innerHTML = '<i style="color:rgba(242,231,210,.45);">No suggestions yet. When a partner sends one, it appears here.</i>'; return; }
+          el.innerHTML = ss.map(function(s){
+            var read = s.read;
+            return '<div style="border-left:3px solid ' + (read ? 'rgba(232,163,76,.25)' : 'rgba(232,163,76,.6)') + ';background:rgba(232,163,76,.05);border-radius:0 8px 8px 0;padding:11px 15px;margin:9px 0;font-size:14px;color:rgba(242,231,210,.82);' + (read ? 'opacity:.6;' : '') + '">'
+              + '<div style="font-style:italic;white-space:pre-wrap;">' + esc(s.text) + '</div>'
+              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:11px;color:rgba(242,231,210,.45);">'
+              + '<span>' + esc(s.org) + ' &middot; ' + esc(s.when) + '</span>'
+              + (read ? '<span>read</span>' : '<button data-sugg-read="' + s.id + '" style="background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:4px 12px;font-size:11px;cursor:pointer;">Mark read</button>')
+              + '</div></div>';
+          }).join('');
+        }catch(e){}
+      }
+      document.addEventListener('click', async function(ev){
+        var b = ev.target;
+        if(b && b.getAttribute && b.getAttribute('data-sugg-read')){
+          b.disabled = true;
+          try{ await fetch('/api/admin/partners/suggestions/read', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: parseInt(b.getAttribute('data-sugg-read'),10)})}); }catch(e){}
+          load();
+        }
+      });
+      load();
+    })();
+    </script>
   </section>
 
   <div class="vow">
@@ -11152,6 +11297,9 @@ def connect_request():
                 json.dump(log, f)
         except Exception:
             pass
+    # PARTNER PORTAL: credit a 'transfer' to every ACTIVE partner whose side
+    # and role cover this need — counts only, never any user text or summary.
+    _partner_write_transfers(kind, pro)
     # Ring the founder's phone via ntfy push
     topic = os.environ.get("NTFY_TOPIC", "").strip()
     notified = False
@@ -11228,3 +11376,625 @@ def admin_connects():
     except Exception:
         log = []
     return jsonify({"status": "ok", "connects": list(reversed(log))})
+
+
+# ===========================================================================
+# PARTNER PORTAL — the back-of-house program for the real providers and
+# attorneys who receive the people InnerLight walks toward help.
+#
+# HARD SEPARATION (Immutable Principles 2, 3, 4, 5, 16):
+#   * Partners NEVER see or submit any user clinical content, identity,
+#     conversation, or any user data. This program stores ZERO user data.
+#   * Partners get their OWN session key (partner_ok) and their own warm
+#     portal at /partner. They have NO access to /admin (The Watch), the
+#     Founder's Study, or any /api/admin/* route — those check founder_ok
+#     only, and partner_ok grants nothing there.
+#   * The three tables live in the same persistent ops sqlite as the on-call
+#     board (founder operational state only): who the partners are, how many
+#     times we transferred toward them, how many arrivals they confirmed,
+#     and their process suggestions. No summaries, no user text — ever.
+#   * P17 posture: /partner/login is an auth endpoint — it tarpits/locks out
+#     via _defend() and flags failed attempts hostile via _flag_hostile(),
+#     exactly like the founder admin login.
+# ===========================================================================
+_PARTNER_LOCK = threading.Lock()
+
+def _partner_db() -> sqlite3.Connection:
+    """Open the ops sqlite and ensure the partner tables. Shares the on-call
+    DB file (founder operational state only — zero user data)."""
+    conn = sqlite3.connect(_ONCALL_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS partners ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, org TEXT NOT NULL, "
+        "contact_name TEXT, side TEXT NOT NULL, role TEXT NOT NULL, "
+        "code_hash TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', "
+        "created_at TEXT NOT NULL)")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS partner_events ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, partner_id INTEGER NOT NULL, "
+        "kind TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL)")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS partner_suggestions ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, partner_id INTEGER NOT NULL, "
+        "text TEXT, created_at TEXT NOT NULL, read_flag INTEGER DEFAULT 0)")
+    conn.commit()
+    return conn
+
+_PARTNER_ROLE_LABELS = {r: lb for _s, r, lb in _PROVIDER_ROLES}
+_PARTNER_ROLE_SIDE = {r: s for s, r, _lb in _PROVIDER_ROLES}
+
+# Fuzzy map from a requested "pro" label to on-call role keys, so a real
+# transfer is credited to the partners who actually cover that need. If none
+# match, nothing is written (the honest default).
+_PARTNER_ROLE_KEYWORDS = {
+    "crisis_counselor":   ["crisis", "counselor", "hotline", "warm line"],
+    "therapist":          ["therap", "counsel", "psycholog", "clinician", "mental", "emotional"],
+    "psychiatrist":       ["psychiatr", "medication", "med management", "prescrib", "meds"],
+    "nurse_practitioner": ["nurse", "practitioner"],
+    "housing_attorney":   ["housing", "tenant", "evict", "landlord", "rent", "lease"],
+    "family_attorney":    ["family", "custody", "divorce", "child support"],
+    "criminal_attorney":  ["criminal", "defense", "arrest", "charge", "police", "warrant", "jail"],
+    "civil_attorney":     ["civil", "consumer", "contract", "debt", "sue", "lawsuit", "wage"],
+    "legal_aid":          ["legal aid", "pro bono", "aid office"],
+}
+
+def _partner_gen_code():
+    """A one-time, human-friendly access code. Shown once, then only its
+    salted hash is stored."""
+    alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no ambiguous characters
+    def part(n):
+        return "".join(secrets.choice(alpha) for _ in range(n))
+    return "IL-" + part(4) + "-" + part(4)
+
+def _partner_hash_code(code):
+    """Salted sha256 of the access code. The salt is bound to ADMIN_KEY so the
+    stored hashes are useless without the deployment secret."""
+    salt = os.environ.get("ADMIN_KEY", "") + "::innerlight-partner-salt::v1"
+    normalized = str(code or "").strip().upper()
+    return hashlib.sha256((salt + "::" + normalized).encode("utf-8")).hexdigest()
+
+def _partner_scrub(text, cap):
+    """Scrub identifiers (email, phone, handle, long digit runs) then hard-cap.
+    Partner-facing storage must never hold user content; this is defense in
+    depth on top of the explicit labeling in the portal."""
+    out = str(text or "")
+    for pat, repl in _SCRUB_PATTERNS:
+        out = pat.sub(repl, out)
+    return out[:cap]
+
+def _partner_match_roles(kind, pro):
+    """Given a connect request kind ('legal'|'care') and its 'pro' label,
+    return (side, [role keys]) that the label fuzzily matches on that side."""
+    side = "legal" if kind == "legal" else "clinical"
+    low = str(pro or "").lower()
+    if not low.strip():
+        return side, []
+    matched = []
+    for role, kws in _PARTNER_ROLE_KEYWORDS.items():
+        if _PARTNER_ROLE_SIDE.get(role) != side:
+            continue
+        if any(k in low for k in kws):
+            matched.append(role)
+    return side, matched
+
+def _partner_write_transfers(kind, pro):
+    """After a real connect request, credit a 'transfer' event to every ACTIVE
+    partner whose side+role covers the requested need. Never stores any user
+    text — the event note is empty. Returns the number of events written."""
+    try:
+        side, roles = _partner_match_roles(kind, pro)
+        if not roles:
+            return 0
+        now = utc_now()
+        with _PARTNER_LOCK:
+            conn = _partner_db()
+            try:
+                qmarks = ",".join("?" for _ in roles)
+                rows = conn.execute(
+                    "SELECT id FROM partners WHERE status='active' AND side=? "
+                    "AND role IN (" + qmarks + ")", [side] + roles).fetchall()
+                for r in rows:
+                    conn.execute(
+                        "INSERT INTO partner_events (partner_id, kind, note, created_at) "
+                        "VALUES (?, 'transfer', '', ?)", (r["id"], now))
+                conn.commit()
+                return len(rows)
+            finally:
+                conn.close()
+    except Exception as e:
+        print("[InnerLight] partner transfer write issue:", e)
+        return 0
+
+def _partner_current():
+    """The active partner row for the current session, or None. If the partner
+    was paused after signing in, this returns None — access is revoked live."""
+    pid = session.get("partner_ok")
+    if not pid:
+        return None
+    try:
+        with _PARTNER_LOCK:
+            conn = _partner_db()
+            try:
+                return conn.execute(
+                    "SELECT * FROM partners WHERE id=? AND status='active'",
+                    (pid,)).fetchone()
+            finally:
+                conn.close()
+    except Exception:
+        return None
+
+
+# ---- The warm partner sign-in page (InnerLight aesthetic, NOT The Watch) ----
+PARTNER_LOGIN_PAGE = """
+<!doctype html><html lang="en"><head><title>InnerLight — Partner Sign In</title>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ :root{--cream:#FAF5EC;--amber:#C56A2C;--amber-deep:#a9531f;--ink:#3a2c1e;
+       --serif:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;}
+ *{box-sizing:border-box;}
+ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+      font-family:var(--serif);color:var(--ink);
+      background:radial-gradient(900px 620px at 50% -12%, #fff8ec, transparent 62%), var(--cream);}
+ .card{background:#fffdf8;border:1px solid rgba(197,106,44,.22);border-radius:20px;padding:42px 38px;width:380px;
+       box-shadow:0 26px 64px -34px rgba(120,70,20,.5);}
+ .brand{display:flex;align-items:center;margin-bottom:6px;}
+ .flame{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--amber);margin-right:12px;
+        box-shadow:0 0 15px 4px rgba(197,106,44,.4);}
+ .brand span{font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:var(--amber-deep);}
+ h1{font-size:23px;font-weight:400;margin:14px 0 6px;color:#2a2016;}
+ .sub{font-size:13.5px;color:#7a6650;margin-bottom:20px;font-style:italic;line-height:1.55;}
+ label{display:block;font-size:12.5px;color:#6a563e;margin:16px 0 6px;letter-spacing:.03em;}
+ input{width:100%;padding:12px 13px;border:1px solid rgba(197,106,44,.32);border-radius:11px;
+       font-size:15px;font-family:var(--serif);background:#fffef9;color:var(--ink);}
+ input:focus{outline:2px solid var(--amber);border-color:var(--amber);}
+ button{margin-top:24px;width:100%;padding:13px;border:0;border-radius:11px;font-size:15px;font-weight:600;
+        color:#fff8ec;background:linear-gradient(90deg,#C56A2C,#a9531f);cursor:pointer;
+        font-family:var(--serif);letter-spacing:.03em;}
+ .err{background:#fbeee4;color:#a9531f;border:1px solid rgba(197,106,44,.35);border-radius:9px;padding:10px 13px;
+      font-size:13px;margin-bottom:8px;display:{{ 'block' if err else 'none' }};}
+ .foot{margin-top:22px;font-size:11.5px;color:#9a8770;line-height:1.6;border-top:1px solid rgba(197,106,44,.14);padding-top:16px;}
+</style></head><body>
+<form class="card" method="POST" action="/partner/login">
+  <div class="brand"><span class="flame"></span><span>InnerLight</span></div>
+  <h1>Partner Portal</h1>
+  <div class="sub">For the providers and attorneys who receive the people we walk toward help.
+    Sign in with your organization and the access code we gave you.</div>
+  <div class="err">{{ err or '' }}</div>
+  <label>Organization</label>
+  <input name="org" autocomplete="organization" autofocus>
+  <label>Access code</label>
+  <input name="code" autocomplete="off">
+  <button type="submit">Enter</button>
+  <div class="foot">This portal never shows or accepts any client identity, conversation, or clinical
+    record. It holds only your own counts and the notes you choose to send us.</div>
+</form></body></html>
+"""
+
+# ---- The portal itself: warm, respectful, zero user data ----
+PARTNER_PORTAL_PAGE = """
+<!doctype html><html lang="en"><head><title>InnerLight — Partner Portal</title>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ :root{--cream:#FAF5EC;--amber:#C56A2C;--amber-deep:#a9531f;--ink:#3a2c1e;--soft:#7a6650;
+       --serif:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;}
+ *{box-sizing:border-box;}
+ body{margin:0;font-family:var(--serif);color:var(--ink);
+      background:radial-gradient(1100px 700px at 50% -10%, #fff8ec, transparent 60%), var(--cream);}
+ .page{max-width:820px;margin:0 auto;padding:0 26px 90px;}
+ header{display:flex;justify-content:space-between;align-items:baseline;padding:34px 4px 10px;}
+ .brand{display:flex;align-items:center;}
+ .flame{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--amber);margin-right:12px;
+        box-shadow:0 0 15px 4px rgba(197,106,44,.4);}
+ .brand b{font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber-deep);font-weight:600;}
+ .who{text-align:right;font-size:13px;color:var(--soft);}
+ .who a{color:var(--amber-deep);text-decoration:none;font-size:12px;}
+ h1{font-size:27px;font-weight:400;margin:18px 4px 4px;color:#2a2016;}
+ .lead{font-size:15px;color:var(--soft);margin:0 4px 20px;font-style:italic;line-height:1.5;}
+ .card{background:#fffdf8;border:1px solid rgba(197,106,44,.2);border-radius:18px;padding:24px 26px;margin:18px 0;
+       box-shadow:0 18px 48px -34px rgba(120,70,20,.4);}
+ .card h2{font-size:18px;font-weight:400;margin:0 0 4px;color:#2a2016;}
+ .card .note{font-size:13px;color:var(--soft);margin-bottom:14px;line-height:1.5;}
+ .record{font-size:20px;line-height:1.6;color:#2a2016;font-style:italic;}
+ .record b{font-style:normal;color:var(--amber-deep);font-weight:600;}
+ .subrec{font-size:14px;color:var(--soft);margin-top:8px;}
+ .nums{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;}
+ .num{flex:1;min-width:130px;background:rgba(197,106,44,.07);border-radius:12px;padding:14px;text-align:center;}
+ .num b{display:block;font-size:30px;color:var(--amber-deep);font-weight:600;}
+ .num span{font-size:12px;color:var(--soft);letter-spacing:.03em;}
+ .btn{background:linear-gradient(90deg,#C56A2C,#a9531f);color:#fff8ec;border:0;border-radius:11px;
+      padding:12px 24px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--serif);letter-spacing:.02em;}
+ label{display:block;font-size:12.5px;color:#6a563e;margin:6px 0 6px;letter-spacing:.02em;}
+ textarea{width:100%;min-height:96px;padding:12px;border:1px solid rgba(197,106,44,.3);border-radius:11px;
+          font-size:15px;font-family:var(--serif);background:#fffef9;color:var(--ink);}
+ textarea:focus{outline:2px solid var(--amber);border-color:var(--amber);}
+ .guard{background:rgba(197,106,44,.06);border-left:3px solid var(--amber);border-radius:0 12px 12px 0;
+        padding:10px 14px;font-size:12.5px;color:var(--soft);line-height:1.55;margin-top:12px;}
+ .ok{font-size:13px;color:var(--amber-deep);margin-top:8px;min-height:16px;}
+ .past{margin-top:14px;}
+ .past .item{border-top:1px solid rgba(197,106,44,.14);padding:9px 0;font-size:14px;color:#4a3a2a;white-space:pre-wrap;}
+ .past .item .when{display:block;font-size:11px;color:#a08a70;margin-top:3px;font-style:italic;}
+ .boundary{background:#fffdf8;border:1px dashed rgba(197,106,44,.4);border-radius:16px;padding:20px 24px;margin-top:22px;}
+ .boundary h3{font-size:15px;font-weight:600;color:var(--amber-deep);margin:0 0 8px;letter-spacing:.04em;}
+ .boundary p{font-size:13px;color:var(--soft);line-height:1.6;margin:0;}
+</style></head><body>
+<div class="page">
+  <header>
+    <div class="brand"><span class="flame"></span><b>InnerLight Partners</b></div>
+    <div class="who">{{ org }} &middot; {{ role_label }}<br><a href="/partner/logout">Sign out</a></div>
+  </header>
+  <h1>Welcome back.</h1>
+  <div class="lead">Thank you for standing on the other side of the bridge. Here is your record &mdash;
+    honest counts only, never a word about the people themselves.</div>
+
+  <div class="card">
+    <h2>Your connection record</h2>
+    <div class="note">How many times we walked a person toward you, and how many arrivals you confirmed.</div>
+    <div class="record" id="record-line">Loading&hellip;</div>
+    <div class="subrec" id="record-week"></div>
+    <div class="nums" style="margin-top:16px;">
+      <div class="num"><b id="n-transfer-all">0</b><span>walked toward you (all-time)</span></div>
+      <div class="num"><b id="n-transfer-week">0</b><span>this week</span></div>
+      <div class="num"><b id="n-received-all">0</b><span>arrivals you confirmed (all-time)</span></div>
+      <div class="num"><b id="n-received-week">0</b><span>this week</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>I received a person</h2>
+    <div class="note">Press this each time a person we walked toward you actually arrived. It updates your record.</div>
+    <button class="btn" id="btn-received">I received a person</button>
+    <label style="margin-top:16px;">A note (optional) — about the handoff process only</label>
+    <textarea id="received-note" placeholder="e.g. the intake link worked well / we had a scheduling gap"></textarea>
+    <div class="guard">About the handoff process only &mdash; never anything about the person: no names, no
+      details, no clinical information. We cannot and will not store client information.</div>
+    <div class="ok" id="received-ok"></div>
+  </div>
+
+  <div class="card">
+    <h2>How it is working</h2>
+    <div class="note">The honest overall picture across everyone InnerLight has held &mdash; numbers only, nothing
+      about any single person.</div>
+    <div class="nums">
+      <div class="num"><b id="o-sessions">0</b><span>total sessions held</span></div>
+      <div class="num"><b id="o-handoffs">0</b><span>handoffs toward human help</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Your suggestions</h2>
+    <div class="note">Better ways to help the people we send you, or a smoother handoff. The founder reads every one.</div>
+    <textarea id="suggest-text" placeholder="What would make this work better for the people we send you?"></textarea>
+    <div style="margin-top:12px;"><button class="btn" id="btn-suggest">Send suggestion</button></div>
+    <div class="ok" id="suggest-ok"></div>
+    <div class="past" id="suggest-list"></div>
+  </div>
+
+  <div class="boundary">
+    <h3>What this portal will never show or accept</h3>
+    <p>It will never show you a person&rsquo;s identity, their conversation, their session, or any clinical or legal
+      record &mdash; and it will never let you enter such a thing. That is not a limitation of the software; it is a
+      founding principle of InnerLight. The person in need is the only master, and their privacy is theirs alone.
+      This portal holds only your own counts and the process notes you choose to send us.</p>
+  </div>
+</div>
+<script>
+(function(){
+  function setText(id, v){ var el = document.getElementById(id); if(el) el.textContent = v; }
+  function esc(s){ return String(s == null ? '' : s).replace(/</g,'&lt;'); }
+  function renderSuggestions(list){
+    var box = document.getElementById('suggest-list');
+    if(!box) return;
+    if(!list || !list.length){ box.innerHTML = ''; return; }
+    box.innerHTML = list.map(function(s){
+      return '<div class="item">' + esc(s.text) + '<span class="when">sent ' + esc(s.when) + '</span></div>';
+    }).join('');
+  }
+  async function loadMe(){
+    try{
+      var r = await fetch('/api/partner/me'); if(!r.ok) return;
+      var d = await r.json();
+      var ta = d.transfers_all || 0, ma = d.received_all || 0;
+      var line;
+      if(ta === 0){
+        line = 'No one has been walked toward you yet. When we do, it will show here — honestly, and only as a count.';
+      } else {
+        line = ta + (ta === 1 ? ' person was' : ' people were') + ' walked toward you. You confirmed ' + ma + (ma === 1 ? ' arrival.' : ' arrivals.');
+      }
+      setText('record-line', line);
+      setText('record-week', 'This week: ' + (d.transfers_week || 0) + ' walked toward you, ' + (d.received_week || 0) + ' confirmed.');
+      setText('n-transfer-all', ta);
+      setText('n-transfer-week', d.transfers_week || 0);
+      setText('n-received-all', ma);
+      setText('n-received-week', d.received_week || 0);
+      var ov = d.overall || {};
+      setText('o-sessions', ov.sessions || 0);
+      setText('o-handoffs', ov.handoffs || 0);
+      renderSuggestions(d.suggestions || []);
+    }catch(e){}
+  }
+  var rb = document.getElementById('btn-received');
+  if(rb) rb.addEventListener('click', async function(){
+    rb.disabled = true;
+    var note = document.getElementById('received-note');
+    try{
+      await fetch('/api/partner/received', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({note: note ? note.value : ''})});
+      setText('received-ok', 'Recorded. Thank you for confirming.');
+      if(note) note.value = '';
+    }catch(e){}
+    rb.disabled = false;
+    loadMe();
+  });
+  var sb = document.getElementById('btn-suggest');
+  if(sb) sb.addEventListener('click', async function(){
+    var t = document.getElementById('suggest-text');
+    if(!t || !t.value.trim()) return;
+    sb.disabled = true;
+    try{
+      await fetch('/api/partner/suggest', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: t.value})});
+      setText('suggest-ok', 'Sent. The founder will read it.');
+      t.value = '';
+    }catch(e){}
+    sb.disabled = false;
+    loadMe();
+  });
+  loadMe();
+})();
+</script>
+</body></html>
+"""
+
+@app.route("/partner/login", methods=["POST"])
+def partner_login():
+    # DETER (P17): an auth endpoint is a brute-force target. Tarpit/lock out
+    # clients that have already earned it before doing any work, exactly like
+    # the founder admin login.
+    blocked = _defend()
+    if blocked is not None:
+        return blocked
+    org = str(request.form.get("org", "")).strip()
+    code = str(request.form.get("code", "")).strip()
+    if org and code:
+        ch = _partner_hash_code(code)
+        try:
+            with _PARTNER_LOCK:
+                conn = _partner_db()
+                try:
+                    row = conn.execute(
+                        "SELECT id FROM partners WHERE lower(org)=lower(?) "
+                        "AND code_hash=? AND status='active'", (org, ch)).fetchone()
+                finally:
+                    conn.close()
+        except Exception:
+            row = None
+        if row:
+            session["partner_ok"] = row["id"]
+            session.permanent = False
+            return redirect("/partner")
+    # A failed partner login is a security event: flag + log so repeated
+    # attempts progressively slow and then lock the attacker out.
+    _flag_hostile("partner-login-fail")
+    return render_template_string(
+        PARTNER_LOGIN_PAGE,
+        err="That organization name or access code is not right."), 401
+
+@app.route("/partner/logout")
+def partner_logout():
+    session.pop("partner_ok", None)
+    return redirect("/partner")
+
+@app.route("/partner")
+def partner_portal():
+    p = _partner_current()
+    if not p:
+        session.pop("partner_ok", None)
+        return render_template_string(PARTNER_LOGIN_PAGE, err=""), 200
+    return render_template_string(
+        PARTNER_PORTAL_PAGE, org=p["org"],
+        role_label=_PARTNER_ROLE_LABELS.get(p["role"], p["role"]))
+
+@app.route("/api/partner/me")
+def partner_me():
+    p = _partner_current()
+    if not p:
+        return jsonify({"error": "auth"}), 401
+    pid = p["id"]
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            def cnt(kind, since=None):
+                if since:
+                    return conn.execute(
+                        "SELECT COUNT(*) c FROM partner_events WHERE partner_id=? "
+                        "AND kind=? AND created_at>=?", (pid, kind, since)).fetchone()["c"]
+                return conn.execute(
+                    "SELECT COUNT(*) c FROM partner_events WHERE partner_id=? "
+                    "AND kind=?", (pid, kind)).fetchone()["c"]
+            transfers_all = cnt("transfer")
+            transfers_week = cnt("transfer", week_ago)
+            received_all = cnt("received")
+            received_week = cnt("received", week_ago)
+            sugg = conn.execute(
+                "SELECT text, created_at FROM partner_suggestions WHERE partner_id=? "
+                "ORDER BY id DESC", (pid,)).fetchall()
+        finally:
+            conn.close()
+    # "How it is working" — overall aggregates from the admin metrics store.
+    # Numbers only; never anything user-level.
+    tot_sessions = tot_handoffs = 0
+    try:
+        with _METRICS_LOCK:
+            m = _metrics_load()
+        for _day, d in m.items():
+            tot_sessions += max(d.get("sessions", 0), len(d.get("by_session", {})))
+            for _hk, _hv in (d.get("handoffs", {}) or {}).items():
+                tot_handoffs += _hv
+    except Exception:
+        pass
+    return jsonify({
+        "org": p["org"],
+        "role_label": _PARTNER_ROLE_LABELS.get(p["role"], p["role"]),
+        "transfers_all": transfers_all, "transfers_week": transfers_week,
+        "received_all": received_all, "received_week": received_week,
+        "overall": {"sessions": tot_sessions, "handoffs": tot_handoffs},
+        "suggestions": [{"text": s["text"] or "", "when": (s["created_at"] or "")[:10]}
+                        for s in sugg],
+    })
+
+@app.route("/api/partner/received", methods=["POST"])
+def partner_received():
+    p = _partner_current()
+    if not p:
+        return jsonify({"error": "auth"}), 401
+    data = request.get_json(silent=True) or {}
+    note = _partner_scrub(data.get("note", ""), 300)
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            conn.execute(
+                "INSERT INTO partner_events (partner_id, kind, note, created_at) "
+                "VALUES (?, 'received', ?, ?)", (p["id"], note, utc_now()))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok"})
+
+@app.route("/api/partner/suggest", methods=["POST"])
+def partner_suggest():
+    p = _partner_current()
+    if not p:
+        return jsonify({"error": "auth"}), 401
+    data = request.get_json(silent=True) or {}
+    text = _partner_scrub(data.get("text", ""), 2000)
+    if not text.strip():
+        return jsonify({"status": "ok"})
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            conn.execute(
+                "INSERT INTO partner_suggestions (partner_id, text, created_at, read_flag) "
+                "VALUES (?, ?, ?, 0)", (p["id"], text, utc_now()))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok"})
+
+
+# ---- FOUNDER-ONLY partner management (The Watch). All check founder_ok. ----
+@app.route("/api/admin/partners")
+def admin_partners_list():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            partners = conn.execute("SELECT * FROM partners ORDER BY id DESC").fetchall()
+            tally = {}
+            for r in conn.execute(
+                    "SELECT partner_id, kind, COUNT(*) c FROM partner_events "
+                    "GROUP BY partner_id, kind"):
+                tally.setdefault(r["partner_id"], {})[r["kind"]] = r["c"]
+        finally:
+            conn.close()
+    out = []
+    for p in partners:
+        t = tally.get(p["id"], {})
+        out.append({
+            "id": p["id"], "org": p["org"], "contact": p["contact_name"] or "",
+            "side": p["side"], "role": p["role"],
+            "role_label": _PARTNER_ROLE_LABELS.get(p["role"], p["role"]),
+            "status": p["status"], "created_at": (p["created_at"] or "")[:10],
+            "transfers": t.get("transfer", 0), "received": t.get("received", 0)})
+    return jsonify({"status": "ok", "partners": out,
+                    "roles": [{"side": s, "role": r, "label": lb}
+                              for s, r, lb in _PROVIDER_ROLES]})
+
+@app.route("/api/admin/partners/create", methods=["POST"])
+def admin_partners_create():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    org = _partner_scrub(data.get("org", ""), 120).strip()
+    contact = _partner_scrub(data.get("contact", ""), 120).strip()
+    role = str(data.get("role", ""))[:40]
+    if role not in _PARTNER_ROLE_SIDE:
+        return jsonify({"error": "unknown role"}), 400
+    if not org:
+        return jsonify({"error": "org required"}), 400
+    side = _PARTNER_ROLE_SIDE[role]
+    code = _partner_gen_code()
+    ch = _partner_hash_code(code)
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            cur = conn.execute(
+                "INSERT INTO partners (org, contact_name, side, role, code_hash, "
+                "status, created_at) VALUES (?, ?, ?, ?, ?, 'active', ?)",
+                (org, contact, side, role, ch, utc_now()))
+            pid = cur.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
+    # The plaintext code is returned ONCE for the founder to copy; only its
+    # hash is stored. It can never be recovered from storage.
+    return jsonify({"status": "ok", "id": pid, "org": org, "code": code,
+                    "role_label": _PARTNER_ROLE_LABELS.get(role, role)})
+
+@app.route("/api/admin/partners/status", methods=["POST"])
+def admin_partners_status():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    try:
+        pid = int(data.get("id"))
+    except Exception:
+        return jsonify({"error": "bad id"}), 400
+    status = "paused" if data.get("status") == "paused" else "active"
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            conn.execute("UPDATE partners SET status=? WHERE id=?", (status, pid))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok", "id": pid, "new_status": status})
+
+@app.route("/api/admin/partners/suggestions")
+def admin_partner_suggestions():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            rows = conn.execute(
+                "SELECT s.id, s.partner_id, s.text, s.created_at, s.read_flag, p.org "
+                "FROM partner_suggestions s LEFT JOIN partners p ON p.id=s.partner_id "
+                "ORDER BY s.id DESC").fetchall()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok", "suggestions": [
+        {"id": r["id"], "org": r["org"] or "(unknown)", "text": r["text"] or "",
+         "when": (r["created_at"] or "")[:16].replace("T", " "),
+         "read": bool(r["read_flag"])}
+        for r in rows]})
+
+@app.route("/api/admin/partners/suggestions/read", methods=["POST"])
+def admin_partner_suggestions_read():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    try:
+        sid = int(data.get("id"))
+    except Exception:
+        return jsonify({"error": "bad id"}), 400
+    with _PARTNER_LOCK:
+        conn = _partner_db()
+        try:
+            conn.execute("UPDATE partner_suggestions SET read_flag=1 WHERE id=?", (sid,))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"status": "ok"})
