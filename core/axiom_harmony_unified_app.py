@@ -825,6 +825,16 @@ PUBLIC_PAGE = """
             <a href="#" onclick="setLang('es');return false;" data-langbtn="es" style="text-decoration:none;">Espa&ntilde;ol</a>
             <span>&middot;</span>
             <a href="#" onclick="setLang('zh');return false;" data-langbtn="zh" style="text-decoration:none;">&#20013;&#25991;</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('hi');return false;" data-langbtn="hi" style="text-decoration:none;">हिन्दी</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('pa');return false;" data-langbtn="pa" style="text-decoration:none;">ਪੰਜਾਬੀ</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('bn');return false;" data-langbtn="bn" style="text-decoration:none;">বাংলা</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('tl');return false;" data-langbtn="tl" style="text-decoration:none;">Tagalog</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('to');return false;" data-langbtn="to" style="text-decoration:none;">lea faka-Tonga</a>
           </div>
         </div>
         <div class="gate-greeting" id="gate-greeting" aria-live="polite"></div>
@@ -843,15 +853,15 @@ PUBLIC_PAGE = """
           <span data-i18n="gate.adult" style="display:inline-block;margin:7px auto 0;max-width:520px;line-height:1.6;">By continuing you confirm you are 18 or older.
           <a href="#" onclick="showMinorBridge();return false;">Under 18? We still have real help for you.</a></span></p>
           <div class="gate-links">
-            <a href="/about">About</a><span>&middot;</span>
-            <a href="/how-it-works">How it works</a><span>&middot;</span>
-            <a href="/stories">How a visit goes</a><span>&middot;</span>
-            <a href="/resources">Real help</a><span>&middot;</span>
-            <a href="/research">Research</a><span>&middot;</span>
-            <a href="/safety">Safety</a><span>&middot;</span>
-            <a href="/privacy">Your privacy</a><span>&middot;</span>
-            <a href="/updates">Updates</a><span>&middot;</span>
-            <a href="/contact">Contact</a>
+            <a href="/about" data-i18n="glink.about">About</a><span>&middot;</span>
+            <a href="/how-it-works" data-i18n="glink.how">How it works</a><span>&middot;</span>
+            <a href="/stories" data-i18n="glink.stories">How a visit goes</a><span>&middot;</span>
+            <a href="/resources" data-i18n="glink.resources">Real help</a><span>&middot;</span>
+            <a href="/research" data-i18n="glink.research">Research</a><span>&middot;</span>
+            <a href="/safety" data-i18n="glink.safety">Safety</a><span>&middot;</span>
+            <a href="/privacy" data-i18n="glink.privacy">Your privacy</a><span>&middot;</span>
+            <a href="/updates" data-i18n="glink.updates">Updates</a><span>&middot;</span>
+            <a href="/contact" data-i18n="glink.contact">Contact</a>
           </div>
         </div>
       </div>
@@ -888,7 +898,16 @@ PUBLIC_PAGE = """
         "rail.nearby": "Ayuda cercana",
         "rail.activities": "Actividades",
         "rail.save": "&#128278; Guardar",
-        "rail.testmic": "Probar micr&oacute;fono"
+        "rail.testmic": "Probar micr&oacute;fono",
+        "glink.about": "Acerca de",
+        "glink.how": "C&oacute;mo funciona",
+        "glink.stories": "C&oacute;mo es una visita",
+        "glink.resources": "Ayuda real",
+        "glink.research": "Investigaci&oacute;n",
+        "glink.safety": "Seguridad",
+        "glink.privacy": "Tu privacidad",
+        "glink.updates": "Novedades",
+        "glink.contact": "Contacto"
       },
       zh: {
         "gate.tagline": "一个安静、私密的地方，倾诉你的心事。<br>你分享的一切都不会展示给任何人——它是加密的。",
@@ -914,14 +933,198 @@ PUBLIC_PAGE = """
         "rail.nearby": "附近的帮助",
         "rail.activities": "活动",
         "rail.save": "&#128278; 保存",
-        "rail.testmic": "测试麦克风"
+        "rail.testmic": "测试麦克风",
+        "glink.about": "关于我们",
+        "glink.how": "运作方式",
+        "glink.stories": "一次访问是怎样的",
+        "glink.resources": "真实的帮助",
+        "glink.research": "研究",
+        "glink.safety": "安全",
+        "glink.privacy": "你的隐私",
+        "glink.updates": "更新",
+        "glink.contact": "联系我们"
+      },
+      hi: {
+        "gate.tagline": "अपनी बात कहने के लिए एक शांत, निजी जगह।<br>आप जो भी साझा करते हैं वह किसी को नहीं दिखाया जाता &mdash; वह एन्क्रिप्टेड (सुरक्षित रूप से कूटबद्ध) है।",
+        "gate.begin": "शुरू करने के लिए टैप करें",
+        "gate.startnote": "टैप करते ही हल्का संगीत और आपका कैमरा धीरे-धीरे शुरू होते हैं।",
+        "gate.camera": "<b style='color:#99673e;'>आपके कैमरे के बारे में:</b> आपका वीडियो <b>आपके अपने डिवाइस पर ही</b> विश्लेषित होता है &mdash; केवल आपके हाव-भाव और हृदय-गति के संकेत धीरे से पढ़ने के लिए। वीडियो स्वयं <b>कभी हमें नहीं भेजा जाता और कहीं भी सहेजा नहीं जाता</b>। कुछ भी आपके डिवाइस से बाहर नहीं जाता। आप कैमरा मना कर सकते हैं और बाकी सब कुछ फिर भी इस्तेमाल कर सकते हैं।",
+        "gate.ainotice": "<b style='color:#99673e;'>कृपया जान लें:</b> InnerLight एक <b>आर्टिफ़िशियल इंटेलिजेंस प्रोग्राम</b> है &mdash; एक कंप्यूटर, कोई इंसान नहीं। यह कोई थेरेपिस्ट, डॉक्टर या वकील नहीं है, और कुछ नाबालिगों के लिए उपयुक्त नहीं हो सकता। आपात स्थिति में <b>988</b> पर कॉल या संदेश करें, या <b>911</b> पर कॉल करें। <a href='/safety' style='color:#2e6e8e;'>संकट में हम कैसे जवाब देते हैं</a>",
+        "gate.adult": "आगे बढ़ने पर आप पुष्टि करते हैं कि आपकी आयु 18 वर्ष या उससे अधिक है। <a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>18 से कम उम्र? आपके लिए भी सच्ची मदद मौजूद है।</a>",
+        "story.title": "मुझे अपनी बात बताइए।",
+        "story.sub": "अपना समय लीजिए। जो सच लगे, वही कहिए। मैं सुनने के लिए यहीं हूँ।",
+        "story.resume": "पहले यहाँ आ चुके हैं? अपनी कहानी जारी रखें",
+        "story.ainote": "InnerLight एक आर्टिफ़िशियल इंटेलिजेंस प्रोग्राम है &mdash; कोई इंसान नहीं, और न ही कोई थेरेपिस्ट, डॉक्टर या वकील।",
+        "story.safetylink": "सुरक्षा और संकट प्रोटोकॉल",
+        "story.placeholder": "जहाँ से चाहें, वहीं से शुरू करें… (भेजने के लिए Enter दबाएँ)",
+        "story.send": "भेजें",
+        "story.speak": "&#127908; बोलें",
+        "music.now": "&#9834; हल्का संगीत चल रहा है",
+        "music.change": "संगीत बदलें",
+        "music.pulseon": "&#10041; शांति की धड़कन: चालू",
+        "music.voiceoff": "&#128263; बोलती आवाज़: बंद",
+        "rail.provider": "देखभाल सेवा",
+        "rail.legal": "कानूनी मदद",
+        "rail.nearby": "आस-पास मदद",
+        "rail.activities": "गतिविधियाँ",
+        "rail.save": "&#128278; सहेजें",
+        "rail.testmic": "माइक जाँचें",
+        "glink.about": "हमारे बारे में",
+        "glink.how": "यह कैसे काम करता है",
+        "glink.stories": "एक मुलाक़ात कैसी होती है",
+        "glink.resources": "सच्ची मदद",
+        "glink.research": "शोध",
+        "glink.safety": "सुरक्षा",
+        "glink.privacy": "आपकी गोपनीयता",
+        "glink.updates": "नई जानकारी",
+        "glink.contact": "संपर्क करें"
+      },
+      pa: {
+        "gate.tagline": "ਆਪਣੀ ਗੱਲ ਕਹਿਣ ਲਈ ਇੱਕ ਸ਼ਾਂਤ, ਨਿੱਜੀ ਥਾਂ।<br>ਜੋ ਵੀ ਤੁਸੀਂ ਸਾਂਝਾ ਕਰਦੇ ਹੋ ਉਹ ਕਿਸੇ ਨੂੰ ਨਹੀਂ ਦਿਖਾਇਆ ਜਾਂਦਾ &mdash; ਉਹ ਐਨਕ੍ਰਿਪਟਡ (ਸੁਰੱਖਿਅਤ ਕੋਡ ਵਿੱਚ) ਹੈ।",
+        "gate.begin": "ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ",
+        "gate.startnote": "ਟੈਪ ਕਰਦਿਆਂ ਹੀ ਹੌਲੀ ਸੰਗੀਤ ਅਤੇ ਤੁਹਾਡਾ ਕੈਮਰਾ ਹੌਲੀ-ਹੌਲੀ ਸ਼ੁਰੂ ਹੁੰਦੇ ਹਨ।",
+        "gate.camera": "<b style='color:#99673e;'>ਤੁਹਾਡੇ ਕੈਮਰੇ ਬਾਰੇ:</b> ਤੁਹਾਡੀ ਵੀਡੀਓ <b>ਤੁਹਾਡੀ ਆਪਣੀ ਡਿਵਾਈਸ ਉੱਤੇ ਹੀ</b> ਪੜ੍ਹੀ ਜਾਂਦੀ ਹੈ &mdash; ਸਿਰਫ਼ ਤੁਹਾਡੇ ਹਾਵ-ਭਾਵ ਅਤੇ ਦਿਲ ਦੀ ਧੜਕਣ ਦੇ ਸੰਕੇਤ ਹੌਲੀ ਜਿਹੇ ਪੜ੍ਹਨ ਲਈ। ਵੀਡੀਓ ਆਪ <b>ਕਦੇ ਵੀ ਸਾਨੂੰ ਨਹੀਂ ਭੇਜੀ ਜਾਂਦੀ ਅਤੇ ਕਿਤੇ ਵੀ ਸਾਂਭੀ ਨਹੀਂ ਜਾਂਦੀ</b>। ਕੁਝ ਵੀ ਤੁਹਾਡੀ ਡਿਵਾਈਸ ਤੋਂ ਬਾਹਰ ਨਹੀਂ ਜਾਂਦਾ। ਤੁਸੀਂ ਕੈਮਰੇ ਤੋਂ ਇਨਕਾਰ ਕਰ ਸਕਦੇ ਹੋ ਅਤੇ ਬਾਕੀ ਸਭ ਕੁਝ ਫਿਰ ਵੀ ਵਰਤ ਸਕਦੇ ਹੋ।",
+        "gate.ainotice": "<b style='color:#99673e;'>ਕਿਰਪਾ ਕਰਕੇ ਜਾਣ ਲਵੋ:</b> InnerLight ਇੱਕ <b>ਆਰਟੀਫ਼ੀਸ਼ੀਅਲ ਇੰਟੈਲੀਜੈਂਸ ਪ੍ਰੋਗਰਾਮ</b> ਹੈ &mdash; ਇੱਕ ਕੰਪਿਊਟਰ, ਕੋਈ ਇਨਸਾਨ ਨਹੀਂ। ਇਹ ਕੋਈ ਥੈਰੇਪਿਸਟ, ਡਾਕਟਰ ਜਾਂ ਵਕੀਲ ਨਹੀਂ ਹੈ, ਅਤੇ ਕੁਝ ਨਾਬਾਲਗਾਂ ਲਈ ਢੁਕਵਾਂ ਨਹੀਂ ਹੋ ਸਕਦਾ। ਐਮਰਜੈਂਸੀ ਵਿੱਚ <b>988</b> ਉੱਤੇ ਕਾਲ ਜਾਂ ਸੁਨੇਹਾ ਭੇਜੋ, ਜਾਂ <b>911</b> ਉੱਤੇ ਕਾਲ ਕਰੋ। <a href='/safety' style='color:#2e6e8e;'>ਸੰਕਟ ਵਿੱਚ ਅਸੀਂ ਕਿਵੇਂ ਜਵਾਬ ਦਿੰਦੇ ਹਾਂ</a>",
+        "gate.adult": "ਅੱਗੇ ਵਧਣ ਨਾਲ ਤੁਸੀਂ ਪੁਸ਼ਟੀ ਕਰਦੇ ਹੋ ਕਿ ਤੁਹਾਡੀ ਉਮਰ 18 ਸਾਲ ਜਾਂ ਵੱਧ ਹੈ। <a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>18 ਤੋਂ ਘੱਟ? ਤੁਹਾਡੇ ਲਈ ਵੀ ਸੱਚੀ ਮਦਦ ਹੈ।</a>",
+        "story.title": "ਮੈਨੂੰ ਆਪਣੀ ਗੱਲ ਦੱਸੋ।",
+        "story.sub": "ਆਪਣਾ ਸਮਾਂ ਲਵੋ। ਜੋ ਸੱਚ ਲੱਗੇ, ਉਹੀ ਕਹੋ। ਮੈਂ ਸੁਣਨ ਲਈ ਇੱਥੇ ਹਾਂ।",
+        "story.resume": "ਪਹਿਲਾਂ ਇੱਥੇ ਆਏ ਹੋ? ਆਪਣੀ ਕਹਾਣੀ ਜਾਰੀ ਰੱਖੋ",
+        "story.ainote": "InnerLight ਇੱਕ ਆਰਟੀਫ਼ੀਸ਼ੀਅਲ ਇੰਟੈਲੀਜੈਂਸ ਪ੍ਰੋਗਰਾਮ ਹੈ &mdash; ਕੋਈ ਇਨਸਾਨ ਨਹੀਂ, ਅਤੇ ਨਾ ਹੀ ਕੋਈ ਥੈਰੇਪਿਸਟ, ਡਾਕਟਰ ਜਾਂ ਵਕੀਲ।",
+        "story.safetylink": "ਸੁਰੱਖਿਆ ਅਤੇ ਸੰਕਟ ਪ੍ਰੋਟੋਕੋਲ",
+        "story.placeholder": "ਜਿੱਥੋਂ ਮਰਜ਼ੀ ਸ਼ੁਰੂ ਕਰੋ… (ਭੇਜਣ ਲਈ Enter ਦਬਾਓ)",
+        "story.send": "ਭੇਜੋ",
+        "story.speak": "&#127908; ਬੋਲੋ",
+        "music.now": "&#9834; ਹੌਲੀ ਸੰਗੀਤ ਚੱਲ ਰਿਹਾ ਹੈ",
+        "music.change": "ਸੰਗੀਤ ਬਦਲੋ",
+        "music.pulseon": "&#10041; ਸ਼ਾਂਤੀ ਦੀ ਧੜਕਣ: ਚਾਲੂ",
+        "music.voiceoff": "&#128263; ਬੋਲਦੀ ਆਵਾਜ਼: ਬੰਦ",
+        "rail.provider": "ਦੇਖਭਾਲ ਸੇਵਾ",
+        "rail.legal": "ਕਾਨੂੰਨੀ ਮਦਦ",
+        "rail.nearby": "ਨੇੜੇ ਦੀ ਮਦਦ",
+        "rail.activities": "ਸਰਗਰਮੀਆਂ",
+        "rail.save": "&#128278; ਸਾਂਭੋ",
+        "rail.testmic": "ਮਾਈਕ ਪਰਖੋ",
+        "glink.about": "ਸਾਡੇ ਬਾਰੇ",
+        "glink.how": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ",
+        "glink.stories": "ਇੱਕ ਮੁਲਾਕਾਤ ਕਿਹੋ ਜਿਹੀ ਹੁੰਦੀ ਹੈ",
+        "glink.resources": "ਸੱਚੀ ਮਦਦ",
+        "glink.research": "ਖੋਜ",
+        "glink.safety": "ਸੁਰੱਖਿਆ",
+        "glink.privacy": "ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ",
+        "glink.updates": "ਨਵੀਆਂ ਖ਼ਬਰਾਂ",
+        "glink.contact": "ਸੰਪਰਕ ਕਰੋ"
+      },
+      bn: {
+        "gate.tagline": "নিজের কথা বলার জন্য একটি শান্ত, ব্যক্তিগত জায়গা।<br>আপনি যা ভাগ করেন তা কাউকে দেখানো হয় না &mdash; তা এনক্রিপ্ট করা (সুরক্ষিতভাবে কোডবদ্ধ)।",
+        "gate.begin": "শুরু করতে ট্যাপ করুন",
+        "gate.startnote": "ট্যাপ করলেই মৃদু সংগীত আর আপনার ক্যামেরা ধীরে ধীরে চালু হয়।",
+        "gate.camera": "<b style='color:#99673e;'>আপনার ক্যামেরা সম্পর্কে:</b> আপনার ভিডিও <b>আপনার নিজের ডিভাইসেই</b> বিশ্লেষণ করা হয় &mdash; শুধু আপনার মুখের ভাব ও হৃদস্পন্দনের সংকেত আলতোভাবে পড়ার জন্য। ভিডিওটি নিজে <b>কখনো আমাদের কাছে পাঠানো হয় না, কোথাও সংরক্ষণও করা হয় না</b>। কিছুই আপনার ডিভাইসের বাইরে যায় না। আপনি ক্যামেরা প্রত্যাখ্যান করেও বাকি সবকিছু ব্যবহার করতে পারেন।",
+        "gate.ainotice": "<b style='color:#99673e;'>দয়া করে জেনে রাখুন:</b> InnerLight একটি <b>কৃত্রিম বুদ্ধিমত্তা প্রোগ্রাম</b> &mdash; একটি কম্পিউটার, কোনো মানুষ নয়। এটি কোনো থেরাপিস্ট, ডাক্তার বা আইনজীবী নয়, এবং কিছু অপ্রাপ্তবয়স্কের জন্য উপযুক্ত না-ও হতে পারে। জরুরি অবস্থায় <b>988</b> নম্বরে কল বা টেক্সট করুন, অথবা <b>911</b> নম্বরে কল করুন। <a href='/safety' style='color:#2e6e8e;'>সংকটে আমরা কীভাবে সাড়া দিই</a>",
+        "gate.adult": "এগিয়ে গেলে আপনি নিশ্চিত করছেন যে আপনার বয়স ১৮ বা তার বেশি। <a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>বয়স ১৮-র কম? আপনার জন্যও সত্যিকারের সাহায্য আছে।</a>",
+        "story.title": "আমাকে আপনার কথা বলুন।",
+        "story.sub": "সময় নিন। যা সত্যি মনে হয়, তাই বলুন। আমি শোনার জন্য এখানে আছি।",
+        "story.resume": "আগে এখানে এসেছিলেন? আপনার কথা চালিয়ে যান",
+        "story.ainote": "InnerLight একটি কৃত্রিম বুদ্ধিমত্তা প্রোগ্রাম &mdash; কোনো মানুষ নয়, এবং কোনো থেরাপিস্ট, ডাক্তার বা আইনজীবীও নয়।",
+        "story.safetylink": "নিরাপত্তা ও সংকট প্রোটোকল",
+        "story.placeholder": "যেখান থেকে ইচ্ছা শুরু করুন… (পাঠাতে Enter চাপুন)",
+        "story.send": "পাঠান",
+        "story.speak": "&#127908; বলুন",
+        "music.now": "&#9834; মৃদু সংগীত বাজছে",
+        "music.change": "সংগীত বদলান",
+        "music.pulseon": "&#10041; শান্তির স্পন্দন: চালু",
+        "music.voiceoff": "&#128263; কথা-বলা কণ্ঠ: বন্ধ",
+        "rail.provider": "সেবা প্রদানকারী",
+        "rail.legal": "আইনি সাহায্য",
+        "rail.nearby": "কাছাকাছি সাহায্য",
+        "rail.activities": "কার্যকলাপ",
+        "rail.save": "&#128278; সংরক্ষণ",
+        "rail.testmic": "মাইক পরীক্ষা",
+        "glink.about": "আমাদের সম্পর্কে",
+        "glink.how": "এটি কীভাবে কাজ করে",
+        "glink.stories": "একটি সাক্ষাৎ কেমন হয়",
+        "glink.resources": "সত্যিকারের সাহায্য",
+        "glink.research": "গবেষণা",
+        "glink.safety": "নিরাপত্তা",
+        "glink.privacy": "আপনার গোপনীয়তা",
+        "glink.updates": "নতুন খবর",
+        "glink.contact": "যোগাযোগ"
+      },
+      tl: {
+        "gate.tagline": "Isang tahimik at pribadong lugar para ikuwento ang iyong kalagayan.<br>Walang ipinapakita kaninuman ang anumang ibinahagi mo &mdash; naka-encrypt ito.",
+        "gate.begin": "I-tap para magsimula",
+        "gate.startnote": "Marahang magsisimula ang mahinang musika at ang iyong camera kapag nag-tap ka.",
+        "gate.camera": "<b style='color:#99673e;'>Tungkol sa iyong camera:</b> sinusuri ang iyong video <b>sa sarili mong device</b> &mdash; para lamang mahinahong mabasa ang iyong ekspresyon at senyales ng tibok ng puso. Ang video mismo ay <b>hindi kailanman ipinapadala sa amin o iniimbak saanman</b>. Walang umaalis sa iyong device. Maaari mong tanggihan ang camera at magagamit mo pa rin ang lahat ng iba pa.",
+        "gate.ainotice": "<b style='color:#99673e;'>Pakitandaan:</b> ang InnerLight ay isang <b>artificial intelligence program</b> &mdash; isang computer, hindi tao. Hindi ito therapist, doktor, o abogado, at maaaring hindi angkop para sa ilang menor de edad. Sa emergency, tumawag o mag-text sa <b>988</b>, o tumawag sa <b>911</b>. <a href='/safety' style='color:#2e6e8e;'>Paano kami tumutugon sa krisis</a>",
+        "gate.adult": "Sa pagpapatuloy, kinukumpirma mong ikaw ay 18 taong gulang o mas matanda. <a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>Wala pang 18? May totoong tulong din kami para sa iyo.</a>",
+        "story.title": "Ikuwento mo sa akin ang nangyayari.",
+        "story.sub": "Huwag magmadali. Sabihin ang totoo sa iyong loob. Nakikinig ako.",
+        "story.resume": "Nakapunta ka na rito? Ipagpatuloy ang iyong kuwento",
+        "story.ainote": "Ang InnerLight ay isang artificial intelligence program &mdash; hindi tao, at hindi therapist, doktor, o abogado.",
+        "story.safetylink": "Kaligtasan at protocol sa krisis",
+        "story.placeholder": "Magsimula kahit saan… (pindutin ang Enter para ipadala)",
+        "story.send": "Ipadala",
+        "story.speak": "&#127908; Magsalita",
+        "music.now": "&#9834; tumutugtog ang mahinang musika",
+        "music.change": "Palitan ang musika",
+        "music.pulseon": "&#10041; Pintig ng kalma: nakabukas",
+        "music.voiceoff": "&#128263; Boses na nagsasalita: nakapatay",
+        "rail.provider": "Pangangalaga",
+        "rail.legal": "Tulong legal",
+        "rail.nearby": "Kalapit na tulong",
+        "rail.activities": "Mga gawain",
+        "rail.save": "&#128278; I-save",
+        "rail.testmic": "Subukan ang mic",
+        "glink.about": "Tungkol sa amin",
+        "glink.how": "Paano ito gumagana",
+        "glink.stories": "Paano ang isang pagbisita",
+        "glink.resources": "Totoong tulong",
+        "glink.research": "Pananaliksik",
+        "glink.safety": "Kaligtasan",
+        "glink.privacy": "Ang iyong privacy",
+        "glink.updates": "Mga update",
+        "glink.contact": "Makipag-ugnayan"
+      },
+      to: {
+        "gate.tagline": "Ko ha feituʻu nonga mo fakapulipuli ke fai ai hoʻo talanoa.<br>ʻOku ʻikai fakahā ki ha taha ha meʻa ʻokú ke vahevahe &mdash; ʻoku maluʻi fakakomipiuta (encrypted).",
+        "gate.begin": "Lomiʻi ke kamata",
+        "gate.startnote": "ʻE kamata māmālie ʻa e hiva vaivai mo hoʻo mea faitā (camera) ʻi hoʻo lomiʻi.",
+        "gate.camera": "<b style='color:#99673e;'>Fekauʻaki mo hoʻo mea faitā:</b> ʻoku sivisiviʻi hoʻo vitiō <b>ʻi hoʻo meʻangāue pē ʻaʻau</b> &mdash; ke lau māmālie pē ʻa e ngaahi fakaʻilonga ʻo ho fofonga mo e tā ʻo ho mafu. Ko e vitiō tonu <b>ʻoku ʻikai ʻaupito ʻoatu kiate kimautolu pe tauhi ʻi ha feituʻu</b>. ʻOku ʻikai mavahe ha meʻa mei hoʻo meʻangāue. ʻE lava ke ke fakafisi ʻa e mea faitā kae kei ngāueʻaki ʻa e meʻa kotoa pē.",
+        "gate.ainotice": "<b style='color:#99673e;'>Kātaki ʻo ʻilo:</b> ko e InnerLight ko ha <b>polokalama ʻatamai fakaʻilekitulōnika (AI)</b> &mdash; ko ha komipiuta, ʻoku ʻikai ko ha tangata. ʻOku ʻikai ko ha toketā fakaʻatamai, toketā, pe loea, pea ʻe ʻikai ngalingali feʻunga ia ki he kau taʻu siʻi ʻe niʻihi. ʻI ha faingataʻa fakavavevave, telefoni pe fai ha pōpoaki ki he <b>988</b>, pe telefoni ki he <b>911</b>. <a href='/safety' style='color:#2e6e8e;'>Ko e founga ʻemau tali ʻi ha faingataʻa</a>",
+        "gate.adult": "ʻI hoʻo hokohoko atu ʻokú ke fakapapauʻi kuó ke taʻu 18 pe lahi ange. <a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>Siʻi hifo he taʻu 18? ʻOku ʻi ai foki mo ha tokoni moʻoni maʻau.</a>",
+        "story.title": "Talamai hoʻo talanoa.",
+        "story.sub": "Fai māmālie pē. Lea ʻaki ʻa e meʻa ʻoku moʻoni kiate koe. ʻOku ou ʻi heni ke fanongo.",
+        "story.resume": "Naʻá ke ʻi heni ki muʻa? Hokohoko atu hoʻo talanoa",
+        "story.ainote": "Ko e InnerLight ko ha polokalama AI &mdash; ʻoku ʻikai ko ha tangata, pea ʻoku ʻikai ko ha toketā fakaʻatamai, toketā, pe loea.",
+        "story.safetylink": "Malu mo e founga ʻi ha faingataʻa",
+        "story.placeholder": "Kamata mei ha feituʻu pē ʻokú ke loto ki ai… (lomiʻi ʻa e Enter ke ʻave)",
+        "story.send": "ʻAve",
+        "story.speak": "&#127908; Lea",
+        "music.now": "&#9834; ʻoku ongo ʻa e hiva vaivai",
+        "music.change": "Liliu ʻa e hiva",
+        "music.pulseon": "&#10041; Tā ʻo e nonga: moʻui",
+        "music.voiceoff": "&#128263; Leʻo lea: mate",
+        "rail.provider": "Tokoni fakafaitoʻo",
+        "rail.legal": "Tokoni fakalao",
+        "rail.nearby": "Tokoni ofi",
+        "rail.activities": "Ngaahi ngāue",
+        "rail.save": "&#128278; Tauhi",
+        "rail.testmic": "ʻAhiʻahiʻi e maikolofoni",
+        "glink.about": "Ko kimautolu",
+        "glink.how": "Founga ʻene ngāue",
+        "glink.stories": "Ko e anga ʻo ha ʻaʻahi",
+        "glink.resources": "Tokoni moʻoni",
+        "glink.research": "Fekumi",
+        "glink.safety": "Malu",
+        "glink.privacy": "Hoʻo fakapulipuli",
+        "glink.updates": "Ngaahi fakamatala foʻou",
+        "glink.contact": "Fetuʻutaki"
       }
     };
     // Current UI language, and helpers that make the SPOKEN voice and the voice
     // INPUT follow it — so Spanish and Chinese are actually heard in-language,
     // not read aloud with an English accent.
     window._ilLang = 'en';
-    function ilBcp47(code){ return code==='es' ? 'es-ES' : (code==='zh' ? 'zh-CN' : 'en-US'); }
+    function ilBcp47(code){ var m={es:'es-ES',zh:'zh-CN',hi:'hi-IN',pa:'pa-IN',bn:'bn-IN',tl:'fil-PH',to:'to-TO'}; return m[code]||'en-US'; }
     function ilPickVoice(bcp){
       try {
         var vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
@@ -2466,7 +2669,57 @@ var _IL_FAC = {
     samhsa:"SAMHSA \u5168\u56fd\u70ed\u7ebf\uff1a1-800-662-4357\uff08\u514d\u8d39\uff0c\u5168\u5929\u5019\uff0c\u5e2e\u52a9\u67e5\u627e\u5f53\u5730\u6cbb\u7597\uff09",
     findtx:"FindTreatment.gov \u2014\u2014 \u6309\u4f60\u7684\u4f4d\u7f6e\u641c\u7d22", call988:"\u62e8\u6253\u6216\u53d1\u77ed\u4fe1\u81f3 <b>988</b> \u7acb\u5373\u503e\u8bc9\u3002",
     confirm:"\u8bf7\u81f4\u7535\u786e\u8ba4\u8425\u4e1a\u65f6\u95f4\u548c\u670d\u52a1\u9879\u76ee\u3002\u7ed3\u679c\u6765\u81ea FindTreatment.gov\uff0c\u5373\u8054\u90a6\u6301\u8bc1\u673a\u6784\u76ee\u5f55\u3002",
-    err:"\u6682\u65f6\u65e0\u6cd5\u641c\u7d22\u3002\u5982\u9700\u5e2e\u52a9\u67e5\u627e\u6cbb\u7597\uff0c\u8bf7\u62e8\u6253 SAMHSA\uff1a1-800-662-4357\u3002"}
+    err:"\u6682\u65f6\u65e0\u6cd5\u641c\u7d22\u3002\u5982\u9700\u5e2e\u52a9\u67e5\u627e\u6cbb\u7597\uff0c\u8bf7\u62e8\u6253 SAMHSA\uff1a1-800-662-4357\u3002"},
+  hi:{title:"अपने आस-पास मदद खोजें", close:"बंद करें",
+    intro:"यदि आप इस समय तत्काल संकट में नहीं हैं और खुद संपर्क करने में सक्षम महसूस करते हैं, तो अपना शहर या ZIP लिखें — हम आपके आस-पास मानसिक स्वास्थ्य केंद्र खोजेंगे, जिनसे आप अपनी सुविधा से संपर्क कर सकते हैं।",
+    ph:"शहर या ZIP (जैसे San Jose, CA)", search:"खोजें",
+    foot:"यदि आप तत्काल खतरे या संकट में हैं, तो <b>988</b> पर कॉल या संदेश करें, या <b>911</b> पर कॉल करें। यह सूची आपके अगले कदम की योजना के लिए है, आपात स्थिति के लिए नहीं।",
+    enter:"कृपया शहर या ZIP लिखें।", looking:"आपके आस-पास केंद्र खोजे जा रहे हैं…",
+    nores:"अभी उस क्षेत्र के लिए कोई सूची नहीं मिली। आप ये भी आज़मा सकते हैं:",
+    samhsa:"SAMHSA राष्ट्रीय हेल्पलाइन: 1-800-662-4357 (निःशुल्क, 24/7, स्थानीय उपचार खोजने में मदद)",
+    findtx:"FindTreatment.gov — अपने स्थान से खोजें", call988:"अभी बात करने के लिए <b>988</b> पर कॉल या संदेश करें।",
+    confirm:"कृपया समय और सेवाओं की पुष्टि पहले फ़ोन करके करें। सूचियाँ FindTreatment.gov से आती हैं — लाइसेंस प्राप्त केंद्रों की संघीय निर्देशिका।",
+    err:"अभी खोज नहीं हो सकी। उपचार खोजने में मदद के लिए SAMHSA को 1-800-662-4357 पर कॉल करें।"},
+  pa:{title:"ਆਪਣੇ ਨੇੜੇ ਮਦਦ ਲੱਭੋ", close:"ਬੰਦ ਕਰੋ",
+    intro:"ਜੇ ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਤੁਰੰਤ ਸੰਕਟ ਵਿੱਚ ਨਹੀਂ ਹੋ ਅਤੇ ਆਪ ਸੰਪਰਕ ਕਰਨ ਦੇ ਯੋਗ ਮਹਿਸੂਸ ਕਰਦੇ ਹੋ, ਤਾਂ ਆਪਣਾ ਸ਼ਹਿਰ ਜਾਂ ZIP ਲਿਖੋ — ਅਸੀਂ ਤੁਹਾਡੇ ਨੇੜੇ ਮਾਨਸਿਕ ਸਿਹਤ ਕੇਂਦਰ ਲੱਭਾਂਗੇ, ਜਿਨ੍ਹਾਂ ਨਾਲ ਤੁਸੀਂ ਆਪਣੀ ਸਹੂਲਤ ਨਾਲ ਸੰਪਰਕ ਕਰ ਸਕਦੇ ਹੋ।",
+    ph:"ਸ਼ਹਿਰ ਜਾਂ ZIP (ਜਿਵੇਂ San Jose, CA)", search:"ਖੋਜੋ",
+    foot:"ਜੇ ਤੁਸੀਂ ਤੁਰੰਤ ਖ਼ਤਰੇ ਜਾਂ ਸੰਕਟ ਵਿੱਚ ਹੋ, ਤਾਂ <b>988</b> ਉੱਤੇ ਕਾਲ ਜਾਂ ਸੁਨੇਹਾ ਭੇਜੋ, ਜਾਂ <b>911</b> ਉੱਤੇ ਕਾਲ ਕਰੋ। ਇਹ ਸੂਚੀ ਤੁਹਾਡੇ ਅਗਲੇ ਕਦਮ ਦੀ ਯੋਜਨਾ ਲਈ ਹੈ, ਐਮਰਜੈਂਸੀ ਲਈ ਨਹੀਂ।",
+    enter:"ਕਿਰਪਾ ਕਰਕੇ ਸ਼ਹਿਰ ਜਾਂ ZIP ਲਿਖੋ।", looking:"ਤੁਹਾਡੇ ਨੇੜੇ ਕੇਂਦਰ ਲੱਭੇ ਜਾ ਰਹੇ ਹਨ…",
+    nores:"ਇਸ ਵੇਲੇ ਉਸ ਇਲਾਕੇ ਲਈ ਕੋਈ ਸੂਚੀ ਨਹੀਂ ਮਿਲੀ। ਤੁਸੀਂ ਇਹ ਵੀ ਅਜ਼ਮਾ ਸਕਦੇ ਹੋ:",
+    samhsa:"SAMHSA ਰਾਸ਼ਟਰੀ ਹੈਲਪਲਾਈਨ: 1-800-662-4357 (ਮੁਫ਼ਤ, 24/7, ਸਥਾਨਕ ਇਲਾਜ ਲੱਭਣ ਵਿੱਚ ਮਦਦ)",
+    findtx:"FindTreatment.gov — ਆਪਣੀ ਥਾਂ ਤੋਂ ਖੋਜੋ", call988:"ਹੁਣੇ ਗੱਲ ਕਰਨ ਲਈ <b>988</b> ਉੱਤੇ ਕਾਲ ਜਾਂ ਸੁਨੇਹਾ ਭੇਜੋ।",
+    confirm:"ਕਿਰਪਾ ਕਰਕੇ ਸਮਾਂ ਅਤੇ ਸੇਵਾਵਾਂ ਪਹਿਲਾਂ ਫ਼ੋਨ ਕਰਕੇ ਪੱਕੀਆਂ ਕਰੋ। ਸੂਚੀਆਂ FindTreatment.gov ਤੋਂ ਆਉਂਦੀਆਂ ਹਨ — ਲਾਇਸੰਸਸ਼ੁਦਾ ਕੇਂਦਰਾਂ ਦੀ ਫੈਡਰਲ ਡਾਇਰੈਕਟਰੀ।",
+    err:"ਇਸ ਵੇਲੇ ਖੋਜ ਨਹੀਂ ਹੋ ਸਕੀ। ਇਲਾਜ ਲੱਭਣ ਵਿੱਚ ਮਦਦ ਲਈ SAMHSA ਨੂੰ 1-800-662-4357 ਉੱਤੇ ਕਾਲ ਕਰੋ।"},
+  bn:{title:"আপনার কাছাকাছি সাহায্য খুঁজুন", close:"বন্ধ করুন",
+    intro:"আপনি যদি এই মুহূর্তে তাৎক্ষণিক সংকটে না থাকেন এবং নিজে যোগাযোগ করতে সক্ষম বোধ করেন, তাহলে আপনার শহর বা ZIP লিখুন — আমরা আপনার কাছাকাছি মানসিক স্বাস্থ্য কেন্দ্র খুঁজব, যেখানে আপনি সুবিধামতো নিজেই যোগাযোগ করতে পারবেন।",
+    ph:"শহর বা ZIP (যেমন San Jose, CA)", search:"খুঁজুন",
+    foot:"আপনি যদি তাৎক্ষণিক বিপদে বা সংকটে থাকেন, তাহলে <b>988</b> নম্বরে কল বা টেক্সট করুন, অথবা <b>911</b> নম্বরে কল করুন। এই তালিকা আপনার পরবর্তী পদক্ষেপ পরিকল্পনার জন্য, জরুরি অবস্থার জন্য নয়।",
+    enter:"অনুগ্রহ করে শহর বা ZIP লিখুন।", looking:"আপনার কাছাকাছি কেন্দ্র খোঁজা হচ্ছে…",
+    nores:"এই মুহূর্তে ওই এলাকার জন্য কিছু পাওয়া যায়নি। আপনি এগুলোও চেষ্টা করতে পারেন:",
+    samhsa:"SAMHSA জাতীয় হেল্পলাইন: 1-800-662-4357 (বিনামূল্যে, ২৪/৭, স্থানীয় চিকিৎসা খুঁজে দেয়)",
+    findtx:"FindTreatment.gov — আপনার অবস্থান দিয়ে খুঁজুন", call988:"এখনই কথা বলতে <b>988</b> নম্বরে কল বা টেক্সট করুন।",
+    confirm:"অনুগ্রহ করে আগে ফোন করে সময় ও সেবা নিশ্চিত করুন। তালিকাগুলো আসে FindTreatment.gov থেকে — লাইসেন্সপ্রাপ্ত কেন্দ্রের ফেডারেল ডিরেক্টরি।",
+    err:"এই মুহূর্তে খোঁজা গেল না। চিকিৎসা খুঁজতে সাহায্যের জন্য SAMHSA-কে 1-800-662-4357 নম্বরে কল করুন।"},
+  tl:{title:"Maghanap ng tulong malapit sa iyo", close:"Isara",
+    intro:"Kung wala ka sa agarang krisis at kaya mong makipag-ugnayan nang mag-isa, ilagay ang iyong lungsod o ZIP at hahanapan ka namin ng mga lugar para sa kalusugang pangkaisipan na malapit sa iyo, na maaari mong kontakin sa sarili mong oras.",
+    ph:"Lungsod o ZIP (hal. San Jose, CA)", search:"Hanapin",
+    foot:"Kung ikaw ay nasa agarang panganib o krisis, tumawag o mag-text sa <b>988</b>, o tumawag sa <b>911</b>. Ang listahang ito ay para sa pagpaplano ng susunod mong hakbang, hindi para sa emergency.",
+    enter:"Pakilagay ang lungsod o ZIP.", looking:"Hinahanap ang mga lugar malapit sa iyo…",
+    nores:"Wala kaming nahanap na listahan para sa lugar na iyon sa ngayon. Maaari mo ring subukan:",
+    samhsa:"SAMHSA National Helpline: 1-800-662-4357 (libre, 24/7, tumutulong maghanap ng lokal na paggamot)",
+    findtx:"FindTreatment.gov — maghanap ayon sa iyong lokasyon", call988:"Tumawag o mag-text sa <b>988</b> para makausap ngayon.",
+    confirm:"Pakikumpirma ang oras at serbisyo sa pamamagitan ng pagtawag muna. Galing ang mga listahan sa FindTreatment.gov, ang pederal na direktoryo ng mga lisensyadong pasilidad.",
+    err:"Hindi makapaghanap sa ngayon. Para sa tulong sa paghahanap ng paggamot, tawagan ang SAMHSA sa 1-800-662-4357."},
+  to:{title:"Kumi tokoni ofi kiate koe", close:"Tāpuni",
+    intro:"Kapau ʻoku ʻikai te ke ʻi ha faingataʻa fakavavevave he taimí ni pea ʻokú ke ongoʻi malava ke ke fetuʻutaki pē ʻe koe, tohi hoʻo kolo pe ZIP pea te mau kumi ha ngaahi feituʻu tokoni ki he moʻui fakaʻatamai ofi kiate koe, te ke lava ʻo fetuʻutaki ki ai ʻi hoʻo taimi pē ʻoʻou.",
+    ph:"Kolo pe ZIP (hangē ko San Jose, CA)", search:"Kumi",
+    foot:"Kapau ʻokú ke ʻi ha tuʻunga fakatuʻutāmaki pe faingataʻa fakavavevave, telefoni pe fai ha pōpoaki ki he <b>988</b>, pe telefoni ki he <b>911</b>. Ko e lisi ko ʻení ke palani ʻaki hoʻo sitepu hoko, ʻoku ʻikai ki ha meʻa fakavavevave.",
+    enter:"Kātaki ʻo tohi ha kolo pe ZIP.", looking:"ʻOku kumi ʻa e ngaahi feituʻu ofi kiate koe…",
+    nores:"Naʻe ʻikai ke mau maʻu ha lisi ki he feituʻu ko iá he taimí ni. Te ke lava foki ʻo ʻahiʻahiʻi:",
+    samhsa:"SAMHSA National Helpline: 1-800-662-4357 (taʻetotongi, 24/7, tokoni ke kumi ha faitoʻo fakalotofonua)",
+    findtx:"FindTreatment.gov — kumi ʻaki ho feituʻu", call988:"Telefoni pe fai ha pōpoaki ki he <b>988</b> ke talanoa he taimí ni.",
+    confirm:"Kātaki ʻo fakapapauʻi ʻa e ngaahi houa mo e ngaahi tokoni ʻaki hoʻo telefoni ki muʻa. ʻOku haʻu ʻa e ngaahi lisí mei he FindTreatment.gov, ko e lisi fakapuleʻanga ʻo e ngaahi feituʻu maʻu laiseni.",
+    err:"Naʻe ʻikai lava ʻa e kumí he taimí ni. Ki ha tokoni ke kumi ha faitoʻo, telefoni ki he SAMHSA ʻi he 1-800-662-4357."}
 };
 function _ilfac(k){ var lg=(window._ilLang||"en"); return (_IL_FAC[lg]||_IL_FAC.en)[k]; }
 function openFacilities(){
@@ -2747,7 +3000,17 @@ var _IL_CT = {
   es:{q:'¿Cómo te sientes ahora mismo?', a:'En calma', b:'Abrumado/a', thanks:'Gracias.', skip:'Ahora no',
       scale:['En calma','Bastante en calma','Entre medio','Bastante abrumado','Abrumado']},
   zh:{q:'你现在感觉怎么样？', a:'平静', b:'不知所措', thanks:'谢谢你。', skip:'暂不',
-      scale:['平静','比较平静','中间','比较不知所措','不知所措']}
+      scale:['平静','比较平静','中间','比较不知所措','不知所措']},
+  hi:{q:'आप इस समय कैसा महसूस कर रहे हैं?', a:'शांत', b:'बहुत बोझिल', thanks:'धन्यवाद।', skip:'अभी नहीं',
+      scale:['शांत','काफ़ी शांत','बीच में','काफ़ी बोझिल','बहुत बोझिल']},
+  pa:{q:'ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ?', a:'ਸ਼ਾਂਤ', b:'ਬਹੁਤ ਬੋਝ ਹੇਠ', thanks:'ਧੰਨਵਾਦ।', skip:'ਹੁਣ ਨਹੀਂ',
+      scale:['ਸ਼ਾਂਤ','ਕਾਫ਼ੀ ਸ਼ਾਂਤ','ਵਿਚਕਾਰ','ਕਾਫ਼ੀ ਬੋਝ ਹੇਠ','ਬਹੁਤ ਬੋਝ ਹੇਠ']},
+  bn:{q:'আপনি এই মুহূর্তে কেমন বোধ করছেন?', a:'শান্ত', b:'ভীষণ চাপে', thanks:'ধন্যবাদ।', skip:'এখন নয়',
+      scale:['শান্ত','মোটামুটি শান্ত','মাঝামাঝি','বেশ চাপে','ভীষণ চাপে']},
+  tl:{q:'Ano ang nararamdaman mo ngayon?', a:'Panatag', b:'Lubhang nalulula', thanks:'Salamat.', skip:'Hindi muna',
+      scale:['Panatag','Medyo panatag','Nasa gitna','Medyo nalulula','Lubhang nalulula']},
+  to:{q:'ʻOkú ke ongoʻi fēfē he taimí ni?', a:'Nonga', b:'Māfasia', thanks:'Mālō.', skip:'ʻIkai he taimí ni',
+      scale:['Nonga','Meimei nonga','Vahaʻa','Meimei māfasia','Māfasia']}
 };
 function _ilct(k){ var lg=(window._ilLang||'en'); return (_IL_CT[lg]||_IL_CT.en)[k]; }
 function showCheckin(){ if(document.getElementById('il-checkin')) return;
@@ -2806,7 +3069,17 @@ var _IL_AN = {
   es:{hint:'toca la luz — el ritmo te seguirá', close:'Estoy bien por ahora', pill:'Enfócate conmigo',
       stay:'… quédate conmigo.', words:['aquí.','contigo.','inhala…','y exhala…','estás a salvo.','quédate conmigo.']},
   zh:{hint:'轻触这束光——节奏会跟随你', close:'我现在还好', pill:'和我一起专注',
-      stay:'……和我在一起。', words:['就在这里。','陪着你。','吸气……','呼气……','你是安全的。','和我在一起。']}
+      stay:'……和我在一起。', words:['就在这里。','陪着你。','吸气……','呼气……','你是安全的。','和我在一起。']},
+  hi:{hint:'रोशनी को छुएँ — लय आपके साथ चलेगी', close:'अभी मैं ठीक हूँ', pill:'मेरे साथ ध्यान लगाएँ',
+      stay:'… मेरे साथ रहिए।', words:['यहीं हूँ।','आपके साथ।','साँस अंदर…','और बाहर…','आप सुरक्षित हैं।','मेरे साथ रहिए।']},
+  pa:{hint:'ਰੋਸ਼ਨੀ ਨੂੰ ਛੂਹੋ — ਤਾਲ ਤੁਹਾਡੇ ਨਾਲ ਚੱਲੇਗੀ', close:'ਹੁਣ ਮੈਂ ਠੀਕ ਹਾਂ', pill:'ਮੇਰੇ ਨਾਲ ਧਿਆਨ ਲਾਓ',
+      stay:'… ਮੇਰੇ ਨਾਲ ਰਹੋ।', words:['ਇੱਥੇ ਹਾਂ।','ਤੁਹਾਡੇ ਨਾਲ।','ਸਾਹ ਅੰਦਰ…','ਤੇ ਬਾਹਰ…','ਤੁਸੀਂ ਸੁਰੱਖਿਅਤ ਹੋ।','ਮੇਰੇ ਨਾਲ ਰਹੋ।']},
+  bn:{hint:'আলোটি ছুঁয়ে দেখুন — ছন্দ আপনাকে অনুসরণ করবে', close:'এখন আমি ঠিক আছি', pill:'আমার সাথে মন দিন',
+      stay:'… আমার সাথে থাকুন।', words:['এখানে আছি।','আপনার সাথে।','শ্বাস নিন…','আর ছাড়ুন…','আপনি নিরাপদ।','আমার সাথে থাকুন।']},
+  tl:{hint:'i-tap ang liwanag — susunod sa iyo ang ritmo', close:'Ayos lang ako sa ngayon', pill:'Sabay tayong tumutok',
+      stay:'… manatili ka sa akin.', words:['narito ako.','kasama mo.','huminga papasok…','at palabas…','ligtas ka.','manatili ka sa akin.']},
+  to:{hint:'lomiʻi e maama — ʻe muimui e taá kiate koe', close:'ʻOku ou sai pē he taimí ni', pill:'Tau tokanga fakataha',
+      stay:'… nofo mo au.', words:['ʻoku ou ʻi heni.','ʻoku ou ʻiate koe.','mānava ki loto…','pea ki tuʻa…','ʻokú ke malu.','nofo mo au.']}
 };
 function _ilan(k){ var lg=(window._ilLang||'en'); return (_IL_AN[lg]||_IL_AN.en)[k]; }
 function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAnchorLast=Date.now();
@@ -3009,7 +3282,12 @@ let _presPeak = 0.5, _presLastWord = 0, _presStart = 0;
 const _IL_PRES = {
   en: ["I’m here.", "Take your time.", "There’s no rush.", "I’m right here with you.", "Breathe. I’m here."],
   es: ["Estoy aquí.", "Tómate tu tiempo.", "No hay prisa.", "Respira, estoy aquí.", "Aquí estoy contigo."],
-  zh: ["我在这里。", "慢慢来。", "别急。", "呼吸，我在这里。", "我一直在你身边。"]
+  zh: ["我在这里。", "慢慢来。", "别急。", "呼吸，我在这里。", "我一直在你身边。"],
+  hi: ["मैं यहीं हूँ।", "अपना समय लीजिए।", "कोई जल्दी नहीं।", "मैं आपके साथ हूँ।", "साँस लीजिए। मैं यहीं हूँ।"],
+  pa: ["ਮੈਂ ਇੱਥੇ ਹਾਂ।", "ਆਪਣਾ ਸਮਾਂ ਲਵੋ।", "ਕੋਈ ਕਾਹਲੀ ਨਹੀਂ।", "ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।", "ਸਾਹ ਲਵੋ। ਮੈਂ ਇੱਥੇ ਹਾਂ।"],
+  bn: ["আমি এখানে আছি।", "সময় নিন।", "কোনো তাড়া নেই।", "আমি আপনার পাশে আছি।", "শ্বাস নিন। আমি এখানে আছি।"],
+  tl: ["Narito ako.", "Huwag magmadali.", "Walang pagmamadali.", "Kasama mo ako.", "Huminga ka. Narito ako."],
+  to: ["ʻOku ou ʻi heni.", "Fai māmālie pē.", "ʻOku ʻikai ha fakavavevave.", "ʻOku ou ʻiate koe.", "Mānava. ʻOku ou ʻi heni."]
 };
 function _ilPresWords(){ var lg=(window._ilLang||"en"); return _IL_PRES[lg]||_IL_PRES.en; }
 
@@ -6268,7 +6546,7 @@ _PAGE_I18N = {}
 def _load_page_i18n():
     import os as _os, json as _json
     base = _os.path.dirname(_os.path.abspath(__file__))
-    for lg in ("es", "zh"):
+    for lg in ("es", "zh", "hi", "pa", "bn", "tl", "to"):
         try:
             with open(_os.path.join(base, "i18n_pages_%s.json" % lg), encoding="utf-8") as f:
                 _PAGE_I18N[lg] = _json.load(f)
@@ -6281,11 +6559,16 @@ _INFO_CHROME = {
     "en": {"back": "&larr; Back to InnerLight", "about": "About", "how": "How it works", "research": "Research", "safety": "Safety &amp; crisis protocol", "privacy": "Your privacy", "contact": "Contact", "resources": "Real help", "stories": "How a visit goes", "updates": "Updates"},
     "es": {"back": "&larr; Volver a InnerLight", "about": "Acerca de", "how": "C&oacute;mo funciona", "research": "Investigaci&oacute;n", "safety": "Seguridad y protocolo de crisis", "privacy": "Tu privacidad", "contact": "Contacto", "resources": "Ayuda real", "stories": "C&oacute;mo es una visita", "updates": "Novedades"},
     "zh": {"back": "&larr; 返回 InnerLight", "about": "关于", "how": "如何运作", "research": "研究", "safety": "安全与危机处理协议", "privacy": "你的隐私", "contact": "联系我们", "resources": "真实的帮助", "stories": "一次访问的样子", "updates": "最新进展"},
+    "hi": {"back": "&larr; InnerLight पर वापस", "about": "हमारे बारे में", "how": "यह कैसे काम करता है", "research": "शोध", "safety": "सुरक्षा और संकट प्रोटोकॉल", "privacy": "आपकी गोपनीयता", "contact": "संपर्क करें", "resources": "सच्ची मदद", "stories": "एक मुलाक़ात कैसी होती है", "updates": "नई जानकारी"},
+    "pa": {"back": "&larr; InnerLight ਉੱਤੇ ਵਾਪਸ", "about": "ਸਾਡੇ ਬਾਰੇ", "how": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ", "research": "ਖੋਜ", "safety": "ਸੁਰੱਖਿਆ ਅਤੇ ਸੰਕਟ ਪ੍ਰੋਟੋਕੋਲ", "privacy": "ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ", "contact": "ਸੰਪਰਕ ਕਰੋ", "resources": "ਸੱਚੀ ਮਦਦ", "stories": "ਇੱਕ ਮੁਲਾਕਾਤ ਕਿਹੋ ਜਿਹੀ ਹੁੰਦੀ ਹੈ", "updates": "ਨਵੀਆਂ ਖ਼ਬਰਾਂ"},
+    "bn": {"back": "&larr; InnerLight-এ ফিরুন", "about": "আমাদের সম্পর্কে", "how": "এটি কীভাবে কাজ করে", "research": "গবেষণা", "safety": "নিরাপত্তা ও সংকট প্রোটোকল", "privacy": "আপনার গোপনীয়তা", "contact": "যোগাযোগ", "resources": "সত্যিকারের সাহায্য", "stories": "একটি সাক্ষাৎ কেমন হয়", "updates": "নতুন খবর"},
+    "tl": {"back": "&larr; Bumalik sa InnerLight", "about": "Tungkol sa amin", "how": "Paano ito gumagana", "research": "Pananaliksik", "safety": "Kaligtasan at protocol sa krisis", "privacy": "Ang iyong privacy", "contact": "Makipag-ugnayan", "resources": "Totoong tulong", "stories": "Paano ang isang pagbisita", "updates": "Mga update"},
+    "to": {"back": "&larr; Foki ki InnerLight", "about": "Ko kimautolu", "how": "Founga ʻene ngāue", "research": "Fekumi", "safety": "Malu mo e founga ʻi ha faingataʻa", "privacy": "Hoʻo fakapulipuli", "contact": "Fetuʻutaki", "resources": "Tokoni moʻoni", "stories": "Ko e anga ʻo ha ʻaʻahi", "updates": "Ngaahi fakamatala foʻou"},
 }
 
 def _info_lang():
     lg = (request.args.get("lang") or request.cookies.get("il_lang") or "en")
-    return lg if lg in ("en", "es", "zh") else "en"
+    return lg if lg in ("en", "es", "zh", "hi", "pa", "bn", "tl", "to") else "en"
 
 def _info_page(title, inner, page_key=None):
     lang = _info_lang()
@@ -6354,6 +6637,16 @@ def _info_page(title, inner, page_key=None):
       <a href="?lang=es" onclick="try{document.cookie='il_lang=es;path=/';sessionStorage.setItem('il_lang','es')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='es' else '' }}">Espa&ntilde;ol</a>
       <span style="color:#ddd1c8;">&middot;</span>
       <a href="?lang=zh" onclick="try{document.cookie='il_lang=zh;path=/';sessionStorage.setItem('il_lang','zh')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='zh' else '' }}">&#20013;&#25991;</a>
+      <span style="color:#ddd1c8;">&middot;</span>
+      <a href="?lang=hi" onclick="try{document.cookie='il_lang=hi;path=/';sessionStorage.setItem('il_lang','hi')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='hi' else '' }}">हिन्दी</a>
+      <span style="color:#ddd1c8;">&middot;</span>
+      <a href="?lang=pa" onclick="try{document.cookie='il_lang=pa;path=/';sessionStorage.setItem('il_lang','pa')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='pa' else '' }}">ਪੰਜਾਬੀ</a>
+      <span style="color:#ddd1c8;">&middot;</span>
+      <a href="?lang=bn" onclick="try{document.cookie='il_lang=bn;path=/';sessionStorage.setItem('il_lang','bn')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='bn' else '' }}">বাংলা</a>
+      <span style="color:#ddd1c8;">&middot;</span>
+      <a href="?lang=tl" onclick="try{document.cookie='il_lang=tl;path=/';sessionStorage.setItem('il_lang','tl')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='tl' else '' }}">Tagalog</a>
+      <span style="color:#ddd1c8;">&middot;</span>
+      <a href="?lang=to" onclick="try{document.cookie='il_lang=to;path=/';sessionStorage.setItem('il_lang','to')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='to' else '' }}">lea faka-Tonga</a>
     </div>
     <div class="orb breathe" aria-hidden="true"></div>
     <div class="brand">InnerLight</div>
@@ -7073,7 +7366,7 @@ _HANDOFF_I18N = {}
 def _load_handoff_i18n():
     import os as _os, json as _json
     base = _os.path.dirname(_os.path.abspath(__file__))
-    for lg in ("es", "zh"):
+    for lg in ("es", "zh", "hi", "pa", "bn", "tl", "to"):
         try:
             with open(_os.path.join(base, "i18n_handoff_%s.json" % lg), encoding="utf-8") as f:
                 _HANDOFF_I18N[lg] = _json.load(f)

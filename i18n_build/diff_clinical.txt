@@ -1,0 +1,183 @@
+--- delete EN[0:1]
+EN| 
+
+--- replace EN[7:8]
+EN|   <title>InnerLight &mdash; Connecting You to a Care Professional</title>
+ES|   <title>InnerLight &mdash; Conectándote con un profesional de atención</title>
+
+--- replace EN[88:92]
+EN|     <div class="tag">Connecting you to mental-health care</div>
+EN|     <p class="whisper" id="intro-whisper" hidden>Someone real is ready for you,</p>
+EN|     <h1 class="promise" id="chooser-title">Reaching a real person for your care</h1>
+EN|     <p class="intro-sub" id="chooser-sub">Before anything is shared, here is exactly who you may reach and what is protected. Nothing leaves this page until you read it and choose to send it.</p>
+ES|     <div class="tag">Conectándote con atención de salud mental</div>
+ES|     <p class="whisper" id="intro-whisper" hidden>Alguien real está listo para ti,</p>
+ES|     <h1 class="promise" id="chooser-title">Camino a una persona real para tu cuidado</h1>
+ES|     <p class="intro-sub" id="chooser-sub">Antes de compartir nada, aquí verás exactamente con quién puedes comunicarte y qué está protegido. Nada sale de esta página hasta que la leas y decidas enviarla.</p>
+
+--- replace EN[94:98]
+EN|         <button type="button" class="pro-btn" data-role="crisis_counselor" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
+EN|         <button type="button" class="pro-btn" data-role="therapist" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
+EN|         <button type="button" class="pro-btn" data-role="psychiatrist" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
+EN|         <button type="button" class="pro-btn" data-role="nurse_practitioner" data-pro="Nurse practitioner" onclick="pickPro(this)"><b>Nurse practitioner</b><span>Can assess symptoms and, in many states, manage medication.</span></button>
+ES|         <button type="button" class="pro-btn" data-role="crisis_counselor" data-pro="Consejero capacitado en crisis" onclick="pickPro(this)"><b>Consejero capacitado en crisis</b><span>Apoyo emocional inmediato para este momento. No receta medicamentos.</span></button>
+ES|         <button type="button" class="pro-btn" data-role="therapist" data-pro="Terapeuta / consejero con licencia" onclick="pickPro(this)"><b>Terapeuta / consejero con licencia</b><span>Apoyo basado en la conversación y trabajo continuo de afrontamiento.</span></button>
+ES|         <button type="button" class="pro-btn" data-role="psychiatrist" data-pro="Psiquiatra" onclick="pickPro(this)"><b>Psiquiatra</b><span>Un médico que puede evaluar síntomas y, cuando corresponda, manejar la medicación.</span></button>
+ES|         <button type="button" class="pro-btn" data-role="nurse_practitioner" data-pro="Enfermero especializado" onclick="pickPro(this)"><b>Enfermero especializado</b><span>Puede evaluar síntomas y, en muchos estados, manejar la medicación.</span></button>
+
+--- replace EN[100:101]
+EN|     <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
+ES|     <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Todavía no &mdash; quédate conmigo un poco más.</a></p>
+
+--- replace EN[104:105]
+EN|       <p><b>If you are in immediate danger right now, call or text 988, or call 911.</b> You can do that while this page stays open. Connecting to a professional here does not replace emergency help in a life-threatening moment.</p>
+ES|       <p><b>Si estás en peligro inmediato en este momento, llama o envía un mensaje de texto al 988, o llama al 911.</b> Puedes hacerlo mientras esta página permanece abierta. Conectarte con un profesional aquí no reemplaza la ayuda de emergencia en un momento de vida o muerte.</p>
+
+--- replace EN[108:116]
+EN|       <h2>Here's what you told InnerLight</h2>
+EN|       <p>This is built from your actual conversation &mdash; not a form. Read it over. If anything is wrong or you want to say it differently, you can correct it so it truly reflects what you mean.</p>
+EN|       <div class="convo" id="convo-summary"><p class="u">Loading your conversation&hellip;</p></div>
+EN|       <label for="clarify">Correct or clarify anything (this becomes part of what the professional sees)</label>
+EN|       <textarea id="clarify" placeholder="For example: when I said I was done, I meant exhausted, not that I want to hurt myself &mdash; or anything you want to make clearer."></textarea>
+EN|       <label for="addnote">Anything you want to add that didn't come up?</label>
+EN|       <textarea id="addnote" placeholder="Medications, what's helped before, what you need most right now, who you'd prefer to talk to."></textarea>
+EN|       <p class="locked">Once you send this, the professional can read it and build their own assessment, but they cannot change your words. Your record stays honest. You stay in control of whether it's sent at all.</p>
+ES|       <h2>Esto es lo que le contaste a InnerLight</h2>
+ES|       <p>Esto se construye a partir de tu conversación real &mdash; no es un formulario. Léelo con calma. Si algo está mal o quieres decirlo de otra manera, puedes corregirlo para que refleje de verdad lo que quieres decir.</p>
+ES|       <div class="convo" id="convo-summary"><p class="u">Cargando tu conversación&hellip;</p></div>
+ES|       <label for="clarify">Corrige o aclara cualquier cosa (esto pasa a formar parte de lo que ve el profesional)</label>
+ES|       <textarea id="clarify" placeholder="Por ejemplo: cuando dije que estaba acabado, quería decir agotado, no que quiera hacerme daño &mdash; o cualquier cosa que quieras dejar más clara."></textarea>
+ES|       <label for="addnote">¿Algo que quieras agregar y que no haya surgido?</label>
+ES|       <textarea id="addnote" placeholder="Medicamentos, qué te ha ayudado antes, qué necesitas más en este momento, con quién preferirías hablar."></textarea>
+ES|       <p class="locked">Una vez que envíes esto, el profesional puede leerlo y formar su propia evaluación, pero no puede cambiar tus palabras. Tu registro se mantiene honesto. Tú tienes el control de si se envía o no.</p>
+
+--- replace EN[119:125]
+EN|       <summary>Your privacy &amp; your rights (tap to read)</summary>
+EN|       <p><b>Your information is protected.</b> InnerLight treats what you share as confidential health information. We aim to follow the privacy standards set by HIPAA &mdash; the U.S. health-privacy law &mdash; which means your information is not shared with anyone unless you give clear permission, and is kept encrypted.</p>
+EN|       <p><b>You decide what is shared.</b> Nothing on this page is sent to any professional until you choose to send it. You can close this page and nothing goes out.</p>
+EN|       <p><b>What we are not.</b> InnerLight is a support and connection tool. It does not diagnose conditions or prescribe medication. Any diagnosis or treatment comes only from the licensed professional you connect with.</p>
+EN|       <p><b>Encryption.</b> Your conversation is encrypted, and the raw details are not displayed on any public page. Only the summary you approve is prepared for the professional.</p>
+EN|       <p><b>Quality review.</b> De-identified notes about conversations &mdash; with names, numbers, and contact details removed &mdash; may be reviewed by InnerLight's founder to improve how people are routed to help. These notes are never sold, never advertised with, and never shown publicly.</p>
+ES|       <summary>Tu privacidad y tus derechos (toca para leer)</summary>
+ES|       <p><b>Tu información está protegida.</b> InnerLight trata lo que compartes como información de salud confidencial. Buscamos cumplir con los estándares de privacidad establecidos por HIPAA &mdash; la ley de privacidad de salud de EE. UU. &mdash;, lo que significa que tu información no se comparte con nadie a menos que des un permiso claro, y se mantiene cifrada.</p>
+ES|       <p><b>Tú decides qué se comparte.</b> Nada en esta página se envía a ningún profesional hasta que tú decidas enviarlo. Puedes cerrar esta página y nada saldrá.</p>
+ES|       <p><b>Lo que no somos.</b> InnerLight es una herramienta de apoyo y conexión. No diagnostica afecciones ni receta medicamentos. Cualquier diagnóstico o tratamiento proviene únicamente del profesional con licencia con quien te conectes.</p>
+ES|       <p><b>Cifrado.</b> Tu conversación está cifrada, y los detalles sin procesar no se muestran en ninguna página pública. Solo el resumen que apruebes se prepara para el profesional.</p>
+ES|       <p><b>Revisión de calidad.</b> Notas anonimizadas sobre las conversaciones &mdash; con nombres, números y datos de contacto eliminados &mdash; pueden ser revisadas por el fundador de InnerLight para mejorar la forma en que se dirige a las personas hacia la ayuda. Estas notas nunca se venden, nunca se usan en publicidad y nunca se muestran públicamente.</p>
+
+--- replace EN[128:130]
+EN|       <h2 id="ready-title">Ready when you are</h2>
+EN|       <p id="ready-sub">When you send this, InnerLight notifies the care side and prepares your approved summary so the professional can read it <i>before</i> they speak with you &mdash; so you don't have to start from the beginning.</p>
+ES|       <h2 id="ready-title">Listos cuando tú lo estés</h2>
+ES|       <p id="ready-sub">Cuando envíes esto, InnerLight avisa al equipo de atención y prepara tu resumen aprobado para que el profesional pueda leerlo <i>antes</i> de hablar contigo &mdash; para que no tengas que empezar desde el principio.</p>
+
+--- replace EN[131:133]
+EN|       <button id="send-btn" onclick="sendToCare()">I&rsquo;m ready to meet them.</button>
+EN|       <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
+ES|       <button id="send-btn" onclick="sendToCare()">Quiero conocer a esa persona.</button>
+ES|       <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Todavía no &mdash; quédate conmigo un poco más.</a></p>
+
+--- replace EN[136:137]
+EN|       InnerLight, a service of God's Love For Us LLC, provides crisis support and connection to care. It is not a medical provider and does not provide medical diagnosis or treatment. We work to follow U.S. health-privacy standards including HIPAA, and your information is encrypted and shared only with your consent. In an emergency, call or text 988 or call 911. This summary is prepared for a licensed professional and reflects what you chose to share.
+ES|       InnerLight, un servicio de God's Love For Us LLC, brinda apoyo en crisis y conexión con atención. No es un proveedor médico y no ofrece diagnóstico ni tratamiento médico. Trabajamos para cumplir con los estándares de privacidad de salud de EE. UU., incluido HIPAA, y tu información está cifrada y se comparte solo con tu consentimiento. En una emergencia, llama o envía un mensaje de texto al 988 o llama al 911. Este resumen se prepara para un profesional con licencia y refleja lo que elegiste compartir.
+
+--- replace EN[138:139]
+EN|   <p class="ember"><a href="tel:988" aria-label="Call 988, the Suicide and Crisis Lifeline">988</a></p>
+ES|   <p class="ember"><a href="tel:988" aria-label="Llama al 988, la Línea de Suicidio y Crisis">988</a></p>
+
+--- replace EN[147:149]
+EN|       if(!log.length){ box.innerHTML='<p class="u">It looks like the conversation did not carry over. You can use the boxes below to tell the professional what is going on, in your own words.</p>'; return; }
+EN|       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
+ES|       if(!log.length){ box.innerHTML='<p class="u">Parece que la conversación no se transfirió. Puedes usar los campos de abajo para contarle al profesional lo que está pasando, con tus propias palabras.</p>'; return; }
+ES|       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'Dijiste':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
+
+--- replace EN[156:157]
+EN|       document.getElementById('pro-picked').textContent = 'You chose: ' + pickedPro + '. Your summary will go to a ' + pickedPro.toLowerCase() + ' \u2014 nobody else.';
+ES|       document.getElementById('pro-picked').textContent = 'Elegiste: ' + pickedPro + '. Tu resumen irá a un ' + pickedPro.toLowerCase() + ' \u2014 a nadie más.';
+
+--- replace EN[164:165]
+EN|         document.getElementById('status').textContent = 'First, tap who you want to reach above \u2014 you choose, always.';
+ES|         document.getElementById('status').textContent = 'Primero, toca arriba con quién quieres comunicarte \u2014 tú decides, siempre.';
+
+--- replace EN[172:176]
+EN|       const summaryText = ['WHO THIS GOES TO: ' + proName,
+EN|         said ? 'IN THEIR OWN WORDS: ' + said : '',
+EN|         clarify ? 'THEY CLARIFIED: ' + clarify : '',
+EN|         add ? 'THEY ADDED: ' + add : ''].filter(Boolean).join('\n\n');
+ES|       const summaryText = ['A QUIÉN VA DIRIGIDO: ' + proName,
+ES|         said ? 'EN SUS PROPIAS PALABRAS: ' + said : '',
+ES|         clarify ? 'ACLARÓ: ' + clarify : '',
+ES|         add ? 'AGREGÓ: ' + add : ''].filter(Boolean).join('\n\n');
+
+--- replace EN[177:178]
+EN|       box.innerHTML = '<p class="a"><b>' + (LEAVE_WORD ? GATE_T.leaveSumLabel : ('The exact summary that goes to your ' + esc(pickedPro.toLowerCase()))) + '</b></p>'
+ES|       box.innerHTML = '<p class="a"><b>' + (LEAVE_WORD ? GATE_T.leaveSumLabel : ('El resumen exacto que va a tu ' + esc(pickedPro.toLowerCase()))) + '</b></p>'
+
+--- replace EN[179:180]
+EN|       document.getElementById('status').innerHTML = LEAVE_WORD ? GATE_T.leaveSending : 'Reaching a human for you\u2026';
+ES|       document.getElementById('status').innerHTML = LEAVE_WORD ? GATE_T.leaveSending : 'Buscando a una persona para ti\u2026';
+
+--- replace EN[188:192]
+EN|           'Your request for a <b>' + esc(pickedPro.toLowerCase()) + '</b> is in, and a human has been alerted. '
+EN|           + 'While our professional network grows, an <b>InnerLight responder</b> \u2014 our founder, not a licensed '
+EN|           + 'provider \u2014 will meet you first, stay with you, and help arrange the ' + esc(pickedPro.toLowerCase()) + ' you chose. '
+EN|           + 'Above is the exact summary they will read.<br><br>'
+ES|           'Tu solicitud de un <b>' + esc(pickedPro.toLowerCase()) + '</b> ya está registrada, y se ha avisado a una persona. '
+ES|           + 'Mientras nuestra red de profesionales crece, un <b>respondedor de InnerLight</b> \u2014 nuestro fundador, no un '
+ES|           + 'proveedor con licencia \u2014 te recibirá primero, se quedará contigo y ayudará a organizar el ' + esc(pickedPro.toLowerCase()) + ' que elegiste. '
+ES|           + 'Arriba está el resumen exacto que leerá.<br><br>'
+
+--- replace EN[193:196]
+EN|           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>'
+EN|           + '<br><span style="font-size:12.5px;color:#8794a0;">The room is private to this request. If no one joins within a few minutes, '
+EN|           + 'call or text 988 anytime \u2014 you never have to wait alone.</span>'
+ES|           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Únete a tu sala de video privada</a>'
+ES|           + '<br><span style="font-size:12.5px;color:#8794a0;">La sala es privada para esta solicitud. Si nadie se une en unos minutos, '
+ES|           + 'llama o envía un mensaje de texto al 988 en cualquier momento \u2014 nunca tienes que esperar en soledad.</span>'
+
+--- replace EN[198:199]
+EN|         document.getElementById('status').textContent = 'The connection request could not go through. If you need someone now, call or text 988.';
+ES|         document.getElementById('status').textContent = 'La solicitud de conexión no se pudo completar. Si necesitas a alguien ahora, llama o envía un mensaje de texto al 988.';
+
+--- replace EN[208:209]
+EN|     var BLESS = "You are the best there is, the best there was, and the best there ever could be.";
+ES|     var BLESS = "Eres lo mejor que hay, lo mejor que ha habido y lo mejor que jamás podrá haber.";
+
+--- replace EN[210:228]
+EN|       promise: 'They have read nothing \u2014 your story stays yours to tell.',
+EN|       promiseRole: 'Your {role} has read nothing \u2014 your story stays yours to tell.',
+EN|       introSub: 'You pick. Tap the kind of professional you want \u2014 your summary goes to them, and only when you say send.',
+EN|       readyRole: 'I\u2019m ready to meet my {role}.',
+EN|       onlyHere: 'Only who is truly here right now is shown.',
+EN|       emptyTitle: 'No care professional is connected at this moment',
+EN|       emptyLead: 'We will not pretend otherwise. Right now no counselor, therapist, psychiatrist, or nurse practitioner is on call here \u2014 and we will never show you a button with no one behind it. The doors below are open and staffed by real people at this very moment.',
+EN|       resources: '<a class="gate-res" href="tel:988"><b>988 Suicide &amp; Crisis Lifeline</b><span>Call or text 988 \u2014 free, 24/7, a trained human answers.</span></a>'
+EN|         + '<a class="gate-res" href="sms:741741"><b>Crisis Text Line</b><span>Text HOME to 741741 \u2014 a live, trained counselor, any hour.</span></a>'
+EN|         + '<a class="gate-res" href="https://findtreatment.gov/" target="_blank" rel="noopener"><b>Find licensed care near you</b><span>FindTreatment.gov \u2014 the federal directory of licensed mental-health facilities.</span></a>',
+EN|       leaveNote: 'Below, you can also leave word. A real person will see this. This is not an instant connection, and we will never pretend it is.',
+EN|       leaveTitle: 'Leave word for the next real person',
+EN|       leaveLead: 'Review your words below and send them when you are ready. They will be waiting for the next real person who comes on call \u2014 not an instant connection, and we will never pretend it is.',
+EN|       leaveBtn: 'Leave word for the next real person',
+EN|       leaveWho: 'the next available care professional',
+EN|       leaveSumLabel: 'The exact summary the next care professional will read',
+EN|       leaveSending: 'Placing your words where the next real person will find them\u2026',
+EN|       leaveDone: 'Your words are safely in. <b>A real person will see this.</b> This is not an instant connection, and we will never pretend it is. If you need someone this minute, call or text <b>988</b> \u2014 a trained human is there right now, around the clock.'
+ES|       promise: 'No ha leído nada — tu historia sigue siendo tuya para contarla.',
+ES|       promiseRole: 'Tu {role} no ha leído nada — tu historia sigue siendo tuya para contarla.',
+ES|       introSub: 'Tú decides. Toca el tipo de profesional que quieres \u2014 tu resumen va a esa persona, y solo cuando tú digas enviar.',
+ES|       readyRole: 'Quiero conocer a mi {role}.',
+ES|       onlyHere: 'Solo se muestra a quien de verdad está aquí en este momento.',
+ES|       emptyTitle: 'En este momento no hay ningún profesional de atención conectado',
+ES|       emptyLead: 'No vamos a fingir lo contrario. Ahora mismo no hay ningún consejero, terapeuta, psiquiatra ni enfermero especializado de guardia aquí — y nunca te mostraremos un botón sin nadie detrás. Las puertas de abajo están abiertas y atendidas por personas reales en este mismo instante.',
+ES|       resources: '<a class="gate-res" href="tel:988"><b>Línea 988 de Suicidio y Crisis</b><span>Llama o envía un mensaje de texto al 988 — gratis, 24/7, responde una persona capacitada. Hay ayuda en español.</span></a>'
+ES|         + '<a class="gate-res" href="sms:741741"><b>Crisis Text Line</b><span>Envía HOLA al 741741 — un consejero real y capacitado, a cualquier hora.</span></a>'
+ES|         + '<a class="gate-res" href="https://findtreatment.gov/" target="_blank" rel="noopener"><b>Encuentra atención con licencia cerca de ti</b><span>FindTreatment.gov — el directorio federal de centros de salud mental con licencia.</span></a>',
+ES|       leaveNote: 'Abajo también puedes dejar un mensaje. Una persona real lo verá. No es una conexión instantánea, y nunca fingiremos que lo es.',
+ES|       leaveTitle: 'Deja un mensaje para la próxima persona real',
+ES|       leaveLead: 'Revisa tus palabras abajo y envíalas cuando estés listo. Quedarán esperando a la próxima persona real que entre de guardia — no es una conexión instantánea, y nunca fingiremos que lo es.',
+ES|       leaveBtn: 'Dejar un mensaje para la próxima persona real',
+ES|       leaveWho: 'el próximo profesional de atención disponible',
+ES|       leaveSumLabel: 'El resumen exacto que leerá el próximo profesional de atención',
+ES|       leaveSending: 'Guardando tus palabras donde la próxima persona real las encontrará…',
+ES|       leaveDone: 'Tus palabras están guardadas. <b>Una persona real las verá.</b> No es una conexión instantánea, y nunca fingiremos que lo es. Si necesitas a alguien en este mismo minuto, llama o envía un mensaje de texto al <b>988</b> — una persona capacitada está ahí ahora mismo, a toda hora.'
+

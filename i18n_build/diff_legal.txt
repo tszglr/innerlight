@@ -1,0 +1,349 @@
+--- delete EN[0:1]
+EN| 
+
+--- replace EN[7:8]
+EN|   <title>InnerLight &mdash; Connecting You to Legal Help</title>
+ES|   <title>InnerLight &mdash; Conectándote con ayuda legal</title>
+
+--- replace EN[88:92]
+EN|     <div class="tag">Connecting you to legal help &mdash; this is a legal handoff</div>
+EN|     <p class="whisper" id="intro-whisper" hidden>Someone real is ready for you,</p>
+EN|     <h1 class="promise" id="chooser-title">Reaching real legal help</h1>
+EN|     <p class="intro-sub" id="chooser-sub">This is <b>not</b> a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want &mdash; your summary goes there only when you say send.</p>
+ES|     <div class="tag">Conectándote con ayuda legal &mdash; este es un traspaso legal</div>
+ES|     <p class="whisper" id="intro-whisper" hidden>Alguien real está listo para ti,</p>
+ES|     <h1 class="promise" id="chooser-title">Camino a ayuda legal real</h1>
+ES|     <p class="intro-sub" id="chooser-sub">Esto <b>no</b> es una conexión médica ni de telesalud. Este camino trata de un asunto legal. Toca el tipo de ayuda legal que quieres &mdash; tu resumen va allí solo cuando tú digas enviar.</p>
+
+--- replace EN[93:98]
+EN|       <button type="button" class="pro-btn" data-role="housing_attorney" data-pro="Housing / tenant attorney" onclick="pickPro(this)"><b>Housing / tenant attorney</b><span>Evictions, landlord disputes, unsafe conditions.</span></button>
+EN|       <button type="button" class="pro-btn" data-role="family_attorney" data-pro="Family law attorney" onclick="pickPro(this)"><b>Family law attorney</b><span>Custody, divorce, protective orders.</span></button>
+EN|       <button type="button" class="pro-btn" data-role="criminal_attorney" data-pro="Criminal defense attorney" onclick="pickPro(this)"><b>Criminal defense attorney</b><span>Charges, warrants, court dates.</span></button>
+EN|       <button type="button" class="pro-btn" data-role="civil_attorney" data-pro="Consumer / civil attorney" onclick="pickPro(this)"><b>Consumer / civil attorney</b><span>Debt, fraud claims, insurance disputes, benefits denials.</span></button>
+EN|       <button type="button" class="pro-btn" data-role="legal_aid" data-pro="Legal aid office" onclick="pickPro(this)"><b>Legal aid office</b><span>Free or low-cost help when money is tight.</span></button>
+ES|       <button type="button" class="pro-btn" data-role="housing_attorney" data-pro="Abogado de vivienda / inquilinos" onclick="pickPro(this)"><b>Abogado de vivienda / inquilinos</b><span>Desalojos, disputas con el arrendador, condiciones inseguras.</span></button>
+ES|       <button type="button" class="pro-btn" data-role="family_attorney" data-pro="Abogado de derecho familiar" onclick="pickPro(this)"><b>Abogado de derecho familiar</b><span>Custodia, divorcio, órdenes de protección.</span></button>
+ES|       <button type="button" class="pro-btn" data-role="criminal_attorney" data-pro="Abogado de defensa penal" onclick="pickPro(this)"><b>Abogado de defensa penal</b><span>Cargos, órdenes de arresto, fechas de corte.</span></button>
+ES|       <button type="button" class="pro-btn" data-role="civil_attorney" data-pro="Abogado civil / de consumo" onclick="pickPro(this)"><b>Abogado civil / de consumo</b><span>Deudas, reclamos de fraude, disputas de seguros, denegaciones de beneficios.</span></button>
+ES|       <button type="button" class="pro-btn" data-role="legal_aid" data-pro="Oficina de asistencia legal" onclick="pickPro(this)"><b>Oficina de asistencia legal</b><span>Ayuda gratuita o de bajo costo cuando el dinero es escaso.</span></button>
+
+--- replace EN[100:101]
+EN|     <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
+ES|     <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Todavía no &mdash; quédate conmigo un poco más.</a></p>
+
+--- replace EN[104:107]
+EN|       <h2>First &mdash; what state are you in? Legal help is different in every state</h2>
+EN|       <p>The law in New York is not the law in California. So we don't want to hand you another state's rules. Tell us your state and we'll point you to help for where you actually are.</p>
+EN|       <label for="state-select">Your state</label>
+ES|       <h2>Primero &mdash; ¿en qué estado estás? La ayuda legal es diferente en cada estado</h2>
+ES|       <p>La ley en New York no es la ley en California. Por eso no queremos darte las reglas de otro estado. Dinos tu estado y te indicaremos ayuda para el lugar donde realmente estás.</p>
+ES|       <label for="state-select">Tu estado</label>
+
+--- replace EN[108:109]
+EN|         <option value="">Select your state&hellip;</option>
+ES|         <option value="">Selecciona tu estado&hellip;</option>
+
+--- replace EN[114:116]
+EN|       <h2>Self-help &amp; civic resources &mdash; free, trusted, available right now</h2>
+EN|       <p>These are established, free legal-information sources. They explain your rights and the process in plain language. They are information, <b>not</b> legal advice &mdash; only a lawyer can advise on your specific case &mdash; but they are a strong, fast place to start understanding where you stand.</p>
+ES|       <h2>Recursos de autoayuda y cívicos &mdash; gratuitos, confiables y disponibles ahora mismo</h2>
+ES|       <p>Estas son fuentes de información legal establecidas y gratuitas. Explican tus derechos y el proceso en lenguaje sencillo. Son información, <b>no</b> asesoría legal &mdash; solo un abogado puede asesorarte sobre tu caso específico &mdash;, pero son un punto de partida sólido y rápido para empezar a entender tu situación.</p>
+
+--- replace EN[117:123]
+EN|         <a class="res" href="https://www.lawhelp.org/" target="_blank" rel="noopener"><b>LawHelp.org</b><span>Find free legal aid and self-help by state and topic.</span></a>
+EN|         <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Plain-language legal dictionary &amp; explanations from Cornell Law School.</span></a>
+EN|         <a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers</b><span>Ask a lawyer a civil legal question free &mdash; you pick your state, and a volunteer attorney in your state answers.</span></a>
+EN|         <a class="res" href="https://www.usa.gov/legal-aid" target="_blank" rel="noopener"><b>USA.gov Legal Aid</b><span>Government directory of free and low-cost legal help.</span></a>
+EN|         <a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Legal Services Corporation</b><span>Find your local federally funded legal-aid office.</span></a>
+EN|         <a class="res" href="https://www.nolo.com/legal-encyclopedia" target="_blank" rel="noopener"><b>Nolo Legal Encyclopedia</b><span>Readable articles on tenants, family, debt, and more.</span></a>
+ES|         <a class="res" href="https://www.lawhelp.org/" target="_blank" rel="noopener"><b>LawHelp.org</b><span>Encuentra asistencia legal gratuita y autoayuda por estado y tema.</span></a>
+ES|         <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Diccionario legal en lenguaje sencillo y explicaciones de Cornell Law School.</span></a>
+ES|         <a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers</b><span>Haz una pregunta legal civil a un abogado gratis &mdash; eliges tu estado y un abogado voluntario en tu estado responde.</span></a>
+ES|         <a class="res" href="https://www.usa.gov/legal-aid" target="_blank" rel="noopener"><b>USA.gov Legal Aid</b><span>Directorio del gobierno de ayuda legal gratuita y de bajo costo.</span></a>
+ES|         <a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Legal Services Corporation</b><span>Encuentra tu oficina local de asistencia legal financiada por el gobierno federal.</span></a>
+ES|         <a class="res" href="https://www.nolo.com/legal-encyclopedia" target="_blank" rel="noopener"><b>Nolo Legal Encyclopedia</b><span>Artículos fáciles de leer sobre inquilinos, familia, deudas y más.</span></a>
+
+--- replace EN[127:130]
+EN|       <h2>Law-school legal knowledge &amp; clinics &mdash; authoritative and free</h2>
+EN|       <p>Law schools publish some of the clearest legal explanations available, and many run <b>free legal clinics</b> that represent low-income people directly. These broaden and cross-check the understanding of your rights &mdash; different schools sometimes explain or expand the same issue in ways that help.</p>
+EN|       <p id="clinic-note" style="font-size:13px;color:var(--legal);font-weight:700;margin:6px 0 0;">Pick your state at the top of this page and your state's law-school clinic appears here.</p>
+ES|       <h2>Conocimiento jurídico y clínicas de facultades de derecho &mdash; autorizados y gratuitos</h2>
+ES|       <p>Las facultades de derecho publican algunas de las explicaciones legales más claras disponibles, y muchas administran <b>clínicas legales gratuitas</b> que representan directamente a personas de bajos ingresos. Estas amplían y contrastan la comprensión de tus derechos &mdash; distintas facultades a veces explican o profundizan el mismo tema de maneras que ayudan.</p>
+ES|       <p id="clinic-note" style="font-size:13px;color:var(--legal);font-weight:700;margin:6px 0 0;">Elige tu estado en la parte superior de esta página y aquí aparecerá la clínica de la facultad de derecho de tu estado.</p>
+
+--- replace EN[132:133]
+EN|         <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Free, plain-language legal encyclopedia from Cornell Law School &mdash; explains the law for any state.</span></a>
+ES|         <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Enciclopedia legal gratuita y en lenguaje sencillo de Cornell Law School &mdash; explica la ley para cualquier estado.</span></a>
+
+--- replace EN[134:135]
+EN|       <p style="font-size:12.5px;color:#8a929a;">Clinics accept clients by their own eligibility rules (often income-based and by region). Even when a clinic can't take your case, its public guides and Know-Your-Rights materials are free to read. Every state's flagship law-school clinic is listed &mdash; choose your state above.</p>
+ES|       <p style="font-size:12.5px;color:#8a929a;">Las clínicas aceptan clientes según sus propias reglas de elegibilidad (a menudo por ingresos y por región). Incluso cuando una clínica no puede tomar tu caso, sus guías públicas y materiales de «Conoce tus derechos» son gratuitos para leer. Se incluye la clínica insignia de la facultad de derecho de cada estado &mdash; elige tu estado arriba.</p>
+
+--- replace EN[138:140]
+EN|       <h2>Choose who you want to reach</h2>
+EN|       <p>When you're ready for a person, you pick. Your summary goes only where you choose, only when you press send.</p>
+ES|       <h2>Elige con quién quieres comunicarte</h2>
+ES|       <p>Cuando estés listo para hablar con una persona, tú decides. Tu resumen va solo a donde tú elijas, solo cuando presiones enviar.</p>
+
+--- replace EN[143:151]
+EN|       <h2>Here's what you told InnerLight</h2>
+EN|       <p>This is built from your actual conversation &mdash; not a form. Read it over. If anything is wrong or you want to say it differently, you can correct it so it truly reflects what you mean.</p>
+EN|       <div class="convo" id="convo-summary"><p class="u">Loading your conversation&hellip;</p></div>
+EN|       <label for="clarify">Correct or clarify anything (this becomes part of what the legal professional sees)</label>
+EN|       <textarea id="clarify" placeholder="Make sure your situation is described the way you mean it."></textarea>
+EN|       <label for="addnote">Anything you want to add that didn't come up?</label>
+EN|       <textarea id="addnote" placeholder="Dates, notices you've received, deadlines, documents you have, or what outcome you're hoping for."></textarea>
+EN|       <p class="locked">Once you send this, the legal professional can read it and form their own view, but they cannot change your words. Your record stays honest. You decide whether it's sent at all.</p>
+ES|       <h2>Esto es lo que le contaste a InnerLight</h2>
+ES|       <p>Esto se construye a partir de tu conversación real &mdash; no es un formulario. Léelo con calma. Si algo está mal o quieres decirlo de otra manera, puedes corregirlo para que refleje de verdad lo que quieres decir.</p>
+ES|       <div class="convo" id="convo-summary"><p class="u">Cargando tu conversación&hellip;</p></div>
+ES|       <label for="clarify">Corrige o aclara cualquier cosa (esto pasa a formar parte de lo que ve el profesional legal)</label>
+ES|       <textarea id="clarify" placeholder="Asegúrate de que tu situación esté descrita de la manera que quieres decir."></textarea>
+ES|       <label for="addnote">¿Algo que quieras agregar y que no haya surgido?</label>
+ES|       <textarea id="addnote" placeholder="Fechas, avisos que hayas recibido, plazos, documentos que tengas, o qué resultado esperas lograr."></textarea>
+ES|       <p class="locked">Una vez que envíes esto, el profesional legal puede leerlo y formar su propia opinión, pero no puede cambiar tus palabras. Tu registro se mantiene honesto. Tú decides si se envía o no.</p>
+
+--- replace EN[154:159]
+EN|       <summary>Your privacy &amp; your rights (tap to read)</summary>
+EN|       <p><b>About attorney-client privilege.</b> Once you formally engage an attorney, what you tell them about your case is generally protected by attorney-client privilege &mdash; meaning they cannot disclose it without your permission, with narrow legal exceptions. That privilege begins with the attorney, once you are their client.</p>
+EN|       <p><b>Before that point.</b> What you share here with InnerLight is treated as private and is encrypted. InnerLight is not your attorney, and sharing with InnerLight is not the same as the attorney-client relationship. Privilege attaches once you engage the lawyer.</p>
+EN|       <p><b>You decide what is shared.</b> Nothing is sent to any legal professional until you choose to send it. You can close this page and nothing goes out.</p>
+EN|       <p><b>What we are not.</b> InnerLight provides legal <i>information</i> and <i>connection</i> to legal help. InnerLight itself does not provide legal advice or represent you. Legal advice comes only from the attorney or legal-aid professional you connect with.</p>
+ES|       <summary>Tu privacidad y tus derechos (toca para leer)</summary>
+ES|       <p><b>Sobre el privilegio abogado-cliente.</b> Una vez que contratas formalmente a un abogado, lo que le cuentas sobre tu caso generalmente está protegido por el privilegio abogado-cliente &mdash; es decir, no puede divulgarlo sin tu permiso, salvo excepciones legales muy limitadas. Ese privilegio comienza con el abogado, una vez que eres su cliente.</p>
+ES|       <p><b>Antes de ese momento.</b> Lo que compartes aquí con InnerLight se trata como privado y está cifrado. InnerLight no es tu abogado, y compartir con InnerLight no es lo mismo que la relación abogado-cliente. El privilegio se establece una vez que contratas al abogado.</p>
+ES|       <p><b>Tú decides qué se comparte.</b> No se envía nada a ningún profesional legal hasta que tú decidas enviarlo. Puedes cerrar esta página y nada saldrá.</p>
+ES|       <p><b>Lo que no somos.</b> InnerLight brinda <i>información</i> legal y <i>conexión</i> con ayuda legal. InnerLight en sí no brinda asesoría legal ni te representa. La asesoría legal proviene únicamente del abogado o profesional de asistencia legal con quien te conectes.</p>
+
+--- replace EN[162:164]
+EN|       <h2 id="ready-title">Ready when you are</h2>
+EN|       <p id="ready-sub">When you send this, InnerLight prepares your approved summary so the legal professional can review it before speaking with you.</p>
+ES|       <h2 id="ready-title">Listos cuando tú lo estés</h2>
+ES|       <p id="ready-sub">Cuando envíes esto, InnerLight prepara tu resumen aprobado para que el profesional legal pueda revisarlo antes de hablar contigo.</p>
+
+--- replace EN[165:167]
+EN|       <button id="send-btn" onclick="sendToLegal()">I&rsquo;m ready to reach legal help.</button>
+EN|       <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Not yet &mdash; stay with me a little longer.</a></p>
+ES|       <button id="send-btn" onclick="sendToLegal()">Quiero contactar con ayuda legal.</button>
+ES|       <p class="notyet"><a href="/" onclick="if(history.length>1){history.back();return false;}">Todavía no &mdash; quédate conmigo un poco más.</a></p>
+
+--- replace EN[170:171]
+EN|       InnerLight, a service of God's Love For Us LLC, provides legal information and connection to legal resources. It is not a law firm and does not provide legal advice or representation. No attorney-client relationship is formed with InnerLight. Attorney-client privilege applies once you engage a licensed attorney. Your information is encrypted and shared only with your consent. If your legal issue involves immediate danger to your safety, call 911.
+ES|       InnerLight, un servicio de God's Love For Us LLC, brinda información legal y conexión con recursos legales. No es un bufete de abogados y no ofrece asesoría ni representación legal. No se forma ninguna relación abogado-cliente con InnerLight. El privilegio abogado-cliente aplica una vez que contratas a un abogado con licencia. Tu información está cifrada y se comparte solo con tu consentimiento. Si tu asunto legal implica un peligro inmediato para tu seguridad, llama al 911.
+
+--- replace EN[172:173]
+EN|   <p class="ember"><a href="tel:988" aria-label="Call 988, the Suicide and Crisis Lifeline">988</a></p>
+ES|   <p class="ember"><a href="tel:988" aria-label="Llama al 988, la Línea de Suicidio y Crisis">988</a></p>
+
+--- replace EN[188:189]
+EN|       document.getElementById('pro-picked').textContent = 'You chose: ' + pickedPro + '.';
+ES|       document.getElementById('pro-picked').textContent = 'Elegiste: ' + pickedPro + '.';
+
+--- replace EN[217:267]
+EN|       'AL': [{s:'University of Alabama School of Law', u:'https://law.ua.edu/academics/law-clinics/', b:'Free civil, criminal defense, domestic violence, mediation clinics.'}],
+EN|       'AR': [{s:'University of Arkansas School of Law', u:'https://law.uark.edu/service-outreach/clinics/', b:'Free civil, criminal, immigration, human trafficking clinics.'}],
+EN|       'AZ': [{s:'University of Arizona College of Law', u:'https://law.arizona.edu/academics/clinical-programs', b:'Clinics: domestic violence, immigration, veterans, family.'}],
+EN|       'CA': [{s:'Stanford Law — Mills Legal Clinic', u:'https://law.stanford.edu/mills-legal-clinic/', b:'Free clinics: eviction defense, disability, reentry.'},{s:'UC Berkeley School of Law', u:'https://www.law.berkeley.edu/experiential/clinics/', b:'Clinics: human rights, environmental, community law.'}],
+EN|       'CO': [{s:'University of Colorado Law School', u:'https://www.colorado.edu/law/academics/clinical-education-program', b:'Clinics: civil, criminal defense, juvenile/family, immigration.'}],
+EN|       'CT': [{s:'Yale Law School', u:'https://law.yale.edu/studying-law-yale/clinical-and-experiential-learning', b:'30+ clinics: veterans, immigration, housing, workers.'}],
+EN|       'DE': [{s:'Widener University Delaware Law School', u:'https://delawarelaw.widener.edu/current-students/jd-academics/experiential-courses/clinics/', b:'Clinics: domestic violence, veterans, environmental, innocence.'}],
+EN|       'DC': [{s:'Georgetown University Law Center', u:'https://www.law.georgetown.edu/experiential-learning/clinics/', b:'17 clinics: health justice, criminal defense, legislation.'}],
+EN|       'FL': [{s:'University of Florida Levin College of Law', u:'https://law.ufl.edu/academics/experiential-learning/clinics-and-field-placements/', b:'Clinics: civil, immigration, veterans, juvenile, tax.'}],
+EN|       'GA': [{s:'University of Georgia School of Law', u:'https://www.law.uga.edu/clinics-and-externships', b:'Clinics: family justice, veterans, community health law.'}],
+EN|       'HI': [{s:'University of Hawaii Richardson School of Law', u:'https://law.hawaii.edu/academics/experiential-learning/', b:'Clinics: family, elder, immigration, Native Hawaiian rights.'}],
+EN|       'ID': [{s:'University of Idaho College of Law', u:'https://www.uidaho.edu/law/legal-clinics-and-support', b:'Clinics: family, immigration, community, tribal law.'}],
+EN|       'IL': [{s:'University of Illinois College of Law', u:'https://law.illinois.edu/academics/clinics-experiential-learning/', b:'Clinics: family, immigration, veterans, First Amendment.'}],
+EN|       'IN': [{s:'Indiana University Maurer School of Law', u:'https://law.indiana.edu/academics/experiential-education/clinics/index.html', b:'Live-client clinics: reentry, protection orders, IP.'}],
+EN|       'IA': [{s:'University of Iowa College of Law', u:'https://law.uiowa.edu/experiential-learning/clinical-law-program', b:'Clinics: immigration, criminal defense, community empowerment.'}],
+EN|       'KS': [{s:'University of Kansas School of Law', u:'https://law.ku.edu/academics/hands-on-learning/clinics', b:'Clinics: legal aid, innocence, veterans.'}],
+EN|       'KY': [{s:'University of Kentucky Rosenberg College of Law', u:'https://law.uky.edu/current-students/clinics', b:'Free civil litigation and civil rights clinics.'}],
+EN|       'LA': [{s:'LSU Paul M. Hebert Law Center', u:'https://law.lsu.edu/experiential/clinics/', b:'Clinics: veterans, youth defense, small business, tax.'}],
+EN|       'ME': [{s:'University of Maine School of Law', u:'https://mainelaw.maine.edu/academics/clinics-and-centers/', b:'Clinics: general practice, refugee/human rights, domestic abuse.'}],
+EN|       'MD': [{s:'University of Maryland Carey School of Law', u:'https://www.law.umaryland.edu/academics/clinics/', b:'18 clinics: eviction prevention, immigration, consumer, medical-legal.'}],
+EN|       'MA': [{s:'Harvard Law School Clinics', u:'https://www.law.harvard.edu/clinics/', b:'Legal Services Center and many free public clinics.'}],
+EN|       'MI': [{s:'University of Michigan Law School', u:'https://michigan.law.umich.edu/academics/experiential-learning/clinics', b:'Clinics: child advocacy, immigration, human trafficking.'}],
+EN|       'MN': [{s:'University of Minnesota Law School', u:'https://law.umn.edu/minnesota-law-clinics', b:'25+ clinics: family, immigration, consumer, economic justice.'}],
+EN|       'MS': [{s:'University of Mississippi School of Law', u:'https://law.olemiss.edu/research-and-practice/clinics-centers-and-institutes/', b:'Clinics serving underserved clients with legal representation.'}],
+EN|       'MO': [{s:'University of Missouri School of Law', u:'https://law.missouri.edu/academics/clinics/', b:'Clinics: child/family justice, veterans, entrepreneurship.'}],
+EN|       'MT': [{s:'University of Montana Blewett School of Law', u:'https://www.umt.edu/law/academics/clinics/', b:'Clinics: veterans, domestic violence, Indian law.'}],
+EN|       'NE': [{s:'University of Nebraska College of Law', u:'https://law.unl.edu/experiential-learning/', b:'Clinics: housing/eviction, children, debtor defense, innocence.'}],
+EN|       'NV': [{s:'UNLV William S. Boyd School of Law', u:'https://law.unlv.edu/clinics/our-clinics', b:'Clinics: immigration, misdemeanor, mediation, public policy.'}],
+EN|       'NH': [{s:'UNH Franklin Pierce School of Law', u:'https://law.unh.edu/academics/clinics', b:'Clinics: criminal defense, IP/transaction, live-client work.'}],
+EN|       'NJ': [{s:'Rutgers Law School', u:'https://law.rutgers.edu/professional-skills/clinics', b:'20+ clinics: housing, domestic violence, immigrant rights, veterans.'}],
+EN|       'NM': [{s:'University of New Mexico School of Law', u:'https://lawschool.unm.edu/clinic/index.html', b:'Clinics: family, economic justice, Indian law.'}],
+EN|       'NY': [{s:'NYU Law Clinics', u:'https://www.law.nyu.edu/academics/clinics/clinics-by-topic', b:'Eviction defense, veterans, immigrant defense, civil rights.'},{s:'CUNY School of Law', u:'https://www.law.cuny.edu/academics/clinical-programs/', b:'Public-interest clinics: housing, immigration, family, disability.'}],
+EN|       'NC': [{s:'University of North Carolina School of Law', u:'https://law.unc.edu/experiential-learning/clinics/', b:'Clinics: civil, family defense, immigration, veterans, youth.'}],
+EN|       'ND': [{s:'University of North Dakota School of Law', u:'https://law.und.edu/academics/und-law-clinics.html', b:'Clinics: family, immigration, business/non-profit.'}],
+EN|       'OH': [{s:'Ohio State Moritz College of Law', u:'https://moritzlaw.osu.edu/academics/clinics', b:'Clinics: civil, immigration, justice for children, mediation.'}],
+EN|       'OK': [{s:'University of Oklahoma College of Law', u:'https://law.ou.edu/jd/academics/experiential-learning/clinics', b:'Free civil and criminal defense clinics for low-income.'}],
+EN|       'OR': [{s:'University of Oregon School of Law', u:'https://law.uoregon.edu/become-practice-ready/clinics', b:'Clinics: domestic violence, criminal defense, nonprofit.'}],
+EN|       'PA': [{s:'University of Pennsylvania Carey Law School', u:'https://www.law.upenn.edu/clinic/', b:'Gittis clinics: civil, criminal defense, child advocacy, immigration.'}],
+EN|       'RI': [{s:'Roger Williams University School of Law', u:'https://law.rwu.edu/academics/juris-doctor/clinics-and-externships', b:'Clinics: immigration, housing, criminal defense, veterans.'}],
+EN|       'SC': [{s:'University of South Carolina Rice School of Law', u:'https://sc.edu/study/colleges_schools/law/academics/experiential_learning/clinics/', b:'Clinics: domestic violence, veterans, education, tax, youth.'}],
+EN|       'SD': [{s:'University of South Dakota Knudson School of Law', u:'https://www.usd.edu/Academics/Colleges-and-Schools/knudson-school-of-law/Experiential-Learning', b:'Clinics: divorce, veterans, tax help.'}],
+EN|       'TN': [{s:'University of Tennessee College of Law', u:'https://winston.utk.edu/clinics/', b:'Clinics: advocacy, domestic violence, wills, expungement.'}],
+EN|       'TX': [{s:'University of Texas School of Law', u:'https://law.utexas.edu/clinics/', b:'Clinics: housing, immigration, domestic violence, children.'}],
+EN|       'UT': [{s:'University of Utah S.J. Quinney College of Law', u:'https://www.law.utah.edu/experiential-education/clinics/', b:'Clinics: immigration, mental health, environmental justice.'}],
+EN|       'VT': [{s:'Vermont Law and Graduate School', u:'https://www.vermontlaw.edu/academics/clinics-and-externships', b:'South Royalton Legal Clinic, environmental justice, small business.'}],
+EN|       'VA': [{s:'University of Virginia School of Law', u:'https://www.law.virginia.edu/clinics', b:'24 clinics: housing, immigration, civil rights, health/disability.'}],
+EN|       'WA': [{s:'University of Washington School of Law', u:'https://www.law.uw.edu/academics/experiential-learning/clinics', b:'Clinics: housing, immigration, workers rights, veterans.'}],
+EN|       'WV': [{s:'West Virginia University College of Law', u:'https://www.law.wvu.edu/clinical-law', b:'Clinics: general litigation, immigration, veterans, innocence.'}],
+EN|       'WI': [{s:'University of Wisconsin Law School', u:'https://law.wisc.edu/clinics/', b:'Clinics: housing, family, consumer, restraining orders, immigration.'}],
+EN|       'WY': [{s:'University of Wyoming College of Law', u:'https://www.uwyo.edu/law/experiential/clinics/index.html', b:'Clinics: civil, family, defender aid, estate.'}]
+ES|       'AL': [{s:'University of Alabama School of Law', u:'https://law.ua.edu/academics/law-clinics/', b:'Clínicas gratuitas de derecho civil, defensa penal, violencia doméstica y mediación.'}],
+ES|       'AR': [{s:'University of Arkansas School of Law', u:'https://law.uark.edu/service-outreach/clinics/', b:'Clínicas gratuitas de derecho civil, penal, inmigración y trata de personas.'}],
+ES|       'AZ': [{s:'University of Arizona College of Law', u:'https://law.arizona.edu/academics/clinical-programs', b:'Clínicas: violencia doméstica, inmigración, veteranos, familia.'}],
+ES|       'CA': [{s:'Stanford Law — Mills Legal Clinic', u:'https://law.stanford.edu/mills-legal-clinic/', b:'Clínicas gratuitas: defensa contra desalojos, discapacidad, reinserción.'},{s:'UC Berkeley School of Law', u:'https://www.law.berkeley.edu/experiential/clinics/', b:'Clínicas: derechos humanos, medio ambiente, derecho comunitario.'}],
+ES|       'CO': [{s:'University of Colorado Law School', u:'https://www.colorado.edu/law/academics/clinical-education-program', b:'Clínicas: civil, defensa penal, juvenil/familiar, inmigración.'}],
+ES|       'CT': [{s:'Yale Law School', u:'https://law.yale.edu/studying-law-yale/clinical-and-experiential-learning', b:'Más de 30 clínicas: veteranos, inmigración, vivienda, trabajadores.'}],
+ES|       'DE': [{s:'Widener University Delaware Law School', u:'https://delawarelaw.widener.edu/current-students/jd-academics/experiential-courses/clinics/', b:'Clínicas: violencia doméstica, veteranos, medio ambiente, inocencia.'}],
+ES|       'DC': [{s:'Georgetown University Law Center', u:'https://www.law.georgetown.edu/experiential-learning/clinics/', b:'17 clínicas: justicia en salud, defensa penal, legislación.'}],
+ES|       'FL': [{s:'University of Florida Levin College of Law', u:'https://law.ufl.edu/academics/experiential-learning/clinics-and-field-placements/', b:'Clínicas: civil, inmigración, veteranos, juvenil, impuestos.'}],
+ES|       'GA': [{s:'University of Georgia School of Law', u:'https://www.law.uga.edu/clinics-and-externships', b:'Clínicas: justicia familiar, veteranos, derecho de salud comunitaria.'}],
+ES|       'HI': [{s:'University of Hawaii Richardson School of Law', u:'https://law.hawaii.edu/academics/experiential-learning/', b:'Clínicas: familia, adultos mayores, inmigración, derechos de los nativos hawaianos.'}],
+ES|       'ID': [{s:'University of Idaho College of Law', u:'https://www.uidaho.edu/law/legal-clinics-and-support', b:'Clínicas: familia, inmigración, comunidad, derecho tribal.'}],
+ES|       'IL': [{s:'University of Illinois College of Law', u:'https://law.illinois.edu/academics/clinics-experiential-learning/', b:'Clínicas: familia, inmigración, veteranos, Primera Enmienda.'}],
+ES|       'IN': [{s:'Indiana University Maurer School of Law', u:'https://law.indiana.edu/academics/experiential-education/clinics/index.html', b:'Clínicas con clientes reales: reinserción, órdenes de protección, propiedad intelectual.'}],
+ES|       'IA': [{s:'University of Iowa College of Law', u:'https://law.uiowa.edu/experiential-learning/clinical-law-program', b:'Clínicas: inmigración, defensa penal, empoderamiento comunitario.'}],
+ES|       'KS': [{s:'University of Kansas School of Law', u:'https://law.ku.edu/academics/hands-on-learning/clinics', b:'Clínicas: asistencia legal, inocencia, veteranos.'}],
+ES|       'KY': [{s:'University of Kentucky Rosenberg College of Law', u:'https://law.uky.edu/current-students/clinics', b:'Clínicas gratuitas de litigio civil y derechos civiles.'}],
+ES|       'LA': [{s:'LSU Paul M. Hebert Law Center', u:'https://law.lsu.edu/experiential/clinics/', b:'Clínicas: veteranos, defensa de jóvenes, pequeñas empresas, impuestos.'}],
+ES|       'ME': [{s:'University of Maine School of Law', u:'https://mainelaw.maine.edu/academics/clinics-and-centers/', b:'Clínicas: práctica general, refugiados/derechos humanos, abuso doméstico.'}],
+ES|       'MD': [{s:'University of Maryland Carey School of Law', u:'https://www.law.umaryland.edu/academics/clinics/', b:'18 clínicas: prevención de desalojos, inmigración, consumo, médico-legal.'}],
+ES|       'MA': [{s:'Harvard Law School Clinics', u:'https://www.law.harvard.edu/clinics/', b:'Legal Services Center y muchas clínicas públicas gratuitas.'}],
+ES|       'MI': [{s:'University of Michigan Law School', u:'https://michigan.law.umich.edu/academics/experiential-learning/clinics', b:'Clínicas: defensa de menores, inmigración, trata de personas.'}],
+ES|       'MN': [{s:'University of Minnesota Law School', u:'https://law.umn.edu/minnesota-law-clinics', b:'Más de 25 clínicas: familia, inmigración, consumo, justicia económica.'}],
+ES|       'MS': [{s:'University of Mississippi School of Law', u:'https://law.olemiss.edu/research-and-practice/clinics-centers-and-institutes/', b:'Clínicas que brindan representación legal a clientes desatendidos.'}],
+ES|       'MO': [{s:'University of Missouri School of Law', u:'https://law.missouri.edu/academics/clinics/', b:'Clínicas: justicia de menores/familia, veteranos, emprendimiento.'}],
+ES|       'MT': [{s:'University of Montana Blewett School of Law', u:'https://www.umt.edu/law/academics/clinics/', b:'Clínicas: veteranos, violencia doméstica, derecho indígena.'}],
+ES|       'NE': [{s:'University of Nebraska College of Law', u:'https://law.unl.edu/experiential-learning/', b:'Clínicas: vivienda/desalojo, menores, defensa de deudores, inocencia.'}],
+ES|       'NV': [{s:'UNLV William S. Boyd School of Law', u:'https://law.unlv.edu/clinics/our-clinics', b:'Clínicas: inmigración, delitos menores, mediación, políticas públicas.'}],
+ES|       'NH': [{s:'UNH Franklin Pierce School of Law', u:'https://law.unh.edu/academics/clinics', b:'Clínicas: defensa penal, propiedad intelectual/transacciones, trabajo con clientes reales.'}],
+ES|       'NJ': [{s:'Rutgers Law School', u:'https://law.rutgers.edu/professional-skills/clinics', b:'Más de 20 clínicas: vivienda, violencia doméstica, derechos de inmigrantes, veteranos.'}],
+ES|       'NM': [{s:'University of New Mexico School of Law', u:'https://lawschool.unm.edu/clinic/index.html', b:'Clínicas: familia, justicia económica, derecho indígena.'}],
+ES|       'NY': [{s:'NYU Law Clinics', u:'https://www.law.nyu.edu/academics/clinics/clinics-by-topic', b:'Defensa contra desalojos, veteranos, defensa de inmigrantes, derechos civiles.'},{s:'CUNY School of Law', u:'https://www.law.cuny.edu/academics/clinical-programs/', b:'Clínicas de interés público: vivienda, inmigración, familia, discapacidad.'}],
+ES|       'NC': [{s:'University of North Carolina School of Law', u:'https://law.unc.edu/experiential-learning/clinics/', b:'Clínicas: civil, defensa familiar, inmigración, veteranos, jóvenes.'}],
+ES|       'ND': [{s:'University of North Dakota School of Law', u:'https://law.und.edu/academics/und-law-clinics.html', b:'Clínicas: familia, inmigración, empresas/organizaciones sin fines de lucro.'}],
+ES|       'OH': [{s:'Ohio State Moritz College of Law', u:'https://moritzlaw.osu.edu/academics/clinics', b:'Clínicas: civil, inmigración, justicia para menores, mediación.'}],
+ES|       'OK': [{s:'University of Oklahoma College of Law', u:'https://law.ou.edu/jd/academics/experiential-learning/clinics', b:'Clínicas gratuitas de derecho civil y defensa penal para personas de bajos ingresos.'}],
+ES|       'OR': [{s:'University of Oregon School of Law', u:'https://law.uoregon.edu/become-practice-ready/clinics', b:'Clínicas: violencia doméstica, defensa penal, organizaciones sin fines de lucro.'}],
+ES|       'PA': [{s:'University of Pennsylvania Carey Law School', u:'https://www.law.upenn.edu/clinic/', b:'Clínicas Gittis: civil, defensa penal, defensa de menores, inmigración.'}],
+ES|       'RI': [{s:'Roger Williams University School of Law', u:'https://law.rwu.edu/academics/juris-doctor/clinics-and-externships', b:'Clínicas: inmigración, vivienda, defensa penal, veteranos.'}],
+ES|       'SC': [{s:'University of South Carolina Rice School of Law', u:'https://sc.edu/study/colleges_schools/law/academics/experiential_learning/clinics/', b:'Clínicas: violencia doméstica, veteranos, educación, impuestos, jóvenes.'}],
+ES|       'SD': [{s:'University of South Dakota Knudson School of Law', u:'https://www.usd.edu/Academics/Colleges-and-Schools/knudson-school-of-law/Experiential-Learning', b:'Clínicas: divorcio, veteranos, ayuda con impuestos.'}],
+ES|       'TN': [{s:'University of Tennessee College of Law', u:'https://winston.utk.edu/clinics/', b:'Clínicas: representación, violencia doméstica, testamentos, eliminación de antecedentes.'}],
+ES|       'TX': [{s:'University of Texas School of Law', u:'https://law.utexas.edu/clinics/', b:'Clínicas: vivienda, inmigración, violencia doméstica, menores.'}],
+ES|       'UT': [{s:'University of Utah S.J. Quinney College of Law', u:'https://www.law.utah.edu/experiential-education/clinics/', b:'Clínicas: inmigración, salud mental, justicia ambiental.'}],
+ES|       'VT': [{s:'Vermont Law and Graduate School', u:'https://www.vermontlaw.edu/academics/clinics-and-externships', b:'South Royalton Legal Clinic, justicia ambiental, pequeñas empresas.'}],
+ES|       'VA': [{s:'University of Virginia School of Law', u:'https://www.law.virginia.edu/clinics', b:'24 clínicas: vivienda, inmigración, derechos civiles, salud/discapacidad.'}],
+ES|       'WA': [{s:'University of Washington School of Law', u:'https://www.law.uw.edu/academics/experiential-learning/clinics', b:'Clínicas: vivienda, inmigración, derechos de los trabajadores, veteranos.'}],
+ES|       'WV': [{s:'West Virginia University College of Law', u:'https://www.law.wvu.edu/clinical-law', b:'Clínicas: litigio general, inmigración, veteranos, inocencia.'}],
+ES|       'WI': [{s:'University of Wisconsin Law School', u:'https://law.wisc.edu/clinics/', b:'Clínicas: vivienda, familia, consumo, órdenes de restricción, inmigración.'}],
+ES|       'WY': [{s:'University of Wyoming College of Law', u:'https://www.uwyo.edu/law/experiential/clinics/index.html', b:'Clínicas: civil, familia, asistencia de defensa, sucesiones.'}]
+
+--- replace EN[283:286]
+EN|           + '<a class="res" href="https://www.lawhelp.org/find-help" target="_blank" rel="noopener"><b>LawHelp.org &mdash; ' + esc(name) + '</b><span>Choose ' + esc(name) + ' to reach the free legal-aid and court self-help website for your state.</span></a>'
+EN|           + '<a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers &mdash; ' + esc(name) + '</b><span>Ask a volunteer attorney in ' + esc(name) + ' a civil legal question, free.</span></a>'
+EN|           + '<a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help" target="_blank" rel="noopener"><b>Find Legal Aid &mdash; ' + esc(name) + '</b><span>The federal directory of local legal-aid offices serving ' + esc(name) + '.</span></a>'
+ES|           + '<a class="res" href="https://www.lawhelp.org/find-help" target="_blank" rel="noopener"><b>LawHelp.org &mdash; ' + esc(name) + '</b><span>Elige ' + esc(name) + ' para acceder al sitio web gratuito de asistencia legal y autoayuda judicial de tu estado.</span></a>'
+ES|           + '<a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers &mdash; ' + esc(name) + '</b><span>Hazle una pregunta legal civil, gratis, a un abogado voluntario en ' + esc(name) + '.</span></a>'
+ES|           + '<a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help" target="_blank" rel="noopener"><b>Buscar asistencia legal &mdash; ' + esc(name) + '</b><span>El directorio federal de oficinas locales de asistencia legal que atienden ' + esc(name) + '.</span></a>'
+
+--- replace EN[287:288]
+EN|           + '<p style="font-size:12.5px;color:#8a929a;margin-top:8px;">These open the official directories. Pick <b>' + esc(name) + '</b> there and you will get help for your state &mdash; never another state’s rules.</p>';
+ES|           + '<p style="font-size:12.5px;color:#8a929a;margin-top:8px;">Estos abren los directorios oficiales. Elige <b>' + esc(name) + '</b> allí y obtendrás ayuda para tu estado &mdash; nunca las reglas de otro estado.</p>';
+
+--- replace EN[297:298]
+EN|           if (note) note.textContent='Pick your state at the top of this page and your state’s law-school clinic appears here.';
+ES|           if (note) note.textContent='Elige tu estado en la parte superior de esta página y aquí aparecerá la clínica de la facultad de derecho de tu estado.';
+
+--- replace EN[304:305]
+EN|             if (note) note.textContent='Law-school clinic in ' + name + ':';
+ES|             if (note) note.textContent='Clínica de la facultad de derecho en ' + name + ':';
+
+--- replace EN[307:308]
+EN|             if (note) note.textContent=name + ' has no accredited law school with a public clinic. Use the ' + name + ' directories above — they will connect you to local legal aid.';
+ES|             if (note) note.textContent=name + ' no tiene una facultad de derecho acreditada con clínica pública. Usa los directorios de ' + name + ' de arriba — te conectarán con asistencia legal local.';
+
+--- replace EN[317:319]
+EN|       if(!log.length){ box.innerHTML='<p class="u">It looks like the conversation did not carry over. You can use the boxes below to describe your legal issue in your own words.</p>'; return; }
+EN|       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'You said':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
+ES|       if(!log.length){ box.innerHTML='<p class="u">Parece que la conversación no se transfirió. Puedes usar los campos de abajo para describir tu asunto legal con tus propias palabras.</p>'; return; }
+ES|       box.innerHTML = log.map(function(t){ return '<p class="'+(t.role==='user'?'u':'a')+'"><b>'+(t.role==='user'?'Dijiste':'InnerLight')+'</b>'+esc(t.text)+'</p>'; }).join('');
+
+--- replace EN[322:323]
+EN|         document.getElementById('status').textContent='First, tap the kind of legal help you want above \u2014 you choose, always.';
+ES|         document.getElementById('status').textContent='Primero, toca arriba el tipo de ayuda legal que quieres \u2014 tú decides, siempre.';
+
+--- replace EN[331:337]
+EN|         summaryText = ['WHO THIS GOES TO: ' + GATE_T.leaveWho,
+EN|           said ? 'IN THEIR OWN WORDS: ' + said : '',
+EN|           clarify ? 'THEY CLARIFIED: ' + clarify : '',
+EN|           addw ? 'THEY ADDED: ' + addw : ''].filter(Boolean).join('\n\n');
+EN|       }
+EN|       document.getElementById('status').innerHTML = LEAVE_WORD ? GATE_T.leaveSending : 'Reaching a human for you\u2026';
+ES|         summaryText = ['A QUIÉN VA DIRIGIDO: ' + GATE_T.leaveWho,
+ES|           said ? 'EN SUS PROPIAS PALABRAS: ' + said : '',
+ES|           clarify ? 'ACLARÓ: ' + clarify : '',
+ES|           addw ? 'AGREGÓ: ' + addw : ''].filter(Boolean).join('\n\n');
+ES|       }
+ES|       document.getElementById('status').innerHTML = LEAVE_WORD ? GATE_T.leaveSending : 'Buscando a una persona para ti\u2026';
+
+--- replace EN[338:339]
+EN|         body: JSON.stringify({kind:'legal', pro: (LEAVE_WORD ? 'Left word (legal, no one on call)' : (pickedPro||'legal help')), summary: summaryText})})
+ES|         body: JSON.stringify({kind:'legal', pro: (LEAVE_WORD ? 'Left word (legal, no one on call)' : (pickedPro||'ayuda legal')), summary: summaryText})})
+
+--- replace EN[345:348]
+EN|           'Your request for a <b>' + (pickedPro||'legal professional').toLowerCase() + '</b> is in, and a human has been alerted. '
+EN|           + 'While our network grows, an <b>InnerLight responder</b> \u2014 our founder, not an attorney \u2014 will meet you first '
+EN|           + 'and help arrange the right legal help.<br><br>'
+ES|           'Tu solicitud de un <b>' + (pickedPro||'profesional legal').toLowerCase() + '</b> ya está registrada, y se ha avisado a una persona. '
+ES|           + 'Mientras nuestra red crece, un <b>respondedor de InnerLight</b> \u2014 nuestro fundador, no un abogado \u2014 te recibirá primero '
+ES|           + 'y ayudará a organizar la ayuda legal adecuada.<br><br>'
+
+--- replace EN[349:350]
+EN|           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Join your private video room</a>'
+ES|           + 'padding:13px 26px;border-radius:999px;font-weight:700;text-decoration:none;">Únete a tu sala de video privada</a>'
+
+--- replace EN[352:353]
+EN|         document.getElementById('status').textContent='The connection request could not go through right now.';
+ES|         document.getElementById('status').textContent='La solicitud de conexión no se pudo completar en este momento.';
+
+--- replace EN[360:361]
+EN|     var BLESS = "You are the best there is, the best there was, and the best there ever could be.";
+ES|     var BLESS = "Eres lo mejor que hay, lo mejor que ha habido y lo mejor que jamás podrá haber.";
+
+--- replace EN[362:378]
+EN|       promise: 'They have read nothing \u2014 your story stays yours to tell.',
+EN|       promiseRole: 'Your {role} has read nothing \u2014 your story stays yours to tell.',
+EN|       introSub: 'This is not a medical or telehealth connection. This path is about a legal issue. Tap the kind of legal help you want \u2014 your summary goes there only when you say send.',
+EN|       readyRole: 'I\u2019m ready to reach my {role}.',
+EN|       onlyHere: 'Only who is truly here right now is shown.',
+EN|       emptyTitle: 'No legal-aid partner is connected at this moment',
+EN|       emptyLead: 'We will not pretend otherwise. Right now no attorney or legal-aid office is on call here \u2014 a button only appears when a real person is truly behind it. Everything else on this page \u2014 your state directories and the law-school clinics \u2014 is real and open right now, and so are the doors below.',
+EN|       resources: '<a class="gate-res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Find your local legal-aid office</b><span>LSC.gov \u2014 the federal Legal Services Corporation directory of free legal-aid offices, always open.</span></a>'
+EN|         + '<a class="gate-res" href="tel:211"><b>211 \u2014 free local help line</b><span>Call 211 (or visit 211.org) \u2014 free, confidential help finding local legal and social services, 24/7.</span></a>',
+EN|       leaveNote: 'Below, you can also leave word. A real person will see this. This is not an instant connection, and we will never pretend it is.',
+EN|       leaveTitle: 'Leave word for the next real person',
+EN|       leaveLead: 'Review your words below and send them when you are ready. They will be waiting for the next real person who comes on call \u2014 not an instant connection, and we will never pretend it is.',
+EN|       leaveBtn: 'Leave word for the next real person',
+EN|       leaveWho: 'the next available legal-aid partner',
+EN|       leaveSending: 'Placing your words where the next real person will find them\u2026',
+EN|       leaveDone: 'Your words are safely in. <b>A real person will see this.</b> This is not an instant connection, and we will never pretend it is. The directories above are open right now \u2014 and if your situation involves immediate danger, call 911.'
+ES|       promise: 'No ha leído nada — tu historia sigue siendo tuya para contarla.',
+ES|       promiseRole: 'Tu {role} no ha leído nada — tu historia sigue siendo tuya para contarla.',
+ES|       introSub: 'Esto no es una conexión médica ni de telesalud. Este camino trata de un asunto legal. Toca el tipo de ayuda legal que quieres \u2014 tu resumen va allí solo cuando tú digas enviar.',
+ES|       readyRole: 'Quiero contactar con mi {role}.',
+ES|       onlyHere: 'Solo se muestra a quien de verdad está aquí en este momento.',
+ES|       emptyTitle: 'En este momento no hay ningún aliado de asistencia legal conectado',
+ES|       emptyLead: 'No vamos a fingir lo contrario. Ahora mismo no hay ningún abogado ni oficina de asistencia legal de guardia aquí — un botón solo aparece cuando hay una persona real detrás. Todo lo demás en esta página — los directorios de tu estado y las clínicas de las facultades de derecho — es real y está abierto ahora mismo, igual que las puertas de abajo.',
+ES|       resources: '<a class="gate-res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Encuentra tu oficina local de asistencia legal</b><span>LSC.gov — el directorio federal de la Legal Services Corporation con oficinas de asistencia legal gratuita, siempre abierto.</span></a>'
+ES|         + '<a class="gate-res" href="tel:211"><b>211 — línea gratuita de ayuda local</b><span>Llama al 211 (o visita 211.org) — ayuda gratuita y confidencial para encontrar servicios legales y sociales locales, 24/7.</span></a>',
+ES|       leaveNote: 'Abajo también puedes dejar un mensaje. Una persona real lo verá. No es una conexión instantánea, y nunca fingiremos que lo es.',
+ES|       leaveTitle: 'Deja un mensaje para la próxima persona real',
+ES|       leaveLead: 'Revisa tus palabras abajo y envíalas cuando estés listo. Quedarán esperando a la próxima persona real que entre de guardia — no es una conexión instantánea, y nunca fingiremos que lo es.',
+ES|       leaveBtn: 'Dejar un mensaje para la próxima persona real',
+ES|       leaveWho: 'el próximo aliado de asistencia legal disponible',
+ES|       leaveSending: 'Guardando tus palabras donde la próxima persona real las encontrará…',
+ES|       leaveDone: 'Tus palabras están guardadas. <b>Una persona real las verá.</b> No es una conexión instantánea, y nunca fingiremos que lo es. Los directorios de arriba están abiertos ahora mismo — y si tu situación implica un peligro inmediato, llama al 911.'
+
