@@ -1234,6 +1234,36 @@ PUBLIC_PAGE = """
         afternoon: '你来到了这里。|这一路并不容易。|歇一会儿吧——我陪着你。',
         evening:   '你走到了黄昏。|光正在变得柔和。|在这里歇一歇——我陪着你。',
         night:     '你在这里，在这份安静里。|夜有时很长。|别走远——我陪着你。'
+      },
+      hi: {
+        morning:   'आप सुबह तक आ पहुँचे।|इसमें हिम्मत लगी।|यहाँ पल भर ठहरिए — मैं आपके साथ हूँ।',
+        afternoon: 'आप यहाँ तक आ पहुँचे।|इसमें हिम्मत लगी।|पल भर ठहरिए — मैं आपके साथ हूँ।',
+        evening:   'आप शाम तक आ पहुँचे।|रोशनी नर्म हो रही है।|यहाँ ठहरिए — मैं आपके साथ हूँ।',
+        night:     'आप यहाँ हैं, इस ख़ामोशी में।|रात लंबी लग सकती है।|पास रहिए — मैं आपके साथ हूँ।'
+      },
+      pa: {
+        morning:   'ਤੁਸੀਂ ਸਵੇਰ ਤੱਕ ਪਹੁੰਚ ਗਏ।|ਇਸ ਵਿੱਚ ਹਿੰਮਤ ਲੱਗੀ।|ਇੱਥੇ ਪਲ ਕੁ ਠਹਿਰੋ — ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।',
+        afternoon: 'ਤੁਸੀਂ ਇੱਥੇ ਤੱਕ ਪਹੁੰਚ ਗਏ।|ਇਸ ਵਿੱਚ ਹਿੰਮਤ ਲੱਗੀ।|ਪਲ ਕੁ ਠਹਿਰੋ — ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।',
+        evening:   'ਤੁਸੀਂ ਸ਼ਾਮ ਤੱਕ ਪਹੁੰਚ ਗਏ।|ਰੋਸ਼ਨੀ ਨਰਮ ਹੋ ਰਹੀ ਹੈ।|ਇੱਥੇ ਠਹਿਰੋ — ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।',
+        night:     'ਤੁਸੀਂ ਇੱਥੇ ਹੋ, ਇਸ ਖ਼ਾਮੋਸ਼ੀ ਵਿੱਚ।|ਰਾਤ ਲੰਮੀ ਲੱਗ ਸਕਦੀ ਹੈ।|ਨੇੜੇ ਰਹੋ — ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।'
+      },
+      bn: {
+        morning:   'আপনি সকাল পর্যন্ত এসে পৌঁছেছেন।|এতে সাহস লেগেছে।|এখানে একটু জিরিয়ে নিন — আমি আপনার সাথে আছি।',
+        afternoon: 'আপনি এখানে এসে পৌঁছেছেন।|এতে সাহস লেগেছে।|একটু জিরিয়ে নিন — আমি আপনার সাথে আছি।',
+        evening:   'আপনি সন্ধ্যা পর্যন্ত এসে পৌঁছেছেন।|আলো নরম হয়ে আসছে।|এখানে থাকুন — আমি আপনার সাথে আছি।',
+        night:     'আপনি এখানে, এই নীরবতায়।|রাত দীর্ঘ মনে হতে পারে।|কাছে থাকুন — আমি আপনার সাথে আছি।'
+      },
+      tl: {
+        morning:   'Nakarating ka sa umaga.|Hindi iyon madali.|Magpahinga ka rito sandali — kasama mo ako.',
+        afternoon: 'Nakarating ka rito.|Hindi iyon madali.|Magpahinga ka sandali — kasama mo ako.',
+        evening:   'Nakarating ka sa takipsilim.|Lumalambot na ang liwanag.|Magpahinga ka rito — kasama mo ako.',
+        night:     'Narito ka, sa katahimikan.|Maaaring humaba ang gabi.|Manatili kang malapit — kasama mo ako.'
+      },
+      to: {
+        morning:   'Kuó ke aʻu ki he pongipongí.|Naʻe ʻikai faingofua ia.|Mālōlō heni ʻo ha kiʻi taimi — ʻoku ou ʻiate koe.',
+        afternoon: 'Kuó ke aʻu mai ki heni.|Naʻe ʻikai faingofua ia.|Mālōlō ʻo ha kiʻi taimi — ʻoku ou ʻiate koe.',
+        evening:   'Kuó ke aʻu ki he efiafí.|ʻOku fakaʻau ke vaivai e maamá.|Mālōlō heni — ʻoku ou ʻiate koe.',
+        night:     'ʻOkú ke ʻi heni, ʻi he fakalongolongó.|ʻE lava ke ongoʻi lōloa e poó.|Nofo ofi mai — ʻoku ou ʻiate koe.'
       }
     };
     function gateSlot() {
@@ -2597,8 +2627,8 @@ function helpKindFrom(text){
   let isLegal = legalWords.some(function(w){ return t.indexOf(w)>=0; });
   let isClinical = clinicalWords.some(function(w){ return t.indexOf(w)>=0; });
   // Honor negations: 'don't need a clinician', 'not a therapist' -> not clinical.
-  if (/(don.t|do not|not|dont)\s+(need\s+)?(a\s+)?(clinician|counselor|therapist|therapy|counseling)/.test(t)) isClinical = false;
-  if (/(don.t|do not|not|dont)\s+(need\s+)?(a\s+)?(lawyer|attorney|legal)/.test(t)) isLegal = false;
+  if (/(don.t|do not|not|dont)\\s+(need\\s+)?(a\\s+)?(clinician|counselor|therapist|therapy|counseling)/.test(t)) isClinical = false;
+  if (/(don.t|do not|not|dont)\\s+(need\\s+)?(a\\s+)?(lawyer|attorney|legal)/.test(t)) isLegal = false;
   if (isLegal && !isClinical) return 'legal';
   if (isClinical && !isLegal) return 'clinical';
   if (isLegal && isClinical) return 'both';
@@ -4700,7 +4730,7 @@ function _spPump() {
     _spPump();                             // speak the next queued line, if any
   }
   // Watchdog: a stalled clip must never freeze the queue forever.
-  var words = text.split(/\s+/).length;
+  var words = text.split(/\\s+/).length;
   var watchdog = setTimeout(done, Math.min(30000, words * 350 + 4000));
   function finish() { clearTimeout(watchdog); done(); }
   _spPlayOne(text, finish);
@@ -11498,9 +11528,9 @@ def admin_study_page():
    — newlines are matched via String.fromCharCode to survive Python. */
 function mdEsc(s){ return String(s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;'); }
 function mdInline(s){
-  s = s.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\\*\\*([^*]+?)\\*\\*/g, '<strong>$1</strong>');
   s = s.replace(/__([^_]+?)__/g, '<strong>$1</strong>');
-  s = s.replace(/(^|[^*])\*(?!\s)([^*]+?)\*(?!\*)/g, '$1<em>$2</em>');
+  s = s.replace(/(^|[^*])\\*(?!\\s)([^*]+?)\\*(?!\\*)/g, '$1<em>$2</em>');
   s = s.replace(/`([^`]+?)`/g, '<code>$1</code>');
   return s;
 }
@@ -11514,14 +11544,14 @@ function mdToHtml(src){
   for (var i=0;i<lines.length;i++){
     var ln = lines[i], t = ln.trim();
     if (t === ''){ flushPara(); closeList(); continue; }
-    if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)){ flushPara(); closeList(); html += '<hr>'; continue; }
-    var h = t.match(/^(#{1,6})\s+(.*)$/);
+    if (/^(-{3,}|\\*{3,}|_{3,})$/.test(t)){ flushPara(); closeList(); html += '<hr>'; continue; }
+    var h = t.match(/^(#{1,6})\\s+(.*)$/);
     if (h){ flushPara(); closeList(); var lvl = Math.min(h[1].length,4);
       html += '<div class="md-h md-h'+lvl+'">'+mdInline(h[2])+'</div>'; continue; }
-    var ul = t.match(/^[-*+]\s+(.*)$/);
+    var ul = t.match(/^[-*+]\\s+(.*)$/);
     if (ul){ flushPara(); if(list!=='ul'){ closeList(); html += '<ul>'; list='ul'; }
       html += '<li>'+mdInline(ul[1])+'</li>'; continue; }
-    var ol = t.match(/^\d+[.)]\s+(.*)$/);
+    var ol = t.match(/^\\d+[.)]\\s+(.*)$/);
     if (ol){ flushPara(); if(list!=='ol'){ closeList(); html += '<ol>'; list='ol'; }
       html += '<li>'+mdInline(ol[1])+'</li>'; continue; }
     para.push(t);

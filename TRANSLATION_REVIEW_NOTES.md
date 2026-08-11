@@ -32,6 +32,13 @@ REMAINING (next build batches; English fallback active meanwhile):
 2. i18n_pages_{hi,pa,bn,tl,to}.json — the 8 info pages per language.
 
 ## Native-review flags (translator, please check these first)
+ARRIVAL GREETING (GATE_GREETINGS): the time-of-day welcome banner ("You made it
+here / to morning / to evening...") is now translated in all 5 new languages,
+four variants each. These are the first words a person in crisis sees — review
+them first in every language. "That took something" is rendered as "that took
+courage/strength" (hi/pa/bn) and "that was not easy" (tl/to); confirm the tone
+lands as gentle acknowledgment, not as emphasizing hardship.
+
 GLOBAL: 988/911/SAMHSA/FindTreatment numbers and names intentionally untranslated.
 "18" age line: Bengali uses Bengali numerals (১৮) in prose; others use ASCII 18 —
 reviewer should confirm preferred numeral style per language.

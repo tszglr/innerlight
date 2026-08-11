@@ -11,9 +11,19 @@ import os
 
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else "core/axiom_harmony_unified_app.py"
+    import ast
     src = open(path, encoding="utf-8").read()
+    # Walk the module's string constants via ast: Constant.value is the string
+    # AFTER Python evaluates escapes (and untouched for r"" raw templates), so
+    # we validate the JS exactly as the browser will receive it — not the raw
+    # source text, which differs for cooked templates (e.g. \\s in source is
+    # \s at runtime).
+    consts = [(n.lineno, n.value) for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+    consts.sort(key=lambda t: t[0])
+    rendered = "\n".join(v for _, v in consts)
     # Grab <script>...</script> blocks that have no src= attribute (inline JS).
-    blocks = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", src, re.DOTALL)
+    blocks = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", rendered, re.DOTALL)
     failures = 0
     checked = 0
     for i, code in enumerate(blocks):
