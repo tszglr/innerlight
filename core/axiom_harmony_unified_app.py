@@ -6165,6 +6165,19 @@ function showWarmHandoff(thread, warm, resolution, action, value) {
   if (goBtn) goBtn.onclick = function() { performBridgeAction(action, value); };
   politeScrollIntoView(el);
 }
+/* Resilient open: the window opens instantly (popup-safe), then the server
+   picks the first destination whose door actually opens right now. */
+async function ilOpenDest(name, fallbackUrl){
+  var w = null;
+  try { w = window.open('about:blank', '_blank'); } catch(e){}
+  var url = fallbackUrl;
+  try {
+    var r = await fetch('/api/dest/' + name);
+    if (r.ok) { var d = await r.json(); if (d.url) url = d.url; }
+  } catch(e){}
+  if (w && !w.closed) { try { w.location = url; return; } catch(e){} }
+  try { window.open(url, '_blank'); } catch(e){ window.location.href = url; }
+}
 function performBridgeAction(action, value) {
   switch(action) {
     case 'call_988': window.location.href = 'tel:988'; break;
@@ -6172,7 +6185,7 @@ function performBridgeAction(action, value) {
     case 'call_211': window.location.href = 'tel:211'; break;
     case 'request_video': window.open('/telehealth/intake', '_blank'); break;
     case 'schedule': window.open('/telehealth/intake', '_blank'); break;
-    case 'match_attorney': window.open('https://www.lawhelp.org/', '_blank'); break;
+    case 'match_attorney': ilOpenDest('legal_aid', 'https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help'); break;
     case 'operator_monitor': /* operator already alerted via backend */ break;
     default: break;
   }
@@ -7109,11 +7122,11 @@ LEGAL_HANDOFF_PAGE = r"""
       <h2>Self-help &amp; civic resources &mdash; free, trusted, available right now</h2>
       <p>These are established, free legal-information sources. They explain your rights and the process in plain language. They are information, <b>not</b> legal advice &mdash; only a lawyer can advise on your specific case &mdash; but they are a strong, fast place to start understanding where you stand.</p>
       <div class="reslib">
-        <a class="res" href="https://www.lawhelp.org/" target="_blank" rel="noopener"><b>LawHelp.org</b><span>Find free legal aid and self-help by state and topic.</span></a>
+        <a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help" target="_blank" rel="noopener"><b>Get Legal Help &mdash; LSC.gov</b><span>The federal Legal Services Corporation&rsquo;s door to free legal aid by state and topic.</span></a>
         <a class="res" href="https://www.law.cornell.edu/wex" target="_blank" rel="noopener"><b>Cornell Law &mdash; Wex</b><span>Plain-language legal dictionary &amp; explanations from Cornell Law School.</span></a>
         <a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers</b><span>Ask a lawyer a civil legal question free &mdash; you pick your state, and a volunteer attorney in your state answers.</span></a>
         <a class="res" href="https://www.usa.gov/legal-aid" target="_blank" rel="noopener"><b>USA.gov Legal Aid</b><span>Government directory of free and low-cost legal help.</span></a>
-        <a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Legal Services Corporation</b><span>Find your local federally funded legal-aid office.</span></a>
+        <a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help" target="_blank" rel="noopener"><b>Legal Services Corporation</b><span>Find your local federally funded legal-aid office.</span></a>
         <a class="res" href="https://www.nolo.com/legal-encyclopedia" target="_blank" rel="noopener"><b>Nolo Legal Encyclopedia</b><span>Readable articles on tenants, family, debt, and more.</span></a>
       </div>
     </section>
@@ -7275,7 +7288,7 @@ LEGAL_HANDOFF_PAGE = r"""
       if (abbr && help){
         help.innerHTML =
           '<div class="reslib">'
-          + '<a class="res" href="https://www.lawhelp.org/find-help" target="_blank" rel="noopener"><b>LawHelp.org &mdash; ' + esc(name) + '</b><span>Choose ' + esc(name) + ' to reach the free legal-aid and court self-help website for your state.</span></a>'
+          + '<a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help" target="_blank" rel="noopener"><b>Free legal aid in ' + esc(name) + '</b><span>The federal directory &mdash; choose ' + esc(name) + ' to find the legal-aid offices serving your state.</span></a>'
           + '<a class="res" href="https://www.abafreelegalanswers.org/" target="_blank" rel="noopener"><b>ABA Free Legal Answers &mdash; ' + esc(name) + '</b><span>Ask a volunteer attorney in ' + esc(name) + ' a civil legal question, free.</span></a>'
           + '<a class="res" href="https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help" target="_blank" rel="noopener"><b>Find Legal Aid &mdash; ' + esc(name) + '</b><span>The federal directory of local legal-aid offices serving ' + esc(name) + '.</span></a>'
           + '</div>'
@@ -7361,7 +7374,7 @@ LEGAL_HANDOFF_PAGE = r"""
       onlyHere: 'Only who is truly here right now is shown.',
       emptyTitle: 'No legal-aid partner is connected at this moment',
       emptyLead: 'We will not pretend otherwise. Right now no attorney or legal-aid office is on call here \u2014 a button only appears when a real person is truly behind it. Everything else on this page \u2014 your state directories and the law-school clinics \u2014 is real and open right now, and so are the doors below.',
-      resources: '<a class="gate-res" href="https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid" target="_blank" rel="noopener"><b>Find your local legal-aid office</b><span>LSC.gov \u2014 the federal Legal Services Corporation directory of free legal-aid offices, always open.</span></a>'
+      resources: '<a class="gate-res" href="https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help" target="_blank" rel="noopener"><b>Find your local legal-aid office</b><span>LSC.gov \u2014 the federal Legal Services Corporation directory of free legal-aid offices, always open.</span></a>'
         + '<a class="gate-res" href="tel:211"><b>211 \u2014 free local help line</b><span>Call 211 (or visit 211.org) \u2014 free, confidential help finding local legal and social services, 24/7.</span></a>',
       leaveNote: 'Below, you can also leave word. A real person will see this. This is not an instant connection, and we will never pretend it is.',
       leaveTitle: 'Leave word for the next real person',
@@ -13216,6 +13229,66 @@ def responder_brief(rid):
 </div>
 </body></html>""", pro=match.get("pro"), kind=match.get("kind"), when=match.get("when"),
     room=match.get("responder_room", match.get("room")), summary_html=summary_html)
+
+# ============ RESILIENT HANDOFF DESTINATIONS ============
+# Every critical handoff has an ordered chain of ways in. Before a person is
+# sent, the server live-checks the chain and returns the FIRST DOOR THAT
+# OPENS. If a link breaks, the next one takes over immediately — a person
+# reaching for help must never land on a dead page. (Founder's law, from the
+# live lawhelp.org 503 outage.)
+DEST_CHAINS = {
+    "legal_aid": [
+        "https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help",
+        "https://www.usa.gov/legal-aid",
+        "https://www.abafreelegalanswers.org/",
+        "https://www.lawhelp.org/",
+    ],
+    "treatment": [
+        "https://findtreatment.gov",
+        "https://www.samhsa.gov/find-help/national-helpline",
+        "https://988lifeline.org",
+    ],
+    "dv_help": [
+        "https://www.thehotline.org",
+        "https://www.domesticshelters.org",
+    ],
+}
+_dest_cache = {}  # name -> (url, checked_at)
+
+def _url_alive(url, timeout=6):
+    try:
+        req = urllib.request.Request(url, method="GET",
+            headers={"User-Agent": "Mozilla/5.0 (InnerLight reachability check)"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return 200 <= getattr(r, "status", 200) < 400
+    except Exception:
+        return False
+
+def resolve_destination(name):
+    """First alive URL in the chain (30-min cache). If every door is closed,
+    return the primary anyway — a person still gets a target — and log it."""
+    chain = DEST_CHAINS.get(name)
+    if not chain:
+        return None
+    cached = _dest_cache.get(name)
+    if cached and (time.time() - cached[1]) < 1800:
+        return cached[0]
+    for url in chain:
+        if _url_alive(url):
+            _dest_cache[name] = (url, time.time())
+            if url != chain[0]:
+                print(f"[destinations] {name}: primary down, routing to {url}")
+            return url
+    print(f"[destinations] WARNING: every door closed for {name}; sending primary")
+    _dest_cache[name] = (chain[0], time.time() - 1500)  # recheck soon
+    return chain[0]
+
+@app.route("/api/dest/<name>")
+def api_dest(name):
+    url = resolve_destination(name)
+    if not url:
+        return jsonify({"error": "unknown"}), 404
+    return jsonify({"url": url})
 
 @app.route("/api/admin/dispatch", methods=["GET", "POST"])
 def api_admin_dispatch():
