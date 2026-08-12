@@ -286,3 +286,30 @@
   moving toward modern memory-hard key derivation (Argon2id/scrypt) and a
   hybrid path ready for post-quantum key exchange (e.g. ML-KEM/Kyber) as the
   libraries and our testing mature.
+
+## 18. INNERLIGHT EVOLVES WITH AI ITSELF (set by the founder, August 2026)
+- As AI improves and updates, so does InnerLight. Newer research and newer
+  ideas are applied to EVERY part of it — comprehension, emotion reading,
+  crisis detection, music adaptation, translation, voice, interface, every
+  engine now existing and every engine to come. InnerLight is a living system;
+  a frozen build is a failing build.
+- The field does not stand still, and the people we serve deserve the state of
+  the art at the worst moment of their lives. Principle 13 gives the reason:
+  one miss is total — and an advancement we declined could have been the one
+  that mattered.
+- THE STANDING LAW OF ADVANCEMENT: touching any part of InnerLight is an
+  occasion to ask what newer research or stronger technique now exists for
+  that part — proactively, without being asked, the same way AHP is hardened
+  with every change (Principle 17). Surfacing the newer way is part of the
+  work, not a separate task.
+- HOW IT LIVES in the architecture: model names live in configuration, never
+  hardcoded; prompts and directives are centralized; every AI touchpoint is
+  built to be upgraded without a rewrite. When a stronger model or method
+  arrives, adopting it is a configuration-and-verification exercise, not a
+  reconstruction.
+- EVERY advancement is verified against this constitution before it ships:
+  no diagnosis, the language promise, honesty on failure, no hallucinating,
+  no substitution, minors protected, always within the law (Principle 11).
+  An upgrade that weakens a principle is not an upgrade; it is rejected.
+- This applies to all of the founder's engines, with InnerLight first among
+  them.
