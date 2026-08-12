@@ -2232,12 +2232,10 @@ PUBLIC_PAGE = """
     <section id="story-screen" class="story-screen" style="display:none;">
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
       <div id="calm-photo-a" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;">
       </div>
       <div id="calm-photo-b" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <div class="scene-fill" style="position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(28px) brightness(0.9);"></div>
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;">
       </div>
       <div id="scene-veil" aria-hidden="true"></div>
       <div id="il-presence" aria-hidden="true"><div class="il-bloom"></div><div class="il-vignette"></div></div>
@@ -2407,12 +2405,12 @@ function setScene(scene, byUser=true) {
   const src = SCENE_PHOTOS[scene];
   if (!frameA || !frameB || !src) return;
   // Crossfade: load into the hidden frame, then trade opacities slowly.
-  // Each frame shows the WHOLE photo, with a soft blurred copy filling the
-  // edges — no cropping deep into the picture, no blank bars.
+  // Full-bleed: one continuous photograph fills the entire screen, edge to
+  // edge — nothing blurred, nothing that looks concealed. Realism over
+  // effects (founder's correction from live use).
   const showing = frameA.style.opacity !== '0' ? frameA : frameB;
   const hidden  = showing === frameA ? frameB : frameA;
   const img = hidden.querySelector('.scene-full');
-  hidden.querySelector('.scene-fill').style.backgroundImage = "url('" + src + "')";
   img.onload = () => { hidden.style.opacity = '1'; showing.style.opacity = '0'; };
   img.src = src;
 }
