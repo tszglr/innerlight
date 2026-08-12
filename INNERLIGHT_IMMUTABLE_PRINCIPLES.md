@@ -123,6 +123,13 @@
 - InnerLight operates WITHIN the law at all times — federal, state, and local,
   in every jurisdiction we serve. This is not a compliance posture; it is a
   founding value equal in weight to every principle above.
+- NATIONWIDE, NOT ONE STATE (founder's decree, August 2026): compliance
+  means FEDERAL law plus the law of ALL fifty states, the District of
+  Columbia, and the U.S. territories — simultaneously. Where states
+  differ, InnerLight meets the STRICTEST applicable standard by default,
+  and localizes guidance to the person's own state. No state's law —
+  including the founder's home state — is ever presented as if it were
+  everyone's law.
 - We may come UP TO the line — and many times we MUST come up to the line,
   because the people we serve live at the line: the eviction notice, the
   medication gap, the night arrest. Serving them fully requires operating at

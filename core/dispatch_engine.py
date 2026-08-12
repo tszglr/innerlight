@@ -30,16 +30,18 @@ _STATE_PATH = os.path.join(_STATE_DIR, "dispatch_state.json")
 STREAMS = [
     {
         "id": "public_payer",
-        "name": "Public-payer infrastructure (Medicaid / Medi-Cal)",
+        "name": "Public-payer infrastructure (Medicaid, all states)",
         "how": (
             "InnerLight contracts as the digital front door and time-to-resolution "
-            "layer for county mobile-crisis and CBO providers. Federal CMS guidance "
-            "for the community-based mobile crisis benefit provides enhanced "
+            "layer for county mobile-crisis and CBO providers — in ANY state. The "
+            "anchor is FEDERAL: 42 U.S.C. § 1396w-6 establishes the community-based "
+            "mobile crisis benefit nationwide, and CMS guidance provides enhanced "
             "matching pathways that include select IT services supporting crisis "
-            "response. California's Medi-Cal benefit (State Plan Amendment 22-0043) "
-            "carries an 85% federal match window through December 31, 2026, with "
-            "the benefit proposed for recast from April 2027 — contracts are "
-            "written with the county or provider, never with the person served."
+            "response. Each contract is localized to that state's approved Medicaid "
+            "state plan or waiver and that state's reimbursement rules — the "
+            "founder's home state (California, SPA 22-0043) is one instance of a "
+            "50-state playbook, never the template. Contracts are written with the "
+            "state, county, or provider — never with the person served."
         ),
     },
     {

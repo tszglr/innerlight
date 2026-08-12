@@ -8140,7 +8140,7 @@ def page_safety():
     companion-chatbot law (Senate Bill 243), one of the first and strictest in the country &mdash; we follow it; and
     where any law is stricter than our own principles, the law governs. As we expand state by state, we study each new
     requirement before we operate there. Questions about this protocol are welcome through the
-    <a href="/contact">contact page</a>.</p>
+    <a href="/contact">contact page</a>. Our compliance is nationwide by design: federal law plus the law of all fifty states, the District of Columbia, and the U.S. territories. Where states differ, we meet the strictest applicable standard everywhere, and legal information is always localized to the person&rsquo;s own state &mdash; no state&rsquo;s law is ever presented as everyone&rsquo;s law.</p>
 
     <div class="soft">
       <p style="margin:0;"><strong>The short version:</strong> InnerLight is a program, not a person. When it sees
