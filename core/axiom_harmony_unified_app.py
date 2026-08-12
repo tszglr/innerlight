@@ -1176,6 +1176,7 @@ PUBLIC_PAGE = """
         // page is read aloud in that language, not English.
         try { if (typeof initVoices === 'function') initVoices(); } catch(e){}
         try { if (typeof populateVoicePicker === 'function') populateVoicePicker(); } catch(e){}
+        try { var _sp=document.getElementById('scene-picker'); if (_sp && typeof _ilux==='function') _sp.setAttribute('aria-label', _ilux('scn.aria')); } catch(e){}
         // the arrival greeting is rendered word-by-word in the chosen language
         try { if (typeof renderGateGreeting === 'function') renderGateGreeting(false); } catch(e){}
         var btns = document.querySelectorAll('[data-langbtn]');
@@ -1216,6 +1217,566 @@ PUBLIC_PAGE = """
     };
     // Greeting lines per language and time of day. "|" separates the lines.
     // English is always the safe fallback, like everywhere else on this page.
+    // ============ UNIVERSAL UI STRINGS (_IL_UX) — every dynamic widget ============
+    // Every user-facing string built by JS at runtime lives here, in all 8
+    // languages, so no widget can ever fall back to English by accident.
+    var _IL_UX = {
+      en: {
+        "sam.q": "How are you feeling right now? (tap one, or ignore me)",
+        "sam.s1": "Very distressed",
+        "sam.s2": "Uneasy",
+        "sam.s3": "In between",
+        "sam.s4": "Okay",
+        "sam.s5": "Calm",
+        "fb.ask": "If you have a moment: did this help? Your answer is anonymous and helps us help others.",
+        "fb.yes": "It helped",
+        "fb.some": "Somewhat",
+        "fb.no": "Not really",
+        "fb.ph": "Anything you want to share about how you feel, or what helped? (optional)",
+        "fb.share": "Share",
+        "fb.nothanks": "No thanks",
+        "fb.thanks": "Thank you for sharing — it genuinely helps us reach others.",
+        "fb.close": "Close",
+        "mb.title": "You matter, and real help is here for you.",
+        "mb.lead": "InnerLight is built for adults right now — but you are not being turned away. What you are feeling deserves a real person who is trained to help someone your age, right now:",
+        "mb.b1": "<b>• Talk to a trusted adult</b> — a parent, family member, school counselor, coach, or teacher. Starting the sentence is the hardest part; you can even show them this screen.",
+        "mb.b2": "<b>• Call or text 988</b> — free, 24/7, and they help young people every day.",
+        "mb.b3": "<b>• Text HOME to 741741</b> — Crisis Text Line, free, 24/7.",
+        "mb.b4": "<b>• Teen Line: text TEEN to 839863</b> — teens helping teens, evenings.",
+        "mb.danger": "If you are in immediate danger, call 911.",
+        "mb.ok": "Okay",
+        "mb.note": "It sounds like you may be under 18 — and I want the right help for you, which is a real person trained to support someone your age. Please look at the options I just showed you, and please tell a trusted adult how you are feeling. You deserve real support.",
+        "sub.note": "I am really glad being here helps, and I want to be honest with you because I care: I am not a person, and I cannot be a substitute for real human connection. What I can do is stay with you right now and help you reach people who can truly be there for you — a counselor, someone you trust, a real voice. You deserve that, more than you deserve a screen. Would you like me to help you reach a real person?",
+        "gb.n1": "You have shared a lot, and I am really glad you did. Whenever you feel ready, the most helpful next step is talking with a real person who can stay with you beyond this moment. I can connect you gently, whenever you want.",
+        "gb.n2": "I am still right here with you, and there is no rush. When you are ready, a real person can carry this forward with you. Would you like me to help you reach someone now?",
+        "gb.connect": "Connect me with someone",
+        "gb.keep": "Keep talking a little longer",
+        "sv.min": "There is not much to save yet. Share a little of your story first, then tap Save again and I will give you a private return code.",
+        "sv.q": "Save where you are? You will get a private return code only you hold.",
+        "sv.auto": "Would you like to save where you are, so you don’t have to start over if you come back?",
+        "sv.btn": "Save my place",
+        "sv.notnow": "Not now",
+        "sv.saved": "Saved. This is your return code — keep it somewhere safe:",
+        "sv.code": "Only this code can reopen your story — not even we can read it without the code.",
+        "sv.copy": "Copy code",
+        "sv.done": "Done",
+        "sv.empty": "There was nothing saved yet — share a little first.",
+        "sv.err": "Could not save right now. Please try again.",
+        "mic.rec": "Recording 3 seconds — say anything…",
+        "mic.ok": "That is what your mic picked up — if you can hear yourself, it works.",
+        "mic.na": "The microphone is not available right now — that is okay. Typing works just as well.",
+        "mic.saved": "Saved — press Enter to send, or keep editing",
+        "mic.now": "Listening… speak now (tap mic again to stop)",
+        "mic.noauto": "Listening… (your words will not auto-type in this browser, but the mic is working — you can type too)",
+        "mic.reconn": "Listening… (mic working; reconnecting transcription…)",
+        "mic.paused": "Listening paused (quiet for a while) — tap the mic to continue",
+        "mic.speak": "&#127908; Speak",
+        "vp.auto": "Voice: automatic (best available)",
+        "vp.human": "Human voices",
+        "vp.female": "Female voices",
+        "vp.male": "Male voices",
+        "vp.other": "Other voices",
+        "vp.test": "This is the voice I will use.",
+        "scn.aria": "Background scene",
+        "s988": "You are not alone. If you need immediate support, you can reach the 988 Suicide and Crisis Lifeline anytime by calling or texting 988. I am staying right here with you.",
+        "empty": "I didn't catch anything yet — take your time, and share whenever you're ready.",
+        "interrupted": "Something interrupted the connection for a moment — please say that again.",
+        "lg.based": "Based on what you shared, here are some things you should know about your {issue}:",
+        "lg.rights": "Your rights",
+        "lg.ask": "Questions to ask an attorney",
+        "lg.free": "Where to get free legal help",
+        "lg.steps": "Steps you can take right now",
+        "wh.connect": "Connect now",
+        "wh.norush": "whenever you're ready — no rush",
+        "wh.more": "I'm here if you need to talk more"
+      },
+      es: {
+        "sam.q": "¿Cómo te sientes ahora mismo? (toca una carita, o ignórame)",
+        "sam.s1": "Muy angustiado/a",
+        "sam.s2": "Inquieto/a",
+        "sam.s3": "Entre medio",
+        "sam.s4": "Bien",
+        "sam.s5": "En calma",
+        "fb.ask": "Si tienes un momento: ¿te ayudó esto? Tu respuesta es anónima y nos ayuda a ayudar a otros.",
+        "fb.yes": "Me ayudó",
+        "fb.some": "Algo",
+        "fb.no": "La verdad, no",
+        "fb.ph": "¿Algo que quieras compartir sobre cómo te sientes o qué te ayudó? (opcional)",
+        "fb.share": "Compartir",
+        "fb.nothanks": "No, gracias",
+        "fb.thanks": "Gracias por compartir — de verdad nos ayuda a llegar a otros.",
+        "fb.close": "Cerrar",
+        "mb.title": "Tú importas, y hay ayuda real para ti.",
+        "mb.lead": "InnerLight está hecho para adultos por ahora — pero no te estamos rechazando. Lo que sientes merece a una persona real, formada para ayudar a alguien de tu edad, ahora mismo:",
+        "mb.b1": "<b>• Habla con un adulto de confianza</b> — madre o padre, un familiar, consejero escolar, entrenador o maestro. Empezar la frase es lo más difícil; incluso puedes mostrarle esta pantalla.",
+        "mb.b2": "<b>• Llama o envía un mensaje al 988</b> — gratis, 24/7, y ayudan a jóvenes todos los días.",
+        "mb.b3": "<b>• Envía HOME al 741741</b> — Crisis Text Line, gratis, 24/7.",
+        "mb.b4": "<b>• Teen Line: envía TEEN al 839863</b> — jóvenes que ayudan a jóvenes, por las tardes.",
+        "mb.danger": "Si estás en peligro inmediato, llama al 911.",
+        "mb.ok": "Entendido",
+        "mb.note": "Parece que podrías ser menor de 18 — y quiero la ayuda adecuada para ti: una persona real, formada para apoyar a alguien de tu edad. Por favor mira las opciones que acabo de mostrarte, y cuéntale a un adulto de confianza cómo te sientes. Mereces apoyo de verdad.",
+        "sub.note": "Me alegra mucho que estar aquí te ayude, y quiero hablarte con honestidad porque me importas: no soy una persona, y no puedo sustituir la conexión humana real. Lo que sí puedo hacer es quedarme contigo ahora y ayudarte a llegar a personas que de verdad pueden estar ahí para ti — un consejero, alguien de confianza, una voz real. Mereces eso, mucho más que una pantalla. ¿Quieres que te ayude a llegar a una persona real?",
+        "gb.n1": "Has compartido mucho, y me alegra de verdad que lo hicieras. Cuando te sientas con fuerzas, el paso más útil es hablar con una persona real que pueda acompañarte más allá de este momento. Puedo conectarte con calma, cuando tú quieras.",
+        "gb.n2": "Sigo aquí contigo, y no hay prisa. Cuando te sientas con fuerzas, una persona real puede continuar esto contigo. ¿Quieres que te ayude a llegar a alguien ahora?",
+        "gb.connect": "Conéctame con alguien",
+        "gb.keep": "Seguir hablando un poco más",
+        "sv.min": "Aún no hay mucho que guardar. Comparte un poco de tu historia primero; luego toca Guardar otra vez y te daré un código privado de regreso.",
+        "sv.q": "¿Guardar donde estás? Recibirás un código privado de regreso que solo tú tendrás.",
+        "sv.auto": "¿Te gustaría guardar donde estás, para no empezar de nuevo si regresas?",
+        "sv.btn": "Guardar mi lugar",
+        "sv.notnow": "Ahora no",
+        "sv.saved": "Guardado. Este es tu código de regreso — guárdalo en un lugar seguro:",
+        "sv.code": "Solo este código puede reabrir tu historia — ni siquiera nosotros podemos leerla sin él.",
+        "sv.copy": "Copiar código",
+        "sv.done": "Listo",
+        "sv.empty": "Aún no había nada que guardar — comparte un poco primero.",
+        "sv.err": "No se pudo guardar en este momento. Inténtalo de nuevo.",
+        "mic.rec": "Grabando 3 segundos — di lo que sea…",
+        "mic.ok": "Eso captó tu micrófono — si puedes oírte, funciona.",
+        "mic.na": "El micrófono no está disponible ahora — no pasa nada. Escribir funciona igual de bien.",
+        "mic.saved": "Guardado — presiona Enter para enviar, o sigue editando",
+        "mic.now": "Escuchando… habla ahora (toca el micrófono otra vez para detener)",
+        "mic.noauto": "Escuchando… (tus palabras no se escribirán solas en este navegador, pero el micrófono funciona — también puedes escribir)",
+        "mic.reconn": "Escuchando… (micrófono activo; reconectando la transcripción…)",
+        "mic.paused": "Escucha en pausa (silencio por un rato) — toca el micrófono para continuar",
+        "mic.speak": "&#127908; Hablar",
+        "vp.auto": "Voz: automática (la mejor disponible)",
+        "vp.human": "Voces humanas",
+        "vp.female": "Voces femeninas",
+        "vp.male": "Voces masculinas",
+        "vp.other": "Otras voces",
+        "vp.test": "Esta es la voz que usaré.",
+        "scn.aria": "Escena de fondo",
+        "s988": "No estás solo/a. Si necesitas apoyo inmediato, puedes comunicarte con la Línea 988 de Suicidio y Crisis en cualquier momento, llamando o enviando un mensaje al 988. Me quedo aquí contigo.",
+        "empty": "Aún no escuché nada — tómate tu tiempo, y comparte cuando quieras.",
+        "interrupted": "Algo interrumpió la conexión un momento — por favor, dilo otra vez.",
+        "lg.based": "Según lo que compartiste, hay cosas que deberías saber sobre tu {issue}:",
+        "lg.rights": "Tus derechos",
+        "lg.ask": "Preguntas para un abogado",
+        "lg.free": "Dónde obtener ayuda legal gratuita",
+        "lg.steps": "Pasos que puedes dar ahora mismo",
+        "wh.connect": "Conectar ahora",
+        "wh.norush": "cuando tú quieras — sin prisa",
+        "wh.more": "Aquí estoy si necesitas hablar más"
+      },
+      zh: {
+        "sam.q": "你现在感觉怎么样？（点一个，或忽略我）",
+        "sam.s1": "非常难受",
+        "sam.s2": "有些不安",
+        "sam.s3": "中间",
+        "sam.s4": "还好",
+        "sam.s5": "平静",
+        "fb.ask": "如果你有片刻时间：这对你有帮助吗？你的回答是匿名的，能帮助我们去帮助更多人。",
+        "fb.yes": "有帮助",
+        "fb.some": "有一点",
+        "fb.no": "不太有",
+        "fb.ph": "关于你的感受，或什么对你有帮助，想分享点什么吗？（可选）",
+        "fb.share": "分享",
+        "fb.nothanks": "不用了",
+        "fb.thanks": "谢谢你的分享——这真的能帮助我们去帮助更多人。",
+        "fb.close": "关闭",
+        "mb.title": "你很重要，真正的帮助就在这里等你。",
+        "mb.lead": "InnerLight 目前是为成年人设计的——但我们不会把你拒之门外。你的感受值得一位真正的人来陪伴——一位受过训练、懂得帮助你这个年纪的人，就在此刻：",
+        "mb.b1": "<b>• 和你信任的大人聊聊</b>——父母、家人、学校辅导员、教练或老师。开口的第一句最难；你甚至可以把这个屏幕给他们看。",
+        "mb.b2": "<b>• 拨打或发短信至 988</b>——免费，全天候，他们每天都在帮助年轻人。",
+        "mb.b3": "<b>• 发送 HOME 至 741741</b>——Crisis Text Line，免费，全天候。",
+        "mb.b4": "<b>• Teen Line：发送 TEEN 至 839863</b>——青少年帮助青少年，晚间开放。",
+        "mb.danger": "如果你正处于紧急危险中，请拨打 911。",
+        "mb.ok": "好的",
+        "mb.note": "听起来你可能未满 18 岁——我希望你得到真正合适的帮助：一位受过训练、懂得支持你这个年纪的真人。请看看我刚刚给你的那些选项，也请把你的感受告诉一位你信任的大人。你值得真正的支持。",
+        "sub.note": "我真的很高兴这里能帮到你，也因为在乎你，我想对你说实话：我不是人，也无法替代真实的人与人的连结。我能做的，是此刻陪着你，并帮你联系到真正能陪伴你的人——一位辅导员、一位你信任的人、一个真实的声音。你值得那些，远胜过一块屏幕。要我帮你联系一位真实的人吗？",
+        "gb.n1": "你分享了很多，我真的很高兴你愿意说出来。等你准备好时，最有帮助的下一步是和一位真正的人聊聊——一位能在这一刻之后继续陪伴你的人。只要你愿意，我可以温和地帮你连接。",
+        "gb.n2": "我还在这里陪着你，不用着急。等你准备好，一位真正的人可以和你一起把这份心事继续下去。要我现在帮你联系一个人吗？",
+        "gb.connect": "帮我联系一个人",
+        "gb.keep": "再聊一会儿",
+        "sv.min": "现在还没有太多可以保存的内容。先分享一点你的心事，然后再点保存，我会给你一个私密的返回码。",
+        "sv.q": "保存你现在的进度吗？你会得到一个只有你自己持有的私密返回码。",
+        "sv.auto": "要保存你现在的进度吗？这样你回来时就不用从头开始。",
+        "sv.btn": "保存我的进度",
+        "sv.notnow": "暂不",
+        "sv.saved": "已保存。这是你的返回码——请妥善保管：",
+        "sv.code": "只有这个码能重新打开你的心事——没有它，连我们也无法读取。",
+        "sv.copy": "复制码",
+        "sv.done": "完成",
+        "sv.empty": "还没有可保存的内容——请先分享一点。",
+        "sv.err": "现在无法保存，请再试一次。",
+        "mic.rec": "录音 3 秒——随便说点什么……",
+        "mic.ok": "这就是你的麦克风录到的——如果你能听到自己，说明它正常。",
+        "mic.na": "麦克风现在不可用——没关系，打字同样好用。",
+        "mic.saved": "已保存——按回车发送，或继续编辑",
+        "mic.now": "正在聆听……现在说吧（再次点击麦克风停止）",
+        "mic.noauto": "正在聆听……（此浏览器不会自动把你的话打出来，但麦克风正常——你也可以打字）",
+        "mic.reconn": "正在聆听……（麦克风正常；正在重新连接转写……）",
+        "mic.paused": "聆听已暂停（安静了一会儿）——点击麦克风继续",
+        "mic.speak": "&#127908; 说话",
+        "vp.auto": "语音：自动（最佳可用）",
+        "vp.human": "真人语音",
+        "vp.female": "女声",
+        "vp.male": "男声",
+        "vp.other": "其他语音",
+        "vp.test": "我将使用这个声音。",
+        "scn.aria": "背景场景",
+        "s988": "你并不孤单。如果你需要即时支持，随时可以拨打或发短信至 988，联系 988 自杀与危机生命线。我就在这里陪着你。",
+        "empty": "我还没有听到什么——慢慢来，准备好了再分享。",
+        "interrupted": "连接被打断了一下——请再说一遍。",
+        "lg.based": "根据你分享的内容，关于你的{issue}，有些事你应该知道：",
+        "lg.rights": "你的权利",
+        "lg.ask": "可以问律师的问题",
+        "lg.free": "哪里可以获得免费法律帮助",
+        "lg.steps": "你现在就能做的事",
+        "wh.connect": "现在连接",
+        "wh.norush": "等你准备好——不着急",
+        "wh.more": "如果你还想聊聊，我就在这里"
+      },
+      hi: {
+        "sam.q": "आप इस समय कैसा महसूस कर रहे हैं? (एक चुनें, या मुझे अनदेखा करें)",
+        "sam.s1": "बहुत परेशान",
+        "sam.s2": "बेचैन",
+        "sam.s3": "बीच में",
+        "sam.s4": "ठीक",
+        "sam.s5": "शांत",
+        "fb.ask": "यदि आपके पास एक पल है: क्या इससे मदद मिली? आपका जवाब गुमनाम है और इससे हम दूसरों की मदद कर पाते हैं।",
+        "fb.yes": "मदद मिली",
+        "fb.some": "कुछ हद तक",
+        "fb.no": "ज़्यादा नहीं",
+        "fb.ph": "अपनी भावनाओं या जो मददगार रहा, उसके बारे में कुछ साझा करना चाहें? (वैकल्पिक)",
+        "fb.share": "साझा करें",
+        "fb.nothanks": "नहीं, धन्यवाद",
+        "fb.thanks": "साझा करने के लिए धन्यवाद — इससे हमें सचमुच दूसरों तक पहुँचने में मदद मिलती है।",
+        "fb.close": "बंद करें",
+        "mb.title": "आप मायने रखते हैं, और आपके लिए सच्ची मदद यहाँ है।",
+        "mb.lead": "InnerLight अभी वयस्कों के लिए बना है — लेकिन आपको लौटाया नहीं जा रहा। आप जो महसूस कर रहे हैं, वह एक ऐसे असली इंसान का हक़दार है जो आपकी उम्र के लोगों की मदद के लिए प्रशिक्षित है, अभी:",
+        "mb.b1": "<b>• किसी भरोसेमंद बड़े से बात करें</b> — माता-पिता, परिवार का कोई सदस्य, स्कूल काउंसलर, कोच या शिक्षक। पहला वाक्य शुरू करना सबसे कठिन होता है; आप उन्हें यह स्क्रीन भी दिखा सकते हैं।",
+        "mb.b2": "<b>• 988 पर कॉल या संदेश करें</b> — निःशुल्क, 24/7, और वे हर दिन युवाओं की मदद करते हैं।",
+        "mb.b3": "<b>• 741741 पर HOME लिखकर भेजें</b> — Crisis Text Line, निःशुल्क, 24/7।",
+        "mb.b4": "<b>• Teen Line: 839863 पर TEEN भेजें</b> — किशोर, किशोरों की मदद करते हैं, शाम के समय।",
+        "mb.danger": "यदि आप तत्काल खतरे में हैं, तो 911 पर कॉल करें।",
+        "mb.ok": "ठीक है",
+        "mb.note": "लगता है आपकी उम्र 18 से कम हो सकती है — और मेरी चाह है कि आपको सही मदद मिले: एक असली इंसान, जो आपकी उम्र के लोगों का साथ देने के लिए प्रशिक्षित है। कृपया वे विकल्प देखें जो मैंने अभी दिखाए, और किसी भरोसेमंद बड़े को बताएं कि आप कैसा महसूस कर रहे हैं। आप सच्चे सहारे के हक़दार हैं।",
+        "sub.note": "मुझे सच में खुशी है कि यहाँ होना आपकी मदद कर रहा है, और आपकी परवाह है, इसलिए सच कहना ज़रूरी है: मैं कोई इंसान नहीं हूँ, और असली इंसानी जुड़ाव का विकल्प नहीं हो सकता। अभी मैं आपके साथ हूँ और आपको ऐसे लोगों तक पहुँचाने में मदद कर सकता हूँ जो सच में आपके साथ रह सकते हैं — एक काउंसलर, कोई भरोसेमंद अपना, एक असली आवाज़। आप उसके हक़दार हैं, एक स्क्रीन से कहीं ज़्यादा। क्या मैं आपको किसी असली इंसान तक पहुँचाने में मदद करूँ?",
+        "gb.n1": "आपने बहुत कुछ साझा किया है, और मुझे सच में खुशी है कि आपने किया। जब भी आप तैयार महसूस करें, सबसे मददगार अगला कदम है किसी असली इंसान से बात करना, जो इस पल के बाद भी आपके साथ रह सके। जब भी चाहें, मैं आपको आराम से जोड़ सकता हूँ।",
+        "gb.n2": "मैं अब भी यहीं आपके साथ हूँ, और कोई जल्दी नहीं। जब आप तैयार हों, एक असली इंसान इसे आपके साथ आगे ले जा सकता है। क्या मैं अभी आपको किसी तक पहुँचाने में मदद करूँ?",
+        "gb.connect": "मुझे किसी से जोड़ें",
+        "gb.keep": "थोड़ी देर और बात करें",
+        "sv.min": "अभी सहेजने के लिए ज़्यादा कुछ नहीं है। पहले अपनी बात थोड़ी साझा करें, फिर दोबारा सहेजें दबाएँ — मैं आपको एक निजी वापसी कोड दूँगा।",
+        "sv.q": "जहाँ हैं वहीं सहेजें? आपको एक निजी वापसी कोड मिलेगा जो सिर्फ़ आपके पास होगा।",
+        "sv.auto": "क्या आप जहाँ हैं वहीं सहेजना चाहेंगे, ताकि लौटने पर दोबारा शुरू न करना पड़े?",
+        "sv.btn": "मेरी जगह सहेजें",
+        "sv.notnow": "अभी नहीं",
+        "sv.saved": "सहेज लिया। यह आपका वापसी कोड है — इसे किसी सुरक्षित जगह रखें:",
+        "sv.code": "सिर्फ़ यही कोड आपकी कहानी दोबारा खोल सकता है — इसके बिना हम भी उसे नहीं पढ़ सकते।",
+        "sv.copy": "कोड कॉपी करें",
+        "sv.done": "हो गया",
+        "sv.empty": "अभी कुछ सहेजा नहीं गया — पहले थोड़ा साझा करें।",
+        "sv.err": "अभी सहेजा नहीं जा सका। कृपया दोबारा कोशिश करें।",
+        "mic.rec": "3 सेकंड रिकॉर्ड हो रहा है — कुछ भी बोलें…",
+        "mic.ok": "यही आपके माइक ने रिकॉर्ड किया — अगर आप खुद को सुन पा रहे हैं, तो यह काम कर रहा है।",
+        "mic.na": "माइक्रोफ़ोन अभी उपलब्ध नहीं है — कोई बात नहीं। लिखना भी उतना ही अच्छा काम करता है।",
+        "mic.saved": "सहेज लिया — भेजने के लिए Enter दबाएँ, या संपादित करते रहें",
+        "mic.now": "सुन रहा है… अब बोलें (रोकने के लिए माइक फिर दबाएँ)",
+        "mic.noauto": "सुन रहा है… (इस ब्राउज़र में आपके शब्द अपने-आप नहीं लिखे जाएँगे, पर माइक काम कर रहा है — आप लिख भी सकते हैं)",
+        "mic.reconn": "सुन रहा है… (माइक चालू है; ट्रांसक्रिप्शन दोबारा जुड़ रहा है…)",
+        "mic.paused": "सुनना रुका है (कुछ देर से शांति है) — जारी रखने के लिए माइक दबाएँ",
+        "mic.speak": "&#127908; बोलें",
+        "vp.auto": "आवाज़: स्वचालित (सबसे अच्छी उपलब्ध)",
+        "vp.human": "मानव आवाज़ें",
+        "vp.female": "स्त्री आवाज़ें",
+        "vp.male": "पुरुष आवाज़ें",
+        "vp.other": "अन्य आवाज़ें",
+        "vp.test": "मैं यही आवाज़ इस्तेमाल करूँगा।",
+        "scn.aria": "पृष्ठभूमि दृश्य",
+        "s988": "आप अकेले नहीं हैं। अगर आपको तुरंत सहारे की ज़रूरत है, तो आप कभी भी 988 पर कॉल या संदेश करके 988 सुसाइड एंड क्राइसिस लाइफ़लाइन से जुड़ सकते हैं। मैं यहीं आपके साथ हूँ।",
+        "empty": "मुझे अभी कुछ नहीं मिला — अपना समय लीजिए, जब तैयार हों तब साझा करें।",
+        "interrupted": "कनेक्शन एक पल के लिए बाधित हुआ — कृपया वह दोबारा कहें।",
+        "lg.based": "आपने जो साझा किया, उसके आधार पर आपके {issue} के बारे में कुछ बातें जाननी चाहिए:",
+        "lg.rights": "आपके अधिकार",
+        "lg.ask": "वकील से पूछने योग्य सवाल",
+        "lg.free": "मुफ़्त कानूनी मदद कहाँ मिलेगी",
+        "lg.steps": "अभी उठाए जा सकने वाले कदम",
+        "wh.connect": "अभी जोड़ें",
+        "wh.norush": "जब आप तैयार हों — कोई जल्दी नहीं",
+        "wh.more": "और बात करनी हो तो मैं यहीं हूँ"
+      },
+      pa: {
+        "sam.q": "ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ? (ਇੱਕ ਚੁਣੋ, ਜਾਂ ਮੈਨੂੰ ਅਣਡਿੱਠ ਕਰੋ)",
+        "sam.s1": "ਬਹੁਤ ਪਰੇਸ਼ਾਨ",
+        "sam.s2": "ਬੇਚੈਨ",
+        "sam.s3": "ਵਿਚਕਾਰ",
+        "sam.s4": "ਠੀਕ",
+        "sam.s5": "ਸ਼ਾਂਤ",
+        "fb.ask": "ਜੇ ਤੁਹਾਡੇ ਕੋਲ ਇੱਕ ਪਲ ਹੈ: ਕੀ ਇਸ ਨਾਲ ਮਦਦ ਮਿਲੀ? ਤੁਹਾਡਾ ਜਵਾਬ ਗੁਮਨਾਮ ਹੈ ਅਤੇ ਇਸ ਨਾਲ ਅਸੀਂ ਦੂਜਿਆਂ ਦੀ ਮਦਦ ਕਰ ਪਾਉਂਦੇ ਹਾਂ।",
+        "fb.yes": "ਮਦਦ ਮਿਲੀ",
+        "fb.some": "ਕੁਝ ਹੱਦ ਤੱਕ",
+        "fb.no": "ਬਹੁਤਾ ਨਹੀਂ",
+        "fb.ph": "ਆਪਣੀਆਂ ਭਾਵਨਾਵਾਂ ਜਾਂ ਜੋ ਮਦਦਗਾਰ ਰਿਹਾ, ਉਸ ਬਾਰੇ ਕੁਝ ਸਾਂਝਾ ਕਰਨਾ ਚਾਹੋਗੇ? (ਵਿਕਲਪਿਕ)",
+        "fb.share": "ਸਾਂਝਾ ਕਰੋ",
+        "fb.nothanks": "ਨਹੀਂ, ਧੰਨਵਾਦ",
+        "fb.thanks": "ਸਾਂਝਾ ਕਰਨ ਲਈ ਧੰਨਵਾਦ — ਇਸ ਨਾਲ ਸਾਨੂੰ ਸੱਚਮੁੱਚ ਦੂਜਿਆਂ ਤੱਕ ਪਹੁੰਚਣ ਵਿੱਚ ਮਦਦ ਮਿਲਦੀ ਹੈ।",
+        "fb.close": "ਬੰਦ ਕਰੋ",
+        "mb.title": "ਤੁਸੀਂ ਮਾਅਨੇ ਰੱਖਦੇ ਹੋ, ਅਤੇ ਤੁਹਾਡੇ ਲਈ ਸੱਚੀ ਮਦਦ ਇੱਥੇ ਹੈ।",
+        "mb.lead": "InnerLight ਹਾਲੇ ਬਾਲਗਾਂ ਲਈ ਬਣਿਆ ਹੈ — ਪਰ ਤੁਹਾਨੂੰ ਮੋੜਿਆ ਨਹੀਂ ਜਾ ਰਿਹਾ। ਜੋ ਤੁਸੀਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ, ਉਹ ਇੱਕ ਅਜਿਹੇ ਅਸਲੀ ਇਨਸਾਨ ਦਾ ਹੱਕਦਾਰ ਹੈ ਜੋ ਤੁਹਾਡੀ ਉਮਰ ਦੇ ਕਿਸੇ ਦੀ ਮਦਦ ਲਈ ਸਿੱਖਿਅਤ ਹੈ, ਹੁਣੇ:",
+        "mb.b1": "<b>• ਕਿਸੇ ਭਰੋਸੇਯੋਗ ਵੱਡੇ ਨਾਲ ਗੱਲ ਕਰੋ</b> — ਮਾਤਾ-ਪਿਤਾ, ਪਰਿਵਾਰ ਦਾ ਕੋਈ ਜੀਅ, ਸਕੂਲ ਕਾਊਂਸਲਰ, ਕੋਚ ਜਾਂ ਅਧਿਆਪਕ। ਪਹਿਲਾ ਵਾਕ ਸ਼ੁਰੂ ਕਰਨਾ ਸਭ ਤੋਂ ਔਖਾ ਹੁੰਦਾ ਹੈ; ਤੁਸੀਂ ਉਨ੍ਹਾਂ ਨੂੰ ਇਹ ਸਕ੍ਰੀਨ ਵੀ ਦਿਖਾ ਸਕਦੇ ਹੋ।",
+        "mb.b2": "<b>• 988 ਉੱਤੇ ਕਾਲ ਜਾਂ ਸੁਨੇਹਾ ਭੇਜੋ</b> — ਮੁਫ਼ਤ, 24/7, ਅਤੇ ਉਹ ਹਰ ਰੋਜ਼ ਨੌਜਵਾਨਾਂ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ।",
+        "mb.b3": "<b>• 741741 ਉੱਤੇ HOME ਲਿਖ ਕੇ ਭੇਜੋ</b> — Crisis Text Line, ਮੁਫ਼ਤ, 24/7।",
+        "mb.b4": "<b>• Teen Line: 839863 ਉੱਤੇ TEEN ਭੇਜੋ</b> — ਕਿਸ਼ੋਰ, ਕਿਸ਼ੋਰਾਂ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ, ਸ਼ਾਮ ਨੂੰ।",
+        "mb.danger": "ਜੇ ਤੁਸੀਂ ਤੁਰੰਤ ਖ਼ਤਰੇ ਵਿੱਚ ਹੋ, ਤਾਂ 911 ਉੱਤੇ ਕਾਲ ਕਰੋ।",
+        "mb.ok": "ਠੀਕ ਹੈ",
+        "mb.note": "ਲੱਗਦਾ ਹੈ ਤੁਹਾਡੀ ਉਮਰ 18 ਤੋਂ ਘੱਟ ਹੋ ਸਕਦੀ ਹੈ — ਅਤੇ ਮੇਰੀ ਚਾਹਤ ਹੈ ਕਿ ਤੁਹਾਨੂੰ ਸਹੀ ਮਦਦ ਮਿਲੇ: ਇੱਕ ਅਸਲੀ ਇਨਸਾਨ, ਜੋ ਤੁਹਾਡੀ ਉਮਰ ਦੇ ਕਿਸੇ ਦਾ ਸਾਥ ਦੇਣ ਲਈ ਸਿੱਖਿਅਤ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਉਹ ਵਿਕਲਪ ਦੇਖੋ ਜੋ ਮੈਂ ਹੁਣੇ ਦਿਖਾਏ, ਅਤੇ ਕਿਸੇ ਭਰੋਸੇਯੋਗ ਵੱਡੇ ਨੂੰ ਦੱਸੋ ਕਿ ਤੁਸੀਂ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ। ਤੁਸੀਂ ਸੱਚੇ ਸਹਾਰੇ ਦੇ ਹੱਕਦਾਰ ਹੋ।",
+        "sub.note": "ਮੈਨੂੰ ਸੱਚਮੁੱਚ ਖੁਸ਼ੀ ਹੈ ਕਿ ਇੱਥੇ ਹੋਣਾ ਤੁਹਾਡੀ ਮਦਦ ਕਰ ਰਿਹਾ ਹੈ, ਅਤੇ ਤੁਹਾਡੀ ਪਰਵਾਹ ਹੈ, ਇਸ ਲਈ ਸੱਚ ਕਹਿਣਾ ਜ਼ਰੂਰੀ ਹੈ: ਮੈਂ ਕੋਈ ਇਨਸਾਨ ਨਹੀਂ ਹਾਂ, ਅਤੇ ਅਸਲੀ ਇਨਸਾਨੀ ਸਾਂਝ ਦਾ ਬਦਲ ਨਹੀਂ ਹੋ ਸਕਦਾ। ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ ਅਤੇ ਤੁਹਾਨੂੰ ਉਨ੍ਹਾਂ ਲੋਕਾਂ ਤੱਕ ਪਹੁੰਚਣ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ ਜੋ ਸੱਚਮੁੱਚ ਤੁਹਾਡੇ ਲਈ ਮੌਜੂਦ ਰਹਿ ਸਕਦੇ ਹਨ — ਇੱਕ ਕਾਊਂਸਲਰ, ਕੋਈ ਭਰੋਸੇਯੋਗ ਆਪਣਾ, ਇੱਕ ਅਸਲੀ ਆਵਾਜ਼। ਤੁਸੀਂ ਉਸ ਦੇ ਹੱਕਦਾਰ ਹੋ, ਇੱਕ ਸਕ੍ਰੀਨ ਤੋਂ ਕਿਤੇ ਵੱਧ। ਕੀ ਮੈਂ ਤੁਹਾਨੂੰ ਕਿਸੇ ਅਸਲੀ ਇਨਸਾਨ ਤੱਕ ਪਹੁੰਚਣ ਵਿੱਚ ਮਦਦ ਕਰਾਂ?",
+        "gb.n1": "ਤੁਸੀਂ ਬਹੁਤ ਕੁਝ ਸਾਂਝਾ ਕੀਤਾ ਹੈ, ਅਤੇ ਮੈਨੂੰ ਸੱਚਮੁੱਚ ਖੁਸ਼ੀ ਹੈ ਕਿ ਤੁਸੀਂ ਕੀਤਾ। ਜਦੋਂ ਵੀ ਤੁਸੀਂ ਤਿਆਰ ਮਹਿਸੂਸ ਕਰੋ, ਸਭ ਤੋਂ ਮਦਦਗਾਰ ਅਗਲਾ ਕਦਮ ਹੈ ਕਿਸੇ ਅਸਲੀ ਇਨਸਾਨ ਨਾਲ ਗੱਲ ਕਰਨਾ, ਜੋ ਇਸ ਪਲ ਤੋਂ ਬਾਅਦ ਵੀ ਤੁਹਾਡੇ ਨਾਲ ਰਹਿ ਸਕੇ। ਜਦੋਂ ਵੀ ਚਾਹੋ, ਮੈਂ ਤੁਹਾਨੂੰ ਹੌਲੀ-ਹੌਲੀ ਜੋੜ ਸਕਦਾ ਹਾਂ।",
+        "gb.n2": "ਮੈਂ ਹਾਲੇ ਵੀ ਇੱਥੇ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ, ਅਤੇ ਕੋਈ ਕਾਹਲੀ ਨਹੀਂ। ਜਦੋਂ ਤੁਸੀਂ ਤਿਆਰ ਹੋਵੋ, ਇੱਕ ਅਸਲੀ ਇਨਸਾਨ ਇਸਨੂੰ ਤੁਹਾਡੇ ਨਾਲ ਅੱਗੇ ਲੈ ਜਾ ਸਕਦਾ ਹੈ। ਕੀ ਮੈਂ ਹੁਣੇ ਤੁਹਾਨੂੰ ਕਿਸੇ ਤੱਕ ਪਹੁੰਚਣ ਵਿੱਚ ਮਦਦ ਕਰਾਂ?",
+        "gb.connect": "ਮੈਨੂੰ ਕਿਸੇ ਨਾਲ ਜੋੜੋ",
+        "gb.keep": "ਥੋੜ੍ਹੀ ਦੇਰ ਹੋਰ ਗੱਲ ਕਰੀਏ",
+        "sv.min": "ਹਾਲੇ ਸਾਂਭਣ ਲਈ ਬਹੁਤਾ ਕੁਝ ਨਹੀਂ ਹੈ। ਪਹਿਲਾਂ ਆਪਣੀ ਗੱਲ ਥੋੜ੍ਹੀ ਸਾਂਝੀ ਕਰੋ, ਫਿਰ ਦੁਬਾਰਾ ਸਾਂਭੋ ਦਬਾਓ — ਮੈਂ ਤੁਹਾਨੂੰ ਇੱਕ ਨਿੱਜੀ ਵਾਪਸੀ ਕੋਡ ਦਿਆਂਗਾ।",
+        "sv.q": "ਜਿੱਥੇ ਹੋ ਉੱਥੇ ਸਾਂਭੀਏ? ਤੁਹਾਨੂੰ ਇੱਕ ਨਿੱਜੀ ਵਾਪਸੀ ਕੋਡ ਮਿਲੇਗਾ ਜੋ ਸਿਰਫ਼ ਤੁਹਾਡੇ ਕੋਲ ਹੋਵੇਗਾ।",
+        "sv.auto": "ਕੀ ਤੁਸੀਂ ਜਿੱਥੇ ਹੋ ਉੱਥੇ ਸਾਂਭਣਾ ਚਾਹੋਗੇ, ਤਾਂ ਜੋ ਵਾਪਸ ਆਉਣ ਉੱਤੇ ਮੁੜ ਤੋਂ ਸ਼ੁਰੂ ਨਾ ਕਰਨਾ ਪਵੇ?",
+        "sv.btn": "ਮੇਰੀ ਥਾਂ ਸਾਂਭੋ",
+        "sv.notnow": "ਹੁਣ ਨਹੀਂ",
+        "sv.saved": "ਸਾਂਭ ਲਿਆ। ਇਹ ਤੁਹਾਡਾ ਵਾਪਸੀ ਕੋਡ ਹੈ — ਇਸਨੂੰ ਕਿਸੇ ਸੁਰੱਖਿਅਤ ਥਾਂ ਰੱਖੋ:",
+        "sv.code": "ਸਿਰਫ਼ ਇਹੀ ਕੋਡ ਤੁਹਾਡੀ ਕਹਾਣੀ ਮੁੜ ਖੋਲ੍ਹ ਸਕਦਾ ਹੈ — ਇਸ ਤੋਂ ਬਿਨਾਂ ਅਸੀਂ ਵੀ ਇਸਨੂੰ ਨਹੀਂ ਪੜ੍ਹ ਸਕਦੇ।",
+        "sv.copy": "ਕੋਡ ਕਾਪੀ ਕਰੋ",
+        "sv.done": "ਹੋ ਗਿਆ",
+        "sv.empty": "ਹਾਲੇ ਕੁਝ ਸਾਂਭਿਆ ਨਹੀਂ ਗਿਆ — ਪਹਿਲਾਂ ਥੋੜ੍ਹਾ ਸਾਂਝਾ ਕਰੋ।",
+        "sv.err": "ਇਸ ਵੇਲੇ ਸਾਂਭਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "mic.rec": "3 ਸਕਿੰਟ ਰਿਕਾਰਡ ਹੋ ਰਿਹਾ ਹੈ — ਕੁਝ ਵੀ ਬੋਲੋ…",
+        "mic.ok": "ਇਹੀ ਤੁਹਾਡੇ ਮਾਈਕ ਨੇ ਰਿਕਾਰਡ ਕੀਤਾ — ਜੇ ਤੁਸੀਂ ਆਪਣੇ ਆਪ ਨੂੰ ਸੁਣ ਸਕਦੇ ਹੋ, ਤਾਂ ਇਹ ਕੰਮ ਕਰਦਾ ਹੈ।",
+        "mic.na": "ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਇਸ ਵੇਲੇ ਉਪਲਬਧ ਨਹੀਂ ਹੈ — ਕੋਈ ਗੱਲ ਨਹੀਂ। ਲਿਖਣਾ ਵੀ ਓਨਾ ਹੀ ਚੰਗਾ ਕੰਮ ਕਰਦਾ ਹੈ।",
+        "mic.saved": "ਸਾਂਭ ਲਿਆ — ਭੇਜਣ ਲਈ Enter ਦਬਾਓ, ਜਾਂ ਸੋਧਦੇ ਰਹੋ",
+        "mic.now": "ਸੁਣ ਰਿਹਾ ਹੈ… ਹੁਣ ਬੋਲੋ (ਰੋਕਣ ਲਈ ਮਾਈਕ ਫਿਰ ਦਬਾਓ)",
+        "mic.noauto": "ਸੁਣ ਰਿਹਾ ਹੈ… (ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਤੁਹਾਡੇ ਸ਼ਬਦ ਆਪਣੇ-ਆਪ ਨਹੀਂ ਲਿਖੇ ਜਾਣਗੇ, ਪਰ ਮਾਈਕ ਕੰਮ ਕਰ ਰਿਹਾ ਹੈ — ਤੁਸੀਂ ਲਿਖ ਵੀ ਸਕਦੇ ਹੋ)",
+        "mic.reconn": "ਸੁਣ ਰਿਹਾ ਹੈ… (ਮਾਈਕ ਚਾਲੂ ਹੈ; ਲਿਪੀਅੰਤਰਨ ਮੁੜ ਜੁੜ ਰਿਹਾ ਹੈ…)",
+        "mic.paused": "ਸੁਣਨਾ ਰੁਕਿਆ ਹੈ (ਕੁਝ ਦੇਰ ਤੋਂ ਚੁੱਪ ਹੈ) — ਜਾਰੀ ਰੱਖਣ ਲਈ ਮਾਈਕ ਦਬਾਓ",
+        "mic.speak": "&#127908; ਬੋਲੋ",
+        "vp.auto": "ਆਵਾਜ਼: ਆਟੋਮੈਟਿਕ (ਸਭ ਤੋਂ ਵਧੀਆ ਉਪਲਬਧ)",
+        "vp.human": "ਮਨੁੱਖੀ ਆਵਾਜ਼ਾਂ",
+        "vp.female": "ਇਸਤਰੀ ਆਵਾਜ਼ਾਂ",
+        "vp.male": "ਮਰਦ ਆਵਾਜ਼ਾਂ",
+        "vp.other": "ਹੋਰ ਆਵਾਜ਼ਾਂ",
+        "vp.test": "ਮੈਂ ਇਹੀ ਆਵਾਜ਼ ਵਰਤਾਂਗਾ।",
+        "scn.aria": "ਪਿਛੋਕੜ ਦ੍ਰਿਸ਼",
+        "s988": "ਤੁਸੀਂ ਇਕੱਲੇ ਨਹੀਂ ਹੋ। ਜੇ ਤੁਹਾਨੂੰ ਤੁਰੰਤ ਸਹਾਰੇ ਦੀ ਲੋੜ ਹੈ, ਤਾਂ ਤੁਸੀਂ ਕਦੇ ਵੀ 988 ਉੱਤੇ ਕਾਲ ਜਾਂ ਸੁਨੇਹਾ ਭੇਜ ਕੇ 988 ਸੁਸਾਈਡ ਐਂਡ ਕ੍ਰਾਈਸਿਸ ਲਾਈਫ਼ਲਾਈਨ ਨਾਲ ਜੁੜ ਸਕਦੇ ਹੋ। ਮੈਂ ਇੱਥੇ ਹੀ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।",
+        "empty": "ਮੈਨੂੰ ਹਾਲੇ ਕੁਝ ਨਹੀਂ ਮਿਲਿਆ — ਆਪਣਾ ਸਮਾਂ ਲਵੋ, ਜਦੋਂ ਤਿਆਰ ਹੋਵੋ ਤਾਂ ਸਾਂਝਾ ਕਰੋ।",
+        "interrupted": "ਕੁਨੈਕਸ਼ਨ ਇੱਕ ਪਲ ਲਈ ਰੁਕ ਗਿਆ — ਕਿਰਪਾ ਕਰਕੇ ਉਹ ਦੁਬਾਰਾ ਕਹੋ।",
+        "lg.based": "ਤੁਸੀਂ ਜੋ ਸਾਂਝਾ ਕੀਤਾ, ਉਸ ਦੇ ਆਧਾਰ ਉੱਤੇ ਤੁਹਾਡੇ {issue} ਬਾਰੇ ਕੁਝ ਗੱਲਾਂ ਜਾਣਨੀਆਂ ਚਾਹੀਦੀਆਂ ਹਨ:",
+        "lg.rights": "ਤੁਹਾਡੇ ਹੱਕ",
+        "lg.ask": "ਵਕੀਲ ਤੋਂ ਪੁੱਛਣ ਵਾਲੇ ਸਵਾਲ",
+        "lg.free": "ਮੁਫ਼ਤ ਕਾਨੂੰਨੀ ਮਦਦ ਕਿੱਥੋਂ ਮਿਲੇਗੀ",
+        "lg.steps": "ਹੁਣੇ ਚੁੱਕੇ ਜਾ ਸਕਣ ਵਾਲੇ ਕਦਮ",
+        "wh.connect": "ਹੁਣੇ ਜੋੜੋ",
+        "wh.norush": "ਜਦੋਂ ਤੁਸੀਂ ਤਿਆਰ ਹੋਵੋ — ਕੋਈ ਕਾਹਲੀ ਨਹੀਂ",
+        "wh.more": "ਹੋਰ ਗੱਲ ਕਰਨੀ ਹੋਵੇ ਤਾਂ ਮੈਂ ਇੱਥੇ ਹਾਂ"
+      },
+      bn: {
+        "sam.q": "আপনি এই মুহূর্তে কেমন বোধ করছেন? (একটি বেছে নিন, বা আমাকে উপেক্ষা করুন)",
+        "sam.s1": "খুব কষ্টে",
+        "sam.s2": "অস্থির",
+        "sam.s3": "মাঝামাঝি",
+        "sam.s4": "ঠিক আছি",
+        "sam.s5": "শান্ত",
+        "fb.ask": "যদি এক মুহূর্ত সময় থাকে: এটি কি সাহায্য করেছে? আপনার উত্তর বেনামি, আর তা আমাদের অন্যদের সাহায্য করতে সাহায্য করে।",
+        "fb.yes": "সাহায্য করেছে",
+        "fb.some": "কিছুটা",
+        "fb.no": "তেমন নয়",
+        "fb.ph": "আপনার অনুভূতি বা কী সাহায্য করেছে, সে সম্পর্কে কিছু ভাগ করতে চান? (ঐচ্ছিক)",
+        "fb.share": "শেয়ার করুন",
+        "fb.nothanks": "না, ধন্যবাদ",
+        "fb.thanks": "ভাগ করার জন্য ধন্যবাদ — এটি সত্যিই আমাদের অন্যদের কাছে পৌঁছাতে সাহায্য করে।",
+        "fb.close": "বন্ধ করুন",
+        "mb.title": "আপনি গুরুত্বপূর্ণ, আর আপনার জন্য সত্যিকারের সাহায্য এখানে আছে।",
+        "mb.lead": "InnerLight এখন প্রাপ্তবয়স্কদের জন্য তৈরি — কিন্তু আপনাকে ফিরিয়ে দেওয়া হচ্ছে না। আপনি যা অনুভব করছেন, তার জন্য এমন একজন সত্যিকারের মানুষ প্রাপ্য, যিনি আপনার বয়সীদের সাহায্য করতে প্রশিক্ষিত, এখনই:",
+        "mb.b1": "<b>• বিশ্বস্ত কোনো বড় মানুষের সাথে কথা বলুন</b> — বাবা-মা, পরিবারের কেউ, স্কুল কাউন্সেলর, কোচ বা শিক্ষক। প্রথম বাক্যটি শুরু করাই সবচেয়ে কঠিন; চাইলে তাদের এই স্ক্রিনটিও দেখাতে পারেন।",
+        "mb.b2": "<b>• 988 নম্বরে কল বা টেক্সট করুন</b> — বিনামূল্যে, ২৪/৭, আর তারা প্রতিদিন তরুণদের সাহায্য করেন।",
+        "mb.b3": "<b>• 741741 নম্বরে HOME লিখে পাঠান</b> — Crisis Text Line, বিনামূল্যে, ২৪/৭।",
+        "mb.b4": "<b>• Teen Line: 839863 নম্বরে TEEN পাঠান</b> — কিশোররা কিশোরদের সাহায্য করে, সন্ধ্যায়।",
+        "mb.danger": "আপনি তাৎক্ষণিক বিপদে থাকলে 911 নম্বরে কল করুন।",
+        "mb.ok": "ঠিক আছে",
+        "mb.note": "মনে হচ্ছে আপনার বয়স ১৮-র কম হতে পারে — আর আমি চাই আপনি সঠিক সাহায্য পান: একজন সত্যিকারের মানুষ, যিনি আপনার বয়সীদের পাশে দাঁড়াতে প্রশিক্ষিত। দয়া করে এইমাত্র দেখানো বিকল্পগুলো দেখুন, আর বিশ্বস্ত কোনো বড় মানুষকে বলুন আপনি কেমন বোধ করছেন। আপনি সত্যিকারের সহায়তা প্রাপ্য।",
+        "sub.note": "আমি সত্যিই খুশি যে এখানে থাকা আপনাকে সাহায্য করছে, আর আপনার কথা ভাবি বলেই সৎ থাকা জরুরি: আমি মানুষ নই, আর সত্যিকারের মানবিক সংযোগের বিকল্প হতে পারি না। আমি যা পারি তা হলো এই মুহূর্তে আপনার পাশে থাকা, আর এমন মানুষদের কাছে পৌঁছাতে সাহায্য করা যারা সত্যিই আপনার পাশে থাকতে পারেন — একজন কাউন্সেলর, বিশ্বস্ত কেউ, একটি সত্যিকারের কণ্ঠ। আপনি তা প্রাপ্য, একটি স্ক্রিনের চেয়ে অনেক বেশি। আমি কি আপনাকে একজন সত্যিকারের মানুষের কাছে পৌঁছাতে সাহায্য করব?",
+        "gb.n1": "আপনি অনেক কিছু ভাগ করেছেন, আর আমি সত্যিই খুশি যে করেছেন। যখনই প্রস্তুত মনে হবে, সবচেয়ে সহায়ক পরবর্তী পদক্ষেপ হলো একজন সত্যিকারের মানুষের সাথে কথা বলা, যিনি এই মুহূর্তের পরেও আপনার পাশে থাকতে পারবেন। যখন চাইবেন, আমি আপনাকে আলতোভাবে সংযুক্ত করতে পারি।",
+        "gb.n2": "আমি এখনও এখানে আপনার সাথে আছি, কোনো তাড়া নেই। আপনি প্রস্তুত হলে, একজন সত্যিকারের মানুষ এটি আপনার সাথে এগিয়ে নিতে পারবেন। আমি কি এখন আপনাকে কারো কাছে পৌঁছাতে সাহায্য করব?",
+        "gb.connect": "আমাকে কারো সাথে যুক্ত করুন",
+        "gb.keep": "আরেকটু কথা বলি",
+        "sv.min": "এখনও সংরক্ষণ করার মতো তেমন কিছু নেই। আগে একটু আপনার কথা ভাগ করুন, তারপর আবার সংরক্ষণ চাপুন — আমি আপনাকে একটি ব্যক্তিগত ফেরার কোড দেব।",
+        "sv.q": "যেখানে আছেন সেখানেই সংরক্ষণ করবেন? আপনি একটি ব্যক্তিগত ফেরার কোড পাবেন যা শুধু আপনার কাছেই থাকবে।",
+        "sv.auto": "যেখানে আছেন সেখানে সংরক্ষণ করতে চান, যাতে ফিরে এলে আবার শুরু থেকে করতে না হয়?",
+        "sv.btn": "আমার জায়গা সংরক্ষণ করুন",
+        "sv.notnow": "এখন নয়",
+        "sv.saved": "সংরক্ষিত হয়েছে। এটি আপনার ফেরার কোড — নিরাপদ কোথাও রাখুন:",
+        "sv.code": "শুধু এই কোডটিই আপনার কথা আবার খুলতে পারে — এটি ছাড়া আমরাও তা পড়তে পারি না।",
+        "sv.copy": "কোড কপি করুন",
+        "sv.done": "সম্পন্ন",
+        "sv.empty": "এখনও কিছু সংরক্ষিত হয়নি — আগে একটু ভাগ করুন।",
+        "sv.err": "এই মুহূর্তে সংরক্ষণ করা গেল না। আবার চেষ্টা করুন।",
+        "mic.rec": "৩ সেকেন্ড রেকর্ড হচ্ছে — যা খুশি বলুন…",
+        "mic.ok": "এটিই আপনার মাইক ধরেছে — নিজের কণ্ঠ শুনতে পেলে, এটি কাজ করছে।",
+        "mic.na": "মাইক্রোফোন এখন পাওয়া যাচ্ছে না — সমস্যা নেই। লেখাও সমান ভালো কাজ করে।",
+        "mic.saved": "সংরক্ষিত — পাঠাতে Enter চাপুন, বা সম্পাদনা চালিয়ে যান",
+        "mic.now": "শুনছি… এখন বলুন (থামাতে আবার মাইক চাপুন)",
+        "mic.noauto": "শুনছি… (এই ব্রাউজারে আপনার কথা নিজে থেকে লেখা হবে না, তবে মাইক কাজ করছে — আপনি লিখতেও পারেন)",
+        "mic.reconn": "শুনছি… (মাইক চলছে; প্রতিলিপি আবার সংযুক্ত হচ্ছে…)",
+        "mic.paused": "শোনা থেমেছে (কিছুক্ষণ নীরবতা) — চালিয়ে যেতে মাইক চাপুন",
+        "mic.speak": "&#127908; বলুন",
+        "vp.auto": "কণ্ঠ: স্বয়ংক্রিয় (সেরা উপলব্ধ)",
+        "vp.human": "মানব কণ্ঠ",
+        "vp.female": "নারী কণ্ঠ",
+        "vp.male": "পুরুষ কণ্ঠ",
+        "vp.other": "অন্যান্য কণ্ঠ",
+        "vp.test": "আমি এই কণ্ঠই ব্যবহার করব।",
+        "scn.aria": "পটভূমি দৃশ্য",
+        "s988": "আপনি একা নন। তাৎক্ষণিক সহায়তা দরকার হলে, যেকোনো সময় 988 নম্বরে কল বা টেক্সট করে 988 সুইসাইড অ্যান্ড ক্রাইসিস লাইফলাইনে পৌঁছাতে পারেন। আমি এখানেই আপনার সাথে আছি।",
+        "empty": "আমি এখনও কিছু পাইনি — সময় নিন, প্রস্তুত হলে ভাগ করুন।",
+        "interrupted": "সংযোগ এক মুহূর্তের জন্য বাধা পেয়েছে — দয়া করে আবার বলুন।",
+        "lg.based": "আপনি যা ভাগ করেছেন তার ভিত্তিতে, আপনার {issue} সম্পর্কে কিছু বিষয় জানা উচিত:",
+        "lg.rights": "আপনার অধিকার",
+        "lg.ask": "আইনজীবীকে জিজ্ঞাসার প্রশ্ন",
+        "lg.free": "বিনামূল্যে আইনি সাহায্য কোথায় পাবেন",
+        "lg.steps": "এখনই যা করতে পারেন",
+        "wh.connect": "এখনই যুক্ত করুন",
+        "wh.norush": "আপনি প্রস্তুত হলে — কোনো তাড়া নেই",
+        "wh.more": "আরও কথা বলতে চাইলে আমি এখানে আছি"
+      },
+      tl: {
+        "sam.q": "Ano ang nararamdaman mo ngayon? (mag-tap ng isa, o balewalain ako)",
+        "sam.s1": "Lubhang naguguluhan",
+        "sam.s2": "Balisa",
+        "sam.s3": "Nasa gitna",
+        "sam.s4": "Ayos lang",
+        "sam.s5": "Panatag",
+        "fb.ask": "Kung may sandali ka: nakatulong ba ito? Anonymous ang sagot mo at nakakatulong ito para matulungan namin ang iba.",
+        "fb.yes": "Nakatulong",
+        "fb.some": "Medyo",
+        "fb.no": "Hindi masyado",
+        "fb.ph": "May gusto ka bang ibahagi tungkol sa nararamdaman mo, o kung ano ang nakatulong? (opsyonal)",
+        "fb.share": "Ibahagi",
+        "fb.nothanks": "Hindi na, salamat",
+        "fb.thanks": "Salamat sa pagbabahagi — totoong nakakatulong ito para maabot namin ang iba.",
+        "fb.close": "Isara",
+        "mb.title": "Mahalaga ka, at may totoong tulong dito para sa iyo.",
+        "mb.lead": "Para sa mga adult ang InnerLight sa ngayon — pero hindi ka tinataboy. Ang nararamdaman mo ay karapat-dapat sa isang totoong tao na sanay tumulong sa kaedad mo, ngayon din:",
+        "mb.b1": "<b>• Kausapin ang isang pinagkakatiwalaang adult</b> — magulang, kapamilya, school counselor, coach, o guro. Ang pagsisimula ng unang pangungusap ang pinakamahirap; puwede mo pang ipakita sa kanila ang screen na ito.",
+        "mb.b2": "<b>• Tumawag o mag-text sa 988</b> — libre, 24/7, at tumutulong sila sa mga kabataan araw-araw.",
+        "mb.b3": "<b>• I-text ang HOME sa 741741</b> — Crisis Text Line, libre, 24/7.",
+        "mb.b4": "<b>• Teen Line: i-text ang TEEN sa 839863</b> — mga teen na tumutulong sa kapwa teen, tuwing gabi.",
+        "mb.danger": "Kung nasa agarang panganib ka, tumawag sa 911.",
+        "mb.ok": "Okay",
+        "mb.note": "Mukhang maaaring wala ka pang 18 — at gusto ko ng tamang tulong para sa iyo: isang totoong tao na sanay sumuporta sa kaedad mo. Pakitingnan ang mga opsyong ipinakita ko, at sabihin sa isang pinagkakatiwalaang adult ang nararamdaman mo. Karapat-dapat ka sa totoong suporta.",
+        "sub.note": "Tuwang-tuwa ako na nakakatulong sa iyo ang pananatili rito, at dahil mahalaga ka sa akin, magiging tapat ako: hindi ako tao, at hindi ko mapapalitan ang totoong ugnayan ng tao. Ang kaya kong gawin ay samahan ka ngayon at tulungan kang makarating sa mga taong tunay na makakasama mo — isang counselor, isang taong pinagkakatiwalaan mo, isang totoong boses. Karapat-dapat ka roon, higit pa sa isang screen. Gusto mo bang tulungan kitang makaugnay sa isang totoong tao?",
+        "gb.n1": "Marami kang naibahagi, at tuwang-tuwa ako na ginawa mo. Kapag handa ka na, ang pinakamakakatulong na susunod na hakbang ay makipag-usap sa isang totoong tao na maaaring manatili sa iyo lampas sa sandaling ito. Maaari kitang ikonekta nang mahinahon, kailan mo man gusto.",
+        "gb.n2": "Nandito pa rin ako kasama mo, at walang pagmamadali. Kapag handa ka na, may totoong tao na maaaring magpatuloy nito kasama mo. Gusto mo bang tulungan kitang makaugnay sa isang tao ngayon?",
+        "gb.connect": "Ikonekta mo ako sa isang tao",
+        "gb.keep": "Mag-usap pa tayo sandali",
+        "sv.min": "Wala pang gaanong maise-save. Magbahagi muna nang kaunti, pagkatapos ay i-tap muli ang Save at bibigyan kita ng pribadong return code.",
+        "sv.q": "I-save ang kinaroroonan mo? Makakakuha ka ng pribadong return code na ikaw lang ang may hawak.",
+        "sv.auto": "Gusto mo bang i-save ang kinaroroonan mo, para hindi ka mag-uumpisa muli kapag bumalik ka?",
+        "sv.btn": "I-save ang lugar ko",
+        "sv.notnow": "Hindi muna",
+        "sv.saved": "Na-save na. Ito ang iyong return code — itago ito sa ligtas na lugar:",
+        "sv.code": "Tanging ang code na ito ang makakapagbukas muli ng iyong kuwento — kahit kami ay hindi ito mababasa nang wala nito.",
+        "sv.copy": "Kopyahin ang code",
+        "sv.done": "Tapos na",
+        "sv.empty": "Wala pang na-save — magbahagi muna nang kaunti.",
+        "sv.err": "Hindi ma-save sa ngayon. Pakisubukan muli.",
+        "mic.rec": "Nagre-record ng 3 segundo — magsalita ka lang…",
+        "mic.ok": "Iyan ang nakuha ng mic mo — kung naririnig mo ang sarili mo, gumagana ito.",
+        "mic.na": "Hindi available ang mikropono ngayon — ayos lang. Kasinghusay din ang pag-type.",
+        "mic.saved": "Na-save — pindutin ang Enter para ipadala, o ituloy ang pag-edit",
+        "mic.now": "Nakikinig… magsalita na (i-tap muli ang mic para huminto)",
+        "mic.noauto": "Nakikinig… (hindi awtomatikong mata-type ang salita mo sa browser na ito, pero gumagana ang mic — puwede ka ring mag-type)",
+        "mic.reconn": "Nakikinig… (gumagana ang mic; muling kumokonekta ang transcription…)",
+        "mic.paused": "Naka-pause ang pakikinig (tahimik nang ilang sandali) — i-tap ang mic para magpatuloy",
+        "mic.speak": "&#127908; Magsalita",
+        "vp.auto": "Boses: awtomatiko (pinakamahusay na available)",
+        "vp.human": "Mga boses ng tao",
+        "vp.female": "Mga boses na babae",
+        "vp.male": "Mga boses na lalaki",
+        "vp.other": "Iba pang boses",
+        "vp.test": "Ito ang boses na gagamitin ko.",
+        "scn.aria": "Background na tanawin",
+        "s988": "Hindi ka nag-iisa. Kung kailangan mo ng agarang suporta, maaari mong maabot ang 988 Suicide and Crisis Lifeline anumang oras sa pagtawag o pag-text sa 988. Nandito lang ako kasama mo.",
+        "empty": "Wala pa akong nakuha — huwag magmadali, magbahagi kapag handa ka na.",
+        "interrupted": "May sandaling gumambala sa koneksyon — pakisabi muli.",
+        "lg.based": "Batay sa ibinahagi mo, may ilang bagay kang dapat malaman tungkol sa iyong {issue}:",
+        "lg.rights": "Ang iyong mga karapatan",
+        "lg.ask": "Mga tanong sa abogado",
+        "lg.free": "Saan makakakuha ng libreng tulong legal",
+        "lg.steps": "Mga hakbang na magagawa mo ngayon",
+        "wh.connect": "Ikonekta na",
+        "wh.norush": "kapag handa ka na — walang pagmamadali",
+        "wh.more": "Nandito ako kung gusto mo pang mag-usap"
+      },
+      to: {
+        "sam.q": "ʻOkú ke ongoʻi fēfē he taimí ni? (lomiʻi ha taha, pe tukunoaʻi au)",
+        "sam.s1": "Faingataʻaʻia lahi",
+        "sam.s2": "Hohaʻa",
+        "sam.s3": "Vahaʻa",
+        "sam.s4": "Sai pē",
+        "sam.s5": "Nonga",
+        "fb.ask": "Kapau ʻoku ʻi ai haʻo kiʻi taimi: naʻe tokoni eni? ʻOku taʻehingoa hoʻo talí pea ʻoku tokoni ia ke mau tokoniʻi ʻa e niʻihi kehe.",
+        "fb.yes": "Naʻe tokoni",
+        "fb.some": "Siʻisiʻi pē",
+        "fb.no": "ʻIkai fau",
+        "fb.ph": "ʻOku ʻi ai ha meʻa ʻokú ke fie vahevahe fekauʻaki mo hoʻo ongoʻí, pe ko e hā naʻe tokoni? (fili pē)",
+        "fb.share": "Vahevahe",
+        "fb.nothanks": "ʻIkai, mālō",
+        "fb.thanks": "Mālō hoʻo vahevahe — ʻoku tokoni moʻoni ia ke mau aʻu atu ki he niʻihi kehe.",
+        "fb.close": "Tāpuni",
+        "mb.title": "ʻOkú ke mahuʻinga, pea ʻoku ʻi heni ha tokoni moʻoni maʻau.",
+        "mb.lead": "ʻOku fokotuʻu ʻa e InnerLight he taimí ni maʻá e kakai lalahi — ka ʻoku ʻikai tekeʻi atu koe. Ko e meʻa ʻokú ke ongoʻí ʻoku taau ke tokoniʻi koe ʻe ha tokotaha moʻoni kuo akoʻi ke tokoni ki ha taha ʻi ho taʻu motuʻá, he taimí ni:",
+        "mb.b1": "<b>• Talanoa ki ha tokotaha lahi ʻokú ke falala ki ai</b> — ha mātuʻa, ha mēmipa ʻo e fāmilí, faleʻi ʻi he akó, faiako sipoti, pe faiako. Ko hono kamataʻi ʻo e ʻuluaki leá ʻa e konga faingataʻa tahá; te ke lava foki ʻo fakahā kiate kinautolu ʻa e sikilini ko ʻení.",
+        "mb.b2": "<b>• Telefoni pe fai ha pōpoaki ki he 988</b> — taʻetotongi, 24/7, pea ʻoku nau tokoniʻi ʻa e toʻutupú he ʻaho kotoa pē.",
+        "mb.b3": "<b>• Fai ha pōpoaki HOME ki he 741741</b> — Crisis Text Line, taʻetotongi, 24/7.",
+        "mb.b4": "<b>• Teen Line: fai ha pōpoaki TEEN ki he 839863</b> — talavou ʻoku tokoni ki he talavou, ʻi he ngaahi efiafí.",
+        "mb.danger": "Kapau ʻokú ke ʻi ha tuʻunga fakatuʻutāmaki vave, telefoni ki he 911.",
+        "mb.ok": "ʻOku sai",
+        "mb.note": "ʻOku hangē ʻokú ke kei siʻi hifo he taʻu 18 — pea ʻoku ou fakaʻamu ke ke maʻu ʻa e tokoni totonú: ha tokotaha moʻoni kuo akoʻi ke poupouʻi ha taha ʻi ho taʻu motuʻá. Kātaki ʻo vakai ki he ngaahi fili naʻá ku toki fakahaá, pea talaange ki ha tokotaha lahi ʻokú ke falala ki aí ʻa e anga hoʻo ongoʻí. ʻOkú ke taau mo ha poupou moʻoni.",
+        "sub.note": "ʻOku ou fiefia moʻoni ʻoku tokoni ʻa e ʻi hení kiate koe, pea koeʻuhí ʻoku ou tokanga kiate koe, ʻoku totonu ke u faitotonu: ʻoku ʻikai ko ha tangata au, pea ʻoku ʻikai lava ke u fetongi ʻa e fetuʻutaki moʻoni fakaetangatá. Ko e meʻa te u lava ʻo faí ko e nofo mo koe he taimí ni, mo tokoni ke ke aʻu ki he kakai ʻe lava ke nau ʻiate koe moʻoni — ha faleʻi, ha taha ʻokú ke falala ki ai, ha leʻo moʻoni. ʻOkú ke taau mo ia, ʻo laka ange ʻi ha sikilini. Te ke loto ke u tokoni ke ke aʻu ki ha tokotaha moʻoni?",
+        "gb.n1": "Kuó ke vahevahe ha meʻa lahi, pea ʻoku ou fiefia moʻoni naʻá ke fai ia. ʻI he taimi ʻokú ke ongoʻi mateuteu aí, ko e sitepu hoko ʻoku tokoni tahá ko e talanoa mo ha tokotaha moʻoni ʻe lava ke ne ʻiate koe ʻo laka atu he mōmeniti ko ʻení. Te u lava ʻo fakafehokotaki koe fakaʻaufuli, ʻi ha taimi pē ʻokú ke loto ki ai.",
+        "gb.n2": "ʻOku ou kei ʻi heni pē mo koe, pea ʻoku ʻikai ha fakavavevave. ʻI hoʻo mateuteú, ʻe lava ʻe ha tokotaha moʻoni ʻo hoko atu eni mo koe. Te ke loto ke u tokoni ke ke aʻu ki ha taha he taimí ni?",
+        "gb.connect": "Fakafehokotaki au ki ha taha",
+        "gb.keep": "Toe talanoa siʻi pē",
+        "sv.min": "ʻOku teʻeki ai ha meʻa lahi ke tauhi. ʻUluaki vahevahe siʻi hoʻo talanoá, pea toe lomiʻi ʻa e Tauhi — te u ʻoatu ha kōti foki fakapulipuli maʻau.",
+        "sv.q": "Tauhi ʻa e feituʻu ʻokú ke ʻi aí? Te ke maʻu ha kōti foki fakapulipuli ʻoku ke maʻu pē ʻe koe.",
+        "sv.auto": "Te ke loto ke tauhi ʻa e feituʻu ʻokú ke ʻi aí, koeʻuhí ke ʻoua te ke toe kamata mei he kamataʻangá ʻi hoʻo foki maí?",
+        "sv.btn": "Tauhi hoku tuʻungá",
+        "sv.notnow": "ʻIkai he taimí ni",
+        "sv.saved": "Kuo tauhi. Ko hoʻo kōti foki eni — tauhi ia ʻi ha feituʻu malu:",
+        "sv.code": "Ko e kōti pē ko ʻení ʻe lava ke toe fakaava hoʻo talanoá — ʻoku ʻikai lava ke mau lau ia taʻe ʻi ai ʻa e kōtí.",
+        "sv.copy": "Hiki ʻa e kōti",
+        "sv.done": "ʻOsi",
+        "sv.empty": "Naʻe teʻeki tauhi ha meʻa — ʻuluaki vahevahe siʻi.",
+        "sv.err": "Naʻe ʻikai lava ʻo tauhi he taimí ni. Kātaki ʻo toe ʻahiʻahiʻi.",
+        "mic.rec": "ʻOku hiki ʻa e sekoni ʻe 3 — lea ʻaki ha meʻa pē…",
+        "mic.ok": "Ko ia naʻe puke ʻe hoʻo maikolofoní — kapau ʻokú ke fanongo kiate koe, ʻoku ngāue ia.",
+        "mic.na": "ʻOku ʻikai ala maʻu ʻa e maikolofoní he taimí ni — ʻoku sai pē ia. ʻOku sai tatau pē ʻa e taipé.",
+        "mic.saved": "Kuo tauhi — lomiʻi ʻa e Enter ke ʻave, pe hokohoko atu hono fakatonutonú",
+        "mic.now": "Fanongo… lea he taimí ni (toe lomiʻi e maikolofoní ke taʻofi)",
+        "mic.noauto": "Fanongo… (ʻe ʻikai taipe fakaʻautō hoʻo ngaahi leá ʻi he polauisa ko ʻení, ka ʻoku ngāue ʻa e maikolofoní — te ke lava foki ʻo taipe)",
+        "mic.reconn": "Fanongo… (ʻoku ngāue e maikolofoní; toe fakahoko ʻa e hiki tohí…)",
+        "mic.paused": "Kuo tuku e fanongó (fakalongolongo siʻi) — lomiʻi e maikolofoní ke hokohoko atu",
+        "mic.speak": "&#127908; Lea",
+        "vp.auto": "Leʻo: fakaʻautō (lelei taha ʻoku ala maʻu)",
+        "vp.human": "Ngaahi leʻo fakaetangata",
+        "vp.female": "Ngaahi leʻo fakafefine",
+        "vp.male": "Ngaahi leʻo fakatangata",
+        "vp.other": "Ngaahi leʻo kehe",
+        "vp.test": "Ko e leʻo eni te u ngāueʻakí.",
+        "scn.aria": "Fakatātā ʻi mui",
+        "s988": "ʻOku ʻikai te ke tokotaha pē. Kapau ʻokú ke fiemaʻu ha poupou fakavavevave, te ke lava ʻo aʻu ki he 988 Suicide and Crisis Lifeline ʻi ha taimi pē ʻaki hoʻo telefoni pe fai ha pōpoaki ki he 988. ʻOku ou nofo ʻi heni pē mo koe.",
+        "empty": "ʻOku teʻeki ke u maʻu ha meʻa — fai māmālie pē, pea vahevahe ʻi hoʻo mateuteú.",
+        "interrupted": "Naʻe ʻi ai ha meʻa naʻe motuhi ai e fehokotakí — kātaki ʻo toe lea ʻaki ia.",
+        "lg.based": "Makatuʻunga he meʻa naʻá ke vahevahé, ʻoku ʻi ai ha ngaahi meʻa ʻoku totonu ke ke ʻilo fekauʻaki mo hoʻo {issue}:",
+        "lg.rights": "Hoʻo ngaahi totonu",
+        "lg.ask": "Ngaahi fehuʻi ki ha loea",
+        "lg.free": "Feituʻu ke maʻu ai ha tokoni fakalao taʻetotongi",
+        "lg.steps": "Ngaahi sitepu te ke lava ʻo fai he taimí ni",
+        "wh.connect": "Fakafehokotaki he taimí ni",
+        "wh.norush": "ʻi hoʻo mateuteú — ʻoku ʻikai ha fakavavevave",
+        "wh.more": "ʻOku ou ʻi heni kapau ʻokú ke fie toe talanoa"
+      }
+    };
+    function _ilux(k){ var lg=(window._ilLang||"en"); var d=_IL_UX[lg]||_IL_UX.en; return (d && d[k]!=null) ? d[k] : _IL_UX.en[k]; }
+    window._ilux = _ilux;
+
     var GATE_GREETINGS = {
       en: {
         morning:   'You made it to morning.|That took something.|Rest here a moment — I’m with you.',
@@ -2437,16 +2998,15 @@ function showMinorBridge(){
   ov.id = 'minor-bridge';
   ov.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(10,18,30,0.9);display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML = '<div style="background:#fff;border-radius:18px;padding:26px;max-width:400px;width:100%;font-family:Arial;">'
-    + '<h3 style="margin:0 0 8px;color:#1e3a5c;">You matter, and real help is here for you.</h3>'
-    + '<p style="font-size:14px;color:#475569;line-height:1.6;">InnerLight is built for adults right now \u2014 but you are not being turned away. '
-    + 'What you are feeling deserves a real person who is trained to help someone your age, right now:</p>'
+    + '<h3 style="margin:0 0 8px;color:#1e3a5c;">'+_ilux('mb.title')+'</h3>'
+    + '<p style="font-size:14px;color:#475569;line-height:1.6;">'+_ilux('mb.lead')+'</p>'
     + '<div style="font-size:14.5px;line-height:1.9;color:#1e293b;">'
-    + '<b>\u2022 Talk to a trusted adult</b> \u2014 a parent, family member, school counselor, coach, or teacher. Starting the sentence is the hardest part; you can even show them this screen.<br>'
-    + '<b>\u2022 Call or text 988</b> \u2014 free, 24/7, and they help young people every day.<br>'
-    + '<b>\u2022 Text HOME to 741741</b> \u2014 Crisis Text Line, free, 24/7.<br>'
-    + '<b>\u2022 Teen Line: text TEEN to 839863</b> \u2014 teens helping teens, evenings.</div>'
-    + '<p style="font-size:12.5px;color:#64748b;margin-top:12px;">If you are in immediate danger, call 911.</p>'
-    + '<button onclick="hideMinorBridge()" style="margin-top:6px;background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;">Okay</button>'
+    + _ilux('mb.b1') + '<br>'
+    + _ilux('mb.b2') + '<br>'
+    + _ilux('mb.b3') + '<br>'
+    + _ilux('mb.b4') + '</div>'
+    + '<p style="font-size:12.5px;color:#64748b;margin-top:12px;">'+_ilux('mb.danger')+'</p>'
+    + '<button onclick="hideMinorBridge()" style="margin-top:6px;background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;">'+_ilux('mb.ok')+'</button>'
     + '</div>';
   document.body.appendChild(ov);
 }
@@ -2465,7 +3025,7 @@ function checkMinorSignals(text){
     if (thread){
       const div = document.createElement('div');
       div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#4a362c;line-height:1.55;';
-      div.textContent = 'It sounds like you may be under 18 \u2014 and I want the right help for you, which is a real person trained to support someone your age. Please look at the options I just showed you, and please tell a trusted adult how you are feeling. You deserve real support.';
+      div.textContent = _ilux('mb.note');
       thread.appendChild(div);
     }
   }
@@ -2495,11 +3055,7 @@ function gentlyRedirectFromSubstitution(){
   if (!thread) return;
   const div = document.createElement('div');
   div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#4a362c;line-height:1.55;';
-  div.innerHTML = 'I am really glad being here helps, and I want to be honest with you because I care: '
-    + 'I am not a person, and I cannot be a substitute for real human connection. '
-    + 'What I can do is stay with you right now and help you reach people who can truly be there for you \u2014 '
-    + 'a counselor, someone you trust, a real voice. You deserve that, more than you deserve a screen. '
-    + 'Would you like me to help you reach a real person?';
+  div.innerHTML = _ilux('sub.note');
   thread.appendChild(div);
   try { metric('substitution_redirect'); } catch(e){}
 }
@@ -2512,10 +3068,8 @@ let _gentleNudges = 0;
 function gentleCompletionCheck(){
   const mins = (Date.now() - _sessionStart) / 60000;
   // First warm bridge at ~20 min, a softer second at ~35 — then we stop nudging.
-  if (mins >= 20 && _gentleNudges === 0){ _gentleNudges = 1; showGentleBridge(
-    'You have shared a lot, and I am really glad you did. Whenever you feel ready, the most helpful next step is talking with a real person who can stay with you beyond this moment. I can connect you gently, whenever you want.'); }
-  else if (mins >= 35 && _gentleNudges === 1){ _gentleNudges = 2; showGentleBridge(
-    'I am still right here with you, and there is no rush. When you are ready, a real person can carry this forward with you. Would you like me to help you reach someone now?'); }
+  if (mins >= 20 && _gentleNudges === 0){ _gentleNudges = 1; showGentleBridge(_ilux('gb.n1')); }
+  else if (mins >= 35 && _gentleNudges === 1){ _gentleNudges = 2; showGentleBridge(_ilux('gb.n2')); }
 }
 function showGentleBridge(message){
   // never blocks, never closes anything — a soft, dismissable invitation
@@ -2526,8 +3080,8 @@ function showGentleBridge(message){
     + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
     + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;text-align:center;';
   b.innerHTML = '<div style="font-size:14px;color:#4a362c;line-height:1.5;margin-bottom:12px;">' + message + '</div>'
-    + '<button onclick="bridgeConnect()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me with someone</button>'
-    + '<button onclick="closeGentleBridge()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Keep talking a little longer</button>';
+    + '<button onclick="bridgeConnect()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">'+_ilux('gb.connect')+'</button>'
+    + '<button onclick="closeGentleBridge()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">'+_ilux('gb.keep')+'</button>';
   document.body.appendChild(b);
 }
 function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} closeGentleBridge(); }
@@ -2813,16 +3367,16 @@ function offerFeedback(){
     + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
     + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;';
   box.innerHTML =
-     '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;text-align:center;">If you have a moment: did this help? Your answer is anonymous and helps us help others.</div>'
+     '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;text-align:center;">'+_ilux('fb.ask')+'</div>'
    + '<div style="text-align:center;margin-bottom:8px;">'
-   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #d3a47d;background:#f8f5f2;color:#6a402c;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">It helped</button>'
-   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #ddd1c8;background:#fff;color:#99673e;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Somewhat</button>'
-   +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">Not really</button>'
+   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #d3a47d;background:#f8f5f2;color:#6a402c;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.yes')+'</button>'
+   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #ddd1c8;background:#fff;color:#99673e;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.some')+'</button>'
+   +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.no')+'</button>'
    + '</div>'
-   + '<textarea id="fb-words" aria-label="Anything you want to share about how you feel, or what helped? (optional)" placeholder="Anything you want to share about how you feel, or what helped? (optional)" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
+   + '<textarea id="fb-words" aria-label="'+_ilux('fb.ph')+'" placeholder="'+_ilux('fb.ph')+'" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
    + '<div style="text-align:center;margin-top:8px;">'
-   +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">Share</button>'
-   +   '<button onclick="closeFb()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">No thanks</button>'
+   +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">'+_ilux('fb.share')+'</button>'
+   +   '<button onclick="closeFb()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">'+_ilux('fb.nothanks')+'</button>'
    + '</div>';
   document.body.appendChild(box);
   box.querySelectorAll('.fb-h').forEach(function(b){
@@ -2840,7 +3394,7 @@ async function submitFeedback(){
       body: JSON.stringify({helped: helped, feeling: feeling, words: words})});
   } catch(e){}
   const card = document.getElementById('fb-card');
-  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#6a402c;padding:6px;">Thank you for sharing \u2014 it genuinely helps us reach others. <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:6px 14px;cursor:pointer;">Close</button></div>';
+  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#6a402c;padding:6px;">'+_ilux('fb.thanks')+' <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:6px 14px;cursor:pointer;">'+_ilux('fb.close')+'</button></div>';
 }
 
 // ---- LIVE BIOMETRIC PING: anonymous, every 4s, for the founder's live monitor.
@@ -3993,8 +4547,8 @@ function showCalmScale(phase){
   card.style.cssText = 'position:fixed;top:206px;right:18px;z-index:60;max-width:200px;'
     + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 16px;'
     + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
-  var samNames = ['Very distressed','Uneasy','In between','Okay','Calm'];
-  card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">How are you feeling right now? (tap one, or ignore me)</div>'
+  var samNames = [_ilux('sam.s1'),_ilux('sam.s2'),_ilux('sam.s3'),_ilux('sam.s4'),_ilux('sam.s5')];
+  card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">'+_ilux('sam.q')+'</div>'
     + '<div style="font-size:30px;letter-spacing:14px;">'
     + ['&#128551;','&#128533;','&#128528;','&#128578;','&#128522;'].map(function(f,i){
         return '<button type="button" data-v="'+(i+1)+'" aria-label="'+samNames[i]+'" style="cursor:pointer;background:none;border:0;padding:0;font-size:inherit;letter-spacing:inherit;">'+f+'</button>';
@@ -4347,7 +4901,7 @@ async function testMic() {
   const status = document.getElementById('mic-test-status');
   try {
     await ensureMicStream();
-    if (status) status.textContent = 'Recording 3 seconds \u2014 say anything\u2026';
+    if (status) status.textContent = _ilux('mic.rec');
     micTestChunks = [];
     micRecorder = new MediaRecorder(micStreamLive);
     micRecorder.ondataavailable = e => { if (e.data.size) micTestChunks.push(e.data); };
@@ -4356,12 +4910,12 @@ async function testMic() {
       const url = URL.createObjectURL(blob);
       const player = document.getElementById('mic-test-playback');
       if (player) { player.src = url; player.style.display = 'block'; player.play().catch(()=>{}); }
-      if (status) status.textContent = 'That is what your mic picked up \u2014 if you can hear yourself, it works.';
+      if (status) status.textContent = _ilux('mic.ok');
     };
     micRecorder.start();
     setTimeout(() => { try { micRecorder.stop(); } catch(e){} }, 3000);
   } catch (e) {
-    if (status) status.textContent = 'The microphone is not available right now — that is okay. Typing works just as well.';
+    if (status) status.textContent = _ilux('mic.na');
   }
 }
 async function startVoiceCapture() {
@@ -4372,15 +4926,15 @@ async function startVoiceCapture() {
     stopMicStream();
     restoreMusicAfterVoice();   // 2s pause, then gentle fade back in
     const micBtn = document.querySelector('.story-mic');
-    if (micBtn) micBtn.innerHTML = '&#127908; Speak';
-    const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Saved \u2014 press Enter to send, or keep editing';
+    if (micBtn) micBtn.innerHTML = _ilux('mic.speak');
+    const lbl = $('listen-label'); if (lbl) lbl.textContent = _ilux('mic.saved');
     return;
   }
   try {
     await ensureMicStream();
   } catch (e) {
     const lbl = $('listen-label');
-    if (lbl) lbl.textContent = 'The microphone is not available right now — that is okay. Typing works just as well.';
+    if (lbl) lbl.textContent = _ilux('mic.na');
     const panel = $('live-transcript'); if (panel) panel.style.display = 'block';
     return;
   }
@@ -4390,7 +4944,7 @@ async function startVoiceCapture() {
   const panel = $('live-transcript'); const dot = $('listen-dot'); const lbl = $('listen-label'); const tEl = $('transcript-text');
   if (panel) panel.style.display = 'block';
   if (dot) dot.style.background = '#e05a5a';
-  if (lbl) lbl.textContent = 'Listening\u2026 speak now (tap mic again to stop)';
+  if (lbl) lbl.textContent = _ilux('mic.now');
   if (tEl) tEl.innerHTML = '&nbsp;';
   const micBtn = document.querySelector('.story-mic');
   if (micBtn) micBtn.innerHTML = '&#128308; Listening\u2026 (tap to stop)';
@@ -4447,7 +5001,7 @@ async function startVoiceCapture() {
     }
     try { voiceRecognizer.start(); } catch (e) {}
   } else {
-    if (lbl) lbl.textContent = 'Listening\u2026 (your words will not auto-type in this browser, but the mic is working \u2014 you can type too)';
+    if (lbl) lbl.textContent = _ilux('mic.noauto');
   }
 }
 
@@ -4497,7 +5051,7 @@ function startDeepgramStream(tempToken){
       }
     };
     dgSocket.onerror = () => {
-      const lbl = $('listen-label'); if (lbl) lbl.textContent = 'Listening\u2026 (mic working; reconnecting transcription\u2026)';
+      const lbl = $('listen-label'); if (lbl) lbl.textContent = _ilux('mic.reconn');
     };
     dgSocket.onclose = () => {
       try { if (dgRecorder && dgRecorder.state !== 'inactive') dgRecorder.stop(); } catch(e){}
@@ -4529,9 +5083,9 @@ function dgTouchActivity(){
     // or the person is left in silence forever after a quiet minute.
     try { restoreMusicAfterVoice(); } catch(e){}
     const micBtn = document.querySelector('.story-mic');
-    if (micBtn) micBtn.innerHTML = '&#127908; Speak';
+    if (micBtn) micBtn.innerHTML = _ilux('mic.speak');
     const lbl = $('listen-label');
-    if (lbl) lbl.textContent = 'Listening paused (quiet for a while) \u2014 tap the mic to continue';
+    if (lbl) lbl.textContent = _ilux('mic.paused');
     metric('listen_autostop');
     const dot = $('listen-dot'); if (dot) dot.style.background = '#9ab0c4';
   }, 60000);
@@ -4631,7 +5185,7 @@ function selectVoice(v){
   } else {
     selectedVoiceId = v;    // a premium provider voice id
   }
-  if (voiceEnabled && v){ speak('This is the voice I will use.'); }
+  if (voiceEnabled && v){ speak(_ilux('vp.test')); }
 }
 // Build the voice picker from BOTH the premium provider (if a key is live) AND
 // the best browser voices, so the person can choose a male/female/accent voice
@@ -4646,13 +5200,13 @@ function _voiceGender(name){
 async function populateVoicePicker(){
   var sel = document.getElementById('voice-picker'); if(!sel) return;
   var pageLang = (window._ilLang || 'en').slice(0,2).toLowerCase();
-  var opts = '<option value="">Voice: automatic (best available)</option>';
+  var opts = '<option value="">'+_ilux('vp.auto')+'</option>';
   var any = false;
   // premium provider voices for THIS language (only present when a voice key is configured)
   try{
     var r = await fetch('/api/voice/list?lang=' + encodeURIComponent(pageLang)); var d = await r.json();
     if (d && d.voices && d.voices.length){
-      opts += '<optgroup label="Human voices">';
+      opts += '<optgroup label="'+_ilux('vp.human')+'">';
       d.voices.forEach(function(v){ any=true; opts += '<option value="'+v.id+'">'+(v.label||v.id)+'</option>'; });
       opts += '</optgroup>';
     }
@@ -4667,7 +5221,7 @@ async function populateVoicePicker(){
     pool.forEach(function(v){ groups[_voiceGender(v.name)].push(v); });
     ['Female','Male','Voice'].forEach(function(g){
       if(!groups[g].length) return;
-      opts += '<optgroup label="'+(g==='Voice'?'Other voices':g+' voices')+'">';
+      opts += '<optgroup label="'+(g==='Voice'?_ilux('vp.other'):(g==='Female'?_ilux('vp.female'):_ilux('vp.male')))+'">';
       groups[g].forEach(function(v){ any=true;
         var lang=(v.lang||'').toUpperCase();
         opts += '<option value="b:'+v.name.replace(/"/g,'')+'">'+v.name+(lang?' ('+lang+')':'')+'</option>';
@@ -4929,12 +5483,12 @@ function openSaveNow(){
     + 'background:rgba(255,255,255,0.97);border:1px solid #e0d7cf;border-radius:16px;padding:14px 18px;'
     + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
   if (story.length < 40){
-    bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">There is not much to save yet. Share a little of your story first, then tap Save again and I will give you a private return code.</div>'
-      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">Okay</button>';
+    bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.min')+'</div>'
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">'+_ilux('mb.ok')+'</button>';
   } else {
-    bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">Save where you are? You will get a private return code only you hold.</div>'
-      + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">Save my place</button>'
-      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
+    bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.q')+'</div>'
+      + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">'+_ilux('sv.btn')+'</button>'
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
   }
   document.body.appendChild(bar);
 }
@@ -4948,9 +5502,9 @@ function maybeOfferSave(){
   bar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:75;'
     + 'background:rgba(255,255,255,0.97);border:1px solid #e0d7cf;border-radius:16px;padding:14px 18px;'
     + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
-  bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">Would you like to save where you are, so you don\u2019t have to start over if you come back?</div>'
-    + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">Save my place</button>'
-    + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">Not now</button>';
+  bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.auto')+'</div>'
+    + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">'+_ilux('sv.btn')+'</button>'
+    + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
   document.body.appendChild(bar);
 }
 async function doSaveStory(){
@@ -4961,13 +5515,13 @@ async function doSaveStory(){
       body: JSON.stringify({summary: story})});
     const d = await r.json();
     if (d.status === 'ok'){
-      if (offer) offer.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:8px;">Saved. This is your return code \u2014 keep it somewhere safe:</div>'
+      if (offer) offer.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:8px;">'+_ilux('sv.saved')+'</div>'
         + '<div style="font-size:22px;font-weight:800;letter-spacing:1px;color:#1e3a5c;margin:6px 0;">' + d.code + '</div>'
-        + '<div style="font-size:12px;color:#736049;margin-bottom:10px;">Only this code can reopen your story \u2014 not even we can read it without the code.</div>'
-        + '<button onclick="copyReturnCode(this)" data-code="' + d.code + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">Copy code</button>'
-        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">Done</button>';
-    } else if (offer){ offer.querySelector('div').textContent = 'There was nothing saved yet \u2014 share a little first.'; }
-  } catch(e){ if (offer) offer.querySelector('div').textContent = 'Could not save right now. Please try again.'; }
+        + '<div style="font-size:12px;color:#736049;margin-bottom:10px;">'+_ilux('sv.code')+'</div>'
+        + '<button onclick="copyReturnCode(this)" data-code="' + d.code + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.copy')+'</button>'
+        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.done')+'</button>';
+    } else if (offer){ offer.querySelector('div').textContent = _ilux('sv.empty'); }
+  } catch(e){ if (offer) offer.querySelector('div').textContent = _ilux('sv.err'); }
 }
 function openResume(){
   const box = document.createElement('div');
@@ -5015,7 +5569,7 @@ async function sendCheckin() {
   // Empty guard: if there's nothing to send, don't fake a response.
   if (!msgVal) {
     const em = $('emotion-status');
-    if (em) { em.style.display='block'; em.textContent = "I didn't catch anything yet — take your time, and share whenever you're ready."; }
+    if (em) { em.style.display='block'; em.textContent = _ilux('empty'); }
     return;
   }
   voiceFinalTranscript = '';
@@ -5026,6 +5580,7 @@ async function sendCheckin() {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(Object.assign({
+      ui_lang:(window._ilLang||'en'),
       name:val('name'),
       birthdate:val('birthdate'),
       region:val('region') || 'US',
@@ -5056,9 +5611,9 @@ async function sendCheckin() {
   // no question — the reply itself carries the conversation. If the reply is
   // missing entirely, say honestly what happened instead of faking warmth.
   const firstQ = allQ.length ? allQ[0] : '';
-  const warmReply = data.response || 'Something interrupted the connection for a moment — please say that again.';
+  const warmReply = data.response || _ilux('interrupted');
   const safetyBlock = data.needs_immediate_support
-    ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">You are not alone. If you need immediate support, you can reach the 988 Suicide and Crisis Lifeline anytime by calling or texting 988. I am staying right here with you.</p>'
+    ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">'+_ilux('s988')+'</p>'
     : '';
   // Hide the initial "Tell me your story" area
   const title = document.querySelector('.story-title'); if (title) title.style.display = 'none';
@@ -5082,21 +5637,21 @@ function appendLegalGuidance(thread, lg) {
   const freeHelp = (lg.free_legal_help || []).slice(0,3).map(h => '<li style="margin:4px 0;">' + escapeHtml(h) + '</li>').join('');
   const steps = (lg.steps_you_can_take_now || []).slice(0,3).map(s => '<li style="margin:4px 0;">' + escapeHtml(s) + '</li>').join('');
   el.innerHTML = `
-    <p style="font-size:15px;color:#6a402c;font-weight:600;margin:0 0 8px;">Based on what you shared, here are some things you should know about your ${escapeHtml(lg.issue_detected)}:</p>
+    <p style="font-size:15px;color:#6a402c;font-weight:600;margin:0 0 8px;">${_ilux('lg.based').replace('{issue}', escapeHtml(lg.issue_detected))}</p>
     <details style="margin:8px 0;" open>
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Your rights</summary>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.rights')}</summary>
       <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${rights}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Questions to ask an attorney</summary>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.ask')}</summary>
       <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${askAtty}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Where to get free legal help</summary>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.free')}</summary>
       <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${freeHelp}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">Steps you can take right now</summary>
+      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.steps')}</summary>
       <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${steps}</ul>
     </details>
     <p style="font-size:11px;color:#bb8559;margin:10px 0 0;line-height:1.5;">${escapeHtml(lg.disclaimer || '')}</p>
@@ -5168,6 +5723,7 @@ async function completeBridge(type, action, value) {
     const res = await fetch('/api/resolution/bridge', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
+        ui_lang: (window._ilLang||'en'),
         session_reference: innerLightSessionReference || '',
         handoff_type: type,
         consent: consent,
@@ -5201,10 +5757,10 @@ function showWarmHandoff(thread, warm, resolution, action, value) {
   el.innerHTML = `
     ${partsHtml}
     <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <button id="bridge-go" style="background:#fff;color:#6b412c;border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Connect now</button>
-      <span style="font-size:13px;opacity:0.9;">whenever you're ready — no rush</span>
+      <button id="bridge-go" style="background:#fff;color:#6b412c;border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">${_ilux('wh.connect')}</button>
+      <span style="font-size:13px;opacity:0.9;">${_ilux('wh.norush')}</span>
     </div>
-    <button onclick="restartConversation()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:9px 20px;font-size:13px;cursor:pointer;margin-top:14px;">I'm here if you need to talk more</button>
+    <button onclick="restartConversation()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:9px 20px;font-size:13px;cursor:pointer;margin-top:14px;">${_ilux('wh.more')}</button>
   `;
   thread.appendChild(el);
   // SPEAK the full warm handoff aloud, calmly
@@ -5338,6 +5894,7 @@ async function continueConversation() {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
+        ui_lang:(window._ilLang||'en'),
       answer: userAnswer,
       learning_state: innerLightLearningState,
       session_reference: innerLightSessionReference,
@@ -7677,6 +8234,22 @@ def resolution_bridge():
     exit_msg = generate_exit_message(handoff_type, consent)
     # Log the handoff for the learning layer
     event_id = get_handoff_learning().log_handoff(handoff_type, register, warm["spoken_script"], session_ref)
+    # Speak the bridge in the person's language. If translation is not
+    # available, the English bridge still goes through — reaching human
+    # help safely outranks the language rule in this one moment.
+    _blang = _req_ui_lang(data)
+    if _blang != "en":
+        try:
+            _parts = [str(p) for p in (warm.get("parts") or [])]
+            _tr = comprehension_engine.translate_texts(
+                _parts + [str(warm.get("spoken_script", "")), str(exit_msg or "")], _blang)
+            if _tr:
+                warm = dict(warm)
+                warm["parts"] = _tr[:len(_parts)]
+                warm["spoken_script"] = _tr[len(_parts)]
+                exit_msg = _tr[len(_parts) + 1]
+        except Exception:
+            pass
 
     # Store the handoff (encrypted) for the operator console
     try:
@@ -8102,6 +8675,67 @@ _LEGAL_CLARIFY = {
 }
 
 
+_UI_LANGS = ("en", "es", "zh", "hi", "pa", "bn", "tl", "to")
+
+# Honest, in-language line used ONLY when the comprehension model is
+# unavailable during a non-English session. We never hand a non-English
+# speaker to the English-only local engine — the language promise holds
+# even in failure, and the 988 path stays visible.
+_NOEN_FALLBACK = {
+    "es": "La conexi\u00f3n se interrumpi\u00f3 un momento \u2014 por favor, dilo otra vez. Si necesitas a alguien ahora mismo, llama o env\u00eda un mensaje al 988.",
+    "zh": "\u8fde\u63a5\u4e2d\u65ad\u4e86\u4e00\u4e0b\u2014\u2014\u8bf7\u518d\u8bf4\u4e00\u904d\u3002\u5982\u679c\u4f60\u73b0\u5728\u5c31\u9700\u8981\u6709\u4eba\u966a\u4f34\uff0c\u8bf7\u62e8\u6253\u6216\u53d1\u77ed\u4fe1\u81f3 988\u3002",
+    "hi": "\u0915\u0928\u0947\u0915\u094d\u0936\u0928 \u090f\u0915 \u092a\u0932 \u0915\u0947 \u0932\u093f\u090f \u091f\u0942\u091f \u0917\u092f\u093e \u2014 \u0915\u0943\u092a\u092f\u093e \u0935\u0939 \u092b\u093f\u0930 \u0938\u0947 \u0915\u0939\u0947\u0902\u0964 \u0905\u0917\u0930 \u0906\u092a\u0915\u094b \u0905\u092d\u0940 \u0915\u093f\u0938\u0940 \u0915\u0940 \u091c\u093c\u0930\u0942\u0930\u0924 \u0939\u0948, \u0924\u094b 988 \u092a\u0930 \u0915\u0949\u0932 \u092f\u093e \u0938\u0902\u0926\u0947\u0936 \u0915\u0930\u0947\u0902\u0964",
+    "pa": "\u0a15\u0a41\u0a28\u0a48\u0a15\u0a38\u0a3c\u0a28 \u0a07\u0a71\u0a15 \u0a2a\u0a32 \u0a32\u0a08 \u0a1f\u0a41\u0a71\u0a1f \u0a17\u0a3f\u0a06 \u2014 \u0a15\u0a3f\u0a30\u0a2a\u0a3e \u0a15\u0a30\u0a15\u0a47 \u0a09\u0a39 \u0a26\u0a41\u0a2c\u0a3e\u0a30\u0a3e \u0a15\u0a39\u0a4b\u0964 \u0a1c\u0a47 \u0a24\u0a41\u0a39\u0a3e\u0a28\u0a42\u0a70 \u0a39\u0a41\u0a23\u0a47 \u0a15\u0a3f\u0a38\u0a47 \u0a26\u0a40 \u0a32\u0a4b\u0a5c \u0a39\u0a48, \u0a24\u0a3e\u0a02 988 \u0a09\u0a71\u0a24\u0a47 \u0a15\u0a3e\u0a32 \u0a1c\u0a3e\u0a02 \u0a38\u0a41\u0a28\u0a47\u0a39\u0a3e \u0a2d\u0a47\u0a1c\u0a4b\u0964",
+    "bn": "\u09b8\u0982\u09af\u09cb\u0997 \u098f\u0995 \u09ae\u09c1\u09b9\u09c2\u09b0\u09cd\u09a4\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u099b\u09bf\u09a8\u09cd\u09a8 \u09b9\u09df\u09c7\u099b\u09c7 \u2014 \u09a6\u09df\u09be \u0995\u09b0\u09c7 \u0986\u09ac\u09be\u09b0 \u09ac\u09b2\u09c1\u09a8\u0964 \u098f\u0996\u09a8\u0987 \u0995\u09be\u0989\u0995\u09c7 \u09a6\u09b0\u0995\u09be\u09b0 \u09b9\u09b2\u09c7 988 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 \u0995\u09b2 \u09ac\u09be \u099f\u09c7\u0995\u09cd\u09b8\u099f \u0995\u09b0\u09c1\u09a8\u0964",
+    "tl": "Naputol sandali ang koneksyon \u2014 pakisabi muli. Kung kailangan mo ng kausap ngayon din, tumawag o mag-text sa 988.",
+    "to": "Na\u02bbe motuhia si\u02bbi \u02bba e fehokotak\u00ed \u2014 k\u0101taki \u02bbo toe lea \u02bbaki ia. Kapau \u02bbok\u00fa ke fiema\u02bbu ha taha he taim\u00ed ni, telefoni pe fai ha p\u014dpoaki ki he 988.",
+}
+
+
+def _req_ui_lang(data):
+    """The person's chosen interface language for this request (client field
+    first, cookie second, English default). Unknown codes resolve to en."""
+    lg = ""
+    try:
+        lg = str((data or {}).get("ui_lang") or "").strip().lower()
+    except Exception:
+        lg = ""
+    if not lg:
+        try:
+            lg = str(request.cookies.get("il_lang") or "").strip().lower()
+        except Exception:
+            lg = ""
+    return lg if lg in _UI_LANGS else "en"
+
+
+def _localized_legal_guidance(lg, ui_lang):
+    """Return legal guidance in the person's language. English sessions pass
+    through untouched. In non-English sessions the content is translated in one
+    model call; if translation is unavailable the card is withheld (None) —
+    we never show English content inside a non-English session, and the main
+    reply still carries the conversation."""
+    if not lg or not isinstance(lg, dict) or not lg.get("issue_detected") or ui_lang == "en":
+        return lg
+    list_fields = ("your_rights", "questions_for_attorney", "free_legal_help", "steps_you_can_take_now")
+    texts = [str(lg.get("issue_detected", ""))]
+    spans = []
+    for f in list_fields:
+        vals = [str(x) for x in (lg.get(f) or [])]
+        spans.append((f, len(vals)))
+        texts.extend(vals)
+    texts.append(str(lg.get("disclaimer", "")))
+    out = comprehension_engine.translate_texts(texts, ui_lang)
+    if not out:
+        return None
+    new = dict(lg)
+    i = 0
+    new["issue_detected"] = out[i]; i += 1
+    for f, ln in spans:
+        new[f] = out[i:i + ln]; i += ln
+    new["disclaimer"] = out[i]
+    return new
+
+
 @app.route("/api/checkin", methods=["POST"])
 def api_checkin():
     if not _rate_ok("checkin", 40, 3600) or not _budget_ok("claude"):
@@ -8182,11 +8816,16 @@ def api_checkin():
     if isinstance(data, dict):
         face_emo = str(data.get("face_emotion", "")).strip()
     history = data.get("conversation") if isinstance(data, dict) else None
+    ui_lang = _req_ui_lang(data)
     smart = comprehension_engine.respond(
-        user_text=message, history=history, risk=risk, face_emotion=face_emo,
+        user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
     )
     if smart:
         initial_conv = {"response": smart["response"], "question": smart.get("question", "")}
+    elif ui_lang != "en":
+        # The language promise holds even on failure: an honest in-language
+        # line instead of the English-only local engine.
+        initial_conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
         initial_conv = get_conversation_engine().respond(
             user_text=message, face_emotion=face_emo, risk=risk,
@@ -8332,7 +8971,7 @@ def api_checkin():
         "localization": local_context,
         "response": conv_response,
         "questions": conv_questions,
-        "legal_guidance": legal_guidance,
+        "legal_guidance": _localized_legal_guidance(legal_guidance, ui_lang),
         "handoff": handoff,
         "register": cultural["register"],
         "crisis_reading": cr,
@@ -8468,11 +9107,14 @@ def api_innerlight_learn():
     if isinstance(context, dict):
         face_emotion = str(context.get("face_emotion", "")).strip()
     history_l = context.get("conversation") if isinstance(context, dict) else None
+    ui_lang = _req_ui_lang(data)
     smart_l = comprehension_engine.respond(
-        user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion,
+        user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
     )
     if smart_l:
         conv = {"response": smart_l["response"], "question": smart_l.get("question", "")}
+    elif ui_lang != "en":
+        conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
         conv = get_conversation_engine().respond(
             user_text=answer,
@@ -8485,7 +9127,7 @@ def api_innerlight_learn():
     learned["questions"] = [get_cultural_engine().shape_response(conv["question"], cultural["register"])]
     learned["zenisys_music"] = get_zenisys_engine().detect_and_fetch(answer)
     legal_issues = detect_legal_issues(answer)
-    learned["legal_guidance"] = generate_legal_guidance(legal_issues)
+    learned["legal_guidance"] = _localized_legal_guidance(generate_legal_guidance(legal_issues), ui_lang)
 
     # Quantum-inspired emotion analysis from all three signals
     ctx = context if isinstance(context, dict) else {}

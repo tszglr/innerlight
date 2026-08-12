@@ -64,3 +64,35 @@ reviewer should confirm preferred numeral style per language.
 
 Per the founder's standing rule these five sets must be presented as
 "ready, pending native review" — never as "verified."
+
+## Batch: runtime widgets + AI language enforcement (2026-08-11)
+
+**New surface: `_IL_UX` (67 keys × 8 languages)** — every string built by JavaScript at
+runtime (calm scale, feedback card, minor bridge, substitution redirect, gentle bridge,
+save flow, mic/listening labels, voice picker, legal card headers, warm-handoff buttons,
+988 safety block, empty/interrupted lines). All hi/pa/bn/tl/to strings: READY, PENDING
+NATIVE REVIEW (Tongan highest priority).
+
+**Server `_NOEN_FALLBACK` (7 languages)** — honest "connection slipped… 988" line used
+only when the comprehension model is unreachable in a non-English session. Same review
+status.
+
+Reviewer flags for this batch:
+- Hindi and Punjabi first-person verb forms (e.g. "दूँगा", "ਦਿਆਂਗਾ", "ਵਰਤਾਂਗਾ") follow the
+  masculine convention for the app's voice; confirm this is the desired register or
+  switch to gender-neutral phrasings.
+- Spanish uses "solo/a", "listo/a" pairings in two strings; a reviewer may prefer
+  gender-neutral rewording.
+- "sub.note", "mb.note", and "gb.*" are emotionally sensitive passages — please review
+  for warmth and natural cadence, not just accuracy.
+- Teen Line / Crisis Text Line / 988 Lifeline names kept in English by design
+  (organization names); numbers kept as digits everywhere.
+
+Known gaps (queued):
+- Client-side minor/substitution DETECTION phrases remain English-only; the server-side
+  cultural engine still catches multi-language crisis phrases. Multi-language detection
+  patterns are a separate batch.
+- Legal guidance CONTENT and warm-handoff prose are translated live via one model call;
+  if that call fails, the legal card is withheld in non-English sessions (never shown in
+  English) while the warm handoff falls back to English deliberately — reaching human
+  help safely outranks the language rule at the bridge moment.

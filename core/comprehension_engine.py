@@ -38,6 +38,16 @@ _DIAGNOSTIC_PATTERNS = [
 ]
 
 
+LANG_NAMES = {
+    "es": "Spanish",
+    "zh": "Simplified Chinese",
+    "hi": "Hindi",
+    "pa": "Punjabi (Gurmukhi script)",
+    "bn": "Bengali",
+    "tl": "Tagalog",
+    "to": "Tongan",
+}
+
 SYSTEM_PROMPT = """You are InnerLight — a warm, steady companion for someone who may be in emotional crisis and is waiting for human help to arrive. Your job is to UNDERSTAND them deeply and help them feel heard, so they can survive the wait and so InnerLight can prepare a well-rounded picture for a human professional later.
 
 THE FOUNDING BELIEF (Principle 15 — holds for every person, unconditionally):
@@ -110,6 +120,7 @@ def respond(
     history: Optional[List[Dict[str, str]]] = None,
     risk: str = "low",
     face_emotion: str = "",
+    ui_lang: str = "en",
 ) -> Optional[Dict[str, Any]]:
     """Return {'response': str, 'question': ''} using real comprehension, or
     None if the model isn't configured or the call fails (caller falls back)."""
@@ -136,6 +147,15 @@ def respond(
                    "for (988 by call or text; 911 if in immediate danger), without lecturing.")
     if face_emotion:
         system += f"\n\n(Their facial expression currently reads as: {face_emotion}. Use gently, do not announce it.)"
+    lang_name = LANG_NAMES.get((ui_lang or "en").strip().lower())
+    if lang_name:
+        system += (
+            f"\n\nLANGUAGE REQUIREMENT — ABSOLUTE: The person chose {lang_name} as their language. "
+            f"Respond ENTIRELY in {lang_name} — every single word, including any follow-up question. "
+            "Never switch to English, even partially, even if the person writes in English or mixes "
+            "languages. Use natural, native phrasing, not literal translation. Keep crisis contact "
+            "points exactly as they are: 988, 911, and HOME to 741741."
+        )
 
     def _call(msgs):
         body = json.dumps({
@@ -184,3 +204,49 @@ def respond(
     except Exception as e:
         print(f"[comprehension] falling back (model call failed): {str(e)[:120]}")
         return None
+
+
+def translate_texts(texts, ui_lang):
+    """Translate a list of short strings into the person's language in ONE
+    model call. Returns the translated list (same length, same order), or None
+    on any failure — the caller decides the safe fallback. Translation only;
+    nothing is added, removed, or invented."""
+    lang_name = LANG_NAMES.get((ui_lang or "en").strip().lower())
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
+    items = [str(t) for t in (texts or [])]
+    if not lang_name or not key or not items:
+        return None
+    body = json.dumps({
+        "model": MODEL,
+        "max_tokens": 1500,
+        "system": (
+            "You are a precise translator. Translate each string in the JSON array the user sends "
+            f"into natural, native {lang_name}. Keep numbers, phone numbers (988, 911, 741741), "
+            "URLs, and organization names unchanged. Return ONLY a JSON array of the translated "
+            "strings — same length, same order, no commentary, no code fences."
+        ),
+        "messages": [{"role": "user", "content": json.dumps(items, ensure_ascii=False)}],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        ANTHROPIC_URL, data=body, method="POST",
+        headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                 "content-type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        text = ""
+        for p in data.get("content", []):
+            if p.get("type") == "text":
+                text += p.get("text", "")
+        text = text.strip()
+        if text.startswith("```"):
+            text = text.strip("`").strip()
+            if text.lower().startswith("json"):
+                text = text[4:].strip()
+        out = json.loads(text)
+        if isinstance(out, list) and len(out) == len(items) and all(isinstance(s, str) for s in out):
+            return out
+    except Exception as e:
+        print(f"[comprehension] translate failed: {str(e)[:120]}")
+    return None
