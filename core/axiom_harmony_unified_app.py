@@ -10841,6 +10841,48 @@ def admin_dashboard():
 
     <div class="hero">{{ kpi_cards|safe }}</div>
 
+    <h2 class="ledger" id="dispatch">Dispatch — the monetary engine (Principle 7)</h2>
+    <div class="card" id="dispatch-card">
+      <p style="margin-top:0;"><b>Status:</b> <span id="dispatch-status" style="font-weight:700;">loading&hellip;</span>
+        <button id="dispatch-toggle" onclick="dispatchToggle()" style="margin-left:14px;padding:6px 16px;border-radius:8px;border:1px solid #b89; background:#fff; cursor:pointer; font-weight:700;">&hellip;</button></p>
+      <p style="font-size:13px;color:#665;">Built, dormant, ready — activation arms the revenue engine that partner
+      and billing surfaces consult. By construction it has <b>zero hooks into care</b>: flipping this switch cannot
+      change what any person in crisis experiences, and money can never buy routing (Principle 3, enforced in code
+      and by a repository test).</p>
+      <div id="dispatch-streams" style="font-size:13.5px;line-height:1.55;"></div>
+      <div id="dispatch-never" style="font-size:13px;margin-top:10px;padding:10px 12px;background:#fdf3f0;border-radius:8px;"></div>
+      <div id="dispatch-log" style="font-size:12px;color:#776;margin-top:10px;"></div>
+    </div>
+    <script>
+      async function dispatchLoad(){
+        try {
+          var r = await fetch('/api/admin/dispatch'); if(!r.ok) return;
+          var d = await r.json();
+          var st = document.getElementById('dispatch-status');
+          st.textContent = d.active ? ('ACTIVE since ' + (d.activated_at||'')) : 'DORMANT (ready)';
+          st.style.color = d.active ? '#1c7a3d' : '#8a6d3b';
+          var btn = document.getElementById('dispatch-toggle');
+          btn.textContent = d.active ? 'Deactivate' : 'Activate';
+          window._dispatchActive = !!d.active;
+          document.getElementById('dispatch-streams').innerHTML =
+            d.streams.map(function(s){ return '<p style="margin:8px 0;"><b>' + s.name + '.</b> ' + s.how + '</p>'; }).join('');
+          document.getElementById('dispatch-never').innerHTML =
+            '<b>Never, regardless of switch state:</b><br>' + d.never.map(function(x){ return '&bull; ' + x; }).join('<br>');
+          document.getElementById('dispatch-log').innerHTML = (d.log||[]).slice().reverse()
+            .map(function(e){ return e.at + ' — ' + e.action + ' by ' + e.by; }).join('<br>') || 'No activations yet.';
+        } catch(e){}
+      }
+      async function dispatchToggle(){
+        var next = !window._dispatchActive;
+        var word = next ? 'ACTIVATE' : 'DEACTIVATE';
+        if (!confirm('Really ' + word + ' Dispatch? Care paths are unaffected either way.')) return;
+        await fetch('/api/admin/dispatch', {method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({active: next})});
+        dispatchLoad();
+      }
+      dispatchLoad();
+    </script>
+
     <h2 class="ledger" id="overview">The daily ledger — the last fourteen days</h2>
     <div class="tablewrap">
     <table>
@@ -13172,6 +13214,19 @@ def responder_brief(rid):
 </div>
 </body></html>""", pro=match.get("pro"), kind=match.get("kind"), when=match.get("when"),
     room=match.get("responder_room", match.get("room")), summary_html=summary_html)
+
+@app.route("/api/admin/dispatch", methods=["GET", "POST"])
+def api_admin_dispatch():
+    """Dispatch (Principle 7): founder-only status and switch. The engine has
+    no hooks into care; this route only arms/disarms revenue surfaces."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    import dispatch_engine
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        result = dispatch_engine.set_active(bool(data.get("active")), actor="founder")
+        return jsonify(result)
+    return jsonify(dispatch_engine.get_status())
 
 @app.route("/api/admin/connects")
 def admin_connects():
