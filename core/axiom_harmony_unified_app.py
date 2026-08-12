@@ -5095,8 +5095,17 @@ function dgTouchActivity(){
 let voiceFeatures = { pitch_variance: 0.5, energy: 0.5, rate: 0.5, tremor: 0.0 };
 let audioContext = null, analyser = null, micStream = null;
 
+let _pfHist = [];   // rolling ~8s of {t, rms, f0} frames
+let _pfTimer = null;
 async function captureVoiceFeatures() {
-  // Analyze microphone audio for tone (pitch variance, energy, tremor)
+  // MEASURED voice prosody -> the quantum engine's voice_features slot.
+  // energy: rolling mean RMS. pitch_variance: std of autocorrelation-estimated
+  // f0 (70-350 Hz) over voiced frames. rate: voiced/unvoiced transitions per
+  // second (syllable-boundary proxy). tremor: 4-8 Hz modulation depth of the
+  // energy envelope. Normalization constants (0.12 RMS, 60 Hz sd, 8 trans/s)
+  // are engineering estimates, labeled as ASSUMPTIONS pending calibration
+  // against a labeled recording set. Runs silently; never asks the person to
+  // adjust anything; degrades to nothing on any failure.
   try {
     if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -5105,21 +5114,54 @@ async function captureVoiceFeatures() {
       analyser = audioContext.createAnalyser();
       analyser.fftSize = 2048;
       source.connect(analyser);
+      if (!_pfTimer) _pfTimer = setInterval(function(){ captureVoiceFeatures(); }, 150);
     }
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    analyser.getByteFrequencyData(data);
-    // Energy = average amplitude
-    const energy = data.reduce((a,b)=>a+b,0) / data.length / 255;
-    // Pitch variance = spread of frequency energy
-    let weightedSum = 0, total = 0;
-    for (let i = 0; i < data.length; i++) { weightedSum += i * data[i]; total += data[i]; }
-    const centroid = total > 0 ? weightedSum / total / data.length : 0.5;
-    voiceFeatures = {
-      energy: Math.min(1, energy * 2),
-      pitch_variance: Math.min(1, centroid * 2),
-      rate: 0.5,
-      tremor: energy < 0.2 ? 0.3 : 0.1
-    };
+    const N = analyser.fftSize;
+    const buf = new Float32Array(N);
+    analyser.getFloatTimeDomainData(buf);
+    let s = 0; for (let i = 0; i < N; i++) s += buf[i]*buf[i];
+    const rms = Math.sqrt(s / N);
+    let f0 = 0;
+    if (rms > 0.015) {
+      const sr = audioContext.sampleRate || 48000;
+      const minLag = Math.floor(sr/350), maxLag = Math.min(N-1, Math.floor(sr/70));
+      let best = 0, bestLag = 0, e0 = s;
+      for (let lag = minLag; lag <= maxLag; lag += 2) {
+        let c = 0;
+        for (let i = 0; i < N - lag; i += 2) c += buf[i]*buf[i+lag];
+        if (c > best) { best = c; bestLag = lag; }
+      }
+      if (bestLag && e0 > 0 && (best*2)/e0 > 0.3) f0 = sr / bestLag;
+    }
+    const now = performance.now();
+    _pfHist.push({t: now, rms: rms, f0: f0});
+    while (_pfHist.length && now - _pfHist[0].t > 8000) _pfHist.shift();
+    if (_pfHist.length < 10) return;
+    const rmsArr = _pfHist.map(function(h){ return h.rms; });
+    const meanRms = rmsArr.reduce(function(a,b){ return a+b; }, 0) / rmsArr.length;
+    const energy = Math.max(0, Math.min(1, meanRms / 0.12));
+    const f0s = [];
+    for (let i = 0; i < _pfHist.length; i++) if (_pfHist[i].f0 > 0) f0s.push(_pfHist[i].f0);
+    let pitchVar = 0;
+    if (f0s.length > 5) {
+      const m = f0s.reduce(function(a,b){ return a+b; }, 0) / f0s.length;
+      let vsum = 0; for (let i = 0; i < f0s.length; i++) vsum += (f0s[i]-m)*(f0s[i]-m);
+      pitchVar = Math.max(0, Math.min(1, Math.sqrt(vsum / f0s.length) / 60));
+    }
+    let trans = 0;
+    for (let i = 1; i < _pfHist.length; i++)
+      if ((_pfHist[i].f0 > 0) !== (_pfHist[i-1].f0 > 0)) trans++;
+    const span = (now - _pfHist[0].t) / 1000;
+    const rate = Math.max(0, Math.min(1, (trans / Math.max(span, 0.5)) / 8));
+    let tremor = 0;
+    if (meanRms > 0.01 && rmsArr.length > 3) {
+      const dt = span / (rmsArr.length - 1);
+      const half = Math.max(1, Math.round(0.083 / Math.max(dt, 0.01)));
+      let mod = 0, cnt = 0;
+      for (let i = half; i < rmsArr.length; i++) { mod += Math.abs(rmsArr[i]-rmsArr[i-half]); cnt++; }
+      if (cnt) tremor = Math.max(0, Math.min(1, (mod/cnt) / (meanRms*0.8)));
+    }
+    voiceFeatures = { energy: energy, pitch_variance: pitchVar, rate: rate, tremor: tremor };
   } catch (e) {}
 }
 
@@ -5320,6 +5362,10 @@ function _spSpeakBrowser(text, finish) {
   if (selectedVoice && (selectedVoice.lang||'').slice(0,2).toLowerCase() === _lang.slice(0,2).toLowerCase()) _v = selectedVoice;
   if (!_v && typeof ilPickVoice === 'function') _v = ilPickVoice(_lang);
   if (_v) utter.voice = _v;
+  // Language promise: if this device has NO voice for the chosen language,
+  // we stay silent rather than speak the wrong language. The words remain
+  // on screen; wrong-language audio would break trust at the worst moment.
+  if (!_v && _lang.slice(0,2).toLowerCase() !== 'en') { finish(); return; }
   // WARMTH + TONE-STEERING: a slightly lower pitch reads as warmer, and we slow
   // down when the person is activated (the vocal twin of the adaptive music).
   var ar = (typeof adaptiveArousal !== 'undefined') ? adaptiveArousal : 0.5;
@@ -5604,6 +5650,9 @@ async function sendCheckin() {
   innerLightLearningState = data.learning_state || null;
   innerLightSessionReference = data.message_fingerprint || '';
   innerLightContext = data;
+  // Server-side multilingual signals: same protections in every language.
+  if (data.minor_signal) { window._minorLock = true; try { showMinorBridge(); } catch(e){} }
+  if (data.substitution_signal) { try { gentlyRedirectFromSubstitution(); } catch(e){} }
   // --- CONVERSATION THREAD (flat, never nests, never stops) ---
   const thread = document.getElementById('conversation-thread');
   const allQ = data.questions || [];
@@ -5904,15 +5953,17 @@ async function continueConversation() {
   const data = await res.json();
   innerLightLearningState = data.learning_state || innerLightLearningState;
   innerLightContext = Object.assign(innerLightContext, data);
+  if (data.minor_signal) { window._minorLock = true; try { showMinorBridge(); } catch(e){} }
+  if (data.substitution_signal) { try { gentlyRedirectFromSubstitution(); } catch(e){} }
   // When comprehension (Claude) is active, its ONE deeper question is already
   // inside the reply — so we do NOT tack on a separate canned question.
   const rawQ = (data.questions || [])[0] || '';
   const nextQ = rawQ && rawQ.trim() ? rawQ : '';
   // No canned gratitude line — if the reply is missing, be honest about it.
-  const reply = data.response || 'Something interrupted the connection for a moment — please say that again.';
+  const reply = data.response || _ilux('interrupted');
   logTurn('innerlight', reply);
   const safety = data.needs_immediate_support
-    ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">You are not alone. The 988 Lifeline is available anytime — call or text 988. I am right here.</p>'
+    ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">'+_ilux('s988')+'</p>'
     : '';
   appendExchange(thread, reply, nextQ, safety);
   // Show legal guidance if detected in this turn
@@ -8241,7 +8292,7 @@ def resolution_bridge():
     if _blang != "en":
         try:
             _parts = [str(p) for p in (warm.get("parts") or [])]
-            _tr = comprehension_engine.translate_texts(
+            _tr = comprehension_engine.translate_texts_verified(
                 _parts + [str(warm.get("spoken_script", "")), str(exit_msg or "")], _blang)
             if _tr:
                 warm = dict(warm)
@@ -8724,7 +8775,7 @@ def _localized_legal_guidance(lg, ui_lang):
         spans.append((f, len(vals)))
         texts.extend(vals)
     texts.append(str(lg.get("disclaimer", "")))
-    out = comprehension_engine.translate_texts(texts, ui_lang)
+    out = comprehension_engine.translate_texts_verified(texts, ui_lang)
     if not out:
         return None
     new = dict(lg)
@@ -8817,6 +8868,14 @@ def api_checkin():
         face_emo = str(data.get("face_emotion", "")).strip()
     history = data.get("conversation") if isinstance(data, dict) else None
     ui_lang = _req_ui_lang(data)
+    # Language-agnostic safety signals (Principles 5 and 9): the client's
+    # English pattern lists cannot read other languages, so the model reads
+    # them here for non-English sessions. Signals can only RAISE care.
+    _sig = comprehension_engine.classify_signals(message) if ui_lang != "en" else None
+    minor_signal = bool(_sig and _sig.get("minor"))
+    substitution_signal = bool(_sig and _sig.get("substitution"))
+    if _sig and _sig.get("crisis") and risk in ("low", "moderate"):
+        risk = "high"
     smart = comprehension_engine.respond(
         user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
     )
@@ -8972,6 +9031,8 @@ def api_checkin():
         "response": conv_response,
         "questions": conv_questions,
         "legal_guidance": _localized_legal_guidance(legal_guidance, ui_lang),
+        "minor_signal": minor_signal,
+        "substitution_signal": substitution_signal,
         "handoff": handoff,
         "register": cultural["register"],
         "crisis_reading": cr,
@@ -9108,6 +9169,12 @@ def api_innerlight_learn():
         face_emotion = str(context.get("face_emotion", "")).strip()
     history_l = context.get("conversation") if isinstance(context, dict) else None
     ui_lang = _req_ui_lang(data)
+    _sig_l = comprehension_engine.classify_signals(answer) if ui_lang != "en" else None
+    learned["minor_signal"] = bool(_sig_l and _sig_l.get("minor"))
+    learned["substitution_signal"] = bool(_sig_l and _sig_l.get("substitution"))
+    if _sig_l and _sig_l.get("crisis") and learn_risk in ("low", "moderate"):
+        learn_risk = "high"
+        learned["risk"] = "high"
     smart_l = comprehension_engine.respond(
         user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
     )

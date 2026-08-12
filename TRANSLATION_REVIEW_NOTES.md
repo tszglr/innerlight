@@ -96,3 +96,18 @@ Known gaps (queued):
   if that call fails, the legal card is withheld in non-English sessions (never shown in
   English) while the warm handoff falls back to English deliberately — reaching human
   help safely outranks the language rule at the bridge moment.
+
+## Batch: Principle 15 advancement pass (2026-08-12)
+
+- Translated legal-guidance and warm-handoff content now passes an independent
+  LLM-judge quality check (threshold 0.8) before display; below-bar batches are
+  withheld (legal) or fall back to English (safety bridge). Tongan and other
+  low-resource outputs benefit most.
+- Minor/substitution/crisis detection in non-English sessions now runs through
+  the model (any language) instead of English-only pattern lists; signals can
+  only raise care, never lower it.
+- KNOWN ASSUMPTIONS (per NOTHING INVENTED): prosody normalization constants
+  (0.12 RMS ~ loud sustained speech, 60 Hz f0 std ~ highly variable pitch,
+  8 transitions/s ~ rapid speech) are engineering estimates labeled in code,
+  pending calibration against a labeled recording set. Measurement path:
+  record a small calibrated speech set and fit the constants.

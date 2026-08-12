@@ -250,3 +250,117 @@ def translate_texts(texts, ui_lang):
     except Exception as e:
         print(f"[comprehension] translate failed: {str(e)[:120]}")
     return None
+
+
+def verify_texts(source_texts, translated_texts, ui_lang):
+    """LLM-as-judge quality estimation for a translation batch (reference-free
+    QE, the current standard for low-resource language pairs). Returns a
+    0.0-1.0 semantic-equivalence + naturalness score, or None on failure."""
+    lang_name = LANG_NAMES.get((ui_lang or "en").strip().lower())
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
+    src_items = [str(t) for t in (source_texts or [])]
+    out_items = [str(t) for t in (translated_texts or [])]
+    if not lang_name or not key or not src_items or len(src_items) != len(out_items):
+        return None
+    pairs = [{"en": a, "tr": b} for a, b in zip(src_items, out_items)]
+    body = json.dumps({
+        "model": MODEL,
+        "max_tokens": 20,
+        "system": (
+            f"You judge English-to-{lang_name} translation quality. The user sends a JSON array of "
+            "{en, tr} pairs. Score the WHOLE batch from 0.0 to 1.0 for semantic equivalence and "
+            "natural native phrasing (1.0 = every pair is a faithful, natural translation; deduct "
+            "for meaning changes, omissions, additions, or unnatural wording; ignore style "
+            "preferences). Return ONLY the number."
+        ),
+        "messages": [{"role": "user", "content": json.dumps(pairs, ensure_ascii=False)}],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        ANTHROPIC_URL, data=body, method="POST",
+        headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                 "content-type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        text = ""
+        for p in data.get("content", []):
+            if p.get("type") == "text":
+                text += p.get("text", "")
+        import re as _re
+        m = _re.search(r"(?:0?\.\d+|1\.0|0|1)", text.strip())
+        if m:
+            score = float(m.group(0))
+            if 0.0 <= score <= 1.0:
+                return score
+    except Exception as e:
+        print(f"[comprehension] verify failed: {str(e)[:120]}")
+    return None
+
+
+def translate_texts_verified(texts, ui_lang, threshold=0.8):
+    """Translate, then verify with an independent judge pass. Rejects (None)
+    any batch the judge scores below threshold — below-bar translations of
+    safety or legal content must not ship. If the judge itself is unavailable
+    while translation succeeded, the translation is accepted (pre-verification
+    behavior); a scored rejection is authoritative."""
+    out = translate_texts(texts, ui_lang)
+    if not out:
+        return None
+    score = verify_texts(texts, out, ui_lang)
+    if score is not None and score < threshold:
+        print(f"[comprehension] translation rejected by QE judge: {score:.2f} < {threshold}")
+        return None
+    return out
+
+
+def classify_signals(user_text):
+    """Language-agnostic safety-signal read of ONE user message: works in any
+    language the model reads, replacing English-only pattern lists for
+    non-English sessions. Returns {"minor": bool, "substitution": bool,
+    "crisis": bool} or None on any failure. Detection only — never shown to
+    the person. Uncertainty leans false for minor/substitution (no false
+    verdicts without investigation) and true for crisis (vigilance only
+    raises care)."""
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
+    if not key or not user_text or not user_text.strip():
+        return None
+    body = json.dumps({
+        "model": MODEL,
+        "max_tokens": 60,
+        "system": (
+            "You are a silent safety-signal detector for a crisis-support tool. The message may be in "
+            "ANY language. Return ONLY this JSON, nothing else: "
+            '{"minor": true|false, "substitution": true|false, "crisis": true|false}. '
+            "minor: the writer indicates they are under 18 (stated age, school grade level, parental "
+            "permission context). substitution: the writer treats this AI as a replacement for human "
+            "connection (only friend, loves the AI, prefers it to people or their therapist). "
+            "crisis: signals of self-harm, suicide, or danger to self or others, including indirect "
+            "phrasing. If uncertain: minor=false, substitution=false, crisis=true."
+        ),
+        "messages": [{"role": "user", "content": user_text.strip()[:2000]}],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        ANTHROPIC_URL, data=body, method="POST",
+        headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                 "content-type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        text = ""
+        for p in data.get("content", []):
+            if p.get("type") == "text":
+                text += p.get("text", "")
+        text = text.strip()
+        if text.startswith("```"):
+            text = text.strip("`").strip()
+            if text.lower().startswith("json"):
+                text = text[4:].strip()
+        out = json.loads(text)
+        if isinstance(out, dict) and all(k in out for k in ("minor", "substitution", "crisis")):
+            return {"minor": bool(out["minor"]), "substitution": bool(out["substitution"]),
+                    "crisis": bool(out["crisis"])}
+    except Exception as e:
+        print(f"[comprehension] classify failed: {str(e)[:120]}")
+    return None
