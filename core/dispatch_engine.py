@@ -27,60 +27,87 @@ _STATE_PATH = os.path.join(_STATE_DIR, "dispatch_state.json")
 
 # The revenue streams Dispatch is built to operate — every one grounded in the
 # 2026 crisis-financing landscape, and every one bound by the guardrails below.
+IDENTITY = (
+    "THE RESOLUTION EXCHANGE. InnerLight sells exactly one thing: a verified "
+    "resolution — a person in crisis reaching the right human, measured, "
+    "consent-based, privacy-preserving. We are paid only when someone reaches "
+    "help, and only by institutions that already owe the system that outcome. "
+    "Never by the person. Never for attention, data, or access."
+)
+
 STREAMS = [
     {
-        "id": "public_payer",
-        "name": "Public-payer infrastructure (Medicaid, all states)",
+        "id": "resolution_gap",
+        "name": "The Gap Engine — paid per verified follow-up (HEDIS FUM/FUA/FUH)",
         "how": (
-            "InnerLight contracts as the digital front door and time-to-resolution "
-            "layer for county mobile-crisis and CBO providers — in ANY state. The "
-            "anchor is FEDERAL: 42 U.S.C. § 1396w-6 establishes the community-based "
-            "mobile crisis benefit nationwide, and CMS guidance provides enhanced "
-            "matching pathways that include select IT services supporting crisis "
-            "response. Each contract is localized to that state's approved Medicaid "
-            "state plan or waiver and that state's reimbursement rules — the "
-            "founder's home state (California, SPA 22-0043) is one instance of a "
-            "50-state playbook, never the template. Contracts are written with the "
-            "state, county, or provider — never with the person served."
+            "Health plans are formally graded on whether people get mental-health "
+            "follow-up after an ED crisis visit (NCQA HEDIS measures FUM, FUA, "
+            "FUH), and people who get no aftercare have 6x the odds of returning "
+            "to the ED within two months. Telehealth, telephone visits, e-visits, "
+            "and virtual check-ins COUNT toward the measure — which means "
+            "InnerLight's consent-based warm handoff into a follow-up visit IS "
+            "the gap-closer. The plan pays per verified closed gap; the person "
+            "pays nothing and their words are never shared. No one else sells "
+            "crisis-moment measure closure — this is InnerLight's native product."
         ),
     },
     {
-        "id": "outcomes",
-        "name": "Outcomes-based contracts",
+        "id": "boarding_relief",
+        "name": "Boarding relief — shared savings with hospitals",
         "how": (
-            "Counties and health plans pay against independently measured "
-            "improvement in time-to-resolution — the outcome InnerLight was built "
-            "to measure from day one. The field's own evaluations name outcome "
-            "data as the gap; InnerLight's measurement layer is the product."
+            "Psychiatric patients wait (board) in EDs longer and cost more than "
+            "any other category, and un-followed crisis visits come back. "
+            "Hospitals pay a share of independently measured avoided return "
+            "visits and boarding hours among people InnerLight bridged to care. "
+            "If nothing is avoided, nothing is owed — the model only earns when "
+            "the system genuinely worked."
         ),
     },
     {
-        "id": "provider_network",
-        "name": "Provider network infrastructure",
+        "id": "pay_for_success",
+        "name": "Pay-for-success instruments",
         "how": (
-            "Enrolled commercial providers (telehealth practices, clinics) pay for "
-            "warm-handoff infrastructure: consent-gated context summaries, "
-            "scheduling, and language support. Payment NEVER affects routing "
-            "order, visibility, or recommendation — placement is decided by fit "
-            "and vetted quality alone (Principle 3)."
+            "Philanthropy fronts the risk capital; a county repays only against "
+            "independently verified improvement in time-to-resolution — the "
+            "single metric InnerLight was built to measure. The field's own "
+            "evaluations name outcome data as its gap; our measurement layer is "
+            "the collateral."
         ),
     },
     {
-        "id": "institutional",
-        "name": "Institutional licensing",
+        "id": "lifeline_988",
+        "name": "The 988 ecosystem lane",
         "how": (
-            "Universities, school districts, employers, and unions license "
-            "InnerLight for their populations as a covered benefit — the "
-            "institution pays; the person in crisis never does."
+            "Thirteen states and counting fund 988 through permanent telecom "
+            "surcharges (California's flows into a dedicated 988 Crisis Service "
+            "Fund), and the federal Designation Act explicitly allows those "
+            "funds to support the WHOLE crisis system — outreach and "
+            "stabilization included, not just call centers. InnerLight "
+            "subcontracts as the digital front door and hold-the-wait layer for "
+            "state 988 systems; parity laws increasingly require insurers to "
+            "cover crisis services regardless of network."
         ),
     },
     {
-        "id": "grants",
-        "name": "Grants and philanthropy",
+        "id": "dmht_future",
+        "name": "Digital mental health treatment reimbursement (watched, not claimed)",
         "how": (
-            "The research-grade grant engine (public-record funder mapping, "
-            "e.g. Arnold Ventures' crisis-response portfolio) — already the "
-            "organization's active non-dilutive path."
+            "CMS has begun paying for digital mental health treatment devices "
+            "under physician billing pathways. That lane requires FDA clearance "
+            "InnerLight does not have and does not claim — it is tracked here "
+            "honestly as the engine's future gear, activated only if and when "
+            "the clearance path is real."
+        ),
+    },
+    {
+        "id": "sustaining_circle",
+        "name": "The Sustaining Circle",
+        "how": (
+            "Someone InnerLight held through their worst night may — later, "
+            "never at the moment of crisis, never required, never prompted "
+            "during care — choose to fund another person's wait. Reported "
+            "publicly in aggregate. The only consumer revenue this engine will "
+            "ever contain, and it is a gift, not a fee."
         ),
     },
 ]
@@ -127,6 +154,7 @@ def is_active():
 def get_status():
     st = _load()
     return {
+        "identity": IDENTITY,
         "active": bool(st.get("active")),
         "activated_at": st.get("activated_at"),
         "streams": STREAMS,

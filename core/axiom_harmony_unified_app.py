@@ -10845,6 +10845,7 @@ def admin_dashboard():
     <div class="card" id="dispatch-card">
       <p style="margin-top:0;"><b>Status:</b> <span id="dispatch-status" style="font-weight:700;">loading&hellip;</span>
         <button id="dispatch-toggle" onclick="dispatchToggle()" style="margin-left:14px;padding:6px 16px;border-radius:8px;border:1px solid #b89; background:#fff; cursor:pointer; font-weight:700;">&hellip;</button></p>
+      <p id="dispatch-identity" style="font-size:14px;font-weight:600;color:#4a3b2c;"></p>
       <p style="font-size:13px;color:#665;">Built, dormant, ready — activation arms the revenue engine that partner
       and billing surfaces consult. By construction it has <b>zero hooks into care</b>: flipping this switch cannot
       change what any person in crisis experiences, and money can never buy routing (Principle 3, enforced in code
@@ -10864,6 +10865,7 @@ def admin_dashboard():
           var btn = document.getElementById('dispatch-toggle');
           btn.textContent = d.active ? 'Deactivate' : 'Activate';
           window._dispatchActive = !!d.active;
+          if (d.identity) document.getElementById('dispatch-identity').textContent = d.identity;
           document.getElementById('dispatch-streams').innerHTML =
             d.streams.map(function(s){ return '<p style="margin:8px 0;"><b>' + s.name + '.</b> ' + s.how + '</p>'; }).join('');
           document.getElementById('dispatch-never').innerHTML =
