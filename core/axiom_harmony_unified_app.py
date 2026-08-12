@@ -1285,7 +1285,7 @@ PUBLIC_PAGE = """
         "s988": "You are not alone. If you need immediate support, you can reach the 988 Suicide and Crisis Lifeline anytime by calling or texting 988. I am staying right here with you.",
         "empty": "I didn't catch anything yet — take your time, and share whenever you're ready.",
         "interrupted": "Something interrupted the connection for a moment — please say that again.",
-        "lg.based": "Based on what you shared, here are some things you should know about your {issue}:",
+        "lg.based": "Based on what you shared, here is what is worth knowing about {issue}:",
         "lg.rights": "Your rights",
         "lg.ask": "Questions to ask an attorney",
         "lg.free": "Where to get free legal help",
@@ -1354,7 +1354,7 @@ PUBLIC_PAGE = """
         "s988": "No estás solo/a. Si necesitas apoyo inmediato, puedes comunicarte con la Línea 988 de Suicidio y Crisis en cualquier momento, llamando o enviando un mensaje al 988. Me quedo aquí contigo.",
         "empty": "Aún no escuché nada — tómate tu tiempo, y comparte cuando quieras.",
         "interrupted": "Algo interrumpió la conexión un momento — por favor, dilo otra vez.",
-        "lg.based": "Según lo que compartiste, hay cosas que deberías saber sobre tu {issue}:",
+        "lg.based": "Según lo que compartiste, esto es lo que vale la pena saber sobre {issue}:",
         "lg.rights": "Tus derechos",
         "lg.ask": "Preguntas para un abogado",
         "lg.free": "Dónde obtener ayuda legal gratuita",
@@ -1423,7 +1423,7 @@ PUBLIC_PAGE = """
         "s988": "你并不孤单。如果你需要即时支持，随时可以拨打或发短信至 988，联系 988 自杀与危机生命线。我就在这里陪着你。",
         "empty": "我还没有听到什么——慢慢来，准备好了再分享。",
         "interrupted": "连接被打断了一下——请再说一遍。",
-        "lg.based": "根据你分享的内容，关于你的{issue}，有些事你应该知道：",
+        "lg.based": "根据你分享的内容，关于{issue}，这些值得了解：",
         "lg.rights": "你的权利",
         "lg.ask": "可以问律师的问题",
         "lg.free": "哪里可以获得免费法律帮助",
@@ -1492,7 +1492,7 @@ PUBLIC_PAGE = """
         "s988": "आप अकेले नहीं हैं। अगर आपको तुरंत सहारे की ज़रूरत है, तो आप कभी भी 988 पर कॉल या संदेश करके 988 सुसाइड एंड क्राइसिस लाइफ़लाइन से जुड़ सकते हैं। मैं यहीं आपके साथ हूँ।",
         "empty": "मुझे अभी कुछ नहीं मिला — अपना समय लीजिए, जब तैयार हों तब साझा करें।",
         "interrupted": "कनेक्शन एक पल के लिए बाधित हुआ — कृपया वह दोबारा कहें।",
-        "lg.based": "आपने जो साझा किया, उसके आधार पर आपके {issue} के बारे में कुछ बातें जाननी चाहिए:",
+        "lg.based": "आपने जो साझा किया, उसके आधार पर {issue} के बारे में ये बातें जानने योग्य हैं:",
         "lg.rights": "आपके अधिकार",
         "lg.ask": "वकील से पूछने योग्य सवाल",
         "lg.free": "मुफ़्त कानूनी मदद कहाँ मिलेगी",
@@ -1561,7 +1561,7 @@ PUBLIC_PAGE = """
         "s988": "ਤੁਸੀਂ ਇਕੱਲੇ ਨਹੀਂ ਹੋ। ਜੇ ਤੁਹਾਨੂੰ ਤੁਰੰਤ ਸਹਾਰੇ ਦੀ ਲੋੜ ਹੈ, ਤਾਂ ਤੁਸੀਂ ਕਦੇ ਵੀ 988 ਉੱਤੇ ਕਾਲ ਜਾਂ ਸੁਨੇਹਾ ਭੇਜ ਕੇ 988 ਸੁਸਾਈਡ ਐਂਡ ਕ੍ਰਾਈਸਿਸ ਲਾਈਫ਼ਲਾਈਨ ਨਾਲ ਜੁੜ ਸਕਦੇ ਹੋ। ਮੈਂ ਇੱਥੇ ਹੀ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।",
         "empty": "ਮੈਨੂੰ ਹਾਲੇ ਕੁਝ ਨਹੀਂ ਮਿਲਿਆ — ਆਪਣਾ ਸਮਾਂ ਲਵੋ, ਜਦੋਂ ਤਿਆਰ ਹੋਵੋ ਤਾਂ ਸਾਂਝਾ ਕਰੋ।",
         "interrupted": "ਕੁਨੈਕਸ਼ਨ ਇੱਕ ਪਲ ਲਈ ਰੁਕ ਗਿਆ — ਕਿਰਪਾ ਕਰਕੇ ਉਹ ਦੁਬਾਰਾ ਕਹੋ।",
-        "lg.based": "ਤੁਸੀਂ ਜੋ ਸਾਂਝਾ ਕੀਤਾ, ਉਸ ਦੇ ਆਧਾਰ ਉੱਤੇ ਤੁਹਾਡੇ {issue} ਬਾਰੇ ਕੁਝ ਗੱਲਾਂ ਜਾਣਨੀਆਂ ਚਾਹੀਦੀਆਂ ਹਨ:",
+        "lg.based": "ਤੁਸੀਂ ਜੋ ਸਾਂਝਾ ਕੀਤਾ, ਉਸ ਦੇ ਆਧਾਰ ਉੱਤੇ {issue} ਬਾਰੇ ਇਹ ਗੱਲਾਂ ਜਾਣਨ ਯੋਗ ਹਨ:",
         "lg.rights": "ਤੁਹਾਡੇ ਹੱਕ",
         "lg.ask": "ਵਕੀਲ ਤੋਂ ਪੁੱਛਣ ਵਾਲੇ ਸਵਾਲ",
         "lg.free": "ਮੁਫ਼ਤ ਕਾਨੂੰਨੀ ਮਦਦ ਕਿੱਥੋਂ ਮਿਲੇਗੀ",
@@ -1630,7 +1630,7 @@ PUBLIC_PAGE = """
         "s988": "আপনি একা নন। তাৎক্ষণিক সহায়তা দরকার হলে, যেকোনো সময় 988 নম্বরে কল বা টেক্সট করে 988 সুইসাইড অ্যান্ড ক্রাইসিস লাইফলাইনে পৌঁছাতে পারেন। আমি এখানেই আপনার সাথে আছি।",
         "empty": "আমি এখনও কিছু পাইনি — সময় নিন, প্রস্তুত হলে ভাগ করুন।",
         "interrupted": "সংযোগ এক মুহূর্তের জন্য বাধা পেয়েছে — দয়া করে আবার বলুন।",
-        "lg.based": "আপনি যা ভাগ করেছেন তার ভিত্তিতে, আপনার {issue} সম্পর্কে কিছু বিষয় জানা উচিত:",
+        "lg.based": "আপনি যা ভাগ করেছেন তার ভিত্তিতে, {issue} সম্পর্কে এগুলো জানা দরকারি:",
         "lg.rights": "আপনার অধিকার",
         "lg.ask": "আইনজীবীকে জিজ্ঞাসার প্রশ্ন",
         "lg.free": "বিনামূল্যে আইনি সাহায্য কোথায় পাবেন",
@@ -1699,7 +1699,7 @@ PUBLIC_PAGE = """
         "s988": "Hindi ka nag-iisa. Kung kailangan mo ng agarang suporta, maaari mong maabot ang 988 Suicide and Crisis Lifeline anumang oras sa pagtawag o pag-text sa 988. Nandito lang ako kasama mo.",
         "empty": "Wala pa akong nakuha — huwag magmadali, magbahagi kapag handa ka na.",
         "interrupted": "May sandaling gumambala sa koneksyon — pakisabi muli.",
-        "lg.based": "Batay sa ibinahagi mo, may ilang bagay kang dapat malaman tungkol sa iyong {issue}:",
+        "lg.based": "Batay sa ibinahagi mo, ito ang mahalagang malaman tungkol sa {issue}:",
         "lg.rights": "Ang iyong mga karapatan",
         "lg.ask": "Mga tanong sa abogado",
         "lg.free": "Saan makakakuha ng libreng tulong legal",
@@ -1768,7 +1768,7 @@ PUBLIC_PAGE = """
         "s988": "ʻOku ʻikai te ke tokotaha pē. Kapau ʻokú ke fiemaʻu ha poupou fakavavevave, te ke lava ʻo aʻu ki he 988 Suicide and Crisis Lifeline ʻi ha taimi pē ʻaki hoʻo telefoni pe fai ha pōpoaki ki he 988. ʻOku ou nofo ʻi heni pē mo koe.",
         "empty": "ʻOku teʻeki ke u maʻu ha meʻa — fai māmālie pē, pea vahevahe ʻi hoʻo mateuteú.",
         "interrupted": "Naʻe ʻi ai ha meʻa naʻe motuhi ai e fehokotakí — kātaki ʻo toe lea ʻaki ia.",
-        "lg.based": "Makatuʻunga he meʻa naʻá ke vahevahé, ʻoku ʻi ai ha ngaahi meʻa ʻoku totonu ke ke ʻilo fekauʻaki mo hoʻo {issue}:",
+        "lg.based": "Makatuʻunga he meʻa naʻá ke vahevahé, ko e ngaahi meʻa eni ʻoku ʻaonga ke ʻilo fekauʻaki mo e {issue}:",
         "lg.rights": "Hoʻo ngaahi totonu",
         "lg.ask": "Ngaahi fehuʻi ki ha loea",
         "lg.free": "Feituʻu ke maʻu ai ha tokoni fakalao taʻetotongi",
@@ -5632,6 +5632,7 @@ async function sendCheckin() {
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(Object.assign({
       ui_lang:(window._ilLang||'en'),
+      client_time: new Date().toString(),
       name:val('name'),
       birthdate:val('birthdate'),
       region:val('region') || 'US',
@@ -5949,6 +5950,7 @@ async function continueConversation() {
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
         ui_lang:(window._ilLang||'en'),
+        client_time: new Date().toString(),
       answer: userAnswer,
       learning_state: innerLightLearningState,
       session_reference: innerLightSessionReference,
@@ -8910,6 +8912,7 @@ def api_checkin():
         risk = "high"
     smart = comprehension_engine.respond(
         user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
+        client_time=str(data.get("client_time", ""))[:80],
     )
     if smart:
         initial_conv = {"response": smart["response"], "question": smart.get("question", "")}
@@ -8985,7 +8988,14 @@ def api_checkin():
         conv_questions = [probe] + [q for q in conv_questions if q and q != probe]
         if risk == "low":
             risk = "moderate"
-    legal_guidance = generate_legal_guidance(legal_issues)
+    # Comfort before paperwork (the founder's correction from live testing):
+    # when legal keywords surface INSIDE acute emotional pain, the rights
+    # card waits a turn. A grieving person needs to be heard before being
+    # handed a checklist; the information returns once the moment settles.
+    if domain == "both" and (crisis.needs_immediate_support or cr.get("level") in ("crisis", "elevated")):
+        legal_guidance = None
+    else:
+        legal_guidance = generate_legal_guidance(legal_issues)
     legal_code = legal_guidance.get("issue_code") if legal_guidance else None
     # If the layered reader sees crisis, force the crisis handoff regardless of phrasing
     handoff_risk = "critical" if cr["level"] == "crisis" else risk
@@ -9209,6 +9219,7 @@ def api_innerlight_learn():
         learned["risk"] = "high"
     smart_l = comprehension_engine.respond(
         user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
+        client_time=str(data.get("client_time", ""))[:80],
     )
     if smart_l:
         conv = {"response": smart_l["response"], "question": smart_l.get("question", "")}

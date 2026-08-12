@@ -111,3 +111,10 @@ Known gaps (queued):
   8 transitions/s ~ rapid speech) are engineering estimates labeled in code,
   pending calibration against a labeled recording set. Measurement path:
   record a small calibrated speech set and fit the constants.
+
+## Batch: live-test corrections (2026-08-12)
+
+- "lg.based" reworded in all 8 languages to a neutral form ("here is what is
+  worth knowing about {issue}") so the legal card never presumes the issue is
+  the user's own — it may belong to someone they love. New-language versions
+  remain READY, PENDING NATIVE REVIEW.
