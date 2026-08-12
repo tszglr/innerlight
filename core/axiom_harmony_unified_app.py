@@ -1224,6 +1224,272 @@ PUBLIC_PAGE = """
     // ============ UNIVERSAL UI STRINGS (_IL_UX) — every dynamic widget ============
     // Every user-facing string built by JS at runtime lives here, in all 8
     // languages, so no widget can ever fall back to English by accident.
+    // ============ HANDOFF CARD TRANSLATIONS (_IL_HO) ============
+    // The crisis, legal, clinical, and community handoff cards are built
+    // server-side in English. This dictionary translates every one of
+    // those strings instantly on the person's own device — no network,
+    // no waiting, exactly when it matters most. Unknown strings fall
+    // back to English rather than fail.
+    var _IL_HO = {
+      es: {
+        "Immediate safety support": "Apoyo de seguridad inmediato",
+        "Connect to 988 Crisis Lifeline": "Conectar con la Línea de Crisis 988",
+        "Alert a live InnerLight monitor": "Avisar a un monitor de InnerLight en vivo",
+        "Call 911 (immediate danger)": "Llamar al 911 (peligro inmediato)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "¿Quieres que comparta lo que me has contado con el consejero de crisis, para que no tengas que empezar de nuevo?",
+        "Talk with a licensed professional": "Habla con un profesional acreditado",
+        "Start a video session with a counselor": "Iniciar una sesión de video con un consejero",
+        "Schedule a session for later": "Programar una sesión para más tarde",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "¿Quieres que comparta un breve resumen con el consejero, para que su tiempo juntos empiece con él ya entendiéndote?",
+        "Find free/low-cost legal help near me": "Buscar ayuda legal gratuita o de bajo costo cerca de mí",
+        "Save my questions for the attorney": "Guardar mis preguntas para el abogado",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "¿Quieres que prepare un resumen de tu situación y las preguntas para hacer, para que estés listo al hablar con un abogado?",
+        "Connect to local resources": "Conectar con recursos locales",
+        "find food assistance near me": "buscar ayuda alimentaria cerca de mí",
+        "find emergency shelter near me": "buscar refugio de emergencia cerca de mí",
+        "Want me to note what you need so the resource line can help you faster?": "¿Quieres que anote lo que necesitas para que la línea de recursos pueda ayudarte más rápido?",
+        "Share my context so I do not have to repeat myself.": "Comparte mi contexto para que no tenga que repetirlo.",
+        "Connect with {who}": "Conectar con {who}",
+        "@who:a tenant rights / housing attorney": "un abogado de vivienda y derechos de inquilinos",
+        "@who:a housing and benefits advocate": "un defensor de vivienda y beneficios",
+        "@who:an employment attorney": "un abogado laboral",
+        "@who:an employment discrimination attorney (EEOC matters)": "un abogado de discriminación laboral (asuntos EEOC)",
+        "@who:a family law attorney": "un abogado de derecho familiar",
+        "@who:a family law / custody attorney": "un abogado de familia y custodia",
+        "@who:a domestic violence advocate and protective-order attorney": "un defensor de violencia doméstica y abogado de órdenes de protección",
+        "@who:a criminal defense attorney or public defender": "un abogado defensor penal o defensor público",
+        "@who:a qualified immigration attorney (not a notario)": "un abogado de inmigración calificado (no un notario)",
+        "@who:an education rights attorney": "un abogado de derechos educativos",
+        "@who:a patient rights / health law advocate": "un defensor de derechos del paciente y derecho sanitario",
+        "@who:a disability rights attorney": "un abogado de derechos de discapacidad",
+        "@who:a consumer protection attorney": "un abogado de protección al consumidor",
+        "@who:a civil rights attorney": "un abogado de derechos civiles",
+        "@who:a qualified attorney": "un abogado calificado"
+      },
+      zh: {
+        "Immediate safety support": "即时安全支持",
+        "Connect to 988 Crisis Lifeline": "连接 988 危机生命线",
+        "Alert a live InnerLight monitor": "通知 InnerLight 在线监护员",
+        "Call 911 (immediate danger)": "拨打 911（紧急危险）",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "要我把你告诉我的内容分享给危机辅导员，让你不用从头再说一遍吗？",
+        "Talk with a licensed professional": "与持证专业人士交谈",
+        "Start a video session with a counselor": "与辅导员开始视频会话",
+        "Schedule a session for later": "预约稍后的会话",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "要我把简短的总结分享给辅导员，让你们一开始他就已经了解你吗？",
+        "Find free/low-cost legal help near me": "查找我附近的免费/低价法律帮助",
+        "Save my questions for the attorney": "保存我要问律师的问题",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "要我准备一份你情况的总结和要问的问题，让你和律师交谈时有备而来吗？",
+        "Connect to local resources": "连接本地资源",
+        "find food assistance near me": "查找我附近的食物援助",
+        "find emergency shelter near me": "查找我附近的紧急庇护所",
+        "Want me to note what you need so the resource line can help you faster?": "要我记下你需要的东西，让资源热线能更快帮到你吗？",
+        "Share my context so I do not have to repeat myself.": "分享我的情况，让我不用重复。",
+        "Connect with {who}": "联系{who}",
+        "@who:a tenant rights / housing attorney": "住房与租户权益律师",
+        "@who:a housing and benefits advocate": "住房与福利事务倡导者",
+        "@who:an employment attorney": "劳动法律师",
+        "@who:an employment discrimination attorney (EEOC matters)": "就业歧视律师（EEOC 事务）",
+        "@who:a family law attorney": "家庭法律师",
+        "@who:a family law / custody attorney": "家庭法/抚养权律师",
+        "@who:a domestic violence advocate and protective-order attorney": "家庭暴力事务倡导者与保护令律师",
+        "@who:a criminal defense attorney or public defender": "刑事辩护律师或公设辩护人",
+        "@who:a qualified immigration attorney (not a notario)": "合格的移民律师（并非“公证人”）",
+        "@who:an education rights attorney": "教育权益律师",
+        "@who:a patient rights / health law advocate": "患者权益/医疗法倡导者",
+        "@who:a disability rights attorney": "残障权益律师",
+        "@who:a consumer protection attorney": "消费者保护律师",
+        "@who:a civil rights attorney": "民权律师",
+        "@who:a qualified attorney": "合格的律师"
+      },
+      hi: {
+        "Immediate safety support": "तत्काल सुरक्षा सहारा",
+        "Connect to 988 Crisis Lifeline": "988 क्राइसिस लाइफ़लाइन से जुड़ें",
+        "Alert a live InnerLight monitor": "InnerLight के लाइव मॉनिटर को सूचित करें",
+        "Call 911 (immediate danger)": "911 पर कॉल करें (तत्काल खतरा)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "क्या मैं आपकी बताई बातें क्राइसिस काउंसलर से साझा कर दूँ, ताकि आपको फिर से शुरू न करना पड़े?",
+        "Talk with a licensed professional": "लाइसेंस प्राप्त पेशेवर से बात करें",
+        "Start a video session with a counselor": "काउंसलर के साथ वीडियो सत्र शुरू करें",
+        "Schedule a session for later": "बाद के लिए सत्र निर्धारित करें",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "क्या मैं काउंसलर से एक छोटा सारांश साझा कर दूँ, ताकि आपकी बातचीत की शुरुआत ही आपको समझने के साथ हो?",
+        "Find free/low-cost legal help near me": "मेरे पास मुफ़्त/कम लागत की कानूनी मदद खोजें",
+        "Save my questions for the attorney": "वकील के लिए मेरे सवाल सहेजें",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "क्या मैं आपकी स्थिति का सारांश और पूछने योग्य सवाल तैयार कर दूँ, ताकि वकील से बात करते समय आप तैयार रहें?",
+        "Connect to local resources": "स्थानीय संसाधनों से जुड़ें",
+        "find food assistance near me": "मेरे पास भोजन सहायता खोजें",
+        "find emergency shelter near me": "मेरे पास आपातकालीन आश्रय खोजें",
+        "Want me to note what you need so the resource line can help you faster?": "क्या मैं आपकी ज़रूरतें नोट कर लूँ ताकि संसाधन लाइन आपकी जल्दी मदद कर सके?",
+        "Share my context so I do not have to repeat myself.": "मेरा विवरण साझा करें ताकि मुझे दोहराना न पड़े।",
+        "Connect with {who}": "{who} से जुड़ें",
+        "@who:a tenant rights / housing attorney": "किरायेदार अधिकार/आवास वकील",
+        "@who:a housing and benefits advocate": "आवास और लाभ सलाहकार",
+        "@who:an employment attorney": "रोज़गार वकील",
+        "@who:an employment discrimination attorney (EEOC matters)": "रोज़गार भेदभाव वकील (EEOC मामले)",
+        "@who:a family law attorney": "पारिवारिक कानून वकील",
+        "@who:a family law / custody attorney": "पारिवारिक/अभिरक्षा वकील",
+        "@who:a domestic violence advocate and protective-order attorney": "घरेलू हिंसा सलाहकार व संरक्षण-आदेश वकील",
+        "@who:a criminal defense attorney or public defender": "आपराधिक बचाव वकील या सरकारी वकील",
+        "@who:a qualified immigration attorney (not a notario)": "योग्य आप्रवासन वकील (नोटारियो नहीं)",
+        "@who:an education rights attorney": "शिक्षा अधिकार वकील",
+        "@who:a patient rights / health law advocate": "मरीज़ अधिकार/स्वास्थ्य कानून सलाहकार",
+        "@who:a disability rights attorney": "दिव्यांगता अधिकार वकील",
+        "@who:a consumer protection attorney": "उपभोक्ता संरक्षण वकील",
+        "@who:a civil rights attorney": "नागरिक अधिकार वकील",
+        "@who:a qualified attorney": "योग्य वकील"
+      },
+      pa: {
+        "Immediate safety support": "ਤੁਰੰਤ ਸੁਰੱਖਿਆ ਸਹਾਰਾ",
+        "Connect to 988 Crisis Lifeline": "988 ਕ੍ਰਾਈਸਿਸ ਲਾਈਫ਼ਲਾਈਨ ਨਾਲ ਜੁੜੋ",
+        "Alert a live InnerLight monitor": "InnerLight ਦੇ ਲਾਈਵ ਮਾਨੀਟਰ ਨੂੰ ਸੂਚਿਤ ਕਰੋ",
+        "Call 911 (immediate danger)": "911 ਉੱਤੇ ਕਾਲ ਕਰੋ (ਤੁਰੰਤ ਖ਼ਤਰਾ)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "ਕੀ ਮੈਂ ਤੁਹਾਡੀਆਂ ਦੱਸੀਆਂ ਗੱਲਾਂ ਕ੍ਰਾਈਸਿਸ ਕਾਊਂਸਲਰ ਨਾਲ ਸਾਂਝੀਆਂ ਕਰ ਦਿਆਂ, ਤਾਂ ਜੋ ਤੁਹਾਨੂੰ ਮੁੜ ਤੋਂ ਸ਼ੁਰੂ ਨਾ ਕਰਨਾ ਪਵੇ?",
+        "Talk with a licensed professional": "ਲਾਇਸੰਸਸ਼ੁਦਾ ਪੇਸ਼ੇਵਰ ਨਾਲ ਗੱਲ ਕਰੋ",
+        "Start a video session with a counselor": "ਕਾਊਂਸਲਰ ਨਾਲ ਵੀਡੀਓ ਸੈਸ਼ਨ ਸ਼ੁਰੂ ਕਰੋ",
+        "Schedule a session for later": "ਬਾਅਦ ਲਈ ਸੈਸ਼ਨ ਤੈਅ ਕਰੋ",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "ਕੀ ਮੈਂ ਕਾਊਂਸਲਰ ਨਾਲ ਇੱਕ ਛੋਟਾ ਸਾਰ ਸਾਂਝਾ ਕਰ ਦਿਆਂ, ਤਾਂ ਜੋ ਤੁਹਾਡੀ ਗੱਲਬਾਤ ਦੀ ਸ਼ੁਰੂਆਤ ਹੀ ਤੁਹਾਨੂੰ ਸਮਝਣ ਨਾਲ ਹੋਵੇ?",
+        "Find free/low-cost legal help near me": "ਮੇਰੇ ਨੇੜੇ ਮੁਫ਼ਤ/ਘੱਟ ਖਰਚ ਵਾਲੀ ਕਾਨੂੰਨੀ ਮਦਦ ਲੱਭੋ",
+        "Save my questions for the attorney": "ਵਕੀਲ ਲਈ ਮੇਰੇ ਸਵਾਲ ਸਾਂਭੋ",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "ਕੀ ਮੈਂ ਤੁਹਾਡੀ ਸਥਿਤੀ ਦਾ ਸਾਰ ਅਤੇ ਪੁੱਛਣ ਵਾਲੇ ਸਵਾਲ ਤਿਆਰ ਕਰ ਦਿਆਂ, ਤਾਂ ਜੋ ਵਕੀਲ ਨਾਲ ਗੱਲ ਕਰਨ ਵੇਲੇ ਤੁਸੀਂ ਤਿਆਰ ਹੋਵੋ?",
+        "Connect to local resources": "ਸਥਾਨਕ ਸਰੋਤਾਂ ਨਾਲ ਜੁੜੋ",
+        "find food assistance near me": "ਮੇਰੇ ਨੇੜੇ ਭੋਜਨ ਸਹਾਇਤਾ ਲੱਭੋ",
+        "find emergency shelter near me": "ਮੇਰੇ ਨੇੜੇ ਐਮਰਜੈਂਸੀ ਆਸਰਾ ਲੱਭੋ",
+        "Want me to note what you need so the resource line can help you faster?": "ਕੀ ਮੈਂ ਤੁਹਾਡੀਆਂ ਲੋੜਾਂ ਨੋਟ ਕਰ ਲਵਾਂ ਤਾਂ ਜੋ ਸਰੋਤ ਲਾਈਨ ਤੁਹਾਡੀ ਛੇਤੀ ਮਦਦ ਕਰ ਸਕੇ?",
+        "Share my context so I do not have to repeat myself.": "ਮੇਰਾ ਵੇਰਵਾ ਸਾਂਝਾ ਕਰੋ ਤਾਂ ਜੋ ਮੈਨੂੰ ਦੁਹਰਾਉਣਾ ਨਾ ਪਵੇ।",
+        "Connect with {who}": "{who} ਨਾਲ ਜੁੜੋ",
+        "@who:a tenant rights / housing attorney": "ਕਿਰਾਏਦਾਰ ਹੱਕ/ਰਿਹਾਇਸ਼ ਵਕੀਲ",
+        "@who:a housing and benefits advocate": "ਰਿਹਾਇਸ਼ ਅਤੇ ਲਾਭ ਸਲਾਹਕਾਰ",
+        "@who:an employment attorney": "ਰੁਜ਼ਗਾਰ ਵਕੀਲ",
+        "@who:an employment discrimination attorney (EEOC matters)": "ਰੁਜ਼ਗਾਰ ਵਿਤਕਰਾ ਵਕੀਲ (EEOC ਮਾਮਲੇ)",
+        "@who:a family law attorney": "ਪਰਿਵਾਰਕ ਕਾਨੂੰਨ ਵਕੀਲ",
+        "@who:a family law / custody attorney": "ਪਰਿਵਾਰਕ/ਕਸਟਡੀ ਵਕੀਲ",
+        "@who:a domestic violence advocate and protective-order attorney": "ਘਰੇਲੂ ਹਿੰਸਾ ਸਲਾਹਕਾਰ ਤੇ ਸੁਰੱਖਿਆ-ਹੁਕਮ ਵਕੀਲ",
+        "@who:a criminal defense attorney or public defender": "ਫੌਜਦਾਰੀ ਬਚਾਅ ਵਕੀਲ ਜਾਂ ਸਰਕਾਰੀ ਵਕੀਲ",
+        "@who:a qualified immigration attorney (not a notario)": "ਯੋਗ ਇਮੀਗ੍ਰੇਸ਼ਨ ਵਕੀਲ (ਨੋਟਾਰੀਓ ਨਹੀਂ)",
+        "@who:an education rights attorney": "ਸਿੱਖਿਆ ਹੱਕ ਵਕੀਲ",
+        "@who:a patient rights / health law advocate": "ਮਰੀਜ਼ ਹੱਕ/ਸਿਹਤ ਕਾਨੂੰਨ ਸਲਾਹਕਾਰ",
+        "@who:a disability rights attorney": "ਦਿਵਿਆਂਗਤਾ ਹੱਕ ਵਕੀਲ",
+        "@who:a consumer protection attorney": "ਖਪਤਕਾਰ ਸੁਰੱਖਿਆ ਵਕੀਲ",
+        "@who:a civil rights attorney": "ਨਾਗਰਿਕ ਹੱਕ ਵਕੀਲ",
+        "@who:a qualified attorney": "ਯੋਗ ਵਕੀਲ"
+      },
+      bn: {
+        "Immediate safety support": "তাৎক্ষণিক নিরাপত্তা সহায়তা",
+        "Connect to 988 Crisis Lifeline": "988 ক্রাইসিস লাইফলাইনে যুক্ত হন",
+        "Alert a live InnerLight monitor": "InnerLight-এর লাইভ মনিটরকে জানান",
+        "Call 911 (immediate danger)": "911 নম্বরে কল করুন (তাৎক্ষণিক বিপদ)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "আপনি আমাকে যা বলেছেন তা কি ক্রাইসিস কাউন্সেলরের সাথে ভাগ করব, যাতে আপনাকে আবার শুরু থেকে বলতে না হয়?",
+        "Talk with a licensed professional": "লাইসেন্সধারী পেশাদারের সাথে কথা বলুন",
+        "Start a video session with a counselor": "কাউন্সেলরের সাথে ভিডিও সেশন শুরু করুন",
+        "Schedule a session for later": "পরের জন্য সেশন নির্ধারণ করুন",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "আমি কি কাউন্সেলরের সাথে একটি সংক্ষিপ্ত সারাংশ ভাগ করব, যাতে আপনাদের সময় শুরু হয় আপনাকে বোঝা দিয়েই?",
+        "Find free/low-cost legal help near me": "আমার কাছে বিনামূল্যে/কম খরচের আইনি সাহায্য খুঁজুন",
+        "Save my questions for the attorney": "আইনজীবীর জন্য আমার প্রশ্ন সংরক্ষণ করুন",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "আমি কি আপনার পরিস্থিতির সারাংশ ও জিজ্ঞাসার প্রশ্নগুলো তৈরি করব, যাতে আইনজীবীর সাথে কথা বলার সময় আপনি প্রস্তুত থাকেন?",
+        "Connect to local resources": "স্থানীয় সংস্থানের সাথে যুক্ত হন",
+        "find food assistance near me": "আমার কাছে খাদ্য সহায়তা খুঁজুন",
+        "find emergency shelter near me": "আমার কাছে জরুরি আশ্রয় খুঁজুন",
+        "Want me to note what you need so the resource line can help you faster?": "আমি কি আপনার প্রয়োজনগুলো লিখে রাখব যাতে রিসোর্স লাইন দ্রুত সাহায্য করতে পারে?",
+        "Share my context so I do not have to repeat myself.": "আমার প্রসঙ্গ ভাগ করুন যাতে আমাকে আবার বলতে না হয়।",
+        "Connect with {who}": "{who} এর সাথে যুক্ত হন",
+        "@who:a tenant rights / housing attorney": "ভাড়াটিয়া অধিকার/আবাসন আইনজীবী",
+        "@who:a housing and benefits advocate": "আবাসন ও সুবিধা সহায়তাকারী",
+        "@who:an employment attorney": "কর্মসংস্থান আইনজীবী",
+        "@who:an employment discrimination attorney (EEOC matters)": "কর্মক্ষেত্রে বৈষম্য আইনজীবী (EEOC বিষয়)",
+        "@who:a family law attorney": "পারিবারিক আইনজীবী",
+        "@who:a family law / custody attorney": "পারিবারিক/হেফাজত আইনজীবী",
+        "@who:a domestic violence advocate and protective-order attorney": "পারিবারিক সহিংসতা সহায়তাকারী ও সুরক্ষা-আদেশ আইনজীবী",
+        "@who:a criminal defense attorney or public defender": "ফৌজদারি প্রতিরক্ষা আইনজীবী বা পাবলিক ডিফেন্ডার",
+        "@who:a qualified immigration attorney (not a notario)": "যোগ্য অভিবাসন আইনজীবী (নোটারিও নয়)",
+        "@who:an education rights attorney": "শিক্ষা অধিকার আইনজীবী",
+        "@who:a patient rights / health law advocate": "রোগীর অধিকার/স্বাস্থ্য আইন সহায়তাকারী",
+        "@who:a disability rights attorney": "প্রতিবন্ধী অধিকার আইনজীবী",
+        "@who:a consumer protection attorney": "ভোক্তা সুরক্ষা আইনজীবী",
+        "@who:a civil rights attorney": "নাগরিক অধিকার আইনজীবী",
+        "@who:a qualified attorney": "যোগ্য আইনজীবী"
+      },
+      tl: {
+        "Immediate safety support": "Agarang suporta sa kaligtasan",
+        "Connect to 988 Crisis Lifeline": "Kumonekta sa 988 Crisis Lifeline",
+        "Alert a live InnerLight monitor": "Abisuhan ang live na InnerLight monitor",
+        "Call 911 (immediate danger)": "Tumawag sa 911 (agarang panganib)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Gusto mo bang ibahagi ko sa crisis counselor ang sinabi mo, para hindi ka na mag-uumpisa muli?",
+        "Talk with a licensed professional": "Makipag-usap sa lisensyadong propesyonal",
+        "Start a video session with a counselor": "Magsimula ng video session sa counselor",
+        "Schedule a session for later": "Mag-iskedyul ng session para mamaya",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "Gusto mo bang magbahagi ako ng maikling buod sa counselor para pagsisimula pa lang ay naiintindihan ka na niya?",
+        "Find free/low-cost legal help near me": "Maghanap ng libre/murang tulong legal malapit sa akin",
+        "Save my questions for the attorney": "I-save ang mga tanong ko para sa abogado",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "Gusto mo bang ihanda ko ang buod ng sitwasyon mo at ang mga itatanong, para handa ka sa pakikipag-usap sa abogado?",
+        "Connect to local resources": "Kumonekta sa mga lokal na mapagkukunan",
+        "find food assistance near me": "maghanap ng tulong sa pagkain malapit sa akin",
+        "find emergency shelter near me": "maghanap ng emergency shelter malapit sa akin",
+        "Want me to note what you need so the resource line can help you faster?": "Gusto mo bang itala ko ang kailangan mo para mas mabilis kang matulungan ng resource line?",
+        "Share my context so I do not have to repeat myself.": "Ibahagi ang konteksto ko para hindi ko na kailangang ulitin.",
+        "Connect with {who}": "Kumonekta sa {who}",
+        "@who:a tenant rights / housing attorney": "abogado sa karapatan ng nangungupahan/pabahay",
+        "@who:a housing and benefits advocate": "tagapagtaguyod sa pabahay at benepisyo",
+        "@who:an employment attorney": "abogado sa trabaho",
+        "@who:an employment discrimination attorney (EEOC matters)": "abogado sa diskriminasyon sa trabaho (mga usaping EEOC)",
+        "@who:a family law attorney": "abogado sa batas pampamilya",
+        "@who:a family law / custody attorney": "abogado sa pamilya/kustodiya",
+        "@who:a domestic violence advocate and protective-order attorney": "tagapagtaguyod sa karahasan sa tahanan at abogado sa protective order",
+        "@who:a criminal defense attorney or public defender": "abogado sa depensa kriminal o public defender",
+        "@who:a qualified immigration attorney (not a notario)": "kwalipikadong abogado sa imigrasyon (hindi notario)",
+        "@who:an education rights attorney": "abogado sa karapatan sa edukasyon",
+        "@who:a patient rights / health law advocate": "tagapagtaguyod sa karapatan ng pasyente/batas pangkalusugan",
+        "@who:a disability rights attorney": "abogado sa karapatan ng may kapansanan",
+        "@who:a consumer protection attorney": "abogado sa proteksyon ng mamimili",
+        "@who:a civil rights attorney": "abogado sa karapatang sibil",
+        "@who:a qualified attorney": "kwalipikadong abogado"
+      },
+      to: {
+        "Immediate safety support": "Poupou maluʻi fakavavevave",
+        "Connect to 988 Crisis Lifeline": "Fakafehokotaki ki he 988 Crisis Lifeline",
+        "Alert a live InnerLight monitor": "Fakatokanga ki ha leʻo InnerLight ʻoku ʻi ai",
+        "Call 911 (immediate danger)": "Telefoni ki he 911 (fakatuʻutāmaki vave)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Te ke loto ke u vahevahe e meʻa kuó ke talamai ki he faleʻi fakatuʻupakeé, koeʻuhí ke ʻoua te ke toe kamata mei he kamataʻangá?",
+        "Talk with a licensed professional": "Talanoa mo ha taukei maʻu laiseni",
+        "Start a video session with a counselor": "Kamata ha fetalanoaʻaki vitiō mo ha faleʻi",
+        "Schedule a session for later": "Fokotuʻu ha taimi fetalanoaʻaki ki ha taimi ʻamui",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "Te ke loto ke u vahevahe ha fakamatala nounou ki he faleʻí koeʻuhí ke kamata hoʻomo taimí kuó ne ʻosi mahinoʻi koe?",
+        "Find free/low-cost legal help near me": "Kumi ha tokoni fakalao taʻetotongi/totongi maʻamaʻa ofi mai",
+        "Save my questions for the attorney": "Tauhi ʻeku ngaahi fehuʻi ki he loeá",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "Te ke loto ke u teuteuʻi ha fakamatala ki hoʻo tuʻungá mo e ngaahi fehuʻi ke fai, koeʻuhí ke ke mateuteu ʻi hoʻo talanoa mo ha loea?",
+        "Connect to local resources": "Fakafehokotaki ki he ngaahi maʻuʻanga tokoni fakalotofonua",
+        "find food assistance near me": "kumi tokoni meʻakai ofi mai",
+        "find emergency shelter near me": "kumi ha hūfanga fakavavevave ofi mai",
+        "Want me to note what you need so the resource line can help you faster?": "Te ke loto ke u hiki e meʻa ʻokú ke fiemaʻú koeʻuhí ke vave ange hono tokoniʻi koe ʻe he laine tokoní?",
+        "Share my context so I do not have to repeat myself.": "Vahevahe ʻeku fakamatalá ke ʻoua te u toe lea tuʻo ua.",
+        "Connect with {who}": "Fakafehokotaki ki ha {who}",
+        "@who:a tenant rights / housing attorney": "ha loea ki he totonu ʻo e kakai nofo totongi mo e nofoʻanga",
+        "@who:a housing and benefits advocate": "ha taukapo ki he nofoʻanga mo e ngaahi monūʻia",
+        "@who:an employment attorney": "ha loea ngāue",
+        "@who:an employment discrimination attorney (EEOC matters)": "ha loea ki he filifilimānako he ngāué (ngaahi meʻa EEOC)",
+        "@who:a family law attorney": "ha loea lao fakafāmili",
+        "@who:a family law / custody attorney": "ha loea fakafāmili mo e tauhi fānau",
+        "@who:a domestic violence advocate and protective-order attorney": "ha taukapo ki he fakamamahi fakaʻapi mo ha loea tuʻutuʻuni maluʻi",
+        "@who:a criminal defense attorney or public defender": "ha loea maluʻi hia pe loea fakapuleʻanga",
+        "@who:a qualified immigration attorney (not a notario)": "ha loea hikifonua taau (ʻikai ko ha notario)",
+        "@who:an education rights attorney": "ha loea ki he totonu ʻo e akó",
+        "@who:a patient rights / health law advocate": "ha taukapo ki he totonu ʻo e mahakí mo e lao moʻui",
+        "@who:a disability rights attorney": "ha loea ki he totonu ʻo e faingataʻaʻiá",
+        "@who:a consumer protection attorney": "ha loea maluʻi fakatau",
+        "@who:a civil rights attorney": "ha loea ki he ngaahi totonu fakasivilé",
+        "@who:a qualified attorney": "ha loea taau"
+      }
+    };
+    function _ilho(s){
+      var lg = (window._ilLang||'en'); if (lg === 'en' || !s) return s;
+      var d = _IL_HO[lg]; if (!d) return s;
+      if (d[s] != null) return d[s];
+      if (s.indexOf('Connect with ') === 0) {
+        var who = s.slice(13);
+        var tw = d['@who:' + who] || who;
+        return (d['Connect with {who}'] || 'Connect with {who}').replace('{who}', tw);
+      }
+      return s;
+    }
+    window._ilho = _ilho;
+
     var _IL_UX = {
       en: {
         "sam.q": "How are you feeling right now? (tap one, or ignore me)",
@@ -1292,7 +1558,13 @@ PUBLIC_PAGE = """
         "lg.steps": "Steps you can take right now",
         "wh.connect": "Connect now",
         "wh.norush": "whenever you're ready — no rush",
-        "wh.more": "I'm here if you need to talk more"
+        "wh.more": "I'm here if you need to talk more",
+        "reply": "Reply",
+        "listen.ph": "I'm listening... (press Enter to send)",
+        "take.ph": "Take your time... or tap Speak (press Enter to send)",
+        "uh": "Help is worth reaching for right now. {988}, or {911} if there is immediate danger. I am staying right here with you.",
+        "uh.988": "Call or text 988",
+        "uh.911n": "911"
       },
       es: {
         "sam.q": "¿Cómo te sientes ahora mismo? (toca una carita, o ignórame)",
@@ -1361,7 +1633,13 @@ PUBLIC_PAGE = """
         "lg.steps": "Pasos que puedes dar ahora mismo",
         "wh.connect": "Conectar ahora",
         "wh.norush": "cuando tú quieras — sin prisa",
-        "wh.more": "Aquí estoy si necesitas hablar más"
+        "wh.more": "Aquí estoy si necesitas hablar más",
+        "reply": "Responder",
+        "listen.ph": "Te escucho... (presiona Enter para enviar)",
+        "take.ph": "Tómate tu tiempo... o toca Hablar (presiona Enter para enviar)",
+        "uh": "Vale la pena buscar ayuda ahora mismo. {988}, o {911} si hay peligro inmediato. Me quedo aquí contigo.",
+        "uh.988": "Llama o envía un mensaje al 988",
+        "uh.911n": "911"
       },
       zh: {
         "sam.q": "你现在感觉怎么样？（点一个，或忽略我）",
@@ -1430,7 +1708,13 @@ PUBLIC_PAGE = """
         "lg.steps": "你现在就能做的事",
         "wh.connect": "现在连接",
         "wh.norush": "等你准备好——不着急",
-        "wh.more": "如果你还想聊聊，我就在这里"
+        "wh.more": "如果你还想聊聊，我就在这里",
+        "reply": "回复",
+        "listen.ph": "我在听……（按回车发送）",
+        "take.ph": "慢慢来……或点“说话”（按回车发送）",
+        "uh": "现在就值得去寻求帮助。{988}，如有紧急危险请{911}。我就在这里陪着你。",
+        "uh.988": "拨打或发短信至 988",
+        "uh.911n": "拨打 911"
       },
       hi: {
         "sam.q": "आप इस समय कैसा महसूस कर रहे हैं? (एक चुनें, या मुझे अनदेखा करें)",
@@ -1499,7 +1783,13 @@ PUBLIC_PAGE = """
         "lg.steps": "अभी उठाए जा सकने वाले कदम",
         "wh.connect": "अभी जोड़ें",
         "wh.norush": "जब आप तैयार हों — कोई जल्दी नहीं",
-        "wh.more": "और बात करनी हो तो मैं यहीं हूँ"
+        "wh.more": "और बात करनी हो तो मैं यहीं हूँ",
+        "reply": "जवाब दें",
+        "listen.ph": "मैं सुन रहा हूँ… (भेजने के लिए Enter दबाएँ)",
+        "take.ph": "अपना समय लीजिए… या बोलें दबाएँ (भेजने के लिए Enter दबाएँ)",
+        "uh": "अभी मदद माँगना बिल्कुल सही है। {988}, या तत्काल खतरा होने पर {911}। मैं यहीं आपके साथ हूँ।",
+        "uh.988": "988 पर कॉल या संदेश करें",
+        "uh.911n": "911 पर कॉल करें"
       },
       pa: {
         "sam.q": "ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ? (ਇੱਕ ਚੁਣੋ, ਜਾਂ ਮੈਨੂੰ ਅਣਡਿੱਠ ਕਰੋ)",
@@ -1568,7 +1858,13 @@ PUBLIC_PAGE = """
         "lg.steps": "ਹੁਣੇ ਚੁੱਕੇ ਜਾ ਸਕਣ ਵਾਲੇ ਕਦਮ",
         "wh.connect": "ਹੁਣੇ ਜੋੜੋ",
         "wh.norush": "ਜਦੋਂ ਤੁਸੀਂ ਤਿਆਰ ਹੋਵੋ — ਕੋਈ ਕਾਹਲੀ ਨਹੀਂ",
-        "wh.more": "ਹੋਰ ਗੱਲ ਕਰਨੀ ਹੋਵੇ ਤਾਂ ਮੈਂ ਇੱਥੇ ਹਾਂ"
+        "wh.more": "ਹੋਰ ਗੱਲ ਕਰਨੀ ਹੋਵੇ ਤਾਂ ਮੈਂ ਇੱਥੇ ਹਾਂ",
+        "reply": "ਜਵਾਬ ਦਿਓ",
+        "listen.ph": "ਮੈਂ ਸੁਣ ਰਿਹਾ ਹਾਂ… (ਭੇਜਣ ਲਈ Enter ਦਬਾਓ)",
+        "take.ph": "ਆਪਣਾ ਸਮਾਂ ਲਵੋ… ਜਾਂ ਬੋਲੋ ਦਬਾਓ (ਭੇਜਣ ਲਈ Enter ਦਬਾਓ)",
+        "uh": "ਹੁਣੇ ਮਦਦ ਮੰਗਣਾ ਬਿਲਕੁਲ ਸਹੀ ਹੈ। {988}, ਜਾਂ ਤੁਰੰਤ ਖ਼ਤਰਾ ਹੋਵੇ ਤਾਂ {911}। ਮੈਂ ਇੱਥੇ ਹੀ ਤੁਹਾਡੇ ਨਾਲ ਹਾਂ।",
+        "uh.988": "988 ਉੱਤੇ ਕਾਲ ਜਾਂ ਸੁਨੇਹਾ ਭੇਜੋ",
+        "uh.911n": "911 ਉੱਤੇ ਕਾਲ ਕਰੋ"
       },
       bn: {
         "sam.q": "আপনি এই মুহূর্তে কেমন বোধ করছেন? (একটি বেছে নিন, বা আমাকে উপেক্ষা করুন)",
@@ -1637,7 +1933,13 @@ PUBLIC_PAGE = """
         "lg.steps": "এখনই যা করতে পারেন",
         "wh.connect": "এখনই যুক্ত করুন",
         "wh.norush": "আপনি প্রস্তুত হলে — কোনো তাড়া নেই",
-        "wh.more": "আরও কথা বলতে চাইলে আমি এখানে আছি"
+        "wh.more": "আরও কথা বলতে চাইলে আমি এখানে আছি",
+        "reply": "উত্তর দিন",
+        "listen.ph": "আমি শুনছি… (পাঠাতে Enter চাপুন)",
+        "take.ph": "সময় নিন… বা বলুন চাপুন (পাঠাতে Enter চাপুন)",
+        "uh": "এখনই সাহায্য চাওয়া একদম ঠিক। {988}, বা তাৎক্ষণিক বিপদ হলে {911}। আমি এখানেই আপনার সাথে আছি।",
+        "uh.988": "988 নম্বরে কল বা টেক্সট করুন",
+        "uh.911n": "911 নম্বরে কল করুন"
       },
       tl: {
         "sam.q": "Ano ang nararamdaman mo ngayon? (mag-tap ng isa, o balewalain ako)",
@@ -1706,7 +2008,13 @@ PUBLIC_PAGE = """
         "lg.steps": "Mga hakbang na magagawa mo ngayon",
         "wh.connect": "Ikonekta na",
         "wh.norush": "kapag handa ka na — walang pagmamadali",
-        "wh.more": "Nandito ako kung gusto mo pang mag-usap"
+        "wh.more": "Nandito ako kung gusto mo pang mag-usap",
+        "reply": "Sumagot",
+        "listen.ph": "Nakikinig ako... (pindutin ang Enter para ipadala)",
+        "take.ph": "Huwag magmadali... o i-tap ang Magsalita (pindutin ang Enter para ipadala)",
+        "uh": "Sulit abutin ang tulong ngayon din. {988}, o {911} kung may agarang panganib. Nandito lang ako kasama mo.",
+        "uh.988": "Tumawag o mag-text sa 988",
+        "uh.911n": "Tumawag sa 911"
       },
       to: {
         "sam.q": "ʻOkú ke ongoʻi fēfē he taimí ni? (lomiʻi ha taha, pe tukunoaʻi au)",
@@ -1775,7 +2083,13 @@ PUBLIC_PAGE = """
         "lg.steps": "Ngaahi sitepu te ke lava ʻo fai he taimí ni",
         "wh.connect": "Fakafehokotaki he taimí ni",
         "wh.norush": "ʻi hoʻo mateuteú — ʻoku ʻikai ha fakavavevave",
-        "wh.more": "ʻOku ou ʻi heni kapau ʻokú ke fie toe talanoa"
+        "wh.more": "ʻOku ou ʻi heni kapau ʻokú ke fie toe talanoa",
+        "reply": "Tali",
+        "listen.ph": "ʻOku ou fanongo... (lomiʻi e Enter ke ʻave)",
+        "take.ph": "Fai māmālie pē... pe lomiʻi ʻa e Lea (lomiʻi e Enter ke ʻave)",
+        "uh": "ʻOku ʻaonga ke kumi tokoni he taimí ni. {988}, pe {911} kapau ʻoku ʻi ai ha fakatuʻutāmaki vave. ʻOku ou nofo ʻi heni pē mo koe.",
+        "uh.988": "Telefoni pe fai ha pōpoaki ki he 988",
+        "uh.911n": "Telefoni ki he 911"
       }
     };
     function _ilux(k){ var lg=(window._ilLang||"en"); var d=_IL_UX[lg]||_IL_UX.en; return (d && d[k]!=null) ? d[k] : _IL_UX.en[k]; }
@@ -1952,7 +2266,7 @@ PUBLIC_PAGE = """
         <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" aria-label="Start wherever you would like... (press Enter to send)" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
           <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
-          <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
+          <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">${_ilux('mic.speak')}</button>
         </div>
         <div class="music-bar">
           <button type="button" id="mute-btn" onclick="toggleMute()" aria-label="Mute music" aria-pressed="false" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="24" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume" aria-label="Music volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
@@ -5493,10 +5807,10 @@ function revealUrgentHelp(data){
   const risk = (data && data.risk) || 'low';
   if(risk === 'critical' || risk === 'high'){
     box.style.display = 'block';
-    box.innerHTML = 'Help is worth reaching for right now. '
-      + '<a href="tel:988" style="color:#b3322e;text-decoration:underline;">Call or text 988</a>, '
-      + 'or <a href="tel:911" style="color:#b3322e;text-decoration:underline;">911</a> if there is immediate danger. '
-      + 'I am staying right here with you.';
+    var _t = _ilux('uh');
+    _t = _t.replace('{988}', '<a href="tel:988" style="color:#b3322e;text-decoration:underline;">'+_ilux('uh.988')+'</a>')
+           .replace('{911}', '<a href="tel:911" style="color:#b3322e;text-decoration:underline;">'+_ilux('uh.911n')+'</a>');
+    box.innerHTML = _t;
   } else {
     box.style.display = 'none';
   }
@@ -5769,10 +6083,10 @@ function appendHandoff(thread, handoff, data) {
   const secondaryStyle = 'background:#fff;color:'+c.accent+';border:1px solid '+c.border+';border-radius:10px;padding:12px 18px;font-size:14px;cursor:pointer;margin:4px 6px 4px 0;';
   const emergencyStyle = 'background:#fff;color:#b91c1c;border:1px solid #fca5a5;border-radius:10px;padding:12px 18px;font-size:14px;cursor:pointer;margin:4px 6px 4px 0;';
   el.innerHTML = `
-    <p style="font-size:15px;font-weight:600;color:${c.accent};margin:0 0 6px;">${escapeHtml(handoff.label)}</p>
+    <p style="font-size:15px;font-weight:600;color:${c.accent};margin:0 0 6px;">${escapeHtml(_ilho(handoff.label))}</p>
     <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#6b412c;margin:10px 0;cursor:pointer;">
       <input type="checkbox" id="consent-${handoff.type}" style="margin-top:3px;">
-      <span>${escapeHtml(handoff.context_prompt || 'Share my context so I do not have to repeat myself.')}</span>
+      <span>${escapeHtml(_ilho(handoff.context_prompt || 'Share my context so I do not have to repeat myself.'))}</span>
     </label>
     <div class="bridge-buttons" style="margin-top:10px;"></div>
   `;
@@ -5782,7 +6096,7 @@ function appendHandoff(thread, handoff, data) {
   function addBtn(b, style) {
     if (!b) return;
     const btn = document.createElement('button');
-    btn.textContent = b.label;
+    btn.textContent = _ilho(b.label);
     btn.setAttribute('style', style);
     btn.onclick = function() { completeBridge(handoff.type, b.action, b.value || ''); };
     btnContainer.appendChild(btn);
@@ -5791,7 +6105,7 @@ function appendHandoff(thread, handoff, data) {
   addBtn(secondary, secondaryStyle);
   addBtn(emergency, emergencyStyle);
   // Speak the handoff offer
-  speak(handoff.label);
+  speak(_ilho(handoff.label));
   window._lastHandoffData = data;
 }
 async function completeBridge(type, action, value) {
@@ -5872,7 +6186,7 @@ function showExit(thread, exitMsg, resolution) {
   el.style.cssText = 'text-align:center;background:linear-gradient(135deg,#b27849,#9e6a40);color:#fff;border-radius:14px;padding:22px;margin:18px 0;';
   el.innerHTML = `
     <p style="font-size:16px;line-height:1.7;margin:0;">${escapeHtml(exitMsg.message)}</p>
-    <button onclick="restartConversation()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:10px 22px;font-size:13px;cursor:pointer;margin-top:16px;">I'm here if you need to talk more</button>
+    <button onclick="restartConversation()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:10px 22px;font-size:13px;cursor:pointer;margin-top:16px;">${_ilux('wh.more')}</button>
   `;
   thread.appendChild(el);
   speak(exitMsg.message);
@@ -5883,10 +6197,10 @@ function restartConversation() {
   box.className = 'reply-box';
   box.style.cssText = 'margin-top:16px;';
   box.innerHTML = `
-    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="I'm listening... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
+    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="${_ilux('listen.ph')}" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="story-send" onclick="continueConversation()">Reply</button>
-      <button class="story-mic" type="button" onclick="startVoiceCapture()">&#127908; Speak</button>
+      <button class="story-send" onclick="continueConversation()">${_ilux('reply')}</button>
+      <button class="story-mic" type="button" onclick="startVoiceCapture()">${_ilux('mic.speak')}</button>
     </div>
   `;
   document.getElementById('conversation-thread').appendChild(box);
@@ -5915,10 +6229,10 @@ function appendExchange(thread, reply, question, safetyHtml) {
   replyBox.className = 'reply-box';
   replyBox.style.cssText = 'margin-top:16px;';
   replyBox.innerHTML = `
-    <textarea id="conv-answer" class="story-input" style="min-height:80px;" aria-label="Take your time... or tap Speak (press Enter to send)" placeholder="Take your time... or tap Speak (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
+    <textarea id="conv-answer" class="story-input" style="min-height:80px;" aria-label="${_ilux('take.ph')}" placeholder="${_ilux('take.ph')}" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="story-send" onclick="continueConversation()">Reply</button>
-      <button class="story-mic" type="button" onclick="startVoiceCapture()">&#127908; Speak</button>
+      <button class="story-send" onclick="continueConversation()">${_ilux('reply')}</button>
+      <button class="story-mic" type="button" onclick="startVoiceCapture()">${_ilux('mic.speak')}</button>
     </div>
   `;
   thread.appendChild(replyBox);

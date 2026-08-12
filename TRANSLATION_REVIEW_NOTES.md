@@ -118,3 +118,13 @@ Known gaps (queued):
   worth knowing about {issue}") so the legal card never presumes the issue is
   the user's own — it may belong to someone they love. New-language versions
   remain READY, PENDING NATIVE REVIEW.
+
+## Batch: crisis handoff surfaces (2026-08-12) — HIGHEST REVIEW PRIORITY
+
+- _IL_HO now translates every server-built handoff card string (crisis title,
+  988/911/monitor buttons, consent prompts, legal/clinical/community cards,
+  15 attorney-type phrases) in all 8 languages, applied instantly on-device
+  with English fallback for unknown strings.
+- These appear at the highest-risk moment a person can be in. Native review of
+  THIS batch comes before all others. Tongan legal vocabulary (loea
+  constructions) especially needs a native speaker's confirmation.

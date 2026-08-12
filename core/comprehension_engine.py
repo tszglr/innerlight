@@ -175,7 +175,7 @@ def respond(
     def _call(msgs):
         body = json.dumps({
             "model": MODEL,
-            "max_tokens": 300,
+            "max_tokens": 500,  # non-Latin scripts (Gurmukhi, Bengali, Chinese) use more tokens per sentence; 300 truncated real replies mid-word
             "system": system,
             "messages": msgs,
         }).encode("utf-8")
