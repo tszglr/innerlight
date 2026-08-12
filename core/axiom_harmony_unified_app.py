@@ -1177,6 +1177,10 @@ PUBLIC_PAGE = """
         try { if (typeof initVoices === 'function') initVoices(); } catch(e){}
         try { if (typeof populateVoicePicker === 'function') populateVoicePicker(); } catch(e){}
         try { var _sp=document.getElementById('scene-picker'); if (_sp && typeof _ilux==='function') _sp.setAttribute('aria-label', _ilux('scn.aria')); } catch(e){}
+        // A feeling prompt already on screen must follow the person into
+        // their new language, not linger in the old one.
+        try { var _ci=document.getElementById('il-checkin'); if (_ci && _ci.querySelector('button')) { _ci.remove(); if (typeof showCheckin==='function') showCheckin(); } } catch(e){}
+        try { var _sc=document.getElementById('sam-card'); if (_sc) { _sc.remove(); if (typeof showCalmScale==='function') showCalmScale(window._lastSamPhase||''); } } catch(e){}
         // the arrival greeting is rendered word-by-word in the chosen language
         try { if (typeof renderGateGreeting === 'function') renderGateGreeting(false); } catch(e){}
         var btns = document.querySelectorAll('[data-langbtn]');
@@ -4541,6 +4545,7 @@ function politeScrollIntoView(el){
 
 // ---- LENS THREE: wordless calm scale (tap a face, or ignore it) ----
 function showCalmScale(phase){
+  window._lastSamPhase = phase;
   if (document.getElementById('sam-card')) return;
   const card = document.createElement('div');
   card.id = 'sam-card';
@@ -7557,6 +7562,33 @@ def page_research():
     <p>InnerLight records anonymous, aggregate research metrics designed around recognized digital-health frameworks: uptake, engagement, session duration, adherence, and completion, alongside expression shifts, sound responses, self-reported calm (a wordless Self-Assessment Manikin scale), and heart-rate trends measured against each person&rsquo;s own baseline. Every heart reading carries a confidence tier so coverage is complete without overstating precision. We follow the scientific method explicitly: a falsifiable hypothesis, stated predictions, an instrument that gathers the data, and a commitment to replication and peer review.</p>
 
     <div class="soft"><p style="margin:0;">InnerLight does not diagnose, prescribe, or practice medicine or law. It is a companion for the wait and a bridge to human help &mdash; never a replacement for it. If you are in immediate danger, call or text 988, or call 911.</p></div>
+
+
+    <h2>9. The mission&rsquo;s evidence &mdash; alternative crisis response</h2>
+    <p>InnerLight&rsquo;s north star is to become a trusted first call for a person in crisis &mdash; a path to real help that does not begin with an armed response. This is not a solitary idea; it is a documented national movement with a growing evidence base. InnerLight is a civilian, software front door to that movement: it bridges people toward care-first human responders, and toward 911 only when immediate physical danger requires it.</p>
+    <p class="cite">Dee T.S., Pyne J. (2022). &ldquo;A community response approach to mental health and substance abuse crises reduced crime.&rdquo; <em>Science Advances</em>, 8(23). (Denver STAR: 34% reduction in low-level offenses in served neighborhoods.)</p>
+    <p class="cite">RTI International (2026). Quasi-experimental evaluations of Durham&rsquo;s HEART and Greensboro&rsquo;s BHRT programs: unarmed response teams matched police response times, reduced arrests, and increased connections to supportive services.</p>
+    <p class="cite">Human Rights Watch (2026). &ldquo;Self-Determination is the Pathway to Liberation&rdquo; &mdash; national assessment of non-police, consent-based, rights-respecting crisis response programs.</p>
+    <p class="cite">Vera Institute of Justice (2022). <em>Civilian Crisis Response Toolkit</em> &mdash; documents community distrust of police-linked emergency lines and recommends crisis access points disconnected from traditional public-safety systems.</p>
+    <p class="cite">Center for American Progress &amp; Law Enforcement Action Partnership (2020). Analysis of 911 calls in eight major cities: up to 68% could be handled without an armed officer.</p>
+    <p class="cite">National portrait of nonpolice alternative response programs (2024): 216 programs operational across the United States.</p>
+    <p class="cite">NBER Working Paper 34344: willingness-to-pay analysis finding the public places higher value on active civilian-led crisis interventions.</p>
+
+    <h2>10. Speaking every language honestly &mdash; translation with a quality judge</h2>
+    <p>InnerLight serves people in eight languages. Machine translation of safety and legal content is held to a published research standard: every translated legal-guidance card and spoken hand-off passes an independent model-judge scoring pass for semantic equivalence and natural phrasing before a person sees it, with 0.8 as the acceptance bar. Content that scores below the bar is withheld rather than shown wrong. Every new-language interface string additionally awaits native-speaker review, and that status is documented in our repository. If a device has no speech voice for the chosen language, InnerLight stays silent rather than speak the wrong language &mdash; the words remain on screen.</p>
+    <p class="cite">LLM-as-a-Judge reference-less quality estimation for machine translation, with a &ge;0.8 semantic-equivalence acceptance threshold (arXiv:2503.24102).</p>
+    <p class="cite">Enomoto et al. &ldquo;From LLM to NMT: Advancing Low-Resource Machine Translation with Claude&rdquo; (arXiv:2404.13813) &mdash; documents where large language models still lag specialized systems on low-resource language pairs, the reason a verification pass is required.</p>
+    <p class="cite">In-context machine translation for low-resource languages (arXiv:2502.11862) &mdash; documents rare-word failure modes in underrepresented languages.</p>
+
+    <h2>11. What the microphone reads &mdash; voice prosody</h2>
+    <p>With the person&rsquo;s microphone permission, InnerLight measures four classical prosodic descriptors on-device: overall vocal energy (RMS), pitch variability (autocorrelation-estimated fundamental frequency over a rolling window), speech rate (voiced-segment transitions), and a 4&ndash;8&nbsp;Hz amplitude-modulation estimate. These are long-established acoustic correlates of emotional arousal in the speech-emotion literature. The raw audio for this analysis never leaves the browser; only the four numbers travel, they steer the calming music, and they are never stored. Our normalization constants are engineering estimates, labeled as such in the source code, pending calibration against a labeled recording set &mdash; consistent with our rule that nothing invented may be presented as ground truth.</p>
+    <p class="cite">Schuller B.W. (2018). &ldquo;Speech emotion recognition: two decades in a nutshell, benchmarks, and ongoing trends.&rdquo; <em>Communications of the ACM</em>, 61(5), 90&ndash;99.</p>
+    <p class="cite">Zennou H., Ouadad R., Ouhda M., Baslam M. (2026). &ldquo;Real-Time Speech Emotion Recognition with a CNN-BiLSTM-Attention Deep Learning Model.&rdquo; <em>Engineering, Technology &amp; Applied Science Research</em>, 16(3) &mdash; the current direction of the field our simpler, on-device measures are designed to grow toward.</p>
+
+    <h2>12. Safety signals in any language</h2>
+    <p>Protective detection &mdash; recognizing when a writer may be a minor, may be substituting this tool for human connection, or may be in crisis &mdash; must not depend on the language a person writes in. In non-English sessions these signals are read by the comprehension model itself, which reads the person&rsquo;s own language, rather than by English-only phrase lists. By design, an uncertain reading can only raise the level of care, never lower it, and an ambiguous statement receives a caring follow-up question rather than a verdict.</p>
+    <p class="cite">Vasan A., Stanford Brainstorm &mdash; on substitution as the primary risk of AI mental-health tools and the duty to escalate to humans (as quoted in Gold, <em>Inside Higher Ed</em>, 2026).</p>
+    <p class="cite">Common Sense Media &mdash; research on adolescent use of AI for mental-health advice, informing InnerLight&rsquo;s heightened minor protections.</p>
 
     <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
     """
