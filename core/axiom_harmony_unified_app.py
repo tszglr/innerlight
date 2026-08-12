@@ -5563,7 +5563,7 @@ async function doSaveStory(){
   const offer = document.getElementById('save-offer');
   try {
     const r = await fetch('/api/memory/save', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({summary: story})});
+      body: JSON.stringify({summary: story, conversation: (typeof conversationLog!=='undefined'?conversationLog.slice(-80):[])})});
     const d = await r.json();
     if (d.status === 'ok'){
       if (offer) offer.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:8px;">'+_ilux('sv.saved')+'</div>'
@@ -5601,10 +5601,38 @@ async function doResume(){
       const box = document.getElementById('resume-box'); if (box) box.remove();
       const thread = document.getElementById('conversation-thread');
       if (thread){
-        const div = document.createElement('div');
-        div.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:14px;color:#4a362c;';
-        div.innerHTML = '<b>Welcome back.</b> Here\u2019s where you left off, so you don\u2019t have to start over:<br><br>' + (d.summary||'').replace(/</g,'&lt;');
-        thread.appendChild(div);
+        // Slip the story screen into conversation state, like an active session.
+        try {
+          const title = document.querySelector('.story-title'); if (title) title.style.display = 'none';
+          const sub = document.querySelector('.story-sub'); if (sub) sub.style.display = 'none';
+        } catch(e){}
+        const head = document.createElement('div');
+        head.style.cssText = 'background:rgba(46,110,142,0.1);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:14px;color:#4a362c;';
+        head.innerHTML = '<b>Welcome back.</b> Here\u2019s where you left off, so you don\u2019t have to start over:';
+        thread.appendChild(head);
+        const turns = Array.isArray(d.conversation) ? d.conversation : [];
+        if (turns.length){
+          // Rebuild the CONVERSATION, turn by turn — and hand the companion its
+          // memory back, so the next message continues the same story.
+          try { conversationLog = turns.map(function(t){ return {role: (t.role==='user'?'user':'innerlight'), text: String(t.text||''), at: ''}; }); } catch(e){}
+          for (let i = 0; i < turns.length; i++){
+            const t = turns[i];
+            const b = document.createElement('div');
+            if (t.role === 'user'){
+              b.style.cssText = 'text-align:right;background:rgba(46,110,142,0.10);border-radius:14px;padding:12px 14px;margin:10px 0 10px 18%;font-size:15px;color:#2b2620;line-height:1.6;white-space:pre-wrap;';
+            } else {
+              b.style.cssText = 'text-align:left;background:#fff;border:1px solid #eee2d6;border-radius:14px;padding:12px 16px;margin:10px 18% 10px 0;font-size:15px;color:#3a2f26;line-height:1.6;white-space:pre-wrap;';
+            }
+            b.textContent = String(t.text||'');
+            thread.appendChild(b);
+          }
+        } else {
+          // Older saves hold only a flat summary — show it readably.
+          const div = document.createElement('div');
+          div.style.cssText = 'background:#fff;border:1px solid #eee2d6;border-radius:14px;padding:12px 16px;margin:10px 0;font-size:14px;color:#4a362c;line-height:1.65;white-space:pre-wrap;';
+          div.textContent = (d.summary||'');
+          thread.appendChild(div);
+        }
         thread.scrollIntoView({behavior:'smooth', block:'start'});
       }
     } else if (msg){
@@ -8093,7 +8121,8 @@ _DEMO_BANNER_HTML = (
     '<b style="text-transform:uppercase;letter-spacing:.06em;">Sample &mdash; Demonstration mode</b> '
     '&mdash; these are not real providers. '
     '<span style="opacity:.92;">Muestra &mdash; modo de demostraci&oacute;n: estos no son proveedores reales. '
-    '&#26679;&#26412; &mdash; &#28436;&#31034;&#27169;&#24335;&#65306;&#36825;&#20123;&#19981;&#26159;&#30495;&#23454;&#30340;&#25552;&#20379;&#32773;&#12290;</span>'
+    '&#26679;&#26412; &mdash; &#28436;&#31034;&#27169;&#24335;&#65306;&#36825;&#20123;&#19981;&#26159;&#30495;&#23454;&#30340;&#25552;&#20379;&#32773;&#12290;</span> '
+    '&mdash; <a href="/demo/exit" style="color:#ffd28a;font-weight:700;text-decoration:underline;">Exit demonstration</a>'
     '</div>'
     '<div style="height:52px;"></div>'
 )
@@ -9810,6 +9839,19 @@ def memory_save():
     summary = str(data.get("summary", ""))[:6000]
     if not summary.strip():
         return jsonify({"status": "empty"}), 200
+    # The conversation itself, as turns — so a return is a CONVERSATION, not
+    # a wall of text, and the companion remembers where they left off.
+    convo = []
+    try:
+        for t in (data.get("conversation") or [])[:80]:
+            role = "user" if str(t.get("role")) == "user" else "innerlight"
+            txt = str(t.get("text", ""))[:1200].strip()
+            if txt:
+                convo.append({"role": role, "text": txt})
+        while convo and len(json.dumps(convo, ensure_ascii=False)) > 9000:
+            convo.pop(0)  # drop the oldest turns first
+    except Exception:
+        convo = []
     # generate a unique code
     with _MEMORY_LOCK:
         store = _memory_load()
@@ -9819,7 +9861,7 @@ def memory_save():
             code = _new_code(); tries += 1
         # encrypt the summary with a key that includes the code
         enc = AxiomHarmonyProtocol(encryption_key("memory::" + _code_key(code))).encrypt(
-            {"summary": summary, "saved": time.strftime("%Y-%m-%d %H:%M")})
+            {"summary": summary, "conversation": convo, "saved": time.strftime("%Y-%m-%d %H:%M")})
         store[_code_key(code)] = {"enc": enc, "saved": time.strftime("%Y-%m-%d %H:%M")}
         # cap total stored
         if len(store) > 5000:
@@ -9845,7 +9887,9 @@ def memory_resume():
         return jsonify({"status": "notfound"}), 200
     try:
         out = AxiomHarmonyProtocol(encryption_key("memory::" + k)).decrypt(rec["enc"]).get("original_data", {})
-        return jsonify({"status": "ok", "summary": out.get("summary",""), "saved": rec.get("saved","")})
+        return jsonify({"status": "ok", "summary": out.get("summary",""),
+                        "conversation": out.get("conversation") or [],
+                        "saved": rec.get("saved","")})
     except Exception:
         return jsonify({"status": "error"}), 200
 
@@ -13732,4 +13776,11 @@ def demo_link(token):
                 "<p><a href='/' style='color:#33567c;'>Go to InnerLight</a></p>"
                 "</body></html>"), 404
     session["demo_mode"] = ["clinical", "legal"]
+    return redirect("/")
+
+@app.route("/demo/exit")
+def demo_exit():
+    """Leave demonstration mode for THIS visitor's session. Always safe —
+    exiting demo can only ever move someone toward the real, live app."""
+    session.pop("demo_mode", None)
     return redirect("/")
