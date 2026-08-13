@@ -7664,6 +7664,48 @@ def _load_page_i18n():
             print("[InnerLight] page i18n %s: none yet — will self-translate on first visit" % lg)
 _load_page_i18n()
 
+# ---- WARM-BOOT TRANSLATION: African languages first ----
+# The server does not wait to be visited. At boot it translates every info
+# page itself, in priority order set by the founder: Swahili, Amharic, and
+# Hausa FIRST, then the remaining languages. Serialized (one page at a time)
+# to respect rate limits; every result flows through the same QE judge and
+# cache; repo-committed native-reviewed files still always win.
+_WARM_ORDER = ("sw", "am", "ha", "hi", "pa", "bn", "tl", "to")
+_WARM_PAGES = ("about", "how-it-works", "stories", "resources", "research",
+               "safety", "privacy", "updates", "contact", "faq", "terms")
+_WARM_PATHS = {"about": "/about", "how-it-works": "/how-it-works", "stories": "/stories",
+               "resources": "/resources", "research": "/research", "safety": "/safety",
+               "privacy": "/privacy", "updates": "/updates", "contact": "/contact",
+               "faq": "/faq", "terms": "/terms"}
+
+def _warm_boot_translations():
+    if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
+        return
+    def _work():
+        time.sleep(15)  # let the app finish waking up first
+        client = app.test_client()
+        for lg in _WARM_ORDER:
+            for key in _WARM_PAGES:
+                try:
+                    if key in _PAGE_I18N.get(lg, {}):
+                        continue
+                    client.get(_WARM_PATHS[key] + "?lang=" + lg)  # triggers the kick
+                    # serialize: wait for this page to land before the next
+                    deadline = time.time() + 240
+                    while time.time() < deadline:
+                        with _page_pending_lock:
+                            still = (lg, key) in _PAGE_PENDING
+                        if not still:
+                            break
+                        time.sleep(1.0)
+                except Exception as e:
+                    print("[InnerLight] warm-boot %s/%s: %s" % (lg, key, str(e)[:80]))
+            print("[InnerLight] warm-boot: %s pages ready (%d/%d)" % (
+                lg, len(_PAGE_I18N.get(lg, {})), len(_WARM_PAGES)))
+    threading.Thread(target=_work, daemon=True).start()
+
+_warm_boot_translations()
+
 # ---- SELF-HEALING PAGE TRANSLATION ----
 # A page visited in a language it does not yet speak serves English INSTANTLY,
 # and quietly translates itself in the background (QE-judged), caches the
