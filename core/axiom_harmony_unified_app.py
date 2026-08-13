@@ -866,6 +866,7 @@ PUBLIC_PAGE = """
             <a href="/research" data-i18n="glink.research">Research</a><span>&middot;</span>
             <a href="/safety" data-i18n="glink.safety">Safety</a><span>&middot;</span>
             <a href="/faq" data-i18n="glink.faq">FAQ</a><span>&middot;</span>
+            <a href="/terms" data-i18n="glink.terms">Terms</a><span>&middot;</span>
             <a href="/privacy" data-i18n="glink.privacy">Your privacy</a><span>&middot;</span>
             <a href="/updates" data-i18n="glink.updates">Updates</a><span>&middot;</span>
             <a href="/contact" data-i18n="glink.contact">Contact</a>
@@ -7930,6 +7931,79 @@ def facilities_lookup():
             print("[InnerLight] facilities lookup issue:", e)
     return jsonify({"status": "ok", "place": place, "results": results})
 
+
+@app.route("/terms")
+def page_terms():
+    inner = """
+    <p style="font-size:13px;color:#776;">Effective date: August 13, 2026 &middot; Version 1.0. Each section below states the full term, then <b>In plain words</b> &mdash; the same promise in everyday language. Both say the same thing; the plain words are there because honesty should be readable.</p>
+
+    <h2>1. Who we are, and what you are agreeing to</h2>
+    <p>InnerLight is a service of <b>God&rsquo;s Love for Us LLC</b> (&ldquo;we,&rdquo; &ldquo;us&rdquo;). By using InnerLight you agree to these Terms of Service and to our <a href="/privacy">Privacy Promise</a>. If you do not agree, please do not use the service &mdash; though the crisis numbers on every page (988, 911) are yours regardless, always.</p>
+    <p class="plain"><b>In plain words:</b> InnerLight is run by God&rsquo;s Love for Us LLC. Using it means you accept this agreement. The emergency numbers belong to everyone, agreement or not.</p>
+
+    <h2>2. What InnerLight is &mdash; and is not</h2>
+    <p>InnerLight is an AI companion for the wait between reaching out for help and human help arriving. It provides emotional support, general information, and warm hand-offs to human services. InnerLight is <b>not</b> a licensed therapist, physician, attorney, or emergency service. It does not diagnose, treat, or prescribe; it does not provide legal advice; it does not replace professional care of any kind, and it is designed to point you toward humans, not away from them. Information it provides &mdash; including legal information &mdash; is general education, not professional advice for your situation.</p>
+    <p class="plain"><b>In plain words:</b> InnerLight is real company and a bridge to real people. It is not a doctor, therapist, or lawyer, and it will never pretend to be.</p>
+
+    <h2>3. Emergencies</h2>
+    <p>If you or someone else is in immediate danger, call <b>911</b>. For mental-health crisis support from trained human counselors, call or text <b>988</b>, or use 988 chat. InnerLight exists to help you reach those services and to stay with you on the way &mdash; it is not itself an emergency response service and cannot dispatch physical help.</p>
+    <p class="plain"><b>In plain words:</b> InnerLight walks with you toward help. It cannot drive the ambulance. In danger: 911. In crisis: 988.</p>
+
+    <h2>4. It is free for you</h2>
+    <p>InnerLight never charges a person seeking help. There are no fees, no subscriptions, no advertisements, and your words are never sold &mdash; these are founding commitments, published in our <a href="/research">principles</a>.</p>
+    <p class="plain"><b>In plain words:</b> You will never pay, see ads, or be the product.</p>
+
+    <h2>5. Your privacy and your saved conversations</h2>
+    <p>Our full <a href="/privacy">Privacy Promise</a> is part of these Terms. In summary: no accounts are required; microphone and camera are optional and processed on your device; conversation sharing with a counselor happens only with your explicit consent; and if you save your place, your conversation is encrypted under a code that only you hold. <b>If you lose your code, no one &mdash; including us &mdash; can recover that conversation.</b> That is a feature, engineered on purpose.</p>
+    <p class="plain"><b>In plain words:</b> What you say stays yours. Your save code is the only key that exists &mdash; guard it.</p>
+
+    <h2>6. Honesty about legal limits</h2>
+    <p>We do not silently report ordinary conversations to anyone. And there are limits we state plainly rather than hide: if you tell us you have harmed someone or intend serious harm to yourself or others, InnerLight will actively work to connect you with human help; licensed professionals you connect with carry their own legal duties (including duty-to-warn obligations that vary by state); federal law requires online services to report child sexual abuse material, without exception; and we comply with valid legal process, with our encryption designed so that what can ever be produced is as close to nothing as we can engineer. Being in crisis is not a crime and will never be treated like one here.</p>
+    <p class="plain"><b>In plain words:</b> No secret reporting. But we follow the law, we act on stated danger by connecting you to humans, and we will never treat your pain as a crime.</p>
+
+    <h2>7. Who may use InnerLight</h2>
+    <p>InnerLight is a general-audience service and requires no account or registration. It is not directed to children under 13, and by design it collects the minimum information possible from anyone. Young people are never turned away from crisis support; InnerLight applies additional protective behaviors for minors, including encouraging connection with trusted adults and youth-specific services.</p>
+    <p class="plain"><b>In plain words:</b> No sign-ups, minimal data from everyone, extra care for young people, and no one in crisis is ever turned away.</p>
+
+    <h2>8. Acceptable use</h2>
+    <p>You agree not to use InnerLight to violate any law; to attempt to harm, probe, overload, or gain unauthorized access to the service or its data; to impersonate others; to harvest information about other people; or to interfere with another person&rsquo;s use of the service. We may limit or refuse service to protect people or the system, applying the least restriction that keeps everyone safe.</p>
+    <p class="plain"><b>In plain words:</b> Use it honestly. Don&rsquo;t attack it or use it against other people.</p>
+
+    <h2>9. Third-party services</h2>
+    <p>InnerLight connects you outward &mdash; to 988, 911, 211, legal aid, treatment finders, and other services operated by others. We verify that these doors open before sending you through them, and we maintain fallback routes when they fail, but the services themselves are governed by their own terms and are not operated or controlled by us.</p>
+    <p class="plain"><b>In plain words:</b> We check that the doors we send you to actually open. What is behind each door is run by its own people.</p>
+
+    <h2>10. Research participation</h2>
+    <p>InnerLight may participate in academic research studies. Any use of InnerLight as part of a formal research study is governed by that study&rsquo;s separate, Institutional Review Board&ndash;approved informed-consent process &mdash; nothing in these Terms enrolls you in research, and research participation is always a separate, explicit choice.</p>
+    <p class="plain"><b>In plain words:</b> If InnerLight is ever part of a university study, you would be asked separately, clearly, and by choice.</p>
+
+    <h2>11. Intellectual property</h2>
+    <p>InnerLight, the Axiom Harmony Protocol, VEIL, EDEN, and the Zenisys Sound System are works of God&rsquo;s Love for Us LLC, created by Toshay S. Zeigler. You may use the service for its intended purpose; you may not copy, resell, or misrepresent it as your own. What you write remains yours.</p>
+    <p class="plain"><b>In plain words:</b> The system is ours; your words are yours.</p>
+
+    <h2>12. Service provided &ldquo;as is&rdquo;</h2>
+    <p>We build carefully &mdash; every release passes a verification gate before it can reach you &mdash; and we still cannot promise perfection. InnerLight is provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo; without warranties of any kind, express or implied, including merchantability, fitness for a particular purpose, and uninterrupted or error-free operation. AI-generated responses can be imperfect; that is one reason InnerLight always keeps human doors in view.</p>
+    <p class="plain"><b>In plain words:</b> We test everything before it reaches you, and we still won&rsquo;t pretend to be flawless. That is exactly why the human help lines are always on screen.</p>
+
+    <h2>13. Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, God&rsquo;s Love for Us LLC and its founder, employees, and partners are not liable for indirect, incidental, special, consequential, or punitive damages arising from use of InnerLight, and our total aggregate liability for any claim is limited to one hundred dollars (US $100) or the amount you paid us in the past twelve months, whichever is greater (and you pay us nothing). Some jurisdictions do not allow certain warranty disclaimers or liability limitations, so parts of Sections 12&ndash;13 may not apply to you; in those places, our liability is limited to the smallest extent the law allows. Nothing in these Terms limits liability that cannot lawfully be limited.</p>
+    <p class="plain"><b>In plain words:</b> The law lets services set liability limits, and ours are here in the open &mdash; adjusted automatically wherever your state says otherwise.</p>
+
+    <h2>14. Changes, and ending use</h2>
+    <p>You may stop using InnerLight at any time. We may update these Terms as the service grows; the effective date above always reflects the current version, material changes will be noted on the <a href="/updates">Updates page</a>, and continued use after a change means acceptance of the updated Terms.</p>
+    <p class="plain"><b>In plain words:</b> Leave whenever you want. When these Terms change, we say so out loud, dated.</p>
+
+    <h2>15. Governing law and disputes</h2>
+    <p>These Terms are governed by the laws of the State of California, without regard to conflict-of-law rules, and disputes belong to the state or federal courts located in Santa Clara County, California &mdash; while your own state&rsquo;s consumer protections that cannot be waived remain fully yours. If any part of these Terms is found unenforceable, the rest stands. These Terms plus the Privacy Promise are the entire agreement between us about InnerLight.</p>
+    <p class="plain"><b>In plain words:</b> California law and Santa Clara County courts govern disagreements &mdash; and no term here takes away rights your own state guarantees you.</p>
+
+    <h2>16. Contact</h2>
+    <p>Questions about these Terms reach us through the <a href="/contact">Contact page</a>. Finding a problem &mdash; in the service or in this document &mdash; is a gift: our standing law is that what is found gets repaired, and the system around it gets improved.</p>
+    <p class="plain"><b>In plain words:</b> Talk to us. Problems found are problems fixed.</p>
+
+    <style>.plain{background:#f4efe4;border-left:3px solid #b89a6a;border-radius:0 10px 10px 0;padding:10px 14px;font-size:14px;}</style>
+    """
+    return _info_page("Terms of Service", inner, page_key="terms")
 
 @app.route("/faq")
 def page_faq():
