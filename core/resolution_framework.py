@@ -66,7 +66,8 @@ def classify_handoff(
             "label": "Immediate safety support",
             "bridge": {
                 "primary": {"action": "call_988", "label": "Connect to 988 Crisis Lifeline", "value": "988"},
-                "secondary": {"action": "operator_monitor", "label": "Alert a live InnerLight monitor", "value": "operator"},
+                "secondary": {"action": "chat_988", "label": "Chat online with 988 (no call needed)", "value": "chat"},
+                "tertiary": {"action": "operator_monitor", "label": "Alert a live InnerLight monitor", "value": "operator"},
                 "emergency": {"action": "call_911", "label": "Call 911 (immediate danger)", "value": "911"},
             },
             "context_prompt": "Want me to share what you've told me with the crisis counselor, so you don't have to start over?",

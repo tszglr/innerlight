@@ -1235,6 +1235,7 @@ PUBLIC_PAGE = """
         "Immediate safety support": "Apoyo de seguridad inmediato",
         "Connect to 988 Crisis Lifeline": "Conectar con la Línea de Crisis 988",
         "Alert a live InnerLight monitor": "Avisar a un monitor de InnerLight en vivo",
+        "Chat online with 988 (no call needed)": "Chatea en línea con 988 (sin llamar)",
         "Call 911 (immediate danger)": "Llamar al 911 (peligro inmediato)",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "¿Quieres que comparta lo que me has contado con el consejero de crisis, para que no tengas que empezar de nuevo?",
         "Talk with a licensed professional": "Habla con un profesional acreditado",
@@ -1270,6 +1271,7 @@ PUBLIC_PAGE = """
         "Immediate safety support": "即时安全支持",
         "Connect to 988 Crisis Lifeline": "连接 988 危机生命线",
         "Alert a live InnerLight monitor": "通知 InnerLight 在线监护员",
+        "Chat online with 988 (no call needed)": "与 988 在线聊天（无需拨打电话）",
         "Call 911 (immediate danger)": "拨打 911（紧急危险）",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "要我把你告诉我的内容分享给危机辅导员，让你不用从头再说一遍吗？",
         "Talk with a licensed professional": "与持证专业人士交谈",
@@ -1305,6 +1307,7 @@ PUBLIC_PAGE = """
         "Immediate safety support": "तत्काल सुरक्षा सहारा",
         "Connect to 988 Crisis Lifeline": "988 क्राइसिस लाइफ़लाइन से जुड़ें",
         "Alert a live InnerLight monitor": "InnerLight के लाइव मॉनिटर को सूचित करें",
+        "Chat online with 988 (no call needed)": "988 से ऑनलाइन चैट करें (कॉल की ज़रूरत नहीं)",
         "Call 911 (immediate danger)": "911 पर कॉल करें (तत्काल खतरा)",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "क्या मैं आपकी बताई बातें क्राइसिस काउंसलर से साझा कर दूँ, ताकि आपको फिर से शुरू न करना पड़े?",
         "Talk with a licensed professional": "लाइसेंस प्राप्त पेशेवर से बात करें",
@@ -1340,6 +1343,7 @@ PUBLIC_PAGE = """
         "Immediate safety support": "ਤੁਰੰਤ ਸੁਰੱਖਿਆ ਸਹਾਰਾ",
         "Connect to 988 Crisis Lifeline": "988 ਕ੍ਰਾਈਸਿਸ ਲਾਈਫ਼ਲਾਈਨ ਨਾਲ ਜੁੜੋ",
         "Alert a live InnerLight monitor": "InnerLight ਦੇ ਲਾਈਵ ਮਾਨੀਟਰ ਨੂੰ ਸੂਚਿਤ ਕਰੋ",
+        "Chat online with 988 (no call needed)": "988 ਨਾਲ ਆਨਲਾਈਨ ਚੈਟ ਕਰੋ (ਕਾਲ ਦੀ ਲੋੜ ਨਹੀਂ)",
         "Call 911 (immediate danger)": "911 ਉੱਤੇ ਕਾਲ ਕਰੋ (ਤੁਰੰਤ ਖ਼ਤਰਾ)",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "ਕੀ ਮੈਂ ਤੁਹਾਡੀਆਂ ਦੱਸੀਆਂ ਗੱਲਾਂ ਕ੍ਰਾਈਸਿਸ ਕਾਊਂਸਲਰ ਨਾਲ ਸਾਂਝੀਆਂ ਕਰ ਦਿਆਂ, ਤਾਂ ਜੋ ਤੁਹਾਨੂੰ ਮੁੜ ਤੋਂ ਸ਼ੁਰੂ ਨਾ ਕਰਨਾ ਪਵੇ?",
         "Talk with a licensed professional": "ਲਾਇਸੰਸਸ਼ੁਦਾ ਪੇਸ਼ੇਵਰ ਨਾਲ ਗੱਲ ਕਰੋ",
@@ -1375,6 +1379,7 @@ PUBLIC_PAGE = """
         "Immediate safety support": "তাৎক্ষণিক নিরাপত্তা সহায়তা",
         "Connect to 988 Crisis Lifeline": "988 ক্রাইসিস লাইফলাইনে যুক্ত হন",
         "Alert a live InnerLight monitor": "InnerLight-এর লাইভ মনিটরকে জানান",
+        "Chat online with 988 (no call needed)": "988-এর সাথে অনলাইনে চ্যাট করুন (কল লাগবে না)",
         "Call 911 (immediate danger)": "911 নম্বরে কল করুন (তাৎক্ষণিক বিপদ)",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "আপনি আমাকে যা বলেছেন তা কি ক্রাইসিস কাউন্সেলরের সাথে ভাগ করব, যাতে আপনাকে আবার শুরু থেকে বলতে না হয়?",
         "Talk with a licensed professional": "লাইসেন্সধারী পেশাদারের সাথে কথা বলুন",
@@ -1410,6 +1415,7 @@ PUBLIC_PAGE = """
         "Immediate safety support": "Agarang suporta sa kaligtasan",
         "Connect to 988 Crisis Lifeline": "Kumonekta sa 988 Crisis Lifeline",
         "Alert a live InnerLight monitor": "Abisuhan ang live na InnerLight monitor",
+        "Chat online with 988 (no call needed)": "Makipag-chat online sa 988 (hindi na kailangang tumawag)",
         "Call 911 (immediate danger)": "Tumawag sa 911 (agarang panganib)",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Gusto mo bang ibahagi ko sa crisis counselor ang sinabi mo, para hindi ka na mag-uumpisa muli?",
         "Talk with a licensed professional": "Makipag-usap sa lisensyadong propesyonal",
@@ -1445,6 +1451,7 @@ PUBLIC_PAGE = """
         "Immediate safety support": "Poupou maluʻi fakavavevave",
         "Connect to 988 Crisis Lifeline": "Fakafehokotaki ki he 988 Crisis Lifeline",
         "Alert a live InnerLight monitor": "Fakatokanga ki ha leʻo InnerLight ʻoku ʻi ai",
+        "Chat online with 988 (no call needed)": "Fetalanoaʻaki ʻi he ʻinitaneti mo e 988 (ʻikai fiemaʻu ha telefoni)",
         "Call 911 (immediate danger)": "Telefoni ki he 911 (fakatuʻutāmaki vave)",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Te ke loto ke u vahevahe e meʻa kuó ke talamai ki he faleʻi fakatuʻupakeé, koeʻuhí ke ʻoua te ke toe kamata mei he kamataʻangá?",
         "Talk with a licensed professional": "Talanoa mo ha taukei maʻu laiseni",
@@ -6101,6 +6108,7 @@ function appendHandoff(thread, handoff, data) {
   }
   addBtn(primary, primaryStyle);
   addBtn(secondary, secondaryStyle);
+  addBtn(handoff.actions && handoff.actions.tertiary, secondaryStyle);
   addBtn(emergency, emergencyStyle);
   // Speak the handoff offer
   speak(_ilho(handoff.label));
@@ -6182,7 +6190,11 @@ function performBridgeAction(action, value) {
   switch(action) {
     case 'call_988': window.location.href = 'tel:988'; break;
     case 'call_911': window.location.href = 'tel:911'; break;
-    case 'call_211': window.location.href = 'tel:211'; break;
+    /* NEVER require an app: 211 opens the website directly (no OS app
+       chooser can appear); the phone number stays visible in the card text
+       for anyone who prefers to dial it themselves. */
+    case 'call_211': ilOpenDest('help_211', 'https://www.211.org'); break;
+    case 'chat_988': ilOpenDest('chat_988', 'https://988lifeline.org'); break;
     case 'request_video': window.open('/telehealth/intake', '_blank'); break;
     case 'schedule': window.open('/telehealth/intake', '_blank'); break;
     case 'match_attorney': ilOpenDest('legal_aid', 'https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help'); break;
@@ -13251,6 +13263,13 @@ DEST_CHAINS = {
     "dv_help": [
         "https://www.thehotline.org",
         "https://www.domesticshelters.org",
+    ],
+    "help_211": [
+        "https://www.211.org",
+    ],
+    "chat_988": [
+        "https://988lifeline.org/chat/",
+        "https://988lifeline.org",
     ],
 }
 _dest_cache = {}  # name -> (url, checked_at)
