@@ -160,15 +160,25 @@ class AxiomHarmonyProtocol:
     def _decode_bytes(value: str) -> bytes:
         return base64.urlsafe_b64decode(value.encode("ascii"))
 
-    # ---- encrypt (default: v2 / scrypt) ---------------------------------
-    def encrypt(self, data: Any):
+    # ---- encrypt (default: v2 / scrypt, optional context binding) --------
+    def encrypt(self, data: Any, context: str = ""):
+        """Encrypt with AES-256-GCM. When a context string is given (e.g.
+        "memory"), it is bound into the GCM associated data: the record then
+        decrypts ONLY when presented in that same context, so a ciphertext can
+        never be transplanted from one purpose to another. Records written
+        without context remain fully compatible. Compelled-disclosure
+        minimalism is a design goal: code-protected records are zero-knowledge
+        to the operator — without the person's code there is nothing readable
+        to produce."""
         raw = data if isinstance(data, str) else json.dumps(data, ensure_ascii=False, sort_keys=True)
         salt = secrets.token_bytes(self.SALT_BYTES)
         nonce = secrets.token_bytes(self.NONCE_BYTES)
         key = self._derive_scrypt(salt, self.SCRYPT_N, self.SCRYPT_R, self.SCRYPT_P)
-        # The version string is bound as GCM associated data so a record cannot be
-        # silently reinterpreted under a different scheme.
-        ciphertext = AESGCM(key).encrypt(nonce, raw.encode("utf-8"), self.VERSION_V2.encode("ascii"))
+        # Version (and context, when present) are bound as GCM associated data
+        # so a record cannot be silently reinterpreted under a different scheme
+        # or replayed into a different part of the system.
+        aad = self.VERSION_V2 + ("|ctx:" + context if context else "")
+        ciphertext = AESGCM(key).encrypt(nonce, raw.encode("utf-8"), aad.encode("utf-8"))
 
         return {
             "status": "Success",
@@ -181,6 +191,7 @@ class AxiomHarmonyProtocol:
             "r": self.SCRYPT_R,
             "p": self.SCRYPT_P,
             "pepper": bool(self._pepper()),
+            "ctx": bool(context),
             "key_fingerprint": self._key_hash()[:12],
         }
 
@@ -222,7 +233,7 @@ class AxiomHarmonyProtocol:
         iterations = int(payload.get("iterations", self.PBKDF2_ITERATIONS))
         return self._derive_pbkdf2(salt, iterations)
 
-    def decrypt(self, encrypted_data: str | dict):
+    def decrypt(self, encrypted_data: str | dict, context: str = ""):
         try:
             if isinstance(encrypted_data, dict):
                 payload = encrypted_data
@@ -245,7 +256,11 @@ class AxiomHarmonyProtocol:
             nonce = self._decode_bytes(payload["nonce"])
             ciphertext = self._decode_bytes(payload["encrypted"])
             key = self._derive_for_record(payload, salt)
-            aad = payload.get("version", self.VERSION).encode("ascii")
+            aad_s = str(payload.get("version", self.VERSION))
+            if payload.get("ctx"):
+                # Context-bound record: decrypts only in its own context.
+                aad_s += "|ctx:" + context
+            aad = aad_s.encode("utf-8")
             plaintext = AESGCM(key).decrypt(nonce, ciphertext, aad)
             decoded = plaintext.decode("utf-8")
 

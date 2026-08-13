@@ -835,6 +835,12 @@ PUBLIC_PAGE = """
             <a href="#" onclick="setLang('tl');return false;" data-langbtn="tl" style="text-decoration:none;">Tagalog</a>
             <span>&middot;</span>
             <a href="#" onclick="setLang('to');return false;" data-langbtn="to" style="text-decoration:none;">lea faka-Tonga</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('sw');return false;" data-langbtn="sw" style="text-decoration:none;">Kiswahili</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('am');return false;" data-langbtn="am" style="text-decoration:none;">&#4768;&#4635;&#4653;&#4763;</a>
+            <span>&middot;</span>
+            <a href="#" onclick="setLang('ha');return false;" data-langbtn="ha" style="text-decoration:none;">Hausa</a>
           </div>
         </div>
         <div class="gate-greeting" id="gate-greeting" aria-live="polite"></div>
@@ -1483,6 +1489,39 @@ PUBLIC_PAGE = """
         "@who:a consumer protection attorney": "ha loea maluʻi fakatau",
         "@who:a civil rights attorney": "ha loea ki he ngaahi totonu fakasivilé",
         "@who:a qualified attorney": "ha loea taau"
+      },
+      sw: {
+        "Immediate safety support": "Msaada wa usalama wa haraka",
+        "Connect to 988 Crisis Lifeline": "Unganishwa na 988 Crisis Lifeline",
+        "Chat online with 988 (no call needed)": "Piga gumzo mtandaoni na 988 (bila kupiga simu)",
+        "Alert a live InnerLight monitor": "Arifu mwangalizi wa InnerLight aliye mtandaoni",
+        "Call 911 (immediate danger)": "Piga 911 (hatari ya papo hapo)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Unataka nishiriki uliyoniambia na mshauri wa dharura, ili usianze upya?",
+        "Connect with {who}": "Unganishwa na {who}",
+        "Share my context so I do not have to repeat myself.": "Shiriki maelezo yangu ili nisilazimike kurudia.",
+        "@who:a qualified attorney": "wakili aliyehitimu"
+      },
+      am: {
+        "Immediate safety support": "አፋጣኝ የደህንነት ድጋፍ",
+        "Connect to 988 Crisis Lifeline": "ከ988 Crisis Lifeline ጋር ይገናኙ",
+        "Chat online with 988 (no call needed)": "ከ988 ጋር በመስመር ላይ ይወያዩ (መደወል አያስፈልግም)",
+        "Alert a live InnerLight monitor": "የInnerLight ቀጥታ ተቆጣጣሪን ያሳውቁ",
+        "Call 911 (immediate danger)": "911 ይደውሉ (አፋጣኝ አደጋ)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "የነገሩኝን ከችግር አማካሪው ጋር እንዳካፍል ይፈልጋሉ፣ እንደገና እንዳይጀምሩ?",
+        "Connect with {who}": "ከ{who} ጋር ይገናኙ",
+        "Share my context so I do not have to repeat myself.": "እንደገና እንዳልደግም መረጃዬን አካፍል።",
+        "@who:a qualified attorney": "ብቁ ጠበቃ"
+      },
+      ha: {
+        "Immediate safety support": "Tallafin tsaro na gaggawa",
+        "Connect to 988 Crisis Lifeline": "Haɗa da 988 Crisis Lifeline",
+        "Chat online with 988 (no call needed)": "Yi hira ta yanar gizo da 988 (ba sai ka kira ba)",
+        "Alert a live InnerLight monitor": "Sanar da mai sa ido na InnerLight kai tsaye",
+        "Call 911 (immediate danger)": "Kira 911 (haɗari na gaggawa)",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Kana so in raba abin da ka faɗa da mai ba da shawara na gaggawa, don kada ka sake farawa?",
+        "Connect with {who}": "Haɗa da {who}",
+        "Share my context so I do not have to repeat myself.": "Raba bayanina don kada in sake maimaitawa.",
+        "@who:a qualified attorney": "lauya ƙwararre"
       }
     };
     function _ilho(s){
@@ -2098,6 +2137,42 @@ PUBLIC_PAGE = """
         "uh": "ʻOku ʻaonga ke kumi tokoni he taimí ni. {988}, pe {911} kapau ʻoku ʻi ai ha fakatuʻutāmaki vave. ʻOku ou nofo ʻi heni pē mo koe.",
         "uh.988": "Telefoni pe fai ha pōpoaki ki he 988",
         "uh.911n": "Telefoni ki he 911"
+      },
+      sw: {
+        "s988": "Hauko peke yako. Ukihitaji msaada wa haraka, unaweza kupiga simu au kutuma ujumbe 988 wakati wowote kufikia 988 Suicide and Crisis Lifeline. Niko hapa pamoja nawe.",
+        "uh": "Inafaa kutafuta msaada sasa hivi. {988}, au {911} ikiwa kuna hatari ya papo hapo. Ninabaki hapa pamoja nawe.",
+        "uh.988": "Piga simu au tuma ujumbe 988",
+        "uh.911n": "Piga 911",
+        "reply": "Jibu",
+        "mic.speak": "Sema",
+        "interrupted": "Kuna kitu kilikatiza muunganisho kwa muda — tafadhali sema tena.",
+        "wh.more": "Niko hapa ukitaka kuzungumza zaidi",
+        "listen.ph": "Nasikiliza... (bonyeza Enter kutuma)",
+        "take.ph": "Chukua muda wako... au gusa Sema (bonyeza Enter kutuma)"
+      },
+      am: {
+        "s988": "ብቻዎን አይደሉም። አስቸኳይ ድጋፍ ከፈለጉ በማንኛውም ጊዜ 988 ደውለው ወይም መልእክት ልከው 988 Suicide and Crisis Lifeline መድረስ ይችላሉ። እኔ እዚሁ ከእርስዎ ጋር ነኝ።",
+        "uh": "አሁን እርዳታ መፈለግ ተገቢ ነው። {988}፣ ወይም አፋጣኝ አደጋ ካለ {911}። እዚሁ ከእርስዎ ጋር እቆያለሁ።",
+        "uh.988": "988 ይደውሉ ወይም መልእክት ይላኩ",
+        "uh.911n": "911 ይደውሉ",
+        "reply": "መልስ",
+        "mic.speak": "ይናገሩ",
+        "interrupted": "ግንኙነቱ ለአፍታ ተቋርጧል — እባክዎ እንደገና ይናገሩ።",
+        "wh.more": "ተጨማሪ ማውራት ከፈለጉ እዚህ ነኝ",
+        "listen.ph": "እየሰማሁ ነው... (ለመላክ Enter ይጫኑ)",
+        "take.ph": "ጊዜዎን ይውሰዱ... ወይም ይናገሩ ይንኩ (ለመላክ Enter ይጫኑ)"
+      },
+      ha: {
+        "s988": "Ba kai kaɗai ba ne. Idan kana buƙatar tallafi cikin gaggawa, kana iya kira ko aika saƙo zuwa 988 a kowane lokaci don isa ga 988 Suicide and Crisis Lifeline. Ina nan tare da kai.",
+        "uh": "Ya dace a nemi taimako yanzu. {988}, ko {911} idan akwai haɗari na gaggawa. Ina nan tare da kai.",
+        "uh.988": "Kira ko aika saƙo zuwa 988",
+        "uh.911n": "Kira 911",
+        "reply": "Amsa",
+        "mic.speak": "Yi magana",
+        "interrupted": "Wani abu ya katse haɗin na ɗan lokaci — don Allah sake faɗa.",
+        "wh.more": "Ina nan idan kana son ƙarin magana",
+        "listen.ph": "Ina saurare... (danna Enter don aikawa)",
+        "take.ph": "Ɗauki lokacinka... ko taɓa Yi magana (danna Enter don aikawa)"
       }
     };
     function _ilux(k){ var lg=(window._ilLang||"en"); var d=_IL_UX[lg]||_IL_UX.en; return (d && d[k]!=null) ? d[k] : _IL_UX.en[k]; }
@@ -3913,6 +3988,12 @@ var _IL_CT = {
       scale:['शांत','काफ़ी शांत','बीच में','काफ़ी बोझिल','बहुत बोझिल']},
   pa:{q:'ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ?', a:'ਸ਼ਾਂਤ', b:'ਬਹੁਤ ਬੋਝ ਹੇਠ', thanks:'ਧੰਨਵਾਦ।', skip:'ਹੁਣ ਨਹੀਂ',
       scale:['ਸ਼ਾਂਤ','ਕਾਫ਼ੀ ਸ਼ਾਂਤ','ਵਿਚਕਾਰ','ਕਾਫ਼ੀ ਬੋਝ ਹੇਠ','ਬਹੁਤ ਬੋਝ ਹੇਠ']},
+  sw:{q:'Unajisikiaje sasa hivi?', a:'Nimetulia', b:'Nimezidiwa', thanks:'Asante.', skip:'Si sasa',
+      scale:['Nimetulia','Nimetulia kiasi','Katikati','Nimezidiwa kiasi','Nimezidiwa']},
+  am:{q:'አሁን ምን ይሰማዎታል?', a:'ተረጋግቻለሁ', b:'ተጨንቄያለሁ', thanks:'አመሰግናለሁ።', skip:'አሁን አይደለም',
+      scale:['ተረጋግቻለሁ','በአብዛኛው ተረጋግቻለሁ','መካከል','በአብዛኛው ተጨንቄያለሁ','ተጨንቄያለሁ']},
+  ha:{q:'Yaya kake ji a yanzu?', a:'Na natsu', b:'Na cika da damuwa', thanks:'Na gode.', skip:'Ba yanzu ba',
+      scale:['Na natsu','Na natsu sosai-sosai','Tsakiya','Damuwa kaɗan-kaɗan','Na cika da damuwa']},
   bn:{q:'আপনি এই মুহূর্তে কেমন বোধ করছেন?', a:'শান্ত', b:'ভীষণ চাপে', thanks:'ধন্যবাদ।', skip:'এখন নয়',
       scale:['শান্ত','মোটামুটি শান্ত','মাঝামাঝি','বেশ চাপে','ভীষণ চাপে']},
   tl:{q:'Ano ang nararamdaman mo ngayon?', a:'Panatag', b:'Lubhang nalulula', thanks:'Salamat.', skip:'Hindi muna',
@@ -7658,6 +7739,9 @@ def _info_page(title, inner, page_key=None):
       <a href="?lang=tl" onclick="try{document.cookie='il_lang=tl;path=/';sessionStorage.setItem('il_lang','tl')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='tl' else '' }}">Tagalog</a>
       <span style="color:#ddd1c8;">&middot;</span>
       <a href="?lang=to" onclick="try{document.cookie='il_lang=to;path=/';sessionStorage.setItem('il_lang','to')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='to' else '' }}">lea faka-Tonga</a>
+      <a href="?lang=sw" onclick="try{document.cookie='il_lang=sw;path=/';sessionStorage.setItem('il_lang','sw')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='sw' else '' }}">Kiswahili</a>
+      <a href="?lang=am" onclick="try{document.cookie='il_lang=am;path=/';sessionStorage.setItem('il_lang','am')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='am' else '' }}">&#4768;&#4635;&#4653;&#4763;</a>
+      <a href="?lang=ha" onclick="try{document.cookie='il_lang=ha;path=/';sessionStorage.setItem('il_lang','ha')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='ha' else '' }}">Hausa</a>
     </div>
     <div class="orb breathe" aria-hidden="true"></div>
     <div class="brand">InnerLight</div>
@@ -7863,13 +7947,15 @@ def page_faq():
     <p>Your words stay between you and InnerLight unless YOU choose otherwise. Conversations are protected with our own layered encryption; nothing is sold, shared, or used for advertising &mdash; ever. If you choose to save your place, it is encrypted under a code only you hold. If you choose to share a summary with a counselor so you don&rsquo;t have to start over, that happens only when you check the consent box yourself.</p>
 
     <h2>Will InnerLight call the police or 911 on me?</h2>
-    <p>InnerLight never contacts anyone behind your back &mdash; no silent calls, no automatic reports. In moments of danger it will show you the fastest doors to help (988, 911, chat) and encourage you to use them, and everything it shares with a counselor requires your consent first. The full step-by-step protocol is public on the <a href="/safety">Safety page</a>.</p>
+    <p>Here is the honest, complete answer. InnerLight does not silently report ordinary conversations to anyone, and sharing a summary with a counselor happens only with your consent. AND &mdash; because honesty matters more than comfort &mdash; there are real limits, and we will not pretend otherwise:</p>
+    <p><b>If you tell us you have harmed someone, or that you intend to harm yourself or someone else, we will not act as if we didn&rsquo;t hear it.</b> InnerLight will immediately and actively work to connect you with human help (988, 911, chat, a live monitor), and we follow the law. Licensed professionals you are connected to &mdash; counselors, clinicians, our human monitors where they are licensed &mdash; carry their own legal duties in most states to act on credible threats of serious harm to an identifiable person (the duty-to-warn laws that bind clinicians nationwide, varying by state). Federal law separately requires any online service to report child sexual abuse material &mdash; that duty is absolute and we honor it completely. And like every company, we comply with valid court orders; our encryption design means a saved conversation without your code cannot be read by anyone, including us, so what can ever be produced is as close to nothing as we can engineer.</p>
+    <p>What we will never do: sell your words, report you for being in pain, or punish you for asking for help. Being in crisis is not a crime, and coming here will never be treated like one. The full step-by-step protocol is public on the <a href="/safety">Safety page</a>.</p>
 
     <h2>Do I have to use my camera or microphone?</h2>
     <p>No. Everything works by typing alone. If you allow the microphone or camera, InnerLight uses them only in the moment, on your device, to listen better and steady the experience &mdash; audio and video are never stored and never leave your browser as recordings.</p>
 
     <h2>What languages does InnerLight speak?</h2>
-    <p>English, Spanish, Chinese, Hindi, Punjabi, Bengali, Tagalog, and Tongan &mdash; and in a crisis, every safety surface holds your language. If your device has no speaking voice for your language, InnerLight stays respectfully silent rather than speak the wrong one; the words remain on screen.</p>
+    <p>English, Spanish, Chinese, Hindi, Punjabi, Bengali, Tagalog, Tongan, Swahili, Amharic, and Hausa &mdash; and in a crisis, every safety surface holds your language. If your device has no speaking voice for your language, InnerLight stays respectfully silent rather than speak the wrong one; the words remain on screen.</p>
 
     <h2>I&rsquo;m under 18. Can I use this?</h2>
     <p>InnerLight will always talk with you and always show you the fastest doors to help. It also takes extra care with young people: it gently encourages connecting with a trusted adult and with youth-specific lines, and it holds firmer boundaries by design. You are never turned away.</p>
@@ -9196,6 +9282,9 @@ _NOEN_FALLBACK = {
     "hi": "\u0915\u0928\u0947\u0915\u094d\u0936\u0928 \u090f\u0915 \u092a\u0932 \u0915\u0947 \u0932\u093f\u090f \u091f\u0942\u091f \u0917\u092f\u093e \u2014 \u0915\u0943\u092a\u092f\u093e \u0935\u0939 \u092b\u093f\u0930 \u0938\u0947 \u0915\u0939\u0947\u0902\u0964 \u0905\u0917\u0930 \u0906\u092a\u0915\u094b \u0905\u092d\u0940 \u0915\u093f\u0938\u0940 \u0915\u0940 \u091c\u093c\u0930\u0942\u0930\u0924 \u0939\u0948, \u0924\u094b 988 \u092a\u0930 \u0915\u0949\u0932 \u092f\u093e \u0938\u0902\u0926\u0947\u0936 \u0915\u0930\u0947\u0902\u0964",
     "pa": "\u0a15\u0a41\u0a28\u0a48\u0a15\u0a38\u0a3c\u0a28 \u0a07\u0a71\u0a15 \u0a2a\u0a32 \u0a32\u0a08 \u0a1f\u0a41\u0a71\u0a1f \u0a17\u0a3f\u0a06 \u2014 \u0a15\u0a3f\u0a30\u0a2a\u0a3e \u0a15\u0a30\u0a15\u0a47 \u0a09\u0a39 \u0a26\u0a41\u0a2c\u0a3e\u0a30\u0a3e \u0a15\u0a39\u0a4b\u0964 \u0a1c\u0a47 \u0a24\u0a41\u0a39\u0a3e\u0a28\u0a42\u0a70 \u0a39\u0a41\u0a23\u0a47 \u0a15\u0a3f\u0a38\u0a47 \u0a26\u0a40 \u0a32\u0a4b\u0a5c \u0a39\u0a48, \u0a24\u0a3e\u0a02 988 \u0a09\u0a71\u0a24\u0a47 \u0a15\u0a3e\u0a32 \u0a1c\u0a3e\u0a02 \u0a38\u0a41\u0a28\u0a47\u0a39\u0a3e \u0a2d\u0a47\u0a1c\u0a4b\u0964",
     "bn": "\u09b8\u0982\u09af\u09cb\u0997 \u098f\u0995 \u09ae\u09c1\u09b9\u09c2\u09b0\u09cd\u09a4\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u099b\u09bf\u09a8\u09cd\u09a8 \u09b9\u09df\u09c7\u099b\u09c7 \u2014 \u09a6\u09df\u09be \u0995\u09b0\u09c7 \u0986\u09ac\u09be\u09b0 \u09ac\u09b2\u09c1\u09a8\u0964 \u098f\u0996\u09a8\u0987 \u0995\u09be\u0989\u0995\u09c7 \u09a6\u09b0\u0995\u09be\u09b0 \u09b9\u09b2\u09c7 988 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 \u0995\u09b2 \u09ac\u09be \u099f\u09c7\u0995\u09cd\u09b8\u099f \u0995\u09b0\u09c1\u09a8\u0964",
+    "sw": "Muunganisho ulikatika kwa muda \u2014 tafadhali sema tena. Ukihitaji mtu sasa hivi, piga simu au tuma ujumbe 988.",
+    "am": "\u130d\u1295\u1299\u1290\u1271 \u1208\u12a0\u134d\u1273 \u1270\u124b\u122d\u1327\u120d \u2014 \u12a5\u1263\u12ad\u12ce \u12a5\u1295\u12f0\u1308\u1293 \u12ed\u1290\u1309\u1229\u1362 \u12a0\u1201\u1295 \u1230\u12cd \u12a8\u1348\u1208\u1309 988 \u12ed\u12f0\u12cd\u1209 \u12c8\u12ed\u1218\u120d\u12a5\u12ad\u1275 \u12ed\u120b\u12a9\u1362",
+    "ha": "Wani abu ya katse ha\u0257in na \u0257an lokaci \u2014 don Allah sake fa\u0257a. Idan kana bu\u1e99atar wani yanzu, kira ko aika sa\u1e99o zuwa 988.",
     "tl": "Naputol sandali ang koneksyon \u2014 pakisabi muli. Kung kailangan mo ng kausap ngayon din, tumawag o mag-text sa 988.",
     "to": "Na\u02bbe motuhia si\u02bbi \u02bba e fehokotak\u00ed \u2014 k\u0101taki \u02bbo toe lea \u02bbaki ia. Kapau \u02bbok\u00fa ke fiema\u02bbu ha taha he taim\u00ed ni, telefoni pe fai ha p\u014dpoaki ki he 988.",
 }
@@ -10256,7 +10345,7 @@ def memory_save():
             code = _new_code(); tries += 1
         # encrypt the summary with a key that includes the code
         enc = AxiomHarmonyProtocol(encryption_key("memory::" + _code_key(code))).encrypt(
-            {"summary": summary, "conversation": convo, "saved": time.strftime("%Y-%m-%d %H:%M")})
+            {"summary": summary, "conversation": convo, "saved": time.strftime("%Y-%m-%d %H:%M")}, context="memory")
         store[_code_key(code)] = {"enc": enc, "saved": time.strftime("%Y-%m-%d %H:%M")}
         # cap total stored
         if len(store) > 5000:
@@ -10281,7 +10370,7 @@ def memory_resume():
     if not rec:
         return jsonify({"status": "notfound"}), 200
     try:
-        out = AxiomHarmonyProtocol(encryption_key("memory::" + k)).decrypt(rec["enc"]).get("original_data", {})
+        out = AxiomHarmonyProtocol(encryption_key("memory::" + k)).decrypt(rec["enc"], context="memory").get("original_data", {})
         return jsonify({"status": "ok", "summary": out.get("summary",""),
                         "conversation": out.get("conversation") or [],
                         "saved": rec.get("saved","")})

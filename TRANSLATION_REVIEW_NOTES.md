@@ -134,3 +134,14 @@ Known gaps (queued):
 - New public /faq page (page_key "faq") ships in English; needs entries in
   i18n_pages_{es,zh,hi,pa,bn,tl,to}.json when the page-translation batches
   are produced. English serves as fallback until then.
+
+## Batch: Swahili, Amharic, Hausa (2026-08-13) — URGENT NATIVE REVIEW
+
+- Three African languages added (research-grounded: Swahili the continent's
+  most-spoken; Hausa the largest sub-Saharan mother tongue after it; Amharic
+  the Horn-of-Africa major language with one of the largest and
+  fastest-growing African diaspora communities in the US). Wired: AI
+  conversation (native via LANG_NAMES), both pickers, offline fallback,
+  one-tap check-in, crisis _IL_UX subset, crisis _IL_HO card subset. All
+  other keys fall back to English by design until full batches land. Native
+  review URGENT for all three; Amharic register (polite forms) first.
