@@ -859,6 +859,7 @@ PUBLIC_PAGE = """
             <a href="/resources" data-i18n="glink.resources">Real help</a><span>&middot;</span>
             <a href="/research" data-i18n="glink.research">Research</a><span>&middot;</span>
             <a href="/safety" data-i18n="glink.safety">Safety</a><span>&middot;</span>
+            <a href="/faq" data-i18n="glink.faq">FAQ</a><span>&middot;</span>
             <a href="/privacy" data-i18n="glink.privacy">Your privacy</a><span>&middot;</span>
             <a href="/updates" data-i18n="glink.updates">Updates</a><span>&middot;</span>
             <a href="/contact" data-i18n="glink.contact">Contact</a>
@@ -7845,6 +7846,56 @@ def facilities_lookup():
             print("[InnerLight] facilities lookup issue:", e)
     return jsonify({"status": "ok", "place": place, "results": results})
 
+
+@app.route("/faq")
+def page_faq():
+    inner = """
+    <h2>What is InnerLight?</h2>
+    <p>InnerLight is a companion for the hardest wait there is &mdash; the time between reaching out for help and human help actually arriving. It talks with you, steadies you, and walks you to the right human: a crisis counselor, a professional, legal aid, or the people who love you. It was built by a founder who spent years watching that gap swallow people, and it exists to close it.</p>
+
+    <h2>Is InnerLight a therapist, doctor, or lawyer?</h2>
+    <p>No &mdash; and it will never pretend to be. InnerLight never diagnoses, never prescribes, and never gives legal advice. It gives you honest information, real company through the wait, and a direct path to licensed humans. That line is written into its founding principles and enforced in its code.</p>
+
+    <h2>Does it cost me anything?</h2>
+    <p>No. A person reaching for help never pays &mdash; not now, not ever. That is a founding law of this project, not a promotion.</p>
+
+    <h2>What happens to what I say?</h2>
+    <p>Your words stay between you and InnerLight unless YOU choose otherwise. Conversations are protected with our own layered encryption; nothing is sold, shared, or used for advertising &mdash; ever. If you choose to save your place, it is encrypted under a code only you hold. If you choose to share a summary with a counselor so you don&rsquo;t have to start over, that happens only when you check the consent box yourself.</p>
+
+    <h2>Will InnerLight call the police or 911 on me?</h2>
+    <p>InnerLight never contacts anyone behind your back &mdash; no silent calls, no automatic reports. In moments of danger it will show you the fastest doors to help (988, 911, chat) and encourage you to use them, and everything it shares with a counselor requires your consent first. The full step-by-step protocol is public on the <a href="/safety">Safety page</a>.</p>
+
+    <h2>Do I have to use my camera or microphone?</h2>
+    <p>No. Everything works by typing alone. If you allow the microphone or camera, InnerLight uses them only in the moment, on your device, to listen better and steady the experience &mdash; audio and video are never stored and never leave your browser as recordings.</p>
+
+    <h2>What languages does InnerLight speak?</h2>
+    <p>English, Spanish, Chinese, Hindi, Punjabi, Bengali, Tagalog, and Tongan &mdash; and in a crisis, every safety surface holds your language. If your device has no speaking voice for your language, InnerLight stays respectfully silent rather than speak the wrong one; the words remain on screen.</p>
+
+    <h2>I&rsquo;m under 18. Can I use this?</h2>
+    <p>InnerLight will always talk with you and always show you the fastest doors to help. It also takes extra care with young people: it gently encourages connecting with a trusted adult and with youth-specific lines, and it holds firmer boundaries by design. You are never turned away.</p>
+
+    <h2>Is talking to an AI a replacement for real help?</h2>
+    <p>No, and InnerLight is built to make sure it never becomes one. Its whole purpose points OUTWARD &mdash; toward humans. If it notices someone treating it as a substitute for human connection, it gently and honestly redirects. It would rather lose your attention than replace your people.</p>
+
+    <h2>What if a service it sends me to is down?</h2>
+    <p>Every critical handoff has a chain of ways in. Before you are sent anywhere, the system checks that the door actually opens right now; if a website is having an outage, the next verified door takes over automatically. You will never be handed a dead link on purpose &mdash; and if you ever find one, it gets repaired and the chain gets deeper.</p>
+
+    <h2>Do I need to install an app?</h2>
+    <p>Never. InnerLight runs in the browser you already have, and it will never require you to install or choose an app to reach help &mdash; 211 opens as a website, 988 can be reached by chat as well as by phone, and every door works from a plain tap.</p>
+
+    <h2>Can I save my conversation and come back?</h2>
+    <p>Yes. Ask to save your place and you receive a short code &mdash; your conversation is encrypted under it, and no code means no access, not even for us. When you return and enter the code, the conversation rebuilds exactly as it was and continues with memory, so you never have to tell your story twice.</p>
+
+    <h2>Why do some connections say &ldquo;sample&rdquo;?</h2>
+    <p>Honesty rule: InnerLight never shows you a button unless a real person or service is behind it. Provider video connections appear only as real providers enroll; until then, demonstrations are clearly labeled as samples. What is live is live everywhere: the companion, the crisis doors, legal information, and the full experience.</p>
+
+    <h2>Who is behind InnerLight?</h2>
+    <p>InnerLight is built by God&rsquo;s Love for Us LLC, founded on years of direct field observation of what actually calms people in distress and firsthand experience navigating healthcare, disability, and public systems. The mission, the evidence, and every method are public on the <a href="/research">Research &amp; Methods</a> page.</p>
+
+    <h2>Something is broken or wrong. What do I do?</h2>
+    <p>Tell us &mdash; it gets fixed. This project runs on a standing law: when a problem is found, it is repaired and the surrounding system is improved, immediately. Every page footer has the contact path, and every report makes InnerLight safer for the next person.</p>
+    """
+    return _info_page("Frequently Asked Questions", inner, page_key="faq")
 
 @app.route("/research")
 def page_research():

@@ -128,3 +128,9 @@ Known gaps (queued):
 - These appear at the highest-risk moment a person can be in. Native review of
   THIS batch comes before all others. Tongan legal vocabulary (loea
   constructions) especially needs a native speaker's confirmation.
+
+## Batch: FAQ page (2026-08-12)
+
+- New public /faq page (page_key "faq") ships in English; needs entries in
+  i18n_pages_{es,zh,hi,pa,bn,tl,to}.json when the page-translation batches
+  are produced. English serves as fallback until then.
