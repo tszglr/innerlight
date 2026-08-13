@@ -7636,17 +7636,67 @@ def manifest_json():
 # "calm but alive" to match the rest of InnerLight.
 # ---------------------------------------------------------------------------
 _PAGE_I18N = {}
+_PAGE_LANGS = ("es", "zh", "hi", "pa", "bn", "tl", "to", "sw", "am", "ha")
+_PAGE_CACHE_DIR = "/var/data" if os.path.isdir("/var/data") else "/tmp/il_i18n"
+
 def _load_page_i18n():
     import os as _os, json as _json
     base = _os.path.dirname(_os.path.abspath(__file__))
-    for lg in ("es", "zh", "hi", "pa", "bn", "tl", "to"):
+    try:
+        _os.makedirs(_PAGE_CACHE_DIR, exist_ok=True)
+    except Exception:
+        pass
+    for lg in _PAGE_LANGS:
+        _PAGE_I18N[lg] = {}
+        # Repo-committed translations first (native-reviewed seeds)...
         try:
             with open(_os.path.join(base, "i18n_pages_%s.json" % lg), encoding="utf-8") as f:
-                _PAGE_I18N[lg] = _json.load(f)
-        except Exception as e:
-            print("[InnerLight] page i18n %s not loaded: %s" % (lg, e))
-            _PAGE_I18N[lg] = {}
+                _PAGE_I18N[lg].update(_json.load(f))
+        except Exception:
+            pass
+        # ...then the runtime cache the server built for itself.
+        try:
+            with open(_os.path.join(_PAGE_CACHE_DIR, "i18n_pages_%s.json" % lg), encoding="utf-8") as f:
+                _PAGE_I18N[lg].update(_json.load(f))
+        except Exception:
+            pass
+        if not _PAGE_I18N[lg]:
+            print("[InnerLight] page i18n %s: none yet — will self-translate on first visit" % lg)
 _load_page_i18n()
+
+# ---- SELF-HEALING PAGE TRANSLATION ----
+# A page visited in a language it does not yet speak serves English INSTANTLY,
+# and quietly translates itself in the background (QE-judged), caches the
+# result, and speaks that language for every visitor after. One mechanism,
+# every page, every language — including pages and languages added later.
+_PAGE_PENDING = set()
+_page_pending_lock = threading.Lock()
+
+def _page_i18n_kick(lang, page_key, inner_en):
+    if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
+        return
+    tag = (lang, page_key)
+    with _page_pending_lock:
+        if tag in _PAGE_PENDING:
+            return
+        _PAGE_PENDING.add(tag)
+    def _work():
+        try:
+            out = comprehension_engine.translate_html_verified(inner_en, lang)
+            if out:
+                _PAGE_I18N.setdefault(lang, {})[page_key] = out
+                try:
+                    os.makedirs(_PAGE_CACHE_DIR, exist_ok=True)
+                    path = os.path.join(_PAGE_CACHE_DIR, "i18n_pages_%s.json" % lang)
+                    with open(path, "w", encoding="utf-8") as f:
+                        json.dump(_PAGE_I18N[lang], f, ensure_ascii=False)
+                    print("[InnerLight] page %r now speaks %s (cached)" % (page_key, lang))
+                except Exception as e:
+                    print("[InnerLight] page i18n cache write failed: %s" % str(e)[:100])
+        finally:
+            with _page_pending_lock:
+                _PAGE_PENDING.discard(tag)
+    threading.Thread(target=_work, daemon=True).start()
 
 _INFO_CHROME = {
     "en": {"back": "&larr; Back to InnerLight", "about": "About", "how": "How it works", "research": "Research", "safety": "Safety &amp; crisis protocol", "privacy": "Your privacy", "contact": "Contact", "resources": "Real help", "stories": "How a visit goes", "updates": "Updates", "terms": "Terms of Service"},
@@ -7661,14 +7711,16 @@ _INFO_CHROME = {
 
 def _info_lang():
     lg = (request.args.get("lang") or request.cookies.get("il_lang") or "en")
-    return lg if lg in ("en", "es", "zh", "hi", "pa", "bn", "tl", "to") else "en"
+    return lg if lg == "en" or lg in _PAGE_LANGS else "en"
 
 def _info_page(title, inner, page_key=None):
     lang = _info_lang()
-    if page_key and lang != "en":
+    if page_key and lang != "en" and lang in _PAGE_LANGS:
         _t = _PAGE_I18N.get(lang, {}).get(page_key)
         if _t:
             inner = _t
+        else:
+            _page_i18n_kick(lang, page_key, inner)
     _ch = _INFO_CHROME.get(lang, _INFO_CHROME["en"])
     _q = ("?lang=" + lang) if lang != "en" else ""
     return render_template_string("""<!DOCTYPE html>
@@ -8178,7 +8230,7 @@ def page_research():
 
     <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
     """
-    return _info_page("Research &amp; Methods", inner)
+    return _info_page("Research &amp; Methods", inner, "research")
 
 
 @app.route("/how-it-works")

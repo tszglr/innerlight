@@ -145,3 +145,11 @@ Known gaps (queued):
   one-tap check-in, crisis _IL_UX subset, crisis _IL_HO card subset. All
   other keys fall back to English by design until full batches land. Native
   review URGENT for all three; Amharic register (polite forms) first.
+
+## Self-healing page translation (2026-08-13)
+
+- Every info page now translates itself on the running server (QE-judged,
+  cached) the first time it is visited in a language it does not yet speak.
+  Machine translations serve until native-reviewed versions are committed to
+  the repo files, which always take precedence at load. Review priority
+  remains: crisis surfaces first, then safety/privacy/terms pages.

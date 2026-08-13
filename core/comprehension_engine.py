@@ -396,3 +396,57 @@ def classify_signals(user_text):
     except Exception as e:
         print(f"[comprehension] classify failed: {str(e)[:120]}")
     return None
+
+
+def translate_html_verified(html, ui_lang, threshold=0.8):
+    """Translate a full HTML page body into ui_lang, preserving every tag,
+    attribute, URL, and entity untouched, then score the result with the
+    independent QE judge. Returns translated HTML, or None (translation
+    unavailable or judged below the bar). Used by the self-healing page
+    translation layer: pages translate themselves once, on the running
+    server, and are cached thereafter."""
+    lang_name = LANG_NAMES.get((ui_lang or "en").strip().lower())
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
+    if not lang_name or not key or not html or not html.strip():
+        return None
+    body = json.dumps({
+        "model": MODEL,
+        "max_tokens": 8192,
+        "system": (
+            f"You are a professional translator producing natural, native {lang_name}. The user sends an "
+            "HTML fragment. Translate every piece of human-visible text into "
+            f"{lang_name}. PRESERVE ALL MARKUP EXACTLY: every tag, attribute, class, href, id, HTML "
+            "entity (&mdash;, &rsquo;, etc.), and any {placeholder} tokens stay byte-identical. Do not "
+            "translate content inside attribute values except title/aria-label/placeholder attributes. "
+            "Keep 988, 911, 211, proper names, and citation titles as they are. Return ONLY the "
+            "translated HTML fragment, nothing else."
+        ),
+        "messages": [{"role": "user", "content": html}],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        ANTHROPIC_URL, data=body, method="POST",
+        headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                 "content-type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=180) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        out = ""
+        for p in data.get("content", []):
+            if p.get("type") == "text":
+                out += p.get("text", "")
+        out = out.strip()
+        if out.startswith("```"):
+            out = out.strip("`").strip()
+            if out.lower().startswith("html"):
+                out = out[4:].strip()
+        if not out or "<" not in out:
+            return None
+        score = verify_texts([html], [out], ui_lang)
+        if score is not None and score < threshold:
+            print(f"[comprehension] page translation rejected by QE judge ({ui_lang}): {score:.2f}")
+            return None
+        return out
+    except Exception as e:
+        print(f"[comprehension] page translation failed ({ui_lang}): {str(e)[:120]}")
+    return None
