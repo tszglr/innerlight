@@ -153,3 +153,12 @@ Known gaps (queued):
   Machine translations serve until native-reviewed versions are committed to
   the repo files, which always take precedence at load. Review priority
   remains: crisis surfaces first, then safety/privacy/terms pages.
+
+## Batch: FULL launch page in Swahili, Amharic, Hausa (2026-08-13)
+
+- Launch-page parity complete: all 73 _IL_UX keys, the full 35-key gate
+  dictionary (tagline, camera/AI notices, story screen, music, rail, footer),
+  and time-of-day greetings now exist in sw/am/ha — the same coverage as
+  every other language, verified by automated key-count parity. glink.faq /
+  glink.terms added for all ten languages. NATIVE REVIEW REMAINS URGENT:
+  crisis strings first, then the minor bridge (mb.*) and substitution note.
