@@ -7649,14 +7649,14 @@ def _load_page_i18n():
 _load_page_i18n()
 
 _INFO_CHROME = {
-    "en": {"back": "&larr; Back to InnerLight", "about": "About", "how": "How it works", "research": "Research", "safety": "Safety &amp; crisis protocol", "privacy": "Your privacy", "contact": "Contact", "resources": "Real help", "stories": "How a visit goes", "updates": "Updates"},
-    "es": {"back": "&larr; Volver a InnerLight", "about": "Acerca de", "how": "C&oacute;mo funciona", "research": "Investigaci&oacute;n", "safety": "Seguridad y protocolo de crisis", "privacy": "Tu privacidad", "contact": "Contacto", "resources": "Ayuda real", "stories": "C&oacute;mo es una visita", "updates": "Novedades"},
-    "zh": {"back": "&larr; 返回 InnerLight", "about": "关于", "how": "如何运作", "research": "研究", "safety": "安全与危机处理协议", "privacy": "你的隐私", "contact": "联系我们", "resources": "真实的帮助", "stories": "一次访问的样子", "updates": "最新进展"},
-    "hi": {"back": "&larr; InnerLight पर वापस", "about": "हमारे बारे में", "how": "यह कैसे काम करता है", "research": "शोध", "safety": "सुरक्षा और संकट प्रोटोकॉल", "privacy": "आपकी गोपनीयता", "contact": "संपर्क करें", "resources": "सच्ची मदद", "stories": "एक मुलाक़ात कैसी होती है", "updates": "नई जानकारी"},
-    "pa": {"back": "&larr; InnerLight ਉੱਤੇ ਵਾਪਸ", "about": "ਸਾਡੇ ਬਾਰੇ", "how": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ", "research": "ਖੋਜ", "safety": "ਸੁਰੱਖਿਆ ਅਤੇ ਸੰਕਟ ਪ੍ਰੋਟੋਕੋਲ", "privacy": "ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ", "contact": "ਸੰਪਰਕ ਕਰੋ", "resources": "ਸੱਚੀ ਮਦਦ", "stories": "ਇੱਕ ਮੁਲਾਕਾਤ ਕਿਹੋ ਜਿਹੀ ਹੁੰਦੀ ਹੈ", "updates": "ਨਵੀਆਂ ਖ਼ਬਰਾਂ"},
-    "bn": {"back": "&larr; InnerLight-এ ফিরুন", "about": "আমাদের সম্পর্কে", "how": "এটি কীভাবে কাজ করে", "research": "গবেষণা", "safety": "নিরাপত্তা ও সংকট প্রোটোকল", "privacy": "আপনার গোপনীয়তা", "contact": "যোগাযোগ", "resources": "সত্যিকারের সাহায্য", "stories": "একটি সাক্ষাৎ কেমন হয়", "updates": "নতুন খবর"},
-    "tl": {"back": "&larr; Bumalik sa InnerLight", "about": "Tungkol sa amin", "how": "Paano ito gumagana", "research": "Pananaliksik", "safety": "Kaligtasan at protocol sa krisis", "privacy": "Ang iyong privacy", "contact": "Makipag-ugnayan", "resources": "Totoong tulong", "stories": "Paano ang isang pagbisita", "updates": "Mga update"},
-    "to": {"back": "&larr; Foki ki InnerLight", "about": "Ko kimautolu", "how": "Founga ʻene ngāue", "research": "Fekumi", "safety": "Malu mo e founga ʻi ha faingataʻa", "privacy": "Hoʻo fakapulipuli", "contact": "Fetuʻutaki", "resources": "Tokoni moʻoni", "stories": "Ko e anga ʻo ha ʻaʻahi", "updates": "Ngaahi fakamatala foʻou"},
+    "en": {"back": "&larr; Back to InnerLight", "about": "About", "how": "How it works", "research": "Research", "safety": "Safety &amp; crisis protocol", "privacy": "Your privacy", "contact": "Contact", "resources": "Real help", "stories": "How a visit goes", "updates": "Updates", "terms": "Terms of Service"},
+    "es": {"back": "&larr; Volver a InnerLight", "about": "Acerca de", "how": "C&oacute;mo funciona", "research": "Investigaci&oacute;n", "safety": "Seguridad y protocolo de crisis", "privacy": "Tu privacidad", "contact": "Contacto", "resources": "Ayuda real", "stories": "C&oacute;mo es una visita", "updates": "Novedades", "terms": "T&eacute;rminos del servicio"},
+    "zh": {"back": "&larr; 返回 InnerLight", "about": "关于", "how": "如何运作", "research": "研究", "safety": "安全与危机处理协议", "privacy": "你的隐私", "contact": "联系我们", "resources": "真实的帮助", "stories": "一次访问的样子", "updates": "最新进展", "terms": "服务条款"},
+    "hi": {"back": "&larr; InnerLight पर वापस", "about": "हमारे बारे में", "how": "यह कैसे काम करता है", "research": "शोध", "safety": "सुरक्षा और संकट प्रोटोकॉल", "privacy": "आपकी गोपनीयता", "contact": "संपर्क करें", "resources": "सच्ची मदद", "stories": "एक मुलाक़ात कैसी होती है", "updates": "नई जानकारी", "terms": "सेवा की शर्तें"},
+    "pa": {"back": "&larr; InnerLight ਉੱਤੇ ਵਾਪਸ", "about": "ਸਾਡੇ ਬਾਰੇ", "how": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ", "research": "ਖੋਜ", "safety": "ਸੁਰੱਖਿਆ ਅਤੇ ਸੰਕਟ ਪ੍ਰੋਟੋਕੋਲ", "privacy": "ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ", "contact": "ਸੰਪਰਕ ਕਰੋ", "resources": "ਸੱਚੀ ਮਦਦ", "stories": "ਇੱਕ ਮੁਲਾਕਾਤ ਕਿਹੋ ਜਿਹੀ ਹੁੰਦੀ ਹੈ", "updates": "ਨਵੀਆਂ ਖ਼ਬਰਾਂ", "terms": "ਸੇਵਾ ਦੀਆਂ ਸ਼ਰਤਾਂ"},
+    "bn": {"back": "&larr; InnerLight-এ ফিরুন", "about": "আমাদের সম্পর্কে", "how": "এটি কীভাবে কাজ করে", "research": "গবেষণা", "safety": "নিরাপত্তা ও সংকট প্রোটোকল", "privacy": "আপনার গোপনীয়তা", "contact": "যোগাযোগ", "resources": "সত্যিকারের সাহায্য", "stories": "একটি সাক্ষাৎ কেমন হয়", "updates": "নতুন খবর", "terms": "পরিষেবার শর্তাবলী"},
+    "tl": {"back": "&larr; Bumalik sa InnerLight", "about": "Tungkol sa amin", "how": "Paano ito gumagana", "research": "Pananaliksik", "safety": "Kaligtasan at protocol sa krisis", "privacy": "Ang iyong privacy", "contact": "Makipag-ugnayan", "resources": "Totoong tulong", "stories": "Paano ang isang pagbisita", "updates": "Mga update", "terms": "Mga Tuntunin ng Serbisyo"},
+    "to": {"back": "&larr; Foki ki InnerLight", "about": "Ko kimautolu", "how": "Founga ʻene ngāue", "research": "Fekumi", "safety": "Malu mo e founga ʻi ha faingataʻa", "privacy": "Hoʻo fakapulipuli", "contact": "Fetuʻutaki", "resources": "Tokoni moʻoni", "stories": "Ko e anga ʻo ha ʻaʻahi", "updates": "Ngaahi fakamatala foʻou", "terms": "Ngaahi Tuʻutuʻuni ʻo e Ngāue"},
 }
 
 def _info_lang():
@@ -7759,14 +7759,15 @@ def _info_page(title, inner, page_key=None):
       <a href="/safety{{ q }}">{{ c_safety|safe }}</a>&middot;
       <a href="/privacy{{ q }}">{{ c_privacy|safe }}</a>&middot;
       <a href="/updates{{ q }}">{{ c_updates|safe }}</a>&middot;
-      <a href="/contact{{ q }}">{{ c_contact|safe }}</a>
+      <a href="/contact{{ q }}">{{ c_contact|safe }}</a>&middot;
+      <a href="/terms{{ q }}">{{ c_terms|safe }}</a>
       <div style="margin-top:10px;">&copy; 2026 God's Love For Us LLC &middot; Created by Toshay S. Zeigler</div>
     </div>
   </div>
 </body></html>""", title=title, inner=inner, lang=lang, q=_q, back=_ch["back"],
     c_about=_ch["about"], c_how=_ch["how"], c_research=_ch["research"], c_safety=_ch["safety"],
     c_privacy=_ch["privacy"], c_contact=_ch["contact"], c_resources=_ch["resources"],
-    c_stories=_ch["stories"], c_updates=_ch["updates"])
+    c_stories=_ch["stories"], c_updates=_ch["updates"], c_terms=_ch.get("terms", "Terms of Service"))
 
 
 @app.route("/about")

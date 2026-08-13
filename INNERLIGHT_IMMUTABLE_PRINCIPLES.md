@@ -168,10 +168,16 @@
 
 ## 10. THE ASYMMETRY OF FAILURE — IT ONLY TAKES ONE TIME
     (set by the founder, July 2026)
-- It takes ONE time for a person to succeed at harming themselves, and we are a
-  complete failure. It takes BILLIONS of times for us to succeed at keeping
-  them from it. That asymmetry must live in the DNA of this program and in
-  every decision it makes. We are never "mostly" safe. One miss is total.
+- It takes ONE time for a person to succeed at harming themselves. It takes
+  BILLIONS of times for us to succeed at keeping them from it. That asymmetry
+  must live in the DNA of this program and in every decision it makes.
+- Realism (founder's amendment, August 2026): one loss would not make us a
+  complete failure — it would mean we are HEADING toward complete failure,
+  and everything stops until we understand why. We hold both truths at once:
+  no single miss erases the people who were held, and no number of successes
+  ever makes a single miss acceptable. We are never "mostly" safe; we are
+  never finished; and we never let the weight of the stakes freeze us into
+  building nothing — that would fail everyone.
 - Therefore we ATTEMPT EVERY TIME. There is no session, no risk level, no quiet
   moment where we relax, assume someone is fine, and stop offering the path to
   a real human. A calm-looking check-in gets the same vigilance as a loud one.
