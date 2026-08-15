@@ -1314,6 +1314,11 @@ PUBLIC_PAGE = """
         // their new language, not linger in the old one.
         try { var _ci=document.getElementById('il-checkin'); if (_ci && _ci.querySelector('button')) { _ci.remove(); if (typeof showCheckin==='function') showCheckin(); } } catch(e){}
         try { var _sc=document.getElementById('sam-card'); if (_sc) { _sc.remove(); if (typeof showCalmScale==='function') showCalmScale(window._lastSamPhase||''); } } catch(e){}
+        // The Focus pill and the anchor overlay were created once and kept
+        // their birth language — they now follow every switch, live.
+        try { var _ap=document.getElementById('il-anchor-pill'); if (_ap && typeof _ilan==='function') _ap.textContent='\u25ce '+_ilan('pill'); } catch(e){}
+        try { var _ah=document.getElementById('il-anchor-hint'); if (_ah && typeof _ilan==='function') _ah.textContent=_ilan('hint'); } catch(e){}
+        try { var _ac=document.getElementById('il-anchor-x'); if (_ac && typeof _ilan==='function') _ac.textContent=_ilan('close'); } catch(e){}
         // the arrival greeting is rendered word-by-word in the chosen language
         try { if (typeof renderGateGreeting === 'function') renderGateGreeting(false); } catch(e){}
         var btns = document.querySelectorAll('[data-langbtn]');
@@ -4542,7 +4547,7 @@ function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAncho
   ov.innerHTML='<canvas id="il-anchor-c" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>'
     +'<div id="il-anchor-w" style="position:absolute;left:0;right:0;top:42%;transform:translateY(-50%);text-align:center;'
     +'font-size:28px;color:#f3e9dc;opacity:0;pointer-events:none;text-shadow:0 2px 20px rgba(0,0,0,.6);"></div>'
-    +'<div style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#a8917c;pointer-events:none;">'+A.hint+'</div>'
+    +'<div id="il-anchor-hint" style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#a8917c;pointer-events:none;">'+A.hint+'</div>'
     +'<button id="il-anchor-x" style="position:absolute;left:50%;bottom:34px;transform:translateX(-50%);'
     +'background:rgba(28,20,13,.7);border:1px solid rgba(240,176,112,.3);color:#d7c3ad;border-radius:999px;'
     +'padding:9px 18px;font-size:13px;cursor:pointer;">'+A.close+'</button>';
