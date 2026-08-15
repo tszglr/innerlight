@@ -8,6 +8,8 @@ echo "== syntax gate (SyntaxWarning = failure) =="
 python -W error::SyntaxWarning -m py_compile core/*.py
 echo "== frontend script blocks =="
 python check_frontend.py core/axiom_harmony_unified_app.py
+echo "== language parity: every dictionary, every language =="
+python tools/check_lang_parity.py
 echo "== live smoke test =="
 python - <<'PY'
 import sys
