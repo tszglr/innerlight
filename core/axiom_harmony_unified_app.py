@@ -2768,11 +2768,11 @@ PUBLIC_PAGE = """
            and the menu lists every language in its OWN native name, so a person
            who chose wrong can find their way home even from a script they
            cannot read. -->
-      <div id="lang-pill-wrap" style="position:fixed;top:10px;right:12px;z-index:9000;">
+      <div id="lang-pill-wrap" style="position:fixed;top:calc(10px + env(safe-area-inset-top, 0px));left:12px;z-index:9000;">
         <button id="lang-pill" onclick="toggleLangMenu()" aria-label="Language"
           style="display:flex;align-items:center;gap:6px;background:rgba(20,14,9,0.55);color:#f5ead8;border:1px solid rgba(245,234,216,0.35);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer;backdrop-filter:blur(6px);">
           &#127760; <span id="lang-pill-name">English</span></button>
-        <div id="lang-menu" style="display:none;position:absolute;right:0;top:40px;background:rgba(24,17,11,0.96);border:1px solid rgba(245,234,216,0.28);border-radius:14px;padding:8px;min-width:190px;max-height:62vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,0.45);"></div>
+        <div id="lang-menu" style="display:none;position:absolute;left:0;top:40px;background:rgba(24,17,11,0.96);border:1px solid rgba(245,234,216,0.28);border-radius:14px;padding:8px;min-width:190px;max-height:62vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,0.45);"></div>
       </div>
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
       <div id="calm-photo-a" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
