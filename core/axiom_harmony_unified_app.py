@@ -1367,6 +1367,7 @@ PUBLIC_PAGE = """
         "Alert a live InnerLight monitor": "Avisar a un monitor de InnerLight en vivo",
         "Chat online with 988 (no call needed)": "Chatea en línea con 988 (sin llamar)",
         "Call 911 (immediate danger)": "Llamar al 911 (peligro inmediato)",
+        "Send emergency help to my location": "Enviar ayuda de emergencia a mi ubicación",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "¿Quieres que comparta lo que me has contado con el consejero de crisis, para que no tengas que empezar de nuevo?",
         "Talk with a licensed professional": "Habla con un profesional acreditado",
         "Start a video session with a counselor": "Iniciar una sesión de video con un consejero",
@@ -1403,6 +1404,7 @@ PUBLIC_PAGE = """
         "Alert a live InnerLight monitor": "通知 InnerLight 在线监护员",
         "Chat online with 988 (no call needed)": "与 988 在线聊天（无需拨打电话）",
         "Call 911 (immediate danger)": "拨打 911（紧急危险）",
+        "Send emergency help to my location": "派遣紧急救援到我的位置",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "要我把你告诉我的内容分享给危机辅导员，让你不用从头再说一遍吗？",
         "Talk with a licensed professional": "与持证专业人士交谈",
         "Start a video session with a counselor": "与辅导员开始视频会话",
@@ -1439,6 +1441,7 @@ PUBLIC_PAGE = """
         "Alert a live InnerLight monitor": "InnerLight के लाइव मॉनिटर को सूचित करें",
         "Chat online with 988 (no call needed)": "988 से ऑनलाइन चैट करें (कॉल की ज़रूरत नहीं)",
         "Call 911 (immediate danger)": "911 पर कॉल करें (तत्काल खतरा)",
+        "Send emergency help to my location": "मेरी लोकेशन पर आपातकालीन मदद भेजें",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "क्या मैं आपकी बताई बातें क्राइसिस काउंसलर से साझा कर दूँ, ताकि आपको फिर से शुरू न करना पड़े?",
         "Talk with a licensed professional": "लाइसेंस प्राप्त पेशेवर से बात करें",
         "Start a video session with a counselor": "काउंसलर के साथ वीडियो सत्र शुरू करें",
@@ -1475,6 +1478,7 @@ PUBLIC_PAGE = """
         "Alert a live InnerLight monitor": "InnerLight ਦੇ ਲਾਈਵ ਮਾਨੀਟਰ ਨੂੰ ਸੂਚਿਤ ਕਰੋ",
         "Chat online with 988 (no call needed)": "988 ਨਾਲ ਆਨਲਾਈਨ ਚੈਟ ਕਰੋ (ਕਾਲ ਦੀ ਲੋੜ ਨਹੀਂ)",
         "Call 911 (immediate danger)": "911 ਉੱਤੇ ਕਾਲ ਕਰੋ (ਤੁਰੰਤ ਖ਼ਤਰਾ)",
+        "Send emergency help to my location": "ਮੇਰੀ ਲੋਕੇਸ਼ਨ ਉੱਤੇ ਐਮਰਜੈਂਸੀ ਮਦਦ ਭੇਜੋ",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "ਕੀ ਮੈਂ ਤੁਹਾਡੀਆਂ ਦੱਸੀਆਂ ਗੱਲਾਂ ਕ੍ਰਾਈਸਿਸ ਕਾਊਂਸਲਰ ਨਾਲ ਸਾਂਝੀਆਂ ਕਰ ਦਿਆਂ, ਤਾਂ ਜੋ ਤੁਹਾਨੂੰ ਮੁੜ ਤੋਂ ਸ਼ੁਰੂ ਨਾ ਕਰਨਾ ਪਵੇ?",
         "Talk with a licensed professional": "ਲਾਇਸੰਸਸ਼ੁਦਾ ਪੇਸ਼ੇਵਰ ਨਾਲ ਗੱਲ ਕਰੋ",
         "Start a video session with a counselor": "ਕਾਊਂਸਲਰ ਨਾਲ ਵੀਡੀਓ ਸੈਸ਼ਨ ਸ਼ੁਰੂ ਕਰੋ",
@@ -1511,6 +1515,7 @@ PUBLIC_PAGE = """
         "Alert a live InnerLight monitor": "InnerLight-এর লাইভ মনিটরকে জানান",
         "Chat online with 988 (no call needed)": "988-এর সাথে অনলাইনে চ্যাট করুন (কল লাগবে না)",
         "Call 911 (immediate danger)": "911 নম্বরে কল করুন (তাৎক্ষণিক বিপদ)",
+        "Send emergency help to my location": "আমার অবস্থানে জরুরি সাহায্য পাঠান",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "আপনি আমাকে যা বলেছেন তা কি ক্রাইসিস কাউন্সেলরের সাথে ভাগ করব, যাতে আপনাকে আবার শুরু থেকে বলতে না হয়?",
         "Talk with a licensed professional": "লাইসেন্সধারী পেশাদারের সাথে কথা বলুন",
         "Start a video session with a counselor": "কাউন্সেলরের সাথে ভিডিও সেশন শুরু করুন",
@@ -1547,6 +1552,7 @@ PUBLIC_PAGE = """
         "Alert a live InnerLight monitor": "Abisuhan ang live na InnerLight monitor",
         "Chat online with 988 (no call needed)": "Makipag-chat online sa 988 (hindi na kailangang tumawag)",
         "Call 911 (immediate danger)": "Tumawag sa 911 (agarang panganib)",
+        "Send emergency help to my location": "Magpadala ng emergency na tulong sa lokasyon ko",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Gusto mo bang ibahagi ko sa crisis counselor ang sinabi mo, para hindi ka na mag-uumpisa muli?",
         "Talk with a licensed professional": "Makipag-usap sa lisensyadong propesyonal",
         "Start a video session with a counselor": "Magsimula ng video session sa counselor",
@@ -1583,6 +1589,7 @@ PUBLIC_PAGE = """
         "Alert a live InnerLight monitor": "Fakatokanga ki ha leʻo InnerLight ʻoku ʻi ai",
         "Chat online with 988 (no call needed)": "Fetalanoaʻaki ʻi he ʻinitaneti mo e 988 (ʻikai fiemaʻu ha telefoni)",
         "Call 911 (immediate danger)": "Telefoni ki he 911 (fakatuʻutāmaki vave)",
+        "Send emergency help to my location": "ʻAve ha tokoni fakavavevave ki hoku tuʻungá",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Te ke loto ke u vahevahe e meʻa kuó ke talamai ki he faleʻi fakatuʻupakeé, koeʻuhí ke ʻoua te ke toe kamata mei he kamataʻangá?",
         "Talk with a licensed professional": "Talanoa mo ha taukei maʻu laiseni",
         "Start a video session with a counselor": "Kamata ha fetalanoaʻaki vitiō mo ha faleʻi",
@@ -1619,6 +1626,7 @@ PUBLIC_PAGE = """
         "Chat online with 988 (no call needed)": "Piga gumzo mtandaoni na 988 (bila kupiga simu)",
         "Alert a live InnerLight monitor": "Arifu mwangalizi wa InnerLight aliye mtandaoni",
         "Call 911 (immediate danger)": "Piga 911 (hatari ya papo hapo)",
+        "Send emergency help to my location": "Tuma msaada wa dharura mahali nilipo",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Unataka nishiriki uliyoniambia na mshauri wa dharura, ili usianze upya?",
         "Connect with {who}": "Unganishwa na {who}",
         "Share my context so I do not have to repeat myself.": "Shiriki maelezo yangu ili nisilazimike kurudia.",
@@ -1630,6 +1638,7 @@ PUBLIC_PAGE = """
         "Chat online with 988 (no call needed)": "ከ988 ጋር በመስመር ላይ ይወያዩ (መደወል አያስፈልግም)",
         "Alert a live InnerLight monitor": "የInnerLight ቀጥታ ተቆጣጣሪን ያሳውቁ",
         "Call 911 (immediate danger)": "911 ይደውሉ (አፋጣኝ አደጋ)",
+        "Send emergency help to my location": "ወደ አካባቢዬ የአደጋ ጊዜ እርዳታ ላክ",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "የነገሩኝን ከችግር አማካሪው ጋር እንዳካፍል ይፈልጋሉ፣ እንደገና እንዳይጀምሩ?",
         "Connect with {who}": "ከ{who} ጋር ይገናኙ",
         "Share my context so I do not have to repeat myself.": "እንደገና እንዳልደግም መረጃዬን አካፍል።",
@@ -1641,6 +1650,7 @@ PUBLIC_PAGE = """
         "Chat online with 988 (no call needed)": "Yi hira ta yanar gizo da 988 (ba sai ka kira ba)",
         "Alert a live InnerLight monitor": "Sanar da mai sa ido na InnerLight kai tsaye",
         "Call 911 (immediate danger)": "Kira 911 (haɗari na gaggawa)",
+        "Send emergency help to my location": "Aika taimakon gaggawa zuwa wurina",
         "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Kana so in raba abin da ka faɗa da mai ba da shawara na gaggawa, don kada ka sake farawa?",
         "Connect with {who}": "Haɗa da {who}",
         "Share my context so I do not have to repeat myself.": "Raba bayanina don kada in sake maimaitawa.",
@@ -5553,6 +5563,8 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
+window._exigentReady = false;
+try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
   try { fetch('/api/case/record', {method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({sid: SESSION_ID, role: role, text: String(text||'').slice(0,1200)})}); } catch(e){}
@@ -6521,6 +6533,11 @@ function appendHandoff(thread, handoff, data) {
   addBtn(primary, primaryStyle);
   addBtn(secondary, secondaryStyle);
   addBtn(handoff.actions && handoff.actions.tertiary, secondaryStyle);
+  // Tier-2 seam: appears only when the exigent engine is active AND a
+  // provider is configured (window._exigentReady from /api/exigent/status).
+  if (window._exigentReady && handoff.type === 'crisis') {
+    addBtn({label: 'Send emergency help to my location', action: 'dispatch_help'}, emergencyStyle);
+  }
   addBtn(emergency, emergencyStyle);
   // Speak the handoff offer
   speak(_ilho(handoff.label));
@@ -6607,6 +6624,11 @@ function performBridgeAction(action, value) {
        for anyone who prefers to dial it themselves. */
     case 'call_211': ilOpenDest('help_211', 'https://www.211.org'); break;
     case 'chat_988': ilOpenDest('chat_988', 'https://988lifeline.org'); break;
+    case 'dispatch_help':
+      fetch('/api/exigent/dispatch', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'})
+        .then(function(r){ if (!r.ok) revealUrgentHelp(); })
+        .catch(function(){ revealUrgentHelp(); });
+      break;
     case 'request_video': window.open('/telehealth/intake', '_blank'); break;
     case 'schedule': window.open('/telehealth/intake', '_blank'); break;
     case 'match_attorney': ilOpenDest('legal_aid', 'https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help'); break;
@@ -11504,6 +11526,49 @@ def admin_dashboard():
 
     <div class="hero">{{ kpi_cards|safe }}</div>
 
+    <h2 class="ledger" id="exigent">Exigent circumstances — emergency dispatch readiness</h2>
+    <div class="card" id="exigent-card">
+      <p style="margin-top:0;"><b>Status:</b> <span id="exigent-status" style="font-weight:700;">loading&hellip;</span>
+        <button id="exigent-toggle" onclick="exigentToggle()" style="margin-left:14px;padding:6px 16px;border-radius:8px;border:1px solid #b89;background:#fff;cursor:pointer;font-weight:700;">&hellip;</button></p>
+      <p style="font-size:13px;color:#665;">Built, dormant, ready. Three tiers: <b>Tier 1</b> (person taps 988/911 —
+      always live, ungated). <b>Tier 2</b> (person explicitly asks "send help to my location" — appears on the crisis
+      card only when this engine is active AND a provider below is configured). <b>Tier 3</b> break-glass stays locked
+      behind separate legal review. Current law mandates crisis <i>referral</i> (SB 243, OR SB 1546, NY &sect;1700);
+      this engine is readiness for the day dispatch is required by statute or contract.</p>
+      <div id="exigent-providers" style="font-size:13.5px;line-height:1.55;"></div>
+      <div id="exigent-never" style="font-size:13px;margin-top:10px;padding:10px 12px;background:#f0f6f3;border-radius:8px;"></div>
+      <div id="exigent-log" style="font-size:12px;color:#776;margin-top:10px;"></div>
+    </div>
+    <script>
+      async function exigentLoad(){
+        try {
+          var r = await fetch('/api/admin/exigent'); if(!r.ok) return;
+          var d = await r.json();
+          var st = document.getElementById('exigent-status');
+          st.textContent = d.active ? (d.available ? 'ACTIVE + provider ready — Tier 2 live' : 'ARMED (no provider configured yet)') : 'DORMANT (ready)';
+          st.style.color = d.available ? '#1c7a3d' : (d.active ? '#a06a1f' : '#8a6d3b');
+          var btn = document.getElementById('exigent-toggle');
+          btn.textContent = d.active ? 'Deactivate' : 'Activate';
+          window._exigentActive = !!d.active;
+          document.getElementById('exigent-providers').innerHTML =
+            d.providers.map(function(p){ return '<p style="margin:8px 0;"><b>' + p.name + '</b> ' +
+              (p.ready ? '<span style="color:#1c7a3d;font-weight:700;">[READY]</span>' : '<span style="color:#999;">[not configured — set ' + p.env + ']</span>') +
+              '<br>' + p.how + '</p>'; }).join('');
+          document.getElementById('exigent-never').innerHTML =
+            '<b>Hard lines, regardless of switch state:</b><br>' + d.never.map(function(x){ return '&bull; ' + x; }).join('<br>');
+          document.getElementById('exigent-log').innerHTML = (d.log||[]).slice().reverse()
+            .map(function(e){ return e.at + ' — ' + e.action + ' by ' + e.by; }).join('<br>') || 'No activity yet.';
+        } catch(e){}
+      }
+      async function exigentToggle(){
+        var next = !window._exigentActive;
+        if (!confirm('Really ' + (next ? 'ACTIVATE' : 'DEACTIVATE') + ' emergency dispatch readiness? Tier 2 appears to people only when a provider is also configured.')) return;
+        await fetch('/api/admin/exigent', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({active: next})});
+        exigentLoad();
+      }
+      exigentLoad();
+    </script>
+
     <h2 class="ledger" id="dispatch">Dispatch — the monetary engine (Principle 7)</h2>
     <div class="card" id="dispatch-card">
       <p style="margin-top:0;"><b>Status:</b> <span id="dispatch-status" style="font-weight:700;">loading&hellip;</span>
@@ -13946,6 +14011,37 @@ def api_dest(name):
     if not url:
         return jsonify({"error": "unknown"}), 404
     return jsonify({"url": url})
+
+@app.route("/api/exigent/status")
+def api_exigent_status():
+    """Public boolean only: does user-consented emergency dispatch exist here?
+    While the engine is dormant this is always false and the crisis surface
+    shows nothing new."""
+    import exigent_engine
+    return jsonify({"available": exigent_engine.is_available()})
+
+@app.route("/api/exigent/dispatch", methods=["POST"])
+def api_exigent_dispatch():
+    """Tier-2 user-consented dispatch seam. Dormant: 503. Active without a
+    completed provider integration: 501 with the honest state. When a real
+    provider integration lands, it is called HERE and nowhere else."""
+    import exigent_engine
+    if not exigent_engine.is_available():
+        return jsonify({"error": "not_available"}), 503
+    exigent_engine.log_dispatch_attempt("tier2_request")
+    return jsonify({"error": "provider_integration_pending",
+                    "message": "Dispatch capability is armed but the provider "
+                               "integration is not yet completed."}), 501
+
+@app.route("/api/admin/exigent", methods=["GET", "POST"])
+def api_admin_exigent():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    import exigent_engine
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        return jsonify(exigent_engine.set_active(bool(data.get("active")), actor="founder"))
+    return jsonify(exigent_engine.get_status())
 
 @app.route("/api/admin/dispatch", methods=["GET", "POST"])
 def api_admin_dispatch():
