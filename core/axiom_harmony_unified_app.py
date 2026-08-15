@@ -1322,12 +1322,40 @@ PUBLIC_PAGE = """
         }
       } catch(e){}
     }
+    var NATIVE_NAMES = { en:'English', es:'Espa\u00f1ol', zh:'\u4e2d\u6587', hi:'\u0939\u093f\u0928\u094d\u0926\u0940',
+      pa:'\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40', bn:'\u09ac\u09be\u0982\u09b2\u09be', tl:'Tagalog', to:'lea faka-Tonga',
+      sw:'Kiswahili', am:'\u12a0\u121b\u122d\u129b', ha:'Hausa' };
     function setLang(code){
       // Language lasts for THIS visit only (session cookie, no expiry date).
       try { sessionStorage.setItem('il_lang', code); } catch(e){}
       try { document.cookie = 'il_lang=' + code + ';path=/'; } catch(e){}
       applyLang(code);
+      try {
+        var nm = document.getElementById('lang-pill-name');
+        if (nm) nm.textContent = NATIVE_NAMES[code] || code;
+        var mn = document.getElementById('lang-menu');
+        if (mn) mn.style.display = 'none';
+      } catch(e){}
     }
+    function toggleLangMenu(){
+      var mn = document.getElementById('lang-menu');
+      if (!mn) return;
+      if (mn.style.display === 'block') { mn.style.display = 'none'; return; }
+      if (!mn.childNodes.length) {
+        Object.keys(NATIVE_NAMES).forEach(function(code){
+          var b = document.createElement('button');
+          b.textContent = NATIVE_NAMES[code];
+          b.setAttribute('data-langbtn-menu', code);
+          b.style.cssText = 'display:block;width:100%;text-align:left;background:none;border:none;color:#f5ead8;padding:9px 12px;font-size:15px;cursor:pointer;border-radius:9px;';
+          b.onmouseenter = function(){ b.style.background = 'rgba(245,234,216,0.12)'; };
+          b.onmouseleave = function(){ b.style.background = 'none'; };
+          b.onclick = function(){ setLang(code); };
+          mn.appendChild(b);
+        });
+      }
+      mn.style.display = 'block';
+    }
+    window.toggleLangMenu = toggleLangMenu;
     (function(){
       // FOUNDER DECREE: ENGLISH IS THE DEFAULT, EVERY VISIT. No language choice
       // ever sticks to the device across visits. Purge any old saved choice.
@@ -2731,6 +2759,16 @@ PUBLIC_PAGE = """
 
     <!-- CALM STORY SCREEN -->
     <section id="story-screen" class="story-screen" style="display:none;">
+      <!-- LANGUAGE IS NEVER A TRAP: the globe pill is always visible in-session,
+           and the menu lists every language in its OWN native name, so a person
+           who chose wrong can find their way home even from a script they
+           cannot read. -->
+      <div id="lang-pill-wrap" style="position:fixed;top:10px;right:12px;z-index:9000;">
+        <button id="lang-pill" onclick="toggleLangMenu()" aria-label="Language"
+          style="display:flex;align-items:center;gap:6px;background:rgba(20,14,9,0.55);color:#f5ead8;border:1px solid rgba(245,234,216,0.35);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer;backdrop-filter:blur(6px);">
+          &#127760; <span id="lang-pill-name">English</span></button>
+        <div id="lang-menu" style="display:none;position:absolute;right:0;top:40px;background:rgba(24,17,11,0.96);border:1px solid rgba(245,234,216,0.28);border-radius:14px;padding:8px;min-width:190px;max-height:62vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,0.45);"></div>
+      </div>
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
       <div id="calm-photo-a" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
         <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;">
