@@ -431,6 +431,14 @@ def translate_html_verified(html, ui_lang, threshold=0.8):
     try:
         with urllib.request.urlopen(req, timeout=180) as r:
             data = json.loads(r.read().decode("utf-8"))
+        if data.get("stop_reason") == "max_tokens":
+            # Truncated output is a hard failure — a partial page must never
+            # be treated as a translation. (This silently broke the largest
+            # pages, and non-Latin scripts like Ge'ez hit the ceiling on
+            # pages Latin scripts fit — exactly the failure the founder
+            # caught in the African languages.)
+            print(f"[comprehension] page translation truncated ({ui_lang}); needs chunking")
+            return None
         out = ""
         for p in data.get("content", []):
             if p.get("type") == "text":
@@ -450,3 +458,73 @@ def translate_html_verified(html, ui_lang, threshold=0.8):
     except Exception as e:
         print(f"[comprehension] page translation failed ({ui_lang}): {str(e)[:120]}")
     return None
+
+
+def _split_html_chunks(html, max_chars=4500):
+    """Split page HTML into chunks on section boundaries (<h2>), grouping
+    sections so no chunk exceeds max_chars. 4,500 chars keeps ANY target
+    script — including Ge'ez, where tokens run near one per character —
+    safely inside the output ceiling. A single oversized section falls back
+    to paragraph-boundary splitting; order is always preserved."""
+    parts = []
+    pieces = html.split("<h2>")
+    head = pieces[0]
+    sections = ["<h2>" + p for p in pieces[1:]]
+    units = ([head] if head.strip() else []) + sections
+    # secondary split for any single unit that is itself too large
+    expanded = []
+    for u in units:
+        if len(u) <= max_chars:
+            expanded.append(u)
+            continue
+        paras = u.split("</p>")
+        buf = ""
+        for j, p in enumerate(paras):
+            piece = p + ("</p>" if j < len(paras) - 1 else "")
+            if buf and len(buf) + len(piece) > max_chars:
+                expanded.append(buf)
+                buf = piece
+            else:
+                buf += piece
+        if buf.strip():
+            expanded.append(buf)
+    # final guarantee: hard-split anything still oversized at tag boundaries
+    # (cuts at the nearest '>' so no HTML tag is ever severed mid-stream)
+    guaranteed = []
+    for u in expanded:
+        while len(u) > max_chars:
+            cut = u.rfind(">", 0, max_chars)
+            if cut <= 0:
+                cut = max_chars
+            else:
+                cut += 1
+            guaranteed.append(u[:cut])
+            u = u[cut:]
+        if u:
+            guaranteed.append(u)
+    expanded = guaranteed
+    # group small units together up to max_chars
+    for u in expanded:
+        if parts and len(parts[-1]) + len(u) <= max_chars:
+            parts[-1] += u
+        else:
+            parts.append(u)
+    return parts
+
+
+def translate_html_chunked_verified(html, ui_lang, threshold=0.8):
+    """Translate a page of ANY size into ui_lang: section-boundary chunking,
+    per-chunk translation and QE judging, strict all-or-nothing assembly —
+    a page is cached translated ONLY when every chunk succeeded, so a partial
+    or truncated translation can never be shown to anyone."""
+    if not html or not html.strip():
+        return None
+    chunks = _split_html_chunks(html)
+    out_parts = []
+    for i, ch in enumerate(chunks):
+        out = translate_html_verified(ch, ui_lang, threshold=threshold)
+        if not out:
+            print(f"[comprehension] chunk {i+1}/{len(chunks)} failed ({ui_lang}); page deferred")
+            return None
+        out_parts.append(out)
+    return "".join(out_parts)

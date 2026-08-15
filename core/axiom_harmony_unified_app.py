@@ -8034,6 +8034,17 @@ def _warm_boot_translations():
         return
     def _work():
         time.sleep(15)  # let the app finish waking up first
+        # Single-runner lock: with multiple workers, exactly one warms the
+        # cache (stale locks over 2h are reclaimed).
+        lock = os.path.join(_PAGE_CACHE_DIR, "warm.lock")
+        try:
+            os.makedirs(_PAGE_CACHE_DIR, exist_ok=True)
+            if os.path.exists(lock) and time.time() - os.path.getmtime(lock) < 7200:
+                return
+            with open(lock, "w") as f:
+                f.write(str(os.getpid()))
+        except Exception:
+            pass
         client = app.test_client()
         for lg in _WARM_ORDER:
             for key in _WARM_PAGES:
@@ -8053,6 +8064,29 @@ def _warm_boot_translations():
                     print("[InnerLight] warm-boot %s/%s: %s" % (lg, key, str(e)[:80]))
             print("[InnerLight] warm-boot: %s pages ready (%d/%d)" % (
                 lg, len(_PAGE_I18N.get(lg, {})), len(_WARM_PAGES)))
+        # Second pass: anything that failed transiently gets one more try —
+        # priority order again, African languages first.
+        for lg in _WARM_ORDER:
+            for key in _WARM_PAGES:
+                if key in _PAGE_I18N.get(lg, {}):
+                    continue
+                try:
+                    client.get(_WARM_PATHS[key] + "?lang=" + lg)
+                    deadline = time.time() + 240
+                    while time.time() < deadline:
+                        with _page_pending_lock:
+                            still = (lg, key) in _PAGE_PENDING
+                        if not still:
+                            break
+                        time.sleep(1.0)
+                except Exception:
+                    pass
+        try:
+            os.remove(os.path.join(_PAGE_CACHE_DIR, "warm.lock"))
+        except Exception:
+            pass
+        missing = [(lg, k) for lg in _WARM_ORDER for k in _WARM_PAGES if k not in _PAGE_I18N.get(lg, {})]
+        print("[InnerLight] warm-boot complete; still pending: %s" % (missing if missing else "none"))
     threading.Thread(target=_work, daemon=True).start()
 
 _warm_boot_translations()
@@ -8075,7 +8109,7 @@ def _page_i18n_kick(lang, page_key, inner_en):
         _PAGE_PENDING.add(tag)
     def _work():
         try:
-            out = comprehension_engine.translate_html_verified(inner_en, lang)
+            out = comprehension_engine.translate_html_chunked_verified(inner_en, lang)
             if out:
                 _PAGE_I18N.setdefault(lang, {})[page_key] = out
                 try:
