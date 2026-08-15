@@ -470,7 +470,7 @@ def _split_html_chunks(html, max_chars=4500):
     pieces = html.split("<h2>")
     head = pieces[0]
     sections = ["<h2>" + p for p in pieces[1:]]
-    units = ([head] if head.strip() else []) + sections
+    units = ([head] if head else []) + sections
     # secondary split for any single unit that is itself too large
     expanded = []
     for u in units:
@@ -486,7 +486,7 @@ def _split_html_chunks(html, max_chars=4500):
                 buf = piece
             else:
                 buf += piece
-        if buf.strip():
+        if buf:
             expanded.append(buf)
     # final guarantee: hard-split anything still oversized at tag boundaries
     # (cuts at the nearest '>' so no HTML tag is ever severed mid-stream)
