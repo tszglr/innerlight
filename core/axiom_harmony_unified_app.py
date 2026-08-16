@@ -3067,18 +3067,19 @@ let actOverlay=null, actOpenedAt=0, actReengaged=false, actTimers=[];
 function actClearTimers(){ actTimers.forEach(t=>{clearInterval(t);clearTimeout(t);}); actTimers=[]; }
 function openActivities(){
   metric('activity_open','overlay');
+  try { if (typeof hideAnchor==='function') hideAnchor(); } catch(e){}
   if (actOverlay){ actOverlay.style.display='block'; actOpenedAt=Date.now(); actReengaged=false; return; }
   actOpenedAt = Date.now(); actReengaged=false;
   actOverlay = document.createElement('div');
   actOverlay.id='activities-overlay';
-  actOverlay.style.cssText='position:fixed;inset:0;z-index:80;background:rgba(10,18,30,0.96);overflow-y:auto;padding:22px 16px 90px;';
+  actOverlay.style.cssText='position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,#fff7ea 0%,#ffe9cf 55%,#ffdcb8 100%);overflow-y:auto;padding:22px 16px 90px;';
   actOverlay.innerHTML = `
-   <div style="max-width:640px;margin:0 auto;font-family:Arial;color:#e6f1fa;">
+   <div style="max-width:640px;margin:0 auto;font-family:Arial;color:#4a362c;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <h2 style="margin:0;font-size:20px;color:#fff;">Calming activities</h2>
-      <button onclick="closeActivities()" style="background:rgba(255,255,255,0.12);color:#cfe3f2;border:1px solid rgba(255,255,255,0.25);border-radius:999px;padding:8px 18px;font-size:14px;cursor:pointer;">Back</button>
+      <h2 style="margin:0;font-size:20px;color:#5a3d22;">Calming activities</h2>
+      <button onclick="closeActivities()" style="background:#fff;color:#7a5230;border:1px solid #e0b98a;border-radius:999px;padding:8px 18px;font-size:14px;cursor:pointer;">Back</button>
     </div>
-    <div style="font-size:12.5px;color:#9db8cf;margin-bottom:14px;">Small things that help a racing mind. Your music keeps playing. Pick anything.</div>
+    <div style="font-size:12.5px;color:#8a6a4c;margin-bottom:14px;">Small things that help a racing mind. Your music keeps playing. Pick anything.</div>
     <div id="act-menu" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;"></div>
     <div id="act-stage" style="margin-top:16px;"></div>
    </div>`;
@@ -3095,18 +3096,18 @@ function openActivities(){
     ['sequence','Glow sequence','Follow and repeat the lights'],
   ];
   const menu = actOverlay.querySelector('#act-menu');
-  menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:13px;cursor:pointer;color:#e6f1fa;">
-     <b style="font-size:14.5px;">${a[1]}</b><span style="display:block;font-size:11.5px;color:#9db8cf;margin-top:3px;">${a[2]}</span></button>`).join('');
+  menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.75);border:1px solid #ecc9a0;border-radius:14px;padding:13px;cursor:pointer;color:#4a362c;box-shadow:0 2px 10px rgba(180,120,60,0.10);">
+     <b style="font-size:14.5px;">${a[1]}</b><span style="display:block;font-size:11.5px;color:#8a6a4c;margin-top:3px;">${a[2]}</span></button>`).join('');
   // gentle re-engagement after 10 minutes of play
   actTimers.push(setInterval(()=>{
     if (!actOverlay || actOverlay.style.display==='none' || actReengaged) return;
     if (Date.now()-actOpenedAt > 10*60*1000){
       actReengaged = true; metric('reengage_prompt');
       const bar = document.createElement('div');
-      bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:rgba(111,179,212,0.95);color:#0c1322;border-radius:14px;padding:14px 16px;font-size:14px;text-align:center;';
+      bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:#fff1dc;color:#4a362c;border:1px solid #ecc9a0;border-radius:14px;padding:14px 16px;font-size:14px;text-align:center;box-shadow:0 -2px 12px rgba(180,120,60,0.12);';
       bar.innerHTML = (gardenBlooms>0 ? 'Look at what you grew \u2014 '+gardenBlooms+' blooms. ' : '') + `I'm still right here with you. Want to talk for a moment?
-        <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" style="background:#0c1322;color:#fff;border:0;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Let's talk</button>
-        <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" style="background:rgba(12,19,34,0.15);color:#0c1322;border:1px solid #0c1322;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Keep playing</button></div>`;
+        <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" style="background:#b8783a;color:#fff;border:0;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Let's talk</button>
+        <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" style="background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Keep playing</button></div>`;
       actOverlay.firstElementChild.appendChild(bar);
     }
   },20000));
@@ -4613,6 +4614,9 @@ function ilAddAnchorPill(){ if(document.getElementById('il-anchor-pill')) return
   document.body.appendChild(b); }
 function ilMaybeAnchor(){ try{
   var ss=document.getElementById('story-screen'); if(!ss || ss.style.display==='none') return;
+  // Founder's law: the Focus anchor never activates on the activities page.
+  // Stillness during breathing is the exercise working, not absence.
+  var _ao=document.getElementById('activities-overlay'); if(_ao && _ao.style.display!=='none') return;
   if(document.getElementById('il-anchor')) return;
   if(!_ilEngaged) return;
   // Principle 14: never rise up over someone who is speaking aloud.
