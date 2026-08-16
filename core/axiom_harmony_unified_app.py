@@ -3094,6 +3094,12 @@ function openActivities(){
     ['stars','Count the stars','A gentle anchor'],
     ['release','Body release','Squeeze, hold, let go'],
     ['sequence','Glow sequence','Follow and repeat the lights'],
+    ['sigh','Physiological sigh','The fastest reset there is'],
+    ['butterfly','Butterfly hug','Slow tapping, side to side'],
+    ['cool','Cool water reset','Slow the heart in seconds'],
+    ['wall','Push the wall','Let the body spend the charge'],
+    ['categories','Categories game','Give a looping mind a job'],
+    ['sevens','Count down by 7s','Busy math for a spinning mind'],
   ];
   const menu = actOverlay.querySelector('#act-menu');
   menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.75);border:1px solid #ecc9a0;border-radius:14px;padding:13px;cursor:pointer;color:#4a362c;box-shadow:0 2px 10px rgba(180,120,60,0.10);">
@@ -3166,8 +3172,9 @@ function startAct(name){
     }, 1500));
   }
   if (name==='ground'){
-    // Camera-guided: read the room's actual dominant colors and send the
-    // person hunting for them — active engagement, not passive listing.
+    // 5-4-3-2-1, made ACTIVE: the person names each thing by tapping a
+    // glowing dot per item, so the count is real and the hunt is theirs.
+    // Camera-aware: if the room's dominant colors are readable, they hunt those.
     let roomColors = [];
     try {
       const video = document.getElementById('visual-preview');
@@ -3179,32 +3186,164 @@ function startAct(name){
         for(let i=0;i<d.length;i+=4){
           const r=d[i],g=d[i+1],b=d[i+2];
           const max=Math.max(r,g,b),min=Math.min(r,g,b);
-          if(max-min<28) continue; // skip grays
-          let name='';
-          if(r>g&&r>b) name = g>b*1.3?'orange or warm yellow':'red or warm pink';
-          else if(g>r&&g>b) name='green';
-          else if(b>r&&b>g) name = r>g?'purple or violet':'blue';
-          if(name) buckets[name]=(buckets[name]||0)+1;
+          if(max-min<28) continue;
+          let nm='';
+          if(r>g&&r>b) nm = g>b*1.3?'orange or warm yellow':'red or warm pink';
+          else if(g>r&&g>b) nm='green';
+          else if(b>r&&b>g) nm = r>g?'purple or violet':'blue';
+          if(nm) buckets[nm]=(buckets[nm]||0)+1;
         }
         roomColors = Object.entries(buckets).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]);
       }
     } catch(e){}
     const seeLine = roomColors.length
-      ? 'Your camera can see ' + roomColors.join(' and ') + ' in this room. Find five things in those colors — hunt them down with your eyes.'
-      : 'Look around slowly. Name five things — their color, their shape.';
-    const steps=[['5 things you can SEE', seeLine],
-      ['4 things you can TOUCH','The chair. Your sleeve. The floor under your feet. Really feel four.'],
-      ['3 things you can HEAR','The room. The music. Something far away.'],
-      ['2 things you can SMELL','Or two smells you like remembering.'],
-      ['1 thing you can TASTE','Even just the inside of your own breath.'],
-      ['One slow breath','You are here. This moment is safe enough to stand in.']];
-    let i=0; st.innerHTML=`<div style="text-align:center;padding:16px;"><div id="g-title" style="font-size:22px;color:#fff;"></div>
-      <div id="g-sub" style="font-size:14px;color:#b9d0e2;margin:12px 0 18px;line-height:1.6;"></div>
-      <button id="g-next" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Done &mdash; next</button></div>`;
-    const show=()=>{ st.querySelector('#g-title').textContent=steps[i][0]; st.querySelector('#g-sub').textContent=steps[i][1];
-      if(i===steps.length-1) st.querySelector('#g-next').textContent='Finish'; };
-    st.querySelector('#g-next').onclick=()=>{ bloom(); i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
+      ? 'Your camera can see ' + roomColors.join(' and ') + ' in this room. Find five things in those colors.'
+      : 'Look around slowly. Find five things \u2014 their color, their shape.';
+    const steps=[[5,'things you can SEE', seeLine],
+      [4,'things you can TOUCH','The chair. Your sleeve. The floor under your feet. Really feel four.'],
+      [3,'things you can HEAR','The room. The music. Something far away.'],
+      [2,'things you can SMELL','Or two smells you like remembering.'],
+      [1,'thing you can TASTE','Even just the inside of your own breath.']];
+    let i=0;
+    st.innerHTML=`<div style="text-align:center;padding:14px;">
+      <div id="g-title" style="font-size:22px;color:#5a3d22;font-weight:700;"></div>
+      <div id="g-sub" style="font-size:14px;color:#7a5a3c;margin:10px 0 16px;line-height:1.6;"></div>
+      <div id="g-dots" style="display:flex;justify-content:center;gap:14px;margin:8px 0 18px;flex-wrap:wrap;"></div>
+      <div id="g-hint" style="font-size:12.5px;color:#a0805e;min-height:18px;">tap a light each time you find one</div></div>`;
+    const render=()=>{
+      const [count,label,sub]=steps[i];
+      st.querySelector('#g-title').textContent = count+' '+label;
+      st.querySelector('#g-sub').textContent = sub;
+      const dots=st.querySelector('#g-dots'); dots.innerHTML='';
+      let found=0;
+      for(let k=0;k<count;k++){
+        const d=document.createElement('button');
+        d.setAttribute('aria-label','found one');
+        d.style.cssText='width:44px;height:44px;border-radius:50%;border:2px solid #e0b98a;background:#fff;cursor:pointer;transition:all .35s;box-shadow:0 2px 8px rgba(180,120,60,0.15);';
+        d.onclick=()=>{ if(d.dataset.on) return; d.dataset.on='1'; found++; bloom();
+          d.style.background='radial-gradient(circle,#ffd27a,#e89a3c)'; d.style.borderColor='#e89a3c'; d.style.transform='scale(1.15)';
+          if(found>=count){ st.querySelector('#g-hint').textContent = i<steps.length-1 ? 'beautiful \u2014 next sense in a moment' : 'you are here. this moment is safe enough to stand in.';
+            actTimers.push(setTimeout(()=>{ i++; if(i>=steps.length){ startAct('menuDone'); } else render(); }, 1400)); }
+        };
+        dots.appendChild(d);
+      }
+      st.querySelector('#g-hint').textContent='tap a light each time you find one';
+    };
+    render();
+  }
+  if (name==='sigh'){
+    // Physiological sigh: double inhale, long exhale x5. Stanford 2023
+    // (Balban, Spiegel, Huberman): five minutes beat mindfulness for
+    // lowering anxiety. Fastest single-breath reset known.
+    let round=0; const total=5;
+    st.innerHTML=`<div style="text-align:center;padding:14px;">
+      <div id="sg-word" style="font-size:24px;color:#5a3d22;font-weight:700;min-height:32px;">Breathe in through your nose</div>
+      <div id="sg-sub" style="font-size:13.5px;color:#7a5a3c;margin:8px 0 14px;">then a second short sip of air on top &mdash; then a long, slow exhale through the mouth</div>
+      <div style="position:relative;width:150px;height:150px;margin:6px auto 12px;">
+        <div id="sg-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#ffd7a3,#e89a3c);transition:transform 2.6s ease-in-out;box-shadow:0 6px 24px rgba(232,154,60,0.35);"></div></div>
+      <div id="sg-round" style="font-size:13px;color:#a0805e;">round 1 of ${total}</div></div>`;
+    const c=st.querySelector('#sg-circle'), w=st.querySelector('#sg-word'), r=st.querySelector('#sg-round');
+    const cycle=()=>{
+      w.textContent='Breathe in through your nose'; c.style.transition='transform 2.4s ease-in-out'; c.style.transform='scale(1.25)';
+      actTimers.push(setTimeout(()=>{ w.textContent='one more short sip in'; c.style.transition='transform 0.9s ease-out'; c.style.transform='scale(1.42)'; },2400));
+      actTimers.push(setTimeout(()=>{ w.textContent='long, slow exhale\u2026'; c.style.transition='transform 6s ease-in-out'; c.style.transform='scale(0.7)'; },3400));
+      actTimers.push(setTimeout(()=>{ round++; bloom(); if(round>=total){ w.textContent='Notice the difference.'; actTimers.push(setTimeout(()=>startAct('menuDone'),2200)); return; }
+        r.textContent='round '+(round+1)+' of '+total; cycle(); },9800));
+    };
+    cycle();
+  }
+  if (name==='butterfly'){
+    // Butterfly hug: bilateral stimulation (EMDR-derived), self-administered.
+    // Slow alternating taps, left-right, with the breath.
+    let taps=0; const total=24; let side=0;
+    st.innerHTML=`<div style="text-align:center;padding:14px;">
+      <div style="font-size:19px;color:#5a3d22;font-weight:700;">Cross your arms over your chest.</div>
+      <div style="font-size:13.5px;color:#7a5a3c;margin:8px 0 14px;line-height:1.55;">Fingertips just under your collarbones. Tap gently with the lights &mdash; left, right, left, right &mdash; slow as a heartbeat. Breathe low.</div>
+      <div style="display:flex;justify-content:center;gap:34px;margin:10px 0 14px;">
+        <div id="bf-l" style="width:64px;height:64px;border-radius:50%;background:#fff;border:2px solid #e0b98a;transition:all .25s;"></div>
+        <div id="bf-r" style="width:64px;height:64px;border-radius:50%;background:#fff;border:2px solid #e0b98a;transition:all .25s;"></div></div>
+      <div id="bf-hint" style="font-size:12.5px;color:#a0805e;">follow the light with your fingertips</div></div>`;
+    const L=st.querySelector('#bf-l'), R=st.querySelector('#bf-r');
+    const on=(el)=>{ el.style.background='radial-gradient(circle,#ffd27a,#e89a3c)'; el.style.transform='scale(1.15)'; };
+    const off=(el)=>{ el.style.background='#fff'; el.style.transform='scale(1)'; };
+    actTimers.push(setInterval(()=>{ side=1-side; if(side){ on(L); off(R);} else { on(R); off(L);} taps++;
+      if(taps%8===0) bloom();
+      if(taps>=total){ actClearTimers(); off(L); off(R); st.querySelector('#bf-hint').textContent='rest your hands. notice your shoulders.'; actTimers.push(setTimeout(()=>startAct('menuDone'),2400)); }
+    }, 900));
+  }
+  if (name==='cool'){
+    // Dive reflex: cool water on the face + a held breath slows the heart
+    // within seconds (2023 meta-analysis on cardiac vagal activity; DBT
+    // temperature skill). Guided, not required — nothing to tap but the
+    // person's own sink or a cold glass.
+    const steps=[
+      ['If you can, get to cool water.','A sink, a cold bottle, a wet cloth, even a cold can. If none is near, cup your hands over your face and breathe slowly \u2014 the next steps still help.'],
+      ['Cool your face.','Splash cool water on your face, or hold something cold to your cheeks and eyes. Not painful \u2014 just cool.'],
+      ['Hold your breath gently.','Bend forward a little, hold your breath for a slow count of ten while the cool sits on your face.'],
+      ['Let it out and breathe low.','Slow exhale. Your heart is already easing \u2014 this is a reflex, not willpower.'],
+      ['One more time if you like.','Then come back. I am right here.']];
+    let i=0;
+    st.innerHTML=`<div style="text-align:center;padding:14px;"><div id="cw-title" style="font-size:21px;color:#5a3d22;font-weight:700;"></div>
+      <div id="cw-sub" style="font-size:14px;color:#7a5a3c;margin:10px 0 16px;line-height:1.6;"></div>
+      <button id="cw-next" style="background:#b8783a;color:#fff;border:0;border-radius:999px;padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;">Next</button></div>`;
+    const show=()=>{ st.querySelector('#cw-title').textContent=steps[i][0]; st.querySelector('#cw-sub').textContent=steps[i][1];
+      if(i===steps.length-1) st.querySelector('#cw-next').textContent='Finish'; };
+    st.querySelector('#cw-next').onclick=()=>{ bloom(); i++; if(i>=steps.length){ startAct('menuDone'); return;} show(); };
     show();
+  }
+  if (name==='wall'){
+    // Push the wall: isometric discharge of fight-or-flight charge (10-15s
+    // holds), a felt sense of one's own strength. Timed holds with rests.
+    let round=0; const total=3;
+    st.innerHTML=`<div style="text-align:center;padding:14px;">
+      <div id="pw-word" style="font-size:21px;color:#5a3d22;font-weight:700;min-height:30px;">Stand facing a wall.</div>
+      <div style="font-size:13.5px;color:#7a5a3c;margin:8px 0 12px;line-height:1.55;">Both palms flat. When the bar fills, push like you mean it &mdash; arms, shoulders, core. Then let go completely.</div>
+      <div style="height:14px;background:#fff;border:1px solid #e0b98a;border-radius:999px;overflow:hidden;margin:6px auto 12px;max-width:320px;"><div id="pw-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#ffd27a,#e89a3c);transition:width .2s;"></div></div>
+      <div id="pw-hint" style="font-size:12.5px;color:#a0805e;">get set&hellip;</div></div>`;
+    const bar=st.querySelector('#pw-bar'), w=st.querySelector('#pw-word'), h=st.querySelector('#pw-hint');
+    const go=()=>{
+      let t=0; w.textContent='PUSH.'; h.textContent='hold\u2026';
+      const iv=setInterval(()=>{ t++; bar.style.width=(t/12*100)+'%'; if(t>=12){ clearInterval(iv); round++; bloom(); w.textContent='Let go. Shake out your arms.'; h.textContent='rest';
+        actTimers.push(setTimeout(()=>{ bar.style.width='0%'; if(round>=total){ w.textContent='Feel your own strength.'; actTimers.push(setTimeout(()=>startAct('menuDone'),2200)); } else { h.textContent='round '+(round+1)+' of '+total; actTimers.push(setTimeout(go,1600)); } },4000)); } },1000);
+      actTimers.push(iv);
+    };
+    actTimers.push(setTimeout(go,2200));
+  }
+  if (name==='categories'){
+    // Categories game: for a LOOPING mind (rumination), a cognitive task
+    // outperforms sensory grounding — give the mind a job. Type-in, no
+    // wrong answers, gentle prompts rotate.
+    const cats=['animals','fruits','cities you have heard of','things that are blue','songs you know','things in a kitchen','words that start with S','things that are soft','things you can drink','places you would like to see'];
+    let ci=Math.floor(Math.random()*cats.length), count=0;
+    st.innerHTML=`<div style="text-align:center;padding:14px;">
+      <div id="cg-cat" style="font-size:21px;color:#5a3d22;font-weight:700;"></div>
+      <div style="font-size:13px;color:#7a5a3c;margin:6px 0 12px;">name as many as you can &mdash; there are no wrong answers</div>
+      <input id="cg-in" autocomplete="off" style="width:min(320px,86%);padding:11px 14px;border-radius:12px;border:1px solid #e0b98a;font-size:16px;color:#4a362c;background:#fff;" placeholder="type one and press Enter">
+      <div id="cg-list" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;"></div>
+      <button id="cg-next" style="background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:999px;padding:8px 18px;font-size:13.5px;cursor:pointer;">new category</button></div>`;
+    const cat=st.querySelector('#cg-cat'), inp=st.querySelector('#cg-in'), list=st.querySelector('#cg-list');
+    const setCat=()=>{ cat.textContent='Name '+cats[ci]; list.innerHTML=''; count=0; inp.value=''; inp.focus({preventScroll:true}); };
+    inp.onkeydown=(e)=>{ if(e.key==='Enter' && inp.value.trim()){ const chip=document.createElement('span'); chip.textContent=inp.value.trim();
+      chip.style.cssText='background:#fff1dc;border:1px solid #ecc9a0;border-radius:999px;padding:6px 12px;font-size:13.5px;color:#5a3d22;'; list.appendChild(chip); inp.value=''; count++; if(count%5===0) bloom(); } };
+    st.querySelector('#cg-next').onclick=()=>{ ci=(ci+1)%cats.length; setCat(); };
+    setCat();
+    inp.onblur=()=>{}; // typing here never triggers the anchor (activities guard)
+  }
+  if (name==='sevens'){
+    // Count down by 7s from a random start: classic cognitive interrupt for
+    // spinning thoughts (working memory occupies the loop). No penalties.
+    let cur=Math.floor(Math.random()*40)+160, right=0;
+    st.innerHTML=`<div style="text-align:center;padding:14px;">
+      <div style="font-size:15px;color:#7a5a3c;">Count down by sevens</div>
+      <div id="s7-num" style="font-size:44px;color:#5a3d22;font-weight:700;margin:6px 0;"></div>
+      <div style="font-size:13px;color:#7a5a3c;margin-bottom:10px;">what comes next?</div>
+      <input id="s7-in" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="width:120px;padding:11px 14px;border-radius:12px;border:1px solid #e0b98a;font-size:22px;text-align:center;color:#4a362c;background:#fff;">
+      <div id="s7-hint" style="font-size:12.5px;color:#a0805e;min-height:18px;margin-top:8px;">press Enter</div></div>`;
+    const num=st.querySelector('#s7-num'), inp=st.querySelector('#s7-in'), h=st.querySelector('#s7-hint');
+    num.textContent=cur; inp.focus({preventScroll:true});
+    inp.onkeydown=(e)=>{ if(e.key!=='Enter') return; const v=parseInt(inp.value,10); if(isNaN(v)) return;
+      if(v===cur-7){ cur=v; right++; num.textContent=cur; h.textContent='yes.'; inp.value=''; if(right%3===0) bloom(); if(cur<7){ h.textContent='all the way down. well done.'; actTimers.push(setTimeout(()=>startAct('menuDone'),2000)); } }
+      else { h.textContent='close \u2014 try '+(cur)+' minus 7'; inp.value=''; } };
   }
   if (name==='words'){
     // WORD SEARCH — hidden calm words in a letter grid. More complex and more
@@ -8785,6 +8924,13 @@ def page_research():
     <p class="cite">Holmes E.A., James E.L., Kilford E.J., Deeprose C. (2010). Key finding: a visuospatial game reduced flashbacks post-trauma while a verbal quiz game did not &mdash; and in one experiment increased them. Not all engagement is beneficial engagement; activity choice must follow the evidence. <em>PLoS ONE</em>, 5(11): e13706.</p>
     <p class="cite">Multilab replication (2025), <em>Collabra: Psychology</em>, 11(1): evidence that the visuospatial task reduces intrusions immediately &mdash; the exact window InnerLight serves &mdash; with weaker evidence for effects days later.</p>
     <p class="cite">ANTIDOTE line of work (2024&ndash;2026): AI-guided, personally tailored imagery-competing task interventions with physiological monitoring &mdash; the research direction InnerLight&rsquo;s conversational activity guidance follows.</p>
+
+    <h2>14. The activities &mdash; matched to the state a person is in</h2>
+    <p>InnerLight&rsquo;s calming activities are chosen by evidence and matched to state. Research distinguishes two very different kinds of distress: high physiological arousal (racing heart, panic), where the fastest tools act directly on the body, and rumination (a looping mind), where a structured cognitive task outperforms sensory grounding. So InnerLight offers both: the physiological sigh, bilateral &ldquo;butterfly&rdquo; tapping, a cool-water dive-reflex reset, and an isometric wall push for the body; a categories game and counting down by sevens for the mind; plus an interactive 5-4-3-2-1 senses walk, breathing, body release, and gentle visuospatial games. Every activity is optional, guided one step at a time, and the Focus anchor never interrupts any of them.</p>
+    <p class="cite">Balban M.Y., Neri E., Kogon M.M., et al. (2023). &ldquo;Brief structured respiration practices enhance mood and reduce physiological arousal.&rdquo; <em>Cell Reports Medicine</em>, 4(1) &mdash; five minutes of cyclic sighing (double inhale, extended exhale) reduced anxiety and improved mood more than mindfulness meditation.</p>
+    <p class="cite">Ackermann S.P., et al. (2023). Meta-analysis of the diving response: moderate-to-large increases in cardiac vagal activity from cold facial stimulation &mdash; the basis of the cool-water reset and of the DBT temperature (&ldquo;TIPP&rdquo;) skill.</p>
+    <p class="cite">Artigas L., Jarero I. The Butterfly Hug: self-administered bilateral stimulation, developed for group trauma work and adopted within EMDR practice.</p>
+    <p class="cite">Grounding technique guidance in trauma and crisis intervention practice: proprioceptive discharge (isometric push), and the state-matching principle that cognitive tasks (categories, serial subtraction) suit rumination while somatic tools suit hyperarousal (Porges 2011, Polyvagal Theory, for the vagal mechanism).</p>
 
     <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
     """
