@@ -8790,6 +8790,9 @@ def page_faq():
     <h2>What if a service it sends me to is down?</h2>
     <p>Every critical handoff has a chain of ways in. Before you are sent anywhere, the system checks that the door actually opens right now; if a website is having an outage, the next verified door takes over automatically. You will never be handed a dead link on purpose &mdash; and if you ever find one, it gets repaired and the chain gets deeper.</p>
 
+    <h2>What if the provider I&rsquo;m connected to can&rsquo;t see me for weeks?</h2>
+    <p>Then the wait has not ended &mdash; it has just moved, and InnerLight does not consider that a resolution. Every provider in the network declares an honest access tier (within 24 hours, within 72 hours, within a week, or longer), the fastest real door is shown first, and 72 hours is the standard we hold the network to. If your next human appointment is more than 72 hours away, InnerLight stays your companion for the interim &mdash; check-ins, holding, activities, and every crisis door &mdash; until the human is actually in the room, and it will offer to help you find a faster door in the meantime while you keep the appointment you have. Research is clear that long waits deepen symptoms and cause people to fall through; we refuse to let a date on a calendar be your only support.</p>
+
     <h2>Do I need to install an app?</h2>
     <p>Never. InnerLight runs in the browser you already have, and it will never require you to install or choose an app to reach help &mdash; 211 opens as a website, 988 can be reached by chat as well as by phone, and every door works from a plain tap.</p>
 
@@ -13464,8 +13467,22 @@ def _oncall_db() -> sqlite3.Connection:
             conn.execute(
                 "INSERT INTO provider_availability (side, role, available, updated_at)"
                 " VALUES (?, ?, 0, ?)", (_side, _role, utc_now()))
+    # CONTINUITY OF CARE (Principle 1 amendment): every role carries an honest
+    # ACCESS TIER — how soon a person can actually be seen. Migration is
+    # idempotent; existing rows default to "unknown" until declared.
+    try:
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(provider_availability)")}
+        if "access_tier" not in cols:
+            conn.execute("ALTER TABLE provider_availability ADD COLUMN access_tier TEXT DEFAULT 'unknown'")
+    except Exception as e:
+        print("[InnerLight] access_tier migration:", e)
     conn.commit()
     return conn
+
+# Access tiers, fastest first. The network standard is 72h (Principle 1).
+ACCESS_TIERS = ("24h", "72h", "7d", "longer", "unknown")
+ACCESS_TIER_LABEL = {"24h": "within 24 hours", "72h": "within 72 hours",
+                     "7d": "within a week", "longer": "longer than a week", "unknown": "not yet declared"}
 
 _ONCALL_CACHE = {"t": 0.0, "data": None}  # light cache for the public endpoint
 
@@ -13502,13 +13519,19 @@ def providers_available():
             conn = _oncall_db()
             try:
                 rows = conn.execute(
-                    "SELECT side, role FROM provider_availability WHERE available = 1"
+                    "SELECT side, role, access_tier FROM provider_availability WHERE available = 1"
                 ).fetchall()
             finally:
                 conn.close()
+        rank = {t: i for i, t in enumerate(ACCESS_TIERS)}
+        rows = sorted(rows, key=lambda r: rank.get(r["access_tier"] or "unknown", 99))
+        tiers = {"clinical": {}, "legal": {}}
         for r in rows:
             if r["side"] in out:
-                out[r["side"]].append(r["role"])
+                out[r["side"]].append(r["role"])  # fastest real door FIRST
+                tiers[r["side"]][r["role"]] = r["access_tier"] or "unknown"
+        out["access_tiers"] = tiers
+        out["network_standard_hours"] = 72
         _ONCALL_CACHE["data"] = out
         _ONCALL_CACHE["t"] = now
     except Exception as e:
@@ -13525,14 +13548,16 @@ def admin_oncall_list():
         conn = _oncall_db()
         try:
             rows = conn.execute(
-                "SELECT side, role, available, updated_at FROM provider_availability"
+                "SELECT side, role, available, updated_at, access_tier FROM provider_availability"
                 " ORDER BY id").fetchall()
         finally:
             conn.close()
-    return jsonify({"status": "ok", "roles": [
+    return jsonify({"status": "ok", "network_standard_hours": 72, "roles": [
         {"side": r["side"], "role": r["role"],
          "label": labels.get((r["side"], r["role"]), r["role"]),
-         "available": bool(r["available"]), "updated_at": r["updated_at"]}
+         "available": bool(r["available"]), "updated_at": r["updated_at"],
+         "access_tier": r["access_tier"] or "unknown",
+         "access_label": ACCESS_TIER_LABEL.get(r["access_tier"] or "unknown", "not yet declared")}
         for r in rows]})
 
 @app.route("/api/admin/oncall", methods=["POST"])
@@ -13543,15 +13568,24 @@ def admin_oncall_set():
     side = str(data.get("side", ""))[:12]
     role = str(data.get("role", ""))[:40]
     available = 1 if data.get("available") else 0
+    tier = str(data.get("access_tier", "") or "")[:10]
     if (side, role) not in {(s, r) for s, r, _lb in _PROVIDER_ROLES}:
         return jsonify({"error": "unknown role"}), 400
+    if tier and tier not in ACCESS_TIERS:
+        return jsonify({"error": "unknown access tier"}), 400
     with _ONCALL_LOCK:
         conn = _oncall_db()
         try:
-            conn.execute(
-                "UPDATE provider_availability SET available = ?, updated_at = ?"
-                " WHERE side = ? AND role = ?",
-                (available, utc_now(), side, role))
+            if tier:
+                conn.execute(
+                    "UPDATE provider_availability SET available = ?, updated_at = ?, access_tier = ?"
+                    " WHERE side = ? AND role = ?",
+                    (available, utc_now(), tier, side, role))
+            else:
+                conn.execute(
+                    "UPDATE provider_availability SET available = ?, updated_at = ?"
+                    " WHERE side = ? AND role = ?",
+                    (available, utc_now(), side, role))
             conn.commit()
         finally:
             conn.close()

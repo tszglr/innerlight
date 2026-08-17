@@ -21,6 +21,24 @@
   bridge are permanent fixtures, not things that appear only in emergencies.
   Warm, but always steering toward a real human as the final support.
 
+- THE WAIT DOES NOT END AT THE HANDOFF (founder's amendment, August 2026):
+  a warm handoff to a provider whose next opening is 45 days away has not
+  resolved anything — it has moved the same wait to a new address. InnerLight
+  therefore carries a CONTINUITY DUTY: (a) every enrolled provider declares
+  an honest ACCESS TIER — within 24 hours, within 72 hours, within 7 days,
+  or longer — and routing shows the fastest real door first, never a
+  slower one dressed as help; (b) 72 hours is the standard we hold ourselves
+  to as a network, and we recruit and rotate provider capacity to keep a
+  rapid tier live; (c) when a person's next human appointment is more than
+  72 hours away, InnerLight remains their companion for the interim —
+  check-ins, holding, activities, and every crisis door — until the human is
+  actually in the room; (d) the person is told the truth about the wait, in
+  plain words, the moment it is known. Research: a two-week wait triples
+  first-appointment no-shows; long waits deepen symptoms and raise
+  mortality; maintained contact during the wait reduces risk. A handoff
+  into a long wait is a dead end by another name, and dead ends are
+  forbidden here.
+
 ## 2. PROVIDERS: SCRUTINIZED, MATCHED, NEVER A DEPENDENCY
 - We scrutinize providers more carefully than typical platforms. We do not toss
   a person to just any therapist and assume it works. Providers are categorized
