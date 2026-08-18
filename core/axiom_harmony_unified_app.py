@@ -2799,6 +2799,7 @@ PUBLIC_PAGE = """
         <button class="scene-btn" data-scene="pumpkinbed" onclick="setScene('pumpkinbed')" title="Pumpkin in the garden" aria-label="Pumpkin in the garden scene">&#127793;</button>
         <button class="scene-btn" data-scene="strawberry" onclick="setScene('strawberry')" title="Strawberry" aria-label="Strawberry scene">&#127827;</button>
         <button class="scene-btn" data-scene="bougainvillea" onclick="setScene('bougainvillea')" title="Bougainvillea" aria-label="Bougainvillea scene">&#127802;</button>
+        <button class="scene-btn" data-scene="trunks" onclick="setScene('trunks')" title="Trees and palm fronds" aria-label="Trees and palm fronds scene">&#127796;</button>
         <button class="scene-btn" data-scene="sunflowers" onclick="setScene('sunflowers')" title="Sunflowers" aria-label="Sunflowers scene">&#127804;</button>
         <button class="scene-btn" data-scene="wave" onclick="setScene('wave')" title="Ocean wave" aria-label="Ocean wave scene">&#127754;</button>
         <button class="scene-btn" data-scene="lettuce" onclick="setScene('lettuce')" title="Garden greens" aria-label="Garden greens scene">&#129382;</button>
@@ -2923,6 +2924,7 @@ const SCENE_PHOTOS = {
   pumpkinbed:'/scenes/photo_17_pumpkin_garden.jpg',
   strawberry:'/scenes/photo_18_strawberry.jpg',
   bougainvillea:'/scenes/photo_19_bougainvillea.jpg',
+  trunks:    '/scenes/photo_20_trunks_fronds.jpg',
   // GENERATED SCENES — the founder's own photographs, re-lit by our scene
   // generator as different times of day (dawn, golden hour, dusk, moonlight,
   // soft-dream). Same real places, new light. They join the rotation so the
@@ -2947,7 +2949,7 @@ const SCENE_PHOTOS = {
   g_sunflowers_golden:'/scenes/gen_photo_12_sunflowers_golden.jpg',
   g_sunflowers_dusk:  '/scenes/gen_photo_12_sunflowers_dusk.jpg'
 };
-const SCENE_ORDER = ['garden','lettuce','pepper','redpepper','sunflower','sunflowers','sunset','horizon','wave','moon','daymoon','moonleaf','pinestars','moonhaze','pumpkin','canopy','pumpkinbed','strawberry','bougainvillea'];
+const SCENE_ORDER = ['garden','lettuce','pepper','redpepper','sunflower','sunflowers','sunset','horizon','wave','moon','daymoon','moonleaf','pinestars','moonhaze','pumpkin','canopy','pumpkinbed','strawberry','bougainvillea','trunks'];
 // Everything eligible for the random start + slow rotation: originals AND
 // the generated re-lit variants. The picker buttons stay the 12 originals.
 const SCENE_POOL = SCENE_ORDER.concat(Object.keys(SCENE_PHOTOS).filter(function(k){ return k.indexOf('g_') === 0; }));
@@ -4849,7 +4851,7 @@ function adaptiveTick() {
           // The view answers too: agitated -> stillness (moons); low -> warmth (sun).
           if (!sceneUserChose){
             const sceneFor = { deepcalm: ['moon','moonleaf','pinestars','moonhaze','horizon','g_moonleaf_night','g_daymoon_night','g_moonleaf_dream','g_wave_dream'],
-                               lifting: ['sunflower','sunset','garden','g_sunflower_golden','g_sunflowers_golden','g_rosemary_golden','g_horizon_dusk', 'pumpkin', 'canopy','pumpkinbed', 'strawberry', 'bougainvillea'],
+                               lifting: ['sunflower','sunset','garden','g_sunflower_golden','g_sunflowers_golden','g_rosemary_golden','g_horizon_dusk', 'pumpkin', 'canopy','pumpkinbed', 'strawberry', 'bougainvillea', 'trunks'],
                                calm: ['garden','horizon','daymoon','g_rosemary_dawn','g_wave_dawn','g_horizon_dawn','g_daymoon_dawn'] };
             const opts = sceneFor[want] || SCENE_POOL;
             setScene(opts[Math.floor(Math.random()*opts.length)], false);
