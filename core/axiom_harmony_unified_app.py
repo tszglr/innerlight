@@ -691,6 +691,11 @@ PUBLIC_PAGE = """
     .story-input::placeholder { color:#8a6a48; }
     .story-input:focus { outline:none; border-color:#b27849; box-shadow:0 0 0 3px rgba(91,160,138,.15); }
     .story-actions { display:flex; gap:12px; justify-content:center; margin:18px 0 10px; }
+    /* Enter sends. The Send button stays hidden unless a device has no reliable
+       Enter (touch keyboards that insert newlines) or the person taps into the box
+       on a coarse pointer — then it appears as a fallback. */
+    .story-send { display:none; }
+    @media (pointer: coarse) { .story-send { display:inline-block; } }
     .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
     .story-send:hover { background:#9e6a40; }
@@ -2776,10 +2781,10 @@ PUBLIC_PAGE = """
       </div>
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
       <div id="calm-photo-a" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#1a1410;">
       </div>
       <div id="calm-photo-b" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#1a1410;">
       </div>
       <div id="scene-veil" aria-hidden="true"></div>
       <div id="il-presence" aria-hidden="true"><div class="il-bloom"></div><div class="il-vignette"></div></div>
@@ -2794,10 +2799,8 @@ PUBLIC_PAGE = """
         <button class="scene-btn" data-scene="moonleaf" onclick="setScene('moonleaf')" title="Moon through leaves" aria-label="Moon through leaves scene">&#127769;</button>
         <button class="scene-btn" data-scene="pinestars" onclick="setScene('pinestars')" title="Pine under the stars" aria-label="Pine under the stars scene">&#127794;</button>
         <button class="scene-btn" data-scene="moonhaze" onclick="setScene('moonhaze')" title="Moon through haze" aria-label="Moon through haze scene">&#127772;</button>
-        <button class="scene-btn" data-scene="pumpkin" onclick="setScene('pumpkin')" title="Pumpkin on the vine" aria-label="Pumpkin on the vine scene">&#127875;</button>
         <button class="scene-btn" data-scene="canopy" onclick="setScene('canopy')" title="Tree canopy and sky" aria-label="Tree canopy and sky scene">&#127795;</button>
         <button class="scene-btn" data-scene="pumpkinbed" onclick="setScene('pumpkinbed')" title="Pumpkin in the garden" aria-label="Pumpkin in the garden scene">&#127793;</button>
-        <button class="scene-btn" data-scene="strawberry" onclick="setScene('strawberry')" title="Strawberry" aria-label="Strawberry scene">&#127827;</button>
         <button class="scene-btn" data-scene="bougainvillea" onclick="setScene('bougainvillea')" title="Bougainvillea" aria-label="Bougainvillea scene">&#127802;</button>
         <button class="scene-btn" data-scene="trunks" onclick="setScene('trunks')" title="Trees and palm fronds" aria-label="Trees and palm fronds scene">&#127796;</button>
         <button class="scene-btn" data-scene="peaches" onclick="setScene('peaches')" title="Peach tree" aria-label="Peach tree scene">&#127825;</button>
@@ -2820,7 +2823,7 @@ PUBLIC_PAGE = """
         <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" aria-label="Start wherever you would like... (press Enter to send)" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
           <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
-          <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">${_ilux('mic.speak')}</button>
+          <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
         </div>
         <div class="music-bar">
           <button type="button" id="mute-btn" onclick="toggleMute()" aria-label="Mute music" aria-pressed="false" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="24" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume" aria-label="Music volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
@@ -2923,10 +2926,8 @@ const SCENE_PHOTOS = {
   // (drop-in at these same paths) for true full-bleed sharpness.
   pinestars: '/scenes/photo_13_pine_stars.jpg',
   moonhaze:  '/scenes/photo_14_moon_haze.jpg',
-  pumpkin:   '/scenes/photo_15_pumpkin.jpg',
   canopy:    '/scenes/photo_16_canopy_sky.jpg',
   pumpkinbed:'/scenes/photo_17_pumpkin_garden.jpg',
-  strawberry:'/scenes/photo_18_strawberry.jpg',
   bougainvillea:'/scenes/photo_19_bougainvillea.jpg',
   trunks:    '/scenes/photo_20_trunks_fronds.jpg',
   peaches:   '/scenes/photo_21_peaches.jpg',
@@ -2957,7 +2958,7 @@ const SCENE_PHOTOS = {
   g_sunflowers_golden:'/scenes/gen_photo_12_sunflowers_golden.jpg',
   g_sunflowers_dusk:  '/scenes/gen_photo_12_sunflowers_dusk.jpg'
 };
-const SCENE_ORDER = ['garden','lettuce','pepper','redpepper','sunflower','sunflowers','sunset','horizon','wave','moon','daymoon','moonleaf','pinestars','moonhaze','pumpkin','canopy','pumpkinbed','strawberry','bougainvillea','trunks','peaches','chilis','rosemarymist','lavender'];
+const SCENE_ORDER = ['garden','lettuce','pepper','redpepper','sunflower','sunflowers','sunset','horizon','wave','moon','daymoon','moonleaf','pinestars','moonhaze','canopy','pumpkinbed','bougainvillea','trunks','peaches','chilis','rosemarymist','lavender'];
 // Everything eligible for the random start + slow rotation: originals AND
 // the generated re-lit variants. The picker buttons stay the 12 originals.
 const SCENE_POOL = SCENE_ORDER.concat(Object.keys(SCENE_PHOTOS).filter(function(k){ return k.indexOf('g_') === 0; }));
@@ -4859,7 +4860,7 @@ function adaptiveTick() {
           // The view answers too: agitated -> stillness (moons); low -> warmth (sun).
           if (!sceneUserChose){
             const sceneFor = { deepcalm: ['moon','moonleaf','pinestars','moonhaze','horizon','g_moonleaf_night','g_daymoon_night','g_moonleaf_dream','g_wave_dream', 'rosemarymist', 'lavender'],
-                               lifting: ['sunflower','sunset','garden','g_sunflower_golden','g_sunflowers_golden','g_rosemary_golden','g_horizon_dusk', 'pumpkin', 'canopy','pumpkinbed', 'strawberry', 'bougainvillea', 'trunks', 'peaches', 'chilis'],
+                               lifting: ['sunflower','sunset','garden','g_sunflower_golden','g_sunflowers_golden','g_rosemary_golden','g_horizon_dusk', 'canopy','pumpkinbed', 'bougainvillea', 'trunks', 'peaches', 'chilis'],
                                calm: ['garden','horizon','daymoon','g_rosemary_dawn','g_wave_dawn','g_horizon_dawn','g_daymoon_dawn'] };
             const opts = sceneFor[want] || SCENE_POOL;
             setScene(opts[Math.floor(Math.random()*opts.length)], false);
@@ -6694,6 +6695,26 @@ async function sendCheckin() {
   voiceFinalTranscript = '';
   try { stopAllSpeech(); } catch(e){}   // new turn: silence any lingering lines
   logTurn('user', msgVal);
+  // INSTANT ACKNOWLEDGEMENT: the person must never wonder whether their words
+  // went through. Their message appears in the thread and a soft listening
+  // pulse shows the moment they press Enter — before the model is even asked.
+  try {
+    const _thread0 = document.getElementById('conversation-thread');
+    if (_thread0) {
+      const _um = document.createElement('div');
+      _um.className = 'user-turn';
+      _um.style.cssText = 'text-align:right;margin:8px 0;';
+      _um.innerHTML = '<p style="display:inline-block;background:#f3ede9;color:#4a372d;padding:10px 16px;border-radius:16px 16px 4px 16px;font-size:15px;max-width:80%;text-align:left;">' + escapeHtml(msgVal) + '</p>';
+      _thread0.appendChild(_um);
+      const _lp = document.createElement('div');
+      _lp.id = 'listening-pulse';
+      _lp.style.cssText = 'margin:6px 0 4px;color:#8a6a4c;font-size:13.5px;font-style:italic;';
+      _lp.textContent = (typeof _ilux==='function' ? _ilux('mic.now').split('\u2026')[0].split('...')[0].trim() : 'Listening') + '\u2026';
+      _thread0.appendChild(_lp);
+      const _ta = document.getElementById('message'); if (_ta) _ta.value = '';
+      try { _thread0.scrollIntoView({behavior:'smooth', block:'end'}); } catch(e){}
+    }
+  } catch(e){}
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   const res = await fetch('/api/checkin', {
     method:'POST',
@@ -6724,6 +6745,7 @@ async function sendCheckin() {
   innerLightLearningState = data.learning_state || null;
   innerLightSessionReference = data.message_fingerprint || '';
   innerLightContext = data;
+  try { const _lp=document.getElementById('listening-pulse'); if (_lp) _lp.remove(); } catch(e){}
   // Server-side multilingual signals: same protections in every language.
   if (data.minor_signal) { window._minorLock = true; try { showMinorBridge(); } catch(e){} }
   if (data.substitution_signal) { try { gentlyRedirectFromSubstitution(); } catch(e){} }
