@@ -8816,6 +8816,10 @@ def page_terms():
     <p>If you or someone else is in immediate danger, call <b>911</b>. For mental-health crisis support from trained human counselors, call or text <b>988</b>, or use 988 chat. InnerLight exists to help you reach those services and to stay with you on the way &mdash; it is not itself an emergency response service and cannot dispatch physical help.</p>
     <p class="plain"><b>In plain words:</b> InnerLight walks with you toward help. It cannot drive the ambulance. In danger: 911. In crisis: 988.</p>
 
+    <h2>3a. Emergency dispatch readiness</h2>
+    <p>InnerLight includes a dormant capability to request emergency help to a person&rsquo;s location <em>at their explicit request and with their consent</em>. When and if it is activated (only where required by law or by a crisis-system contract, and only with a real responder integration in place), it operates in three tiers: you contacting services yourself (always available); you asking us to send help to your location and confirming that request; and, separately locked behind independent legal review, exigent circumstances involving imminent danger and incapacity. Location is requested only for a dispatch you asked for, used once, and never stored. Until activation, this capability is not offered to anyone.</p>
+    <p class="plain"><b>In plain words:</b> A &ldquo;send help to me&rdquo; button exists in the code, switched off. If it is ever switched on, it works only when you ask and confirm &mdash; and it never watches you.</p>
+
     <h2>4. It is free for you</h2>
     <p>InnerLight never charges a person seeking help. There are no fees, no subscriptions, no advertisements, and your words are never sold &mdash; these are founding commitments, published in our <a href="/research">principles</a>.</p>
     <p class="plain"><b>In plain words:</b> You will never pay, see ads, or be the product.</p>
@@ -8909,6 +8913,9 @@ def page_faq():
 
     <h2>What if the provider I&rsquo;m connected to can&rsquo;t see me for weeks?</h2>
     <p>Then the wait has not ended &mdash; it has just moved, and InnerLight does not consider that a resolution. Every provider in the network declares an honest access tier (within 24 hours, within 72 hours, within a week, or longer), the fastest real door is shown first, and 72 hours is the standard we hold the network to. If your next human appointment is more than 72 hours away, InnerLight stays your companion for the interim &mdash; check-ins, holding, activities, and every crisis door &mdash; until the human is actually in the room, and it will offer to help you find a faster door in the meantime while you keep the appointment you have. Research is clear that long waits deepen symptoms and cause people to fall through; we refuse to let a date on a calendar be your only support.</p>
+
+    <h2>How does &ldquo;Nearby help&rdquo; work?</h2>
+    <p>Type a city or ZIP and InnerLight lists licensed mental-health facilities near you from the federal FindTreatment.gov directory. Tap any facility to call it in one touch, open its own website, get directions from its exact location, and see what it offers &mdash; including whether it accepts Medicaid or a sliding scale, which languages it serves, and whether it has emergency mental-health services. Hours are not in the federal record, so we always suggest confirming by phone; providers who see themselves listed are welcome to send us their hours and details.</p>
 
     <h2>Do I need to install an app?</h2>
     <p>Never. InnerLight runs in the browser you already have, and it will never require you to install or choose an app to reach help &mdash; 211 opens as a website, 988 can be reached by chat as well as by phone, and every door works from a plain tap.</p>
@@ -9051,6 +9058,16 @@ def page_research():
     <p class="cite">Ackermann S.P., et al. (2023). Meta-analysis of the diving response: moderate-to-large increases in cardiac vagal activity from cold facial stimulation &mdash; the basis of the cool-water reset and of the DBT temperature (&ldquo;TIPP&rdquo;) skill.</p>
     <p class="cite">Artigas L., Jarero I. The Butterfly Hug: self-administered bilateral stimulation, developed for group trauma work and adopted within EMDR practice.</p>
     <p class="cite">Grounding technique guidance in trauma and crisis intervention practice: proprioceptive discharge (isometric push), and the state-matching principle that cognitive tasks (categories, serial subtraction) suit rumination while somatic tools suit hyperarousal (Porges 2011, Polyvagal Theory, for the vagal mechanism).</p>
+
+    <h2>15. Continuity of care &mdash; the wait does not end at the handoff</h2>
+    <p>Reaching a provider whose next opening is weeks away moves a person&rsquo;s wait rather than ending it. The evidence is unambiguous that this matters: longer waitlist lags sharply reduce the chance the first appointment ever happens, prolonged waits are associated with worsening symptoms and higher mortality, and symptoms do not usually dissipate on their own. Maintained contact during the wait is the recognized hallmark of mature programs. InnerLight therefore requires every provider to declare an honest access tier, routes to the fastest real door first, holds itself to a 72-hour network standard, and remains a person&rsquo;s companion during any interim longer than that &mdash; check-ins, activities, and every crisis door &mdash; until the human is actually in the room.</p>
+    <p class="cite">Gallucci G., Swartz W., Hackerman F. (2005). Impact of the wait for an initial appointment on the rate of kept appointments at a mental health center. <em>Psychiatric Services</em>, 56(3), 344&ndash;346 &mdash; longer waits sharply increased first-appointment no-shows.</p>
+    <p class="cite">Systematic review, <em>JMIR</em> (2024): digital interventions during psychotherapy waiting lists &mdash; documents wait-associated symptom worsening, quality-of-life decline, and increased mortality; symptoms do not dissipate with time.</p>
+    <p class="cite">Carter O., et al. (2012). Increased wait-list time predicts dropout from outpatient CBT. <em>Behaviour Research and Therapy</em>, 50(7&ndash;8), 487&ndash;492.</p>
+    <p class="cite">Thomas K.A., et al. (2021). Systematic review of mental-health waitlist management strategies &mdash; triage, client-led approaches, and brief/single-session models as effective access interventions.</p>
+
+    <h2>16. No dead doors &mdash; resilient handoff destinations</h2>
+    <p>A crisis handoff that lands on an outage is a dead end by another name. Every critical external destination in InnerLight (legal aid, treatment finders, domestic-violence help, 211, 988 chat) is held as an ordered chain of verified alternatives; before a person is sent, the server checks that the door actually opens and routes to the first live one, logging any failover. If every door in a chain is closed the person still receives the primary target rather than nothing. Destinations that require choosing or installing an app are avoided by design: 211 opens as a website and 988 is reachable by chat as well as by phone.</p>
 
     <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
     """
@@ -9435,6 +9452,32 @@ def page_updates():
     inner = """
     <h1>Building in the open</h1>
     <p class="lead">We publish what we change, in plain language, because transparency is a founding value. Here is what has actually improved recently &mdash; and what we are working on next.</p>
+
+    <h2>August 2026</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Eleven languages, with a guard that keeps them equal</h3>
+      <p style="margin-bottom:0;">Swahili, Amharic, and Hausa joined Punjabi, Bengali, Tagalog, Tongan, Hindi, Chinese, Spanish, and English. Every crisis surface, the launch page, the feeling prompts, and the Focus anchor speak all eleven, and every info page translates itself on first visit. A build check now fails any release where a single language falls behind &mdash; and you can switch languages mid-conversation from a globe that shows every language in its own name.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">The wait does not end at the handoff</h3>
+      <p style="margin-bottom:0;">A provider whose next opening is weeks away has not resolved anything. Providers now declare an honest access tier (within 24 hours, 72 hours, a week, or longer), the fastest real door is shown first, 72 hours is the standard we hold the network to, and if your next human appointment is further away than that, InnerLight remains your companion until the human is in the room.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Nearby help you can actually act on</h3>
+      <p style="margin-bottom:0;">Every nearby facility is now tappable: call in one touch, open the facility&rsquo;s own website, get directions from its exact location, and see what it offers &mdash; including whether it accepts Medicaid or a sliding scale, which languages it serves, and whether it has emergency mental-health services. Listings come from the federal FindTreatment.gov directory. Providers who see themselves listed can reach us to add hours and details.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">No dead doors, no required apps</h3>
+      <p style="margin-bottom:0;">Every critical handoff now has a chain of ways in, checked live before you are sent so a website outage routes you to the next verified door automatically. 211 opens as a website (no app chooser can appear), and 988 can be reached by chat as well as by phone. Nothing here will ever require you to install an app.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Warmer, truer, more honest</h3>
+      <p style="margin-bottom:0;">The companion now knows the real date and time, speaks plainly instead of clinically, recognizes when the hardship belongs to someone you love, and holds a rights card back for a turn when grief is acute. Backgrounds are now your founder&rsquo;s own garden and sky photographs shown whole, without blur or crop. New calming activities were chosen from published research and matched to the state you are in &mdash; body-first tools for panic, mind-first tools for a looping thought. The Terms of Service and a full FAQ are public, including an honest answer about legal limits.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Readiness, built dormant</h3>
+      <p style="margin-bottom:0;">Two engines now exist in the codebase but are switched off: an emergency-dispatch readiness engine (three tiers, consent-anchored, activated only when law or a crisis-system contract requires it and a real provider is connected) and the funding engine described in our principles. Neither can touch what a person in crisis experiences; that isolation is enforced by automated tests.</p>
+    </div>
 
     <h2>July 2026</h2>
     <div class="card">
