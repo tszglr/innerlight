@@ -4335,6 +4335,7 @@ var _IL_FAC = {
 };
 function _ilfac(k){ var lg=(window._ilLang||"en"); return (_IL_FAC[lg]||_IL_FAC.en)[k]; }
 function openFacilities(){
+  try { var _ci=document.getElementById('il-checkin'); if (_ci) _ci.remove(); } catch(e){}
   let ov = document.getElementById('facilities-overlay');
   if (ov){ ov.style.display='flex'; return; }
   ov = document.createElement('div');
@@ -4370,13 +4371,45 @@ async function doFacilities(){
         + '\u2022 '+_ilfac("call988")+'</div>';
       metric('facilities_search', 'nores'); return;
     }
-    box.innerHTML = d.results.map(function(f){
-      return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:11px 13px;margin:8px 0;">'
-        + '<b style="color:#1e3a5c;font-size:14.5px;">'+f.name+'</b>'
-        + (f.address?'<div style="font-size:12.5px;color:#64748b;">'+f.address+'</div>':'')
-        + (f.phone?'<div style="font-size:13px;color:#2e6e8e;margin-top:3px;">'+f.phone+'</div>':'')
+    window._facResults = d.results;
+    box.innerHTML = d.results.map(function(f, idx){
+      var tel = (f.phone||'').replace(/[^0-9+]/g,'');
+      var lbl = {type:'Type', setting:'Setting', care:'Care offered', payment:'Payment accepted', assistance:'Payment help', languages:'Languages', emergency:'Emergency services', ages:'Ages', programs:'Programs'};
+      var det = f.details || {};
+      var detHtml = Object.keys(lbl).filter(function(k){ return det[k]; }).map(function(k){
+        return '<div style="margin:6px 0;"><span style="color:#8a6a4c;font-size:12px;text-transform:uppercase;letter-spacing:.04em;">'+lbl[k]+'</span><br><span style="font-size:13.5px;color:#4a372d;line-height:1.5;">'+escapeHtml(det[k])+'</span></div>';
+      }).join('');
+      var maps = (f.lat && f.lon) ? 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(f.lat+','+f.lon)
+                                  : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((f.name||'')+' '+(f.address||''));
+      var doors = ''
+        + (tel ? '<a href="tel:'+tel+'" style="display:inline-block;margin:6px 6px 0 0;background:#b8783a;color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;text-decoration:none;font-weight:700;">Call</a>' : '')
+        + (f.website ? '<a href="'+escapeHtml(f.website)+'" target="_blank" rel="noopener" style="display:inline-block;margin:6px 6px 0 0;background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:999px;padding:8px 14px;font-size:13px;text-decoration:none;font-weight:700;">Website</a>' : '')
+        + '<a href="'+maps+'" target="_blank" rel="noopener" style="display:inline-block;margin:6px 6px 0 0;background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:999px;padding:8px 14px;font-size:13px;text-decoration:none;font-weight:700;">Directions</a>'
+        + (f.intake && f.intake!==f.phone ? '<div style="font-size:12.5px;color:#64748b;margin-top:6px;">Intake: <a href="tel:'+f.intake.replace(/[^0-9+]/g,'')+'" style="color:#2e6e8e;">'+f.intake+'</a></div>' : '')
+        + (f.hotline ? '<div style="font-size:12.5px;color:#64748b;">24-hour line: <a href="tel:'+f.hotline.replace(/[^0-9+]/g,'')+'" style="color:#2e6e8e;">'+f.hotline+'</a></div>' : '');
+      return '<div class="fac-card" data-idx="'+idx+'" role="button" tabindex="0" style="border:1px solid #e2e8f0;border-radius:12px;padding:11px 13px;margin:8px 0;cursor:pointer;background:#fff;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+        +   '<div><b style="color:#1e3a5c;font-size:14.5px;">'+escapeHtml(f.name)+'</b>'
+        +   (f.address?'<div style="font-size:12.5px;color:#64748b;">'+escapeHtml(f.address)+'</div>':'')
+        +   (f.phone?'<div style="font-size:13px;color:#2e6e8e;margin-top:3px;">'+escapeHtml(f.phone)+'</div>':'') + '</div>'
+        +   '<span class="fac-chev" style="color:#a08a72;font-size:18px;line-height:1;">&#8250;</span></div>'
+        + '<div class="fac-detail" style="display:none;margin-top:8px;border-top:1px dashed #e7dccc;padding-top:8px;">'+doors+detHtml+'</div>'
         + '</div>';
     }).join('') + '<div style="font-size:12px;color:#94a3b8;margin-top:6px;">'+_ilfac("confirm")+'</div>';
+    // Tap a facility to open its full details. Doors (call/website/directions)
+    // are real links, so a tap on them goes straight through.
+    box.querySelectorAll('.fac-card').forEach(function(card){
+      var toggle = function(ev){
+        if (ev && ev.target && ev.target.closest && ev.target.closest('a')) return;
+        var d = card.querySelector('.fac-detail'); var ch = card.querySelector('.fac-chev');
+        var open = d.style.display !== 'none';
+        d.style.display = open ? 'none' : 'block';
+        ch.style.transform = open ? '' : 'rotate(90deg)';
+        if (!open) { try { metric('facility_open'); } catch(e){} }
+      };
+      card.addEventListener('click', toggle);
+      card.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(e); } });
+    });
     metric('facilities_search', 'ok');
   } catch(e){ box.innerHTML='<span style="color:#c0564e;font-size:13px;">'+_ilfac("err")+'</span>'; }
 }
@@ -4632,6 +4665,13 @@ var _IL_CT = {
 };
 function _ilct(k){ var lg=(window._ilLang||'en'); return (_IL_CT[lg]||_IL_CT.en)[k]; }
 function showCheckin(){ if(document.getElementById('il-checkin')) return;
+  // Never stamp a feelings prompt over something the person is actively
+  // reading or using: nearby help, activities, the anchor, or any overlay.
+  try {
+    var _busy = ['facilities-overlay','activities-overlay','il-anchor','legal-overlay','provider-overlay'].some(function(id){
+      var el=document.getElementById(id); return el && el.style.display!=='none' && el.offsetParent!==null; });
+    if (_busy) return;
+  } catch(e){}
   var wrap=document.createElement('div'); wrap.id='il-checkin';
   wrap.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:92vw;'
     +'background:#faf5ec;border:1px solid #e7dccc;border-radius:18px;box-shadow:0 12px 40px rgba(42,30,20,0.22);'
@@ -8690,8 +8730,36 @@ def facilities_lookup():
                         addr = (addr + (" — %.1f miles" % float(miles))).strip(" —")
                 except (TypeError, ValueError):
                     pass
-                results.append({"name": name[:80], "address": addr[:140],
-                                "phone": (row.get("phone") or "")[:24]})
+                # The federal record carries far more than name and phone —
+                # website, intake line, hotline, and the service details a
+                # person actually needs (setting, payment accepted, languages,
+                # emergency services). Carry it all; the card shows it on tap.
+                svc = {}
+                for s in (row.get("services") or []):
+                    k = (s.get("f1") or "").strip()
+                    v = (s.get("f3") or "").strip()
+                    if k and v:
+                        svc[k] = v[:300]
+                details = {
+                    "type": svc.get("Facility Type", ""),
+                    "setting": svc.get("Service Setting", ""),
+                    "care": svc.get("Type of Care", ""),
+                    "payment": svc.get("Payment/Insurance/Funding Accepted", ""),
+                    "assistance": svc.get("Payment Assistance Available", ""),
+                    "languages": svc.get("Language Services", ""),
+                    "emergency": svc.get("Emergency Mental Health Services", ""),
+                    "ages": svc.get("Age Groups Accepted", ""),
+                    "programs": svc.get("Special Programs/Groups Offered", ""),
+                }
+                results.append({
+                    "name": name[:80], "address": addr[:140],
+                    "phone": (row.get("phone") or "")[:24],
+                    "website": (row.get("website") or "").strip()[:200],
+                    "intake": (row.get("intake1") or "").strip()[:24],
+                    "hotline": (row.get("hotline1") or "").strip()[:24],
+                    "lat": row.get("latitude"), "lon": row.get("longitude"),
+                    "details": {k: v for k, v in details.items() if v},
+                })
                 if len(results) >= 12:
                     break
         except Exception as e:
