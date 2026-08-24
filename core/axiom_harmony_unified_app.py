@@ -5834,6 +5834,67 @@ async function startAmbientMusic(attempt) {
     scheduleSpaTransition(data.then, (data.transition_after_seconds || 180) * 1000);
   }
 }
+// ZENISYS WORD-SPINE: the server reads every message and sends a sound mode.
+// Words are the always-available signal — face and heart are enhancers, never
+// gatekeepers. This steers the real-track lanes AND the generative Creator.
+function _modeToLane(mode){
+  var m = String(mode || '').toLowerCase();
+  if (/deep|agitat|anger|angry|panic|fear|anxi|rage|overwhelm|crisis/.test(m)) return 'deepcalm';
+  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely/.test(m)) return 'lifting';
+  if (/calm|greet|steady|settl|neutral|hope/.test(m)) return 'calm';
+  return null;
+}
+function steerLaneFromMode(mode){
+  try {
+    var want = _modeToLane(mode);
+    if (!want || want === adaptiveLaneNow) return;
+    var now = Date.now();
+    if (now - adaptiveLastSwitch < 10000) return;                 // one shift per 10s
+    if (now - (window._lastManualMusic || 0) < 5*60*1000) return; // their hand outranks ours
+    adaptiveLaneNow = want; adaptiveLastSwitch = now;
+    var emo = want === 'deepcalm' ? 'angry' : (want === 'lifting' ? 'sad' : 'calm');
+    fetch('/api/zenisys/ambient?emotion=' + encodeURIComponent(emo))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var tracks = (d && d.tracks) || [];
+        if (!tracks.length) return;
+        ambientTracks = tracks.slice(1); ambientIndex = 0;
+        window._lastTrackFile = (tracks[0].url || '').split('/').pop();
+        switchAmbient(tracks[0].url, tracks[0].name);
+        try { metric('lane_switch', 'words:' + String(mode).slice(0,20)); } catch(e){}
+        armIsoEase(want);
+      }).catch(function(){});
+    creatorApplyMode(mode);
+  } catch(e){}
+}
+// THE CREATOR as under-bed: fetch the SoundscapePlan for this state and render
+// it through the Tone.js engine at under-bed volume beneath the real tracks.
+// Browsers require a human gesture before audio: if the engine cannot start
+// yet, the plan waits and starts on the person's next touch.
+function creatorApplyMode(mode){
+  try {
+    var m = String(mode || 'calm').toLowerCase();
+    fetch('/api/zenisys/plan?emotion=' + encodeURIComponent(m) + '&prev=' + encodeURIComponent(window._lastPlanMode || ''))
+      .then(function(r){ return r.json(); })
+      .then(function(plan){
+        if (!plan) return;
+        window._lastPlanMode = m;
+        plan.volume = Math.min(0.18, (plan.volume || 0.3) * 0.35);  // under-bed, never competing
+        if (window.ZENISYS && window.ZENISYS.started) { zenisysApplyPlan(plan); }
+        else {
+          window._pendingPlan = plan;
+          if (!window._creatorGestureArmed) {
+            window._creatorGestureArmed = 1;
+            document.addEventListener('pointerdown', function _once(){
+              document.removeEventListener('pointerdown', _once, true);
+              try { if (window._pendingPlan) zenisysStart(window._pendingPlan); } catch(e){}
+            }, true);
+          }
+        }
+      }).catch(function(){});
+  } catch(e){}
+}
+
 function changeMusic() {
   window._lastManualMusic = Date.now();   // the person's own hand outranks any schedule
   playNextTrackBlended();   // manages the crossfading flag itself (refills if the bag is empty)
@@ -6609,7 +6670,7 @@ async function analyzeVisualEmotion() {
     $('visual_emotion').value = data.sources.visual.dominant_emotion;
   }
   $('emotion-status').textContent = `Emotion profile: ${data.primary_emotion || 'needs more context'}, distress ${data.distress_score || '?'}/10, confidence ${data.confidence || '?'}.`;
-  if ((data.zenisys_mode_hint || '') && zenisysCtx) adaptZenisys(data.zenisys_mode_hint);
+  if (data.zenisys_mode_hint) { steerLaneFromMode(data.zenisys_mode_hint); if (zenisysCtx) adaptZenisys(data.zenisys_mode_hint); }
 }
 window._applyProviderSuggestion = applyProviderSuggestion;
 function openLegalHelp(){ try{ openHelp('legal'); }catch(e){} }
@@ -6843,6 +6904,7 @@ async function sendCheckin() {
     }, multimodalPayload()))
   });
   const data = await res.json();
+  steerLaneFromMode(data.sound_mode || 'greeting');
   adaptZenisys(data.sound_mode || 'greeting');
   revealUrgentHelp(data);
   logTurn('innerlight', data.response || '');
@@ -9518,6 +9580,10 @@ def page_updates():
     <p class="lead">We publish what we change, in plain language, because transparency is a founding value. Here is what has actually improved recently &mdash; and what we are working on next.</p>
 
     <h2>August 2026</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Zenisys awakened: the sound now listens to your words</h3>
+      <p style="margin-bottom:0;">The Zenisys Sound System&rsquo;s full design is now active: every message you write steers the music &mdash; no camera needed &mdash; meeting your state and gently carrying it toward calm (the Iso principle, with the strongest effects around 24 minutes in controlled trials). Tracks play in a no-repeat shuffle so nothing loops, the generative Creator composes a soft under-bed matched to your state, and after deep-calm or lifting music the sound eases back toward calm on the researched schedule &mdash; unless you touch the music yourself, which always wins.</p>
+    </div>
     <div class="card">
       <h3 style="margin-top:0;">Eleven languages, with a guard that keeps them equal</h3>
       <p style="margin-bottom:0;">Swahili, Amharic, and Hausa joined Punjabi, Bengali, Tagalog, Tongan, Hindi, Chinese, Spanish, and English. Every crisis surface, the launch page, the feeling prompts, and the Focus anchor speak all eleven, and every info page translates itself on first visit. A build check now fails any release where a single language falls behind &mdash; and you can switch languages mid-conversation from a globe that shows every language in its own name.</p>
@@ -12272,7 +12338,112 @@ def admin_dashboard():
 
     <div class="hero">{{ kpi_cards|safe }}</div>
 
-    <h2 class="ledger" id="exigent">Exigent circumstances — emergency dispatch readiness</h2>
+    <h2 class="ledger" id="zenisyslab">Zenisys Lab &mdash; the sound studio</h2>
+    <div class="card" id="zlab-card">
+      <p style="margin-top:0;font-size:13.5px;color:#665;">The full instrument, in one room: the Creator&rsquo;s plans, a live tweak console, the Calm DNA of every track, and the standalone Lab itself. Zenisys composes the state; you shape the sound.</p>
+      <div style="margin:6px 0 12px;">
+        <a href="/zenisys/lab" target="_blank" rel="noopener" style="display:inline-block;background:#b8783a;color:#fff;border-radius:9px;padding:9px 18px;font-weight:700;text-decoration:none;margin-right:8px;">Open the Lab (full screen)</a>
+        <a href="/zenisys" target="_blank" rel="noopener" style="display:inline-block;background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:9px;padding:9px 18px;font-weight:700;text-decoration:none;">Standalone Zenisys</a>
+      </div>
+      <h3 style="margin:14px 0 6px;font-size:14px;color:#5a3d22;">The Creator&rsquo;s plans &mdash; what Zenisys composes for each state</h3>
+      <div id="zlab-emos" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+      <pre id="zlab-plan" style="background:#faf5ec;border:1px solid #e7dccc;border-radius:10px;padding:10px;font-size:12px;max-height:220px;overflow:auto;">pick a state above</pre>
+      <h3 style="margin:14px 0 6px;font-size:14px;color:#5a3d22;">Live console &mdash; audition and tweak the plan in this room</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;font-size:12.5px;color:#5a3d22;">
+        <label>Brightness <input id="zl-bright" type="range" min="600" max="3800" value="1200" style="width:100%;"></label>
+        <label>Volume <input id="zl-vol" type="range" min="0" max="100" value="18" style="width:100%;"></label>
+        <label>Warmth (detune) <input id="zl-warm" type="range" min="0" max="18" value="6" style="width:100%;"></label>
+        <label>Breath (pulse/min) <input id="zl-breath" type="range" min="4" max="12" value="6" style="width:100%;"></label>
+      </div>
+      <div style="margin-top:8px;">
+        <button id="zl-start" style="background:#1c7a3d;color:#fff;border:0;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Start sound</button>
+        <button id="zl-stop" style="background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;margin-left:8px;">Stop</button>
+        <span id="zl-status" style="margin-left:10px;font-size:12.5px;color:#8a6a4c;">quiet</span>
+      </div>
+      <h3 style="margin:16px 0 6px;font-size:14px;color:#5a3d22;">Calm DNA &mdash; the learned fingerprint of every track</h3>
+      <div id="zlab-dna" style="font-size:12px;max-height:260px;overflow:auto;border:1px solid #e7dccc;border-radius:10px;"></div>
+      <h3 style="margin:16px 0 6px;font-size:14px;color:#5a3d22;">The Lab, embedded</h3>
+      <iframe src="/zenisys/lab" title="Zenisys Lab" style="width:100%;height:430px;border:1px solid #e7dccc;border-radius:12px;background:#111;"></iframe>
+    </div>
+    <script>
+      (function(){
+        var EMOS = ['calm','anxious','panic','angry','sad','grief','numb','hopeful','greeting'];
+        var emosEl = document.getElementById('zlab-emos');
+        EMOS.forEach(function(e){
+          var b = document.createElement('button');
+          b.textContent = e;
+          b.style.cssText = 'background:#fff;border:1px solid #d9a86f;color:#7a5230;border-radius:999px;padding:6px 14px;cursor:pointer;font-size:12.5px;';
+          b.addEventListener('click', function(){ loadPlan(e); });
+          emosEl.appendChild(b);
+        });
+        function loadPlan(emo){
+          fetch('/api/zenisys/plan?emotion=' + encodeURIComponent(emo) + '&binaural=1')
+            .then(function(r){ return r.json(); })
+            .then(function(p){
+              document.getElementById('zlab-plan').textContent = JSON.stringify(p, null, 2);
+              try {
+                if (p.brightness != null) document.getElementById('zl-bright').value = Math.round(600 + p.brightness*3200);
+                if (p.volume != null) document.getElementById('zl-vol').value = Math.round(Math.min(1,p.volume)*100);
+              } catch(e){}
+              applyKnobs();
+            }).catch(function(){});
+        }
+        // Compact WebAudio creator: two warm detuned sines -> lowpass -> gain,
+        // with a slow breathing LFO on the gain. Real sound, in this room.
+        var ctx=null, o1=null, o2=null, filt=null, gain=null, lfo=null, lfoGain=null;
+        function applyKnobs(){
+          if (!ctx) return;
+          var br = parseFloat(document.getElementById('zl-bright').value);
+          var vol = parseFloat(document.getElementById('zl-vol').value)/100;
+          var warm = parseFloat(document.getElementById('zl-warm').value);
+          var bpm = parseFloat(document.getElementById('zl-breath').value);
+          filt.frequency.setTargetAtTime(br, ctx.currentTime, 0.4);
+          gain.gain.setTargetAtTime(vol, ctx.currentTime, 0.4);
+          o2.detune.setTargetAtTime(warm, ctx.currentTime, 0.4);
+          lfo.frequency.setTargetAtTime(bpm/60, ctx.currentTime, 0.4);
+          lfoGain.gain.setTargetAtTime(vol*0.35, ctx.currentTime, 0.4);
+          document.getElementById('zl-status').textContent = 'playing &mdash; ' + Math.round(br) + ' Hz bright, breath ' + bpm + '/min';
+          document.getElementById('zl-status').innerHTML = document.getElementById('zl-status').textContent;
+        }
+        document.getElementById('zl-start').addEventListener('click', function(){
+          if (ctx) { applyKnobs(); return; }
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+          o1 = ctx.createOscillator(); o2 = ctx.createOscillator();
+          o1.type='sine'; o2.type='sine'; o1.frequency.value=216; o2.frequency.value=216;
+          filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=0.7;
+          gain = ctx.createGain(); gain.gain.value=0.0;
+          lfo = ctx.createOscillator(); lfoGain = ctx.createGain();
+          lfo.frequency.value=0.1; lfoGain.gain.value=0.05;
+          lfo.connect(lfoGain); lfoGain.connect(gain.gain);
+          o1.connect(filt); o2.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+          o1.start(); o2.start(); lfo.start();
+          applyKnobs();
+        });
+        ['zl-bright','zl-vol','zl-warm','zl-breath'].forEach(function(id){
+          document.getElementById(id).addEventListener('input', applyKnobs);
+        });
+        document.getElementById('zl-stop').addEventListener('click', function(){
+          if (!ctx) return;
+          try { gain.gain.setTargetAtTime(0, ctx.currentTime, 0.3); } catch(e){}
+          setTimeout(function(){ try { ctx.close(); } catch(e){} ctx=null; }, 900);
+          document.getElementById('zl-status').textContent = 'quiet';
+        });
+        fetch('/api/admin/zenisys/dna').then(function(r){ return r.json(); }).then(function(d){
+          var dna = d.dna || {};
+          var rows = Object.keys(dna).sort().map(function(f){
+            var t = dna[f];
+            return '<div style="display:grid;grid-template-columns:1.4fr repeat(5,1fr);gap:6px;padding:6px 10px;border-bottom:1px solid #f0e6d6;">'
+              + '<b>' + f + '</b><span>' + t.bpm + ' bpm</span><span>key ' + t.key + '</span>'
+              + '<span>energy ' + t.energy + '</span><span>bright ' + t.brightness + '</span>'
+              + '<span style="color:#1c7a3d;font-weight:700;">calm ' + t.calm_score + '</span></div>';
+          }).join('');
+          document.getElementById('zlab-dna').innerHTML =
+            '<div style="display:grid;grid-template-columns:1.4fr repeat(5,1fr);gap:6px;padding:6px 10px;background:#faf5ec;font-weight:700;color:#8a5a28;"><span>track</span><span>tempo</span><span>key</span><span>energy</span><span>brightness</span><span>calm score</span></div>' + rows;
+        }).catch(function(){});
+      })();
+    </script>
+
+    <h2 class="ledger" id="exigent">Exigent circumstances &mdash; emergency dispatch readiness</h2>
     <div class="card" id="exigent-card">
       <p style="margin-top:0;"><b>Status:</b> <span id="exigent-status" style="font-weight:700;">loading&hellip;</span>
         <button id="exigent-toggle" onclick="exigentToggle()" style="margin-left:14px;padding:6px 16px;border-radius:8px;border:1px solid #b89;background:#fff;cursor:pointer;font-weight:700;">&hellip;</button></p>
@@ -14902,6 +15073,17 @@ def api_exigent_dispatch():
     return jsonify({"error": "provider_integration_pending",
                     "message": "Dispatch capability is armed but the provider "
                                "integration is not yet completed."}), 501
+
+@app.route("/api/admin/zenisys/dna")
+def api_admin_zenisys_dna():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        with open(Path(__file__).resolve().parent / "track_fingerprints.json") as f:
+            dna = json.load(f)
+    except Exception:
+        dna = {}
+    return jsonify({"dna": dna, "count": len(dna)})
 
 @app.route("/api/admin/exigent", methods=["GET", "POST"])
 def api_admin_exigent():
