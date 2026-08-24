@@ -4462,25 +4462,44 @@ async function submitFeedback(){
 // Sends only: an anonymous session id, bpm, tier, and derived calm state.
 // No words, no identity. Lets the founder watch the calm curve in real time.
 let _bioPingInt = null;
+function _bioPingPayload(extra){
+  const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 12000);
+  const bpm = (fresh && window._heartBPM) ? Math.round(window._heartBPM) : 0;
+  const base = window._heartBaseline ? Math.round(window._heartBaseline) : (bpm || 0);
+  let state = 'steady';
+  if (bpm) { if (bpm >= base + 8) state = 'rising'; else if (bpm <= base - 6) state = 'settling'; }
+  const p = {sid: sessionId, bpm: bpm, tier: (window._heartTier||''), base: base,
+             state: state, face: (window.currentFaceEmotion || ''),
+             cam: window._camOn ? 1 : 0, hasheart: bpm ? 1 : 0};
+  if (extra) Object.assign(p, extra);
+  return p;
+}
+function _bioPingNow(){
+  try {
+    fetch('/api/bio/ping', {method:'POST', headers:{'Content-Type':'application/json'},
+      keepalive: true, body: JSON.stringify(_bioPingPayload())}).catch(()=>{});
+  } catch(e){}
+}
 function startBioPing(){
   if (_bioPingInt) return;
-  _bioPingInt = setInterval(()=>{
-    try {
-      // Ping EVERY interval while the session is live, even before a heart
-      // reading exists, so the founder's live monitor shows the session right
-      // away with an honest status (camera on / acquiring / measured).
-      const fresh = window._heartUpdatedAt && (Date.now() - window._heartUpdatedAt < 12000);
-      const bpm = (fresh && window._heartBPM) ? Math.round(window._heartBPM) : 0;
-      const base = window._heartBaseline ? Math.round(window._heartBaseline) : (bpm || 0);
-      let state = 'steady';
-      if (bpm) { if (bpm >= base + 8) state = 'rising'; else if (bpm <= base - 6) state = 'settling'; }
-      const face = (window.currentFaceEmotion || '');
-      const cam = window._camOn ? 1 : 0;
-      fetch('/api/bio/ping', {method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({sid: sessionId, bpm: bpm, tier: (window._heartTier||''),
-          base: base, state: state, face: face, cam: cam, hasheart: bpm ? 1 : 0})}).catch(()=>{});
-    } catch(e){}
-  }, 4000);
+  _bioPingNow();                       // FIRST ping fires the instant the person enters
+  _bioPingInt = setInterval(_bioPingNow, 4000);
+  // Phones freeze timers when the screen locks or the tab backgrounds. We
+  // send a final marked ping on the way out and an instant ping on return,
+  // so the founder's board reflects reality within seconds either way.
+  try {
+    document.addEventListener('visibilitychange', function(){
+      if (document.visibilityState === 'visible') { _bioPingNow(); }
+      else if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/bio/ping', new Blob([JSON.stringify(_bioPingPayload({away: 1}))], {type: 'application/json'}));
+      }
+    });
+    window.addEventListener('pagehide', function(){
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/bio/ping', new Blob([JSON.stringify(_bioPingPayload({bye: 1}))], {type: 'application/json'}));
+      }
+    });
+  } catch(e){}
 }
 
 _hrTickInt=null, _hrEstInt=null;
@@ -10974,6 +10993,19 @@ def bio_ping():
     if bpm and not (30 <= bpm <= 220):
         bpm = 0
     now = time.time()
+    if data.get("bye"):
+        # Clean exit: the person left; the board should show it within one poll.
+        try:
+            with _LIVE_DB_LOCK:
+                conn = _live_db()
+                try:
+                    conn.execute("DELETE FROM live_state WHERE key = ?", ("bio:" + sid,))
+                    conn.commit()
+                finally:
+                    conn.close()
+        except Exception:
+            pass
+        return jsonify({"status": "ok"})
     with _BIO_LOCK:
         rec = _live_get("bio:" + sid) or {"history": []}
         if "start" not in rec:
@@ -10985,12 +11017,15 @@ def bio_ping():
         rec.update({"bpm": bpm, "hasheart": 1 if bpm else 0, "cam": cam,
                     "tier": str(data.get("tier",""))[:14],
                     "base": int(data.get("base", bpm) or bpm), "state": str(data.get("state",""))[:12],
-                    "face": str(data.get("face",""))[:16], "last": now})
+                    "face": str(data.get("face",""))[:16], "last": now,
+                    "away": 1 if data.get("away") else 0})
         if bpm:
             rec["history"].append({"t": time.strftime("%H:%M:%S"), "bpm": bpm})
             rec["history"] = rec["history"][-40:]   # last ~40 readings
         _live_set("bio:" + sid, rec)
-        _live_cleanup("bio:", 90)
+        # 180s TTL: rides out short screen-locks (mobile browsers freeze
+        # timers); the away flag keeps the board honest in the meantime.
+        _live_cleanup("bio:", 180)
     return jsonify({"status": "ok"})
 
 @app.route("/api/admin/bio/live")
@@ -11002,7 +11037,7 @@ def admin_bio_live():
         live = _live_all("bio:")
         active = []
         for i, (sid, v) in enumerate(sorted(live.items(), key=lambda kv: kv[1].get("last",0), reverse=True)):
-            if now - v.get("last",0) > 90: continue
+            if now - v.get("last",0) > 180: continue
             active.append({
                 "who": "Person " + str(i+1),
                 # stable anonymous key (hash of the random session id) so the
@@ -11012,6 +11047,7 @@ def admin_bio_live():
                 "bpm": v.get("bpm"), "base": v.get("base"), "state": v.get("state"),
                 "tier": v.get("tier"), "face": v.get("face"),
                 "cam": v.get("cam", 0), "hasheart": v.get("hasheart", 0),
+                "away": v.get("away", 0),
                 "ago": int(now - v.get("last",0)),
                 "spark": [h["bpm"] for h in v.get("history", [])][-24:]
             })
