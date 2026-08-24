@@ -11248,6 +11248,94 @@ def _honeytoken_watch():
     return None
 
 
+# SECURITY KNOWLEDGE BASE — the learning module behind the founder's shield
+# panel. Every event the shield records maps to a card: what it is, why the
+# defense exists, what the attacker wanted, the harm prevented, and how we
+# responded. Written to teach, not just to count.
+SECURITY_KB = {
+    "honeypot:wordpress": {
+        "name": "WordPress login decoy",
+        "what": "A fake WordPress sign-in page at /wp-login.php and /wp-admin. InnerLight is not WordPress; no link anywhere points there. Only automated attack scanners visit those addresses.",
+        "attacker_goal": "Scanners sweep the whole internet for WordPress sites, then hammer the login with stolen or guessed passwords to take the site over and use it for spam, malware, or data theft.",
+        "why_up": "Touching a door no legitimate visitor can find is self-identification. The decoy converts an invisible probe into a flagged, logged, slowed attacker \u2014 before they ever reach anything real.",
+        "harm_prevented": "Site takeover, defacement of a crisis resource, or InnerLight's name being used to spread malware to vulnerable people.",
+        "our_response": "The visitor is flagged hostile, every later request is progressively delayed (cheap for us, expensive for a bot), repeat offenders are locked out up to 15 minutes, and one evidence line is written for law enforcement.",
+    },
+    "honeypot:dotenv": {
+        "name": ".env secrets decoy",
+        "what": "A fake environment file at /.env that looks like a developer accidentally exposed the server's passwords and API keys. Every value in it is fabricated.",
+        "attacker_goal": "Exposed .env files are the #1 thing scanners hunt: real ones contain database passwords and paid API keys that can be stolen and abused within minutes.",
+        "why_up": "Anyone downloading it reveals hostile intent instantly \u2014 and takes home a marked fake key (a honeytoken). If that key is ever used against us later, it proves the sender scraped this decoy.",
+        "harm_prevented": "Theft of real credentials, a hijacked AI budget (someone else's abuse billed to InnerLight), and exposure of infrastructure details.",
+        "our_response": "Flag, progressive delay, lockout on repeat, evidence line. The honeytoken silently arms a tripwire that fires if the fake key ever returns.",
+    },
+    "honeypot:phpmyadmin": {
+        "name": "Database panel decoy",
+        "what": "A fake phpMyAdmin database-administration page. InnerLight runs no such panel; only scanners looking for unprotected databases request it.",
+        "attacker_goal": "An exposed database panel is a direct door to everything a site stores \u2014 attackers dump it, ransom it, or sell it.",
+        "why_up": "Same principle: a door only burglars try. It absorbs the probe, identifies the client, and protects the real data paths.",
+        "harm_prevented": "Attempted access to stored data. (InnerLight's real protection is deeper: code-protected conversations are encrypted so that even a stolen database is unreadable without each person's own code.)",
+        "our_response": "Flag, delay, lockout on repeat, evidence line.",
+    },
+    "honeypot:api-keys": {
+        "name": "API-keys decoy",
+        "what": "A fake /api/keys endpoint returning fabricated credentials seeded with the honeytoken.",
+        "attacker_goal": "Harvest working API keys to steal paid AI capacity or impersonate the service.",
+        "why_up": "No real client ever calls it; the fake keys mark whoever takes them.",
+        "harm_prevented": "Stolen AI budget \u2014 an attack that could silently drain the funds that keep InnerLight free for people in crisis.",
+        "our_response": "Flag, delay, lockout on repeat, evidence line; honeytoken tripwire armed.",
+    },
+    "honeytoken-replay": {
+        "name": "Honeytoken tripwire",
+        "what": "The marked fake key planted in the decoys came BACK to us in a request. Only someone who scraped a honeypot could possess it \u2014 this is proof, not suspicion.",
+        "attacker_goal": "Using what they believed was a stolen credential to access paid services or admin functions.",
+        "why_up": "It turns stolen bait into a signed confession: possession of the token is possible only via the decoys.",
+        "harm_prevented": "Credential-based intrusion \u2014 caught at first use, with evidence a prosecutor can follow.",
+        "our_response": "Immediate hard lockout (no warning strikes) and a high-priority evidence line.",
+    },
+    "admin-login-fail": {
+        "name": "Founder-door guess",
+        "what": "A wrong passcode was submitted to The Watch's login.",
+        "attacker_goal": "Guessing or brute-forcing the founder passcode to reach the dashboard.",
+        "why_up": "Wrong guesses accumulate strikes: each adds delay, and repeated failure locks the address out. Brute force becomes uneconomical.",
+        "harm_prevented": "Dashboard takeover \u2014 visibility into operations and control surfaces.",
+        "our_response": "Strike recorded, progressive delay, lockout after repeated failures, evidence line. (If this was YOU mistyping, it clears on success and the lockout expires on its own.)",
+    },
+    "partner-login-fail": {
+        "name": "Provider-door guess",
+        "what": "A wrong credential was submitted to the provider portal.",
+        "attacker_goal": "Impersonating an enrolled provider to reach provider-side surfaces.",
+        "why_up": "Same strike-and-slow discipline as the founder door.",
+        "harm_prevented": "Provider impersonation \u2014 a stranger appearing inside the trust boundary meant for vetted humans.",
+        "our_response": "Strike, delay, lockout on repeat, evidence line.",
+    },
+    "lockout-hit": {
+        "name": "Locked-out client knocking",
+        "what": "A client already locked out for repeated offenses tried again during its lockout window.",
+        "attacker_goal": "Persistence \u2014 automated retries hoping the door reopened.",
+        "why_up": "Shows the lockout is absorbing sustained pressure rather than letting it through.",
+        "harm_prevented": "Continued hammering of authentication or decoy surfaces.",
+        "our_response": "The polite busy answer, zero server work spent, window continues; each knock is counted here.",
+    },
+    "rate-limit": {
+        "name": "Rate limit (cost shield)",
+        "what": "One address exceeded the per-minute/per-hour ceiling on an endpoint that costs money (AI replies, voice, transcription, saves).",
+        "attacker_goal": "Bot floods that drain the AI budget \u2014 a cost-collapse attack \u2014 or simple runaway scripts.",
+        "why_up": "Per-address ceilings plus global daily budget caps mean even a distributed flood cannot spend past the day's ceiling; the service degrades gracefully instead of bleeding.",
+        "harm_prevented": "Budget exhaustion that would take InnerLight away from real people mid-crisis.",
+        "our_response": "The request gets a gentle 'very busy' answer that still shows 988. Real people are never blocked on crisis paths \u2014 ceilings there are set far above human speed.",
+    },
+}
+
+def _kb_for(reason):
+    r = str(reason or "")
+    if r in SECURITY_KB:
+        return r
+    for k in SECURITY_KB:
+        if r.startswith(k):
+            return k
+    return None
+
 @app.route("/api/admin/security")
 def admin_security():
     """FOUNDER-ONLY forensic readout: recent security events + quick counts.
@@ -11272,6 +11360,8 @@ def admin_security():
         now = time.time()
         locked = sum(1 for h in _HOSTILE.values() if h.get("block_until", 0) > now)
         hostile_ips = len(_HOSTILE)
+    for e in events:
+        e["kb"] = _kb_for(e.get("reason"))
     return jsonify({
         "attacks_total": _SECURITY_COUNTS.get("attacks", 0),
         "honeypot_hits": _SECURITY_COUNTS.get("honeypots", 0),
@@ -11279,6 +11369,7 @@ def admin_security():
         "locked_out_now": locked,
         "top_paths": [{"path": p, "count": c} for p, c in top_paths],
         "recent": events[:120],
+        "kb": SECURITY_KB,
     })
 
 
@@ -12478,18 +12569,90 @@ def admin_dashboard():
                 + '<b style="color:#e8a34c;">' + (p.count||0) + '</b></div>';
             }).join('');
           }
+          window._secKB = d.kb || {};
+          window._secEvents = d.recent || [];
           var rec = d.recent || [];
           if(rec.length){
-            html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:16px 0 4px;">Recent events (metadata only)</div>';
-            html += rec.slice(0,40).map(function(e){
-              return '<div style="border-left:3px solid rgba(232,83,78,.5);background:rgba(232,163,76,.04);border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:12.5px;color:rgba(242,231,210,.78);">'
-                + '<b style="color:#e8534e;">' + esc3(e.reason) + '</b> &middot; ' + esc3(e.method) + ' ' + esc3(e.path)
+            html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:16px 0 4px;">Recent events &mdash; tap any block to learn exactly what happened</div>';
+            html += rec.slice(0,40).map(function(e, i){
+              var kb = (e.kb && window._secKB[e.kb]) ? window._secKB[e.kb] : null;
+              var nm = kb ? kb.name : e.reason;
+              return '<div class="sec-ev" data-i="' + i + '" role="button" tabindex="0" style="cursor:pointer;border-left:3px solid rgba(232,83,78,.5);background:rgba(232,163,76,.04);border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:12.5px;color:rgba(242,231,210,.78);">'
+                + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;">'
+                + '<span><b style="color:#e8534e;">' + esc3(nm) + '</b> &middot; ' + esc3(e.method) + ' ' + esc3(e.path) + '</span>'
+                + '<span style="color:rgba(244,201,119,.55);font-size:14px;">&#8250;</span></div>'
                 + '<span style="display:block;font-size:11px;color:rgba(242,231,210,.45);margin-top:3px;">' + esc3(e.ip) + ' &middot; ' + esc3(e.ts) + '</span></div>';
             }).join('');
           } else {
             html += '<div style="color:rgba(242,231,210,.45);font-style:italic;margin-top:10px;">No attempts recorded. The walls are quiet.</div>';
           }
+          // THE LEARNING MODULE: every defense explained even when quiet
+          var kbKeys = Object.keys(window._secKB || {});
+          if (kbKeys.length){
+            html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:18px 0 4px;">The defenses, explained &mdash; tap to open each lesson</div>';
+            html += kbKeys.map(function(k){
+              var kb = window._secKB[k];
+              return '<div class="sec-kb" data-k="' + esc3(k) + '" role="button" tabindex="0" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;background:rgba(232,163,76,.05);border:1px solid rgba(232,163,76,.14);border-radius:10px;padding:9px 12px;margin:6px 0;">'
+                + '<span style="color:rgba(242,231,210,.85);font-size:13px;"><b style="color:#f4c977;">' + esc3(kb.name) + '</b></span>'
+                + '<span style="color:rgba(244,201,119,.55);font-size:14px;">&#8250;</span></div>';
+            }).join('');
+          }
           el.innerHTML = html;
+          function openWin(title, rows){
+            var old = document.getElementById('sec-window'); if (old) old.remove();
+            var w = document.createElement('div');
+            w.id = 'sec-window';
+            w.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(12,8,5,0.72);display:flex;align-items:center;justify-content:center;padding:18px;';
+            var body = rows.map(function(r){
+              if (!r[1]) return '';
+              return '<div style="margin:10px 0;"><div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b98a4e;">' + r[0] + '</div>'
+                + '<div style="font-size:14px;color:#3d2f22;line-height:1.6;margin-top:2px;">' + esc3(r[1]) + '</div></div>';
+            }).join('');
+            w.innerHTML = '<div style="background:#faf5ec;border-radius:16px;max-width:560px;width:100%;max-height:82vh;overflow-y:auto;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.5);">'
+              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+              + '<b style="color:#8a5a28;font-size:16px;">' + esc3(title) + '</b>'
+              + '<button id="sec-window-close" style="background:none;border:1px solid #d9c4a6;border-radius:999px;padding:5px 14px;color:#8a5a28;cursor:pointer;font-size:13px;">Close</button></div>'
+              + body + '</div>';
+            w.addEventListener('click', function(ev){ if (ev.target === w) w.remove(); });
+            document.body.appendChild(w);
+            var xb = document.getElementById('sec-window-close');
+            if (xb) xb.addEventListener('click', function(){ w.remove(); });
+          }
+          function eventWin(i){
+            var e = (window._secEvents||[])[i]; if (!e) return;
+            var kb = (e.kb && window._secKB[e.kb]) ? window._secKB[e.kb] : {};
+            openWin(kb.name || e.reason, [
+              ['When', e.ts + ' (UTC)'],
+              ['What happened', (kb.what || e.reason)],
+              ['Where', e.method + ' ' + e.path + '  \u2014  from ' + e.ip + (e.ua ? ('  \u2014  client: ' + e.ua) : '')],
+              ['What the attacker wanted', kb.attacker_goal],
+              ['Why this defense exists', kb.why_up],
+              ['The harm prevented', kb.harm_prevented],
+              ['How InnerLight responded', kb.our_response],
+              ['The hard line', 'Lawful active defense only: deter, deceive, withstand, deliver-to-justice. InnerLight never hacks back \u2014 and no person in crisis is ever delayed by any of this: the conversation and crisis paths never run these gates.'],
+            ]);
+          }
+          function kbWin(k){
+            var kb = window._secKB[k]; if (!kb) return;
+            openWin(kb.name, [
+              ['What it is', kb.what],
+              ['What attackers want', kb.attacker_goal],
+              ['Why we run it', kb.why_up],
+              ['The harm it prevents', kb.harm_prevented],
+              ['What happens on a hit', kb.our_response],
+              ['The hard line', 'Lawful active defense only. Never hack back; never touch an attacker\u2019s system; crisis paths never run these gates.'],
+            ]);
+          }
+          el.querySelectorAll('.sec-ev').forEach(function(c){
+            var go = function(){ eventWin(parseInt(c.getAttribute('data-i'),10)); };
+            c.addEventListener('click', go);
+            c.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+          });
+          el.querySelectorAll('.sec-kb').forEach(function(c){
+            var go = function(){ kbWin(c.getAttribute('data-k')); };
+            c.addEventListener('click', go);
+            c.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+          });
         }catch(e){}
       }
       load(); setInterval(load, 30000);
