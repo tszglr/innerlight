@@ -5920,6 +5920,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
+try { console.log('[InnerLight build] ' + '2026-08-24.1 realtime-presence'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -14815,6 +14816,27 @@ def api_dest(name):
     if not url:
         return jsonify({"error": "unknown"}), 404
     return jsonify({"url": url})
+
+APP_BUILD = "2026-08-24.1 realtime-presence"
+
+@app.after_request
+def _no_stale_clients(resp):
+    """A crisis tool must never serve yesterday's code. Browsers aggressively
+    cache HTML on phones, which paired an old client with a new server and
+    produced ghost bugs the founder could see and we could not. HTML is now
+    never cached; images and audio keep caching normally."""
+    try:
+        if resp.mimetype == "text/html":
+            resp.headers["Cache-Control"] = "no-store, max-age=0"
+            resp.headers["Pragma"] = "no-cache"
+            resp.headers["Expires"] = "0"
+    except Exception:
+        pass
+    return resp
+
+@app.route("/api/version")
+def api_version():
+    return jsonify({"build": APP_BUILD, "server_time": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())})
 
 @app.route("/api/exigent/status")
 def api_exigent_status():
