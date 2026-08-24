@@ -4913,9 +4913,11 @@ function adaptiveTick() {
       .then(d => {
         const tracks = d.tracks || [];
         if (tracks.length) {
-          ambientTracks = tracks; ambientIndex = 0;
+          ambientTracks = tracks.slice(1); ambientIndex = 0;
+          window._lastTrackFile = (tracks[0].url || '').split('/').pop();
           switchAmbient(tracks[0].url, tracks[0].name);
           metric('lane_switch', want + ':' + JSON.stringify(window._fusionParts||{}));
+          armIsoEase(want);
           // The view answers too: agitated -> stillness (moons); low -> warmth (sun).
           if (!sceneUserChose){
             const sceneFor = { deepcalm: ['moon','moonleaf','pinestars','moonhaze','horizon','g_moonleaf_night','g_daymoon_night','g_moonleaf_dream','g_wave_dream', 'rosemarymist', 'lavender'],
@@ -5266,7 +5268,14 @@ function crossfade(fadeOut, fadeIn, duration) {
         // person in sound — give the outgoing deck back instead of silence.
         activeDeck = (fadeOut === deckA) ? 'A' : 'B';
         fadeOut.volume = Math.min(1, ceilEnd);
-        if (fadeOut.paused || fadeOut.ended) fadeOut.play().catch(()=>{});
+        if (fadeOut.ended) {
+          // The old song is OVER and the new one could not start. Replaying a
+          // finished track is the same-song-forever bug the founder caught:
+          // advance instead, gently, until sound returns.
+          setTimeout(function(){ if (!crossfading) playNextTrackBlended(); }, 1500);
+        } else if (fadeOut.paused) {
+          fadeOut.play().catch(()=>{});
+        }
         // Tell the truth in the little label: this is the song still playing.
         const nowEl = document.getElementById('music-now');
         if (nowEl) {
@@ -5288,7 +5297,7 @@ async function playNextTrackBlended() {
   if (crossfading) return;   // one blend at a time
   crossfading = true;        // claimed now; handed to crossfade() or released below
   try {
-    if (ambientTracks.length <= 1) {
+    if (ambientTracks.length < 1) {
       // Only one track (or none) — fetch new ones based on current emotion
       const emo = currentFaceEmotion || 'calm';
       const url = '/api/zenisys/ambient?emotion=' + encodeURIComponent(emo);
@@ -5309,8 +5318,18 @@ async function playNextTrackBlended() {
       setTimeout(() => { if (!crossfading && !ambientTracks.length) playNextTrackBlended(); }, 20000);
       return;
     }
-    ambientIndex = (ambientIndex + 1) % ambientTracks.length;
-    const next = ambientTracks[ambientIndex];
+    // NO-REPEAT SHUFFLE BAG (researched): the server deals a fresh uniform
+    // shuffle of the lane; we CONSUME it track by track, so every track plays
+    // once before any can repeat, and a new shuffled bag is dealt when this
+    // one empties. Guided sequencing outperforms static ordering (Lowe-Brown
+    // et al. 2026); repetition of one track defeats the Iso approach outright.
+    window._lastTrackFile = window._lastTrackFile || '';
+    if (ambientTracks.length > 1) {
+      const _f0 = (ambientTracks[0].url || '').split('/').pop();
+      if (_f0 && _f0 === window._lastTrackFile) ambientTracks.push(ambientTracks.shift());
+    }
+    const next = ambientTracks.shift();
+    if (next) window._lastTrackFile = (next.url || '').split('/').pop();
     const inactive = getInactiveDeck();
     if (!inactive || !next) { crossfading = false; return; }
     inactive.src = next.url;
@@ -5816,8 +5835,32 @@ async function startAmbientMusic(attempt) {
   }
 }
 function changeMusic() {
-  if (!ambientTracks.length) return;
-  playNextTrackBlended();   // manages the crossfading flag itself
+  window._lastManualMusic = Date.now();   // the person's own hand outranks any schedule
+  playNextTrackBlended();   // manages the crossfading flag itself (refills if the bag is empty)
+}
+
+// ISO EASE (researched): the dose-response literature finds the strongest
+// anxiety reduction around 24 minutes, with music shifting toward calm — the
+// Iso principle's second half. After ~24 minutes in a deepcalm or lifting
+// lane, ease gently into the calm lane — unless the person touched the music
+// themselves in the last 5 minutes (their preference always outranks ours).
+let _isoEaseTimer = null;
+function armIsoEase(lane){
+  try {
+    if (_isoEaseTimer) { clearTimeout(_isoEaseTimer); _isoEaseTimer = null; }
+    if (lane === 'calm') return;
+    _isoEaseTimer = setTimeout(function(){
+      if (Date.now() - (window._lastManualMusic || 0) < 5*60*1000) return;
+      fetch('/api/zenisys/ambient?emotion=calm').then(function(r){ return r.json(); }).then(function(d){
+        var tracks = (d && d.tracks) || [];
+        if (!tracks.length) return;
+        ambientTracks = tracks.slice(1); ambientIndex = 0;
+        window._lastTrackFile = (tracks[0].url || '').split('/').pop();
+        switchAmbient(tracks[0].url, tracks[0].name);
+        try { metric('lane_switch', 'iso_ease_24min'); } catch(e){}
+      }).catch(function(){});
+    }, 24*60*1000);
+  } catch(e){}
 }
 
 // Proven car method: when someone arrives very upset, symphony plays first to
@@ -5829,8 +5872,9 @@ function scheduleSpaTransition(spaTracks, delayMs) {
   spaTransitionTimer = setTimeout(() => {
     if (!spaTracks || !spaTracks.length) return;
     // Swap the playlist over to spa and crossfade into it softly.
-    ambientTracks = spaTracks;
+    ambientTracks = spaTracks.slice(1);   // the first is consumed right now
     ambientIndex = 0;
+    window._lastTrackFile = (spaTracks[0].url || '').split('/').pop();
     const inactive = getInactiveDeck();
     if (!inactive) return;
     inactive.src = spaTracks[0].url;
