@@ -10878,10 +10878,84 @@ else:
 
 # ---- LIVE BIOMETRIC MONITOR (anonymous, ephemeral) ----
 # Holds the most recent biometric ping per active session so the founder can
-# watch calm-state in real time. In memory only, auto-expires; no identity,
-# no words. This is the live research window.
-_BIO_LIVE = {}   # sid -> {bpm, tier, base, state, face, last, history:[...]}
+# watch calm-state in real time. Auto-expires; no identity, no words.
+#
+# SHARED LIVE-STATE STORE (founder's major-flaw repair): this state used to
+# live in per-process Python dicts — invisible to any other gunicorn worker,
+# wiped on every deploy. The founder page went blank exactly while the app
+# was busiest. Live state now lives in a small SQLite store (WAL mode) in
+# the shared data directory: every worker reads and writes the same truth,
+# and when the persistent disk is added it survives deploys too.
 _BIO_LOCK = threading.Lock()
+_LIVE_DB_PATH = os.path.join(_DATA_DIR, "innerlight_live.db")
+_LIVE_DB_LOCK = threading.Lock()
+
+def _live_db():
+    conn = sqlite3.connect(_LIVE_DB_PATH, timeout=5)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=4000")
+    conn.execute("CREATE TABLE IF NOT EXISTS live_state ("
+                 "key TEXT PRIMARY KEY, val TEXT, updated REAL)")
+    return conn
+
+def _live_set(key, obj):
+    try:
+        with _LIVE_DB_LOCK:
+            conn = _live_db()
+            try:
+                conn.execute("INSERT INTO live_state(key,val,updated) VALUES(?,?,?) "
+                             "ON CONFLICT(key) DO UPDATE SET val=excluded.val, updated=excluded.updated",
+                             (key, json.dumps(obj, ensure_ascii=False), time.time()))
+                conn.commit()
+            finally:
+                conn.close()
+    except Exception as e:
+        print("[live-store] set failed:", str(e)[:100])
+
+def _live_get(key, default=None):
+    try:
+        with _LIVE_DB_LOCK:
+            conn = _live_db()
+            try:
+                row = conn.execute("SELECT val FROM live_state WHERE key=?", (key,)).fetchone()
+            finally:
+                conn.close()
+        return json.loads(row[0]) if row else default
+    except Exception:
+        return default
+
+def _live_all(prefix):
+    try:
+        with _LIVE_DB_LOCK:
+            conn = _live_db()
+            try:
+                rows = conn.execute("SELECT key, val FROM live_state WHERE key LIKE ?",
+                                    (prefix + "%",)).fetchall()
+            finally:
+                conn.close()
+        out = {}
+        for k, v in rows:
+            try:
+                out[k[len(prefix):]] = json.loads(v)
+            except Exception:
+                continue
+        return out
+    except Exception:
+        return {}
+
+def _live_cleanup(prefix, ttl):
+    try:
+        cutoff = time.time() - ttl
+        with _LIVE_DB_LOCK:
+            conn = _live_db()
+            try:
+                conn.execute("DELETE FROM live_state WHERE key LIKE ? AND updated < ?",
+                             (prefix + "%", cutoff))
+                conn.commit()
+            finally:
+                conn.close()
+    except Exception:
+        pass
 
 @app.route("/api/bio/ping", methods=["POST"])
 def bio_ping():
@@ -10901,7 +10975,7 @@ def bio_ping():
         bpm = 0
     now = time.time()
     with _BIO_LOCK:
-        rec = _BIO_LIVE.get(sid) or {"history": []}
+        rec = _live_get("bio:" + sid) or {"history": []}
         if "start" not in rec:
             rec["start"] = now   # when this session first appeared — powers ember size
         try:
@@ -10915,10 +10989,8 @@ def bio_ping():
         if bpm:
             rec["history"].append({"t": time.strftime("%H:%M:%S"), "bpm": bpm})
             rec["history"] = rec["history"][-40:]   # last ~40 readings
-        _BIO_LIVE[sid] = rec
-        # expire anything older than 90s
-        for k in [k for k,v in _BIO_LIVE.items() if now - v.get("last",0) > 90]:
-            _BIO_LIVE.pop(k, None)
+        _live_set("bio:" + sid, rec)
+        _live_cleanup("bio:", 90)
     return jsonify({"status": "ok"})
 
 @app.route("/api/admin/bio/live")
@@ -10927,8 +10999,9 @@ def admin_bio_live():
         return jsonify({"error": "auth"}), 403
     now = time.time()
     with _BIO_LOCK:
+        live = _live_all("bio:")
         active = []
-        for i, (sid, v) in enumerate(sorted(_BIO_LIVE.items(), key=lambda kv: kv[1].get("last",0), reverse=True)):
+        for i, (sid, v) in enumerate(sorted(live.items(), key=lambda kv: kv[1].get("last",0), reverse=True)):
             if now - v.get("last",0) > 90: continue
             active.append({
                 "who": "Person " + str(i+1),
@@ -10942,7 +11015,9 @@ def admin_bio_live():
                 "ago": int(now - v.get("last",0)),
                 "spark": [h["bpm"] for h in v.get("history", [])][-24:]
             })
-    return jsonify({"active": active, "count": len(active), "server_time": time.strftime("%H:%M:%S")})
+    last_write = max([v.get("last", 0) for v in live.values()], default=0)
+    return jsonify({"active": active, "count": len(active), "server_time": time.strftime("%H:%M:%S"),
+                    "store": "shared", "last_write_ago": (int(now - last_write) if last_write else None)})
 
 
 
@@ -11355,7 +11430,29 @@ def admin_security():
                 continue
     except Exception:
         events = []
-    top_paths = sorted(_SECURITY_COUNTS.get("paths", {}).items(), key=lambda x: -x[1])[:8]
+    # Counts are derived from the evidence FILE (shared across workers and
+    # honest after restarts) rather than per-process memory.
+    file_paths = {}
+    file_attacks = 0
+    file_honeypots = 0
+    try:
+        with _SECURITY_LOG_LOCK:
+            if os.path.exists(_SECURITY_LOG_FILE):
+                with open(_SECURITY_LOG_FILE, "r", encoding="utf-8") as f:
+                    all_lines = f.readlines()
+        file_attacks = len(all_lines)
+        for ln in all_lines[-2000:]:
+            try:
+                r = json.loads(ln)
+            except Exception:
+                continue
+            if str(r.get("reason", "")).startswith("honeypot"):
+                file_honeypots += 1
+            pk = r.get("path", "?")
+            file_paths[pk] = file_paths.get(pk, 0) + 1
+    except Exception:
+        pass
+    top_paths = sorted(file_paths.items(), key=lambda x: -x[1])[:8]
     with _HOSTILE_LOCK:
         now = time.time()
         locked = sum(1 for h in _HOSTILE.values() if h.get("block_until", 0) > now)
@@ -11363,8 +11460,8 @@ def admin_security():
     for e in events:
         e["kb"] = _kb_for(e.get("reason"))
     return jsonify({
-        "attacks_total": _SECURITY_COUNTS.get("attacks", 0),
-        "honeypot_hits": _SECURITY_COUNTS.get("honeypots", 0),
+        "attacks_total": file_attacks,
+        "honeypot_hits": file_honeypots,
         "hostile_ips": hostile_ips,
         "locked_out_now": locked,
         "top_paths": [{"path": p, "count": c} for p, c in top_paths],
@@ -11483,8 +11580,6 @@ app.secret_key = hashlib.sha256(
     ("innerlight-founder-session::" + os.environ.get("ADMIN_KEY", "unset")).encode()
 ).hexdigest()
 
-_LIVE_FEED = []  # rolling last-N events for real-time proof on the dashboard
-_LIVE_TOTAL = {"count": 0, "day": ""}
 
 @app.route("/api/metrics/event", methods=["POST"])
 def metrics_event():
@@ -11504,16 +11599,18 @@ def metrics_event():
     if etype not in allowed:
         return jsonify({"status": "ignored"}), 200
     day = time.strftime("%Y-%m-%d")
-    # LIVE FEED (real-time proof of tracking)
-    global _LIVE_FEED, _LIVE_TOTAL
-    if _LIVE_TOTAL.get("day") != day:
-        _LIVE_TOTAL = {"count": 0, "day": day}
-    _LIVE_TOTAL["count"] += 1
-    _LIVE_FEED.append({"t": time.strftime("%H:%M:%S"), "type": etype,
-                       "val": (str(value)[:24] if value is not None else ""),
-                       "sid": sid[:4] + "\u2026"})
-    if len(_LIVE_FEED) > 60:
-        _LIVE_FEED = _LIVE_FEED[-60:]
+    # LIVE FEED (real-time proof of tracking) — shared store, all workers
+    with _METRICS_LOCK:
+        tot = _live_get("total") or {"count": 0, "day": day}
+        if tot.get("day") != day:
+            tot = {"count": 0, "day": day}
+        tot["count"] += 1
+        _live_set("total", tot)
+        feed = _live_get("feed") or []
+        feed.append({"t": time.strftime("%H:%M:%S"), "type": etype,
+                     "val": (str(value)[:24] if value is not None else ""),
+                     "sid": sid[:4] + "\u2026"})
+        _live_set("feed", feed[-60:])
     with _METRICS_LOCK:
         m = _metrics_load()
         d = m.setdefault(day, {"sessions": 0, "messages": 0, "lane_switches": 0,
@@ -11700,13 +11797,16 @@ def admin_live():
         sessions_today = len(d.get("by_session", {}))
         blooms = d.get("blooms", 0)
         msgs = d.get("messages", 0)
+    tot = _live_get("total") or {}
+    feed = _live_get("feed") or []
     return jsonify({
-        "events_today": _LIVE_TOTAL.get("count", 0) if _LIVE_TOTAL.get("day") == day else 0,
+        "events_today": tot.get("count", 0) if tot.get("day") == day else 0,
         "sessions_today": sessions_today,
         "blooms_today": blooms,
         "messages_today": msgs,
         "server_time": time.strftime("%H:%M:%S"),
-        "feed": list(reversed(_LIVE_FEED[-18:]))
+        "store": "shared",
+        "feed": list(reversed(feed[-18:]))
     })
 
 @app.route("/admin")
