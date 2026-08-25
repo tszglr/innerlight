@@ -846,6 +846,7 @@ PUBLIC_PAGE = """
             <a href="#" onclick="setLang('am');return false;" data-langbtn="am" style="text-decoration:none;">&#4768;&#4635;&#4653;&#4763;</a>
             <span>&middot;</span>
             <a href="#" onclick="setLang('ha');return false;" data-langbtn="ha" style="text-decoration:none;">Hausa</a>
+            <a href="#" onclick="setLang('ru');return false;" data-langbtn="ru" style="text-decoration:none;">Русский</a>
           </div>
         </div>
         <div class="gate-greeting" id="gate-greeting" aria-live="polite"></div>
@@ -1256,7 +1257,44 @@ PUBLIC_PAGE = """
         "glink.contact": "Tuntuɓe mu",
         "glink.faq": "Tambayoyin da ake yawan yi",
         "glink.terms": "Sharuɗɗa"
-      }
+      },
+      ru: {
+        "gate.tagline": "Тихое, приватное место, где можно рассказать свою историю.<br>Ничто из того, чем вы делитесь, никому не показывается — всё зашифровано.",
+        "gate.begin": "Коснитесь, чтобы начать",
+        "gate.startnote": "Мягкая музыка и ваша камера спокойно включатся после касания.",
+        "gate.camera": "<b style='color:#99673e;'>О вашей камере:</b> видео анализируется <b>на вашем собственном устройстве</b> — только чтобы мягко читать выражение лица и сердечный ритм. Само видео <b>никогда не отправляется нам и нигде не сохраняется</b>. Ничто не покидает ваше устройство. Вы можете отказаться от камеры и пользоваться всем остальным.",
+        "gate.ainotice": "<b style='color:#99673e;'>Обратите внимание:</b> InnerLight — это <b>программа искусственного интеллекта</b>, компьютер, а не человек. Это не психотерапевт, не врач и не юрист, и программа может не подходить некоторым несовершеннолетним. В экстренной ситуации позвоните или напишите на <b>988</b> или позвоните <b>911</b>. <a href='/safety' style='color:#2e6e8e;'>Как мы действуем в кризис</a>",
+        "gate.adult": "Продолжая, вы подтверждаете, что вам 18 лет или больше. <a href='#' onclick='showMinorBridge();return false;' style='color:#2e6e8e;'>Младше 18? Для вас тоже есть настоящая помощь.</a>",
+        "story.title": "Расскажите мне свою историю.",
+        "story.sub": "Не торопитесь. Говорите то, что чувствуете. Я слушаю.",
+        "story.resume": "Уже были здесь? Продолжить свою историю",
+        "story.ainote": "InnerLight — это программа искусственного интеллекта, не человек, и не психотерапевт, врач или юрист.",
+        "story.safetylink": "Безопасность и кризисный протокол",
+        "story.placeholder": "Начните с чего угодно... (Enter — отправить)",
+        "story.send": "Отправить",
+        "story.speak": "&#127908; Говорить",
+        "music.now": "&#9834; звучит тихая музыка",
+        "music.change": "Сменить музыку",
+        "music.pulseon": "&#10041; Пульс спокойствия: включён",
+        "music.voiceoff": "&#128263; Голос: выключен",
+        "rail.provider": "Специалист",
+        "rail.legal": "Юридическая помощь",
+        "rail.nearby": "Помощь рядом",
+        "rail.activities": "Занятия",
+        "rail.save": "&#128278; Сохранить",
+        "rail.testmic": "Проверить микрофон",
+        "glink.about": "О нас",
+        "glink.how": "Как это работает",
+        "glink.stories": "Как проходит визит",
+        "glink.resources": "Ресурсы",
+        "glink.research": "Исследования",
+        "glink.safety": "Безопасность",
+        "glink.privacy": "Конфиденциальность",
+        "glink.updates": "Обновления",
+        "glink.contact": "Контакты",
+        "glink.faq": "Вопросы и ответы",
+        "glink.terms": "Условия"
+}
     };
     // Current UI language, and helpers that make the SPOKEN voice and the voice
     // INPUT follow it — so Spanish and Chinese are actually heard in-language,
@@ -1334,7 +1372,7 @@ PUBLIC_PAGE = """
     }
     var NATIVE_NAMES = { en:'English', es:'Espa\u00f1ol', zh:'\u4e2d\u6587', hi:'\u0939\u093f\u0928\u094d\u0926\u0940',
       pa:'\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40', bn:'\u09ac\u09be\u0982\u09b2\u09be', tl:'Tagalog', to:'lea faka-Tonga',
-      sw:'Kiswahili', am:'\u12a0\u121b\u122d\u129b', ha:'Hausa' };
+      sw:'Kiswahili', am:'\u12a0\u121b\u122d\u129b', ha:'Hausa', ru:'Русский' };
     function setLang(code){
       // Language lasts for THIS visit only (session cookie, no expiry date).
       try { sessionStorage.setItem('il_lang', code); } catch(e){}
@@ -1771,7 +1809,44 @@ PUBLIC_PAGE = """
         "@who:a consumer protection attorney": "lauyan kare mabukaci",
         "@who:a civil rights attorney": "lauyan haƙƙin jama'a",
         "@who:a qualified attorney": "lauya ƙwararre"
-      }
+      },
+      ru: {
+        "Immediate safety support": "Немедленная поддержка и безопасность",
+        "Connect to 988 Crisis Lifeline": "Связаться с кризисной линией 988",
+        "Alert a live InnerLight monitor": "Оповестить дежурного InnerLight",
+        "Chat online with 988 (no call needed)": "Чат с 988 онлайн (звонить не нужно)",
+        "Call 911 (immediate danger)": "Позвонить 911 (непосредственная опасность)",
+        "Send emergency help to my location": "Отправить экстренную помощь по моему местоположению",
+        "Want me to share what you've told me with the crisis counselor, so you don't have to start over?": "Хотите, я передам кризисному консультанту то, что вы мне рассказали, чтобы вам не начинать заново?",
+        "Talk with a licensed professional": "Поговорить с лицензированным специалистом",
+        "Start a video session with a counselor": "Начать видеосессию с консультантом",
+        "Schedule a session for later": "Записаться на сессию позже",
+        "Want me to share a short summary with the counselor so your time together starts with them already understanding you?": "Хотите, я передам консультанту краткое резюме, чтобы ваша встреча началась с того, что он уже понимает вас?",
+        "Find free/low-cost legal help near me": "Найти бесплатную или недорогую юридическую помощь рядом",
+        "Save my questions for the attorney": "Сохранить мои вопросы для юриста",
+        "Want me to prepare a summary of your situation and the questions to ask, so you're ready when you talk to an attorney?": "Хотите, я подготовлю резюме вашей ситуации и вопросы, чтобы вы были готовы к разговору с юристом?",
+        "Connect to local resources": "Связаться с местными ресурсами",
+        "find food assistance near me": "найти продовольственную помощь рядом",
+        "find emergency shelter near me": "найти экстренное убежище рядом",
+        "Want me to note what you need so the resource line can help you faster?": "Хотите, я запишу, что вам нужно, чтобы ресурсная линия помогла вам быстрее?",
+        "Share my context so I do not have to repeat myself.": "Передать мой контекст, чтобы мне не пришлось повторяться.",
+        "Connect with {who}": "Связаться с {who}",
+        "@who:a tenant rights / housing attorney": "юристом по правам арендаторов и жилью",
+        "@who:a housing and benefits advocate": "защитником по жилью и пособиям",
+        "@who:an employment attorney": "юристом по трудовым вопросам",
+        "@who:an employment discrimination attorney (EEOC matters)": "юристом по дискриминации на работе (дела EEOC)",
+        "@who:a family law attorney": "юристом по семейному праву",
+        "@who:a family law / custody attorney": "юристом по семейным делам и опеке",
+        "@who:a domestic violence advocate and protective-order attorney": "защитником по домашнему насилию и юристом по охранным ордерам",
+        "@who:a criminal defense attorney or public defender": "адвокатом по уголовной защите или государственным защитником",
+        "@who:a qualified immigration attorney (not a notario)": "квалифицированным иммиграционным юристом (не «нотарио»)",
+        "@who:an education rights attorney": "юристом по правам в образовании",
+        "@who:a patient rights / health law advocate": "защитником прав пациентов и медицинского права",
+        "@who:a disability rights attorney": "юристом по правам людей с инвалидностью",
+        "@who:a consumer protection attorney": "юристом по защите прав потребителей",
+        "@who:a civil rights attorney": "юристом по гражданским правам",
+        "@who:a qualified attorney": "квалифицированным юристом"
+}
     };
     function _ilho(s){
       var lg = (window._ilLang||'en'); if (lg === 'en' || !s) return s;
@@ -2611,7 +2686,82 @@ PUBLIC_PAGE = """
         "wh.more": "Ina nan idan kana son ƙarin magana",
         "listen.ph": "Ina saurare... (danna Enter don aikawa)",
         "take.ph": "Ɗauki lokacinka... ko taɓa Yi magana (danna Enter don aikawa)"
-      }
+      },
+      ru: {
+        "sam.q": "Как вы себя чувствуете прямо сейчас? (коснитесь одного — или просто пропустите)",
+        "sam.s1": "Очень тяжело",
+        "sam.s2": "Тревожно",
+        "sam.s3": "Посередине",
+        "sam.s4": "Нормально",
+        "sam.s5": "Спокойно",
+        "fb.ask": "Если есть минутка: это помогло? Ваш ответ анонимен и помогает нам помогать другим.",
+        "fb.yes": "Помогло",
+        "fb.some": "Отчасти",
+        "fb.no": "Не особо",
+        "fb.ph": "Хотите поделиться, как вы себя чувствуете или что помогло? (необязательно)",
+        "fb.share": "Поделиться",
+        "fb.nothanks": "Нет, спасибо",
+        "fb.thanks": "Спасибо, что поделились — это действительно помогает нам помогать другим.",
+        "fb.close": "Закрыть",
+        "mb.title": "Вы важны, и настоящая помощь для вас есть.",
+        "mb.lead": "InnerLight пока создан для взрослых — но вас не прогоняют. То, что вы чувствуете, заслуживает настоящего человека, обученного помогать людям вашего возраста, прямо сейчас:",
+        "mb.b1": "<b>• Поговорите со взрослым, которому доверяете</b> — родителем, родственником, школьным психологом, тренером или учителем. Начать фразу — самое трудное; можно даже просто показать им этот экран.",
+        "mb.b2": "<b>• Позвоните или напишите на 988</b> — бесплатно, круглосуточно, там каждый день помогают молодым людям.",
+        "mb.b3": "<b>• Отправьте HOME на номер 741741</b> — Crisis Text Line, бесплатно, круглосуточно.",
+        "mb.b4": "<b>• Teen Line: отправьте TEEN на 839863</b> — подростки помогают подросткам, по вечерам.",
+        "mb.danger": "Если вам грозит непосредственная опасность, позвоните 911.",
+        "mb.ok": "Хорошо",
+        "mb.note": "Похоже, вам может быть меньше 18 — и я хочу для вас правильной помощи: настоящего человека, обученного поддерживать людей вашего возраста. Пожалуйста, посмотрите варианты, которые я показал, и расскажите взрослому, которому доверяете, как вы себя чувствуете. Вы заслуживаете настоящей поддержки.",
+        "sub.note": "Я очень рад, что вам здесь легче, и хочу быть честным, потому что мне не всё равно: я не человек и не могу заменить настоящую человеческую близость. Что я могу — это быть с вами прямо сейчас и помочь вам дойти до людей, которые действительно смогут быть рядом: до консультанта, до близкого человека, до живого голоса. Вы заслуживаете этого больше, чем экрана. Помочь вам связаться с настоящим человеком?",
+        "gb.n1": "Вы многим поделились, и я очень этому рад. Когда будете готовы, самый полезный следующий шаг — поговорить с настоящим человеком, который сможет быть с вами и дальше. Я могу мягко вас соединить, когда захотите.",
+        "gb.n2": "Я по-прежнему здесь, и спешить некуда. Когда будете готовы, настоящий человек сможет понести это дальше вместе с вами.",
+        "gb.connect": "Соединить меня с кем-то",
+        "gb.keep": "Поговорить ещё немного",
+        "sv.min": "Пока сохранять почти нечего. Сначала расскажите немного своей истории, затем снова нажмите «Сохранить», и я дам вам личный код возврата.",
+        "sv.q": "Сохранить, где вы остановились? Вы получите личный код возврата, который будет только у вас.",
+        "sv.auto": "Хотите сохранить, где вы остановились, чтобы не начинать заново, если вернётесь?",
+        "sv.btn": "Сохранить моё место",
+        "sv.notnow": "Не сейчас",
+        "sv.saved": "Сохранено. Вот ваш код возврата — храните его в надёжном месте:",
+        "sv.code": "Только этот код может открыть вашу историю — даже мы не можем прочитать её без кода.",
+        "sv.copy": "Скопировать код",
+        "sv.done": "Готово",
+        "sv.empty": "Пока ничего не сохранено — сначала расскажите немного.",
+        "sv.err": "Сейчас не удалось сохранить. Пожалуйста, попробуйте ещё раз.",
+        "mic.rec": "Запись 3 секунды — скажите что-нибудь…",
+        "mic.ok": "Вот что услышал ваш микрофон — если вы слышите себя, он работает.",
+        "mic.na": "Микрофон сейчас недоступен — ничего страшного. Печатать так же хорошо.",
+        "mic.saved": "Сохранено — нажмите Enter, чтобы отправить, или продолжайте редактировать",
+        "mic.now": "Слушаю… говорите (коснитесь микрофона ещё раз, чтобы остановить)",
+        "mic.noauto": "Слушаю… (в этом браузере слова не появятся сами, но микрофон работает — можно и печатать)",
+        "mic.reconn": "Слушаю… (микрофон работает; переподключаю расшифровку…)",
+        "mic.paused": "Прослушивание на паузе (было тихо) — коснитесь микрофона, чтобы продолжить",
+        "mic.speak": "&#127908; Говорить",
+        "vp.auto": "Голос: автоматически (лучший доступный)",
+        "vp.human": "Человеческие голоса",
+        "vp.female": "Женские голоса",
+        "vp.male": "Мужские голоса",
+        "vp.other": "Другие голоса",
+        "vp.test": "Этим голосом я буду говорить.",
+        "scn.aria": "Фоновая сцена",
+        "s988": "Вы не одни. Если нужна немедленная поддержка, вы в любой момент можете связаться с Линией 988 — позвоните или напишите 988. Я остаюсь здесь, с вами.",
+        "empty": "Я пока ничего не расслышал — не торопитесь и поделитесь, когда будете готовы.",
+        "interrupted": "Связь на мгновение прервалась — пожалуйста, скажите это ещё раз.",
+        "lg.based": "Исходя из того, чем вы поделились, вот что стоит знать о {issue}:",
+        "lg.rights": "Ваши права",
+        "lg.ask": "Вопросы юристу",
+        "lg.free": "Где получить бесплатную юридическую помощь",
+        "lg.steps": "Шаги, которые можно сделать прямо сейчас",
+        "wh.connect": "Соединить сейчас",
+        "wh.norush": "когда будете готовы — без спешки",
+        "wh.more": "Я здесь, если захотите поговорить ещё",
+        "reply": "Ответить",
+        "listen.ph": "Я слушаю... (Enter — отправить)",
+        "take.ph": "Не торопитесь... или нажмите «Говорить» (Enter — отправить)",
+        "uh": "Помощь стоит того, чтобы к ней потянуться прямо сейчас. {988}, или {911}, если есть непосредственная опасность. Я остаюсь здесь, с вами.",
+        "uh.988": "Позвонить или написать 988",
+        "uh.911n": "911"
+}
     };
     function _ilux(k){ var lg=(window._ilLang||"en"); var d=_IL_UX[lg]||_IL_UX.en; return (d && d[k]!=null) ? d[k] : _IL_UX.en[k]; }
     window._ilux = _ilux;
@@ -2635,6 +2785,10 @@ PUBLIC_PAGE = """
         evening:   'Ka kai maraice.|Haske yana laushi.|Huta nan — ina tare da kai.',
         night:     'Kana nan, cikin natsuwa.|Dare na iya zama mai tsawo.|Kasance kusa — ina tare da kai.'
       },
+      ru: {morning: 'Вы дожили до утра.|Это потребовало сил.|Отдохните здесь минуту — я рядом.',
+       afternoon: 'Вы дошли сюда.|Это потребовало сил.|Отдохните минуту — я рядом.',
+       evening: 'Вы дошли до вечера.|Свет становится мягче.|Отдохните здесь — я рядом.',
+       night: 'Вы здесь, в тишине.|Ночь может казаться долгой.|Будьте рядом — я с вами.'},
       en: {
         morning:   'You made it to morning.|That took something.|Rest here a moment — I’m with you.',
         afternoon: 'You made it here.|That took something.|Rest a moment — I’m with you.',
@@ -4675,6 +4829,8 @@ var _IL_CT = {
       scale:['ተረጋግቻለሁ','በአብዛኛው ተረጋግቻለሁ','መካከል','በአብዛኛው ተጨንቄያለሁ','ተጨንቄያለሁ']},
   ha:{q:'Yaya kake ji a yanzu?', a:'Na natsu', b:'Na cika da damuwa', thanks:'Na gode.', skip:'Ba yanzu ba',
       scale:['Na natsu','Na natsu sosai-sosai','Tsakiya','Damuwa kaɗan-kaɗan','Na cika da damuwa']},
+      ru: {q:'Как вы себя чувствуете прямо сейчас?', a:'Спокойно', b:'Невыносимо', thanks:'Спасибо.', skip:'Не сейчас',
+      scale:['Спокойно','В основном спокойно','Посередине','Почти невыносимо','Невыносимо']},
   bn:{q:'আপনি এই মুহূর্তে কেমন বোধ করছেন?', a:'শান্ত', b:'ভীষণ চাপে', thanks:'ধন্যবাদ।', skip:'এখন নয়',
       scale:['শান্ত','মোটামুটি শান্ত','মাঝামাঝি','বেশ চাপে','ভীষণ চাপে']},
   tl:{q:'Ano ang nararamdaman mo ngayon?', a:'Panatag', b:'Lubhang nalulula', thanks:'Salamat.', skip:'Hindi muna',
@@ -4762,7 +4918,9 @@ var _IL_AN = {
   am:{hint:'ብርሃኑን ይንኩ — ምቱ ይከተልዎታል', close:'አሁን ደህና ነኝ', pill:'ከእኔ ጋር ትኩረት ያድርጉ',
       stay:'… ከእኔ ጋር ይቆዩ።', words:['እዚህ ነኝ።','ከእርስዎ ጋር።','ትንፋሽ ወደ ውስጥ…','እና ወደ ውጭ…','ደህና ነዎት።','ከእኔ ጋር ይቆዩ።']},
   ha:{hint:'taɓa hasken — kari zai bi ka', close:'Ina lafiya a yanzu', pill:'Mai da hankali tare da ni',
-      stay:'… kasance tare da ni.', words:['ina nan.','tare da kai.','shaƙa ciki…','sannan fitar…','kana cikin aminci.','kasance tare da ni.']}
+      stay:'… kasance tare da ni.', words:['ina nan.','tare da kai.','shaƙa ciki…','sannan fitar…','kana cikin aminci.','kasance tare da ni.']},
+      ru: {hint:'коснитесь света — ритм последует за вами', close:'Сейчас я в порядке', pill:'Сосредоточьтесь со мной',
+      stay:'… останьтесь со мной.', words:['я здесь.','с вами.','вдох…','и выдох…','вы в безопасности.','останьтесь со мной.']}
 };
 function _ilan(k){ var lg=(window._ilLang||'en'); return (_IL_AN[lg]||_IL_AN.en)[k]; }
 function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAnchorLast=Date.now();
@@ -8472,7 +8630,7 @@ def manifest_json():
 # "calm but alive" to match the rest of InnerLight.
 # ---------------------------------------------------------------------------
 _PAGE_I18N = {}
-_PAGE_LANGS = ("es", "zh", "hi", "pa", "bn", "tl", "to", "sw", "am", "ha")
+_PAGE_LANGS = ("es", "zh", "hi", "pa", "bn", "tl", "to", "sw", "am", "ha", "ru")
 _PAGE_CACHE_DIR = "/var/data" if os.path.isdir("/var/data") else "/tmp/il_i18n"
 
 def _load_page_i18n():
@@ -8490,6 +8648,19 @@ def _load_page_i18n():
                 _PAGE_I18N[lg].update(_json.load(f))
         except Exception:
             pass
+        # BAKED PAGES (the founder's translation law): every page x language
+        # committed to the repo loads here, ahead of everything — deploys
+        # cannot erase them and visitor #1 sees their language, not English.
+        try:
+            baked_dir = _os.path.join(base, "i18n_pages")
+            if _os.path.isdir(baked_dir):
+                for fn in _os.listdir(baked_dir):
+                    if fn.startswith(lg + "_") and fn.endswith(".json"):
+                        key = fn[len(lg) + 1:-5]
+                        with open(_os.path.join(baked_dir, fn), encoding="utf-8") as f:
+                            _PAGE_I18N[lg][key] = _json.load(f).get("html", "")
+        except Exception as e:
+            print("[InnerLight] baked i18n load issue (%s): %s" % (lg, str(e)[:80]))
         # ...then the runtime cache the server built for itself.
         try:
             with open(_os.path.join(_PAGE_CACHE_DIR, "i18n_pages_%s.json" % lg), encoding="utf-8") as f:
@@ -8506,7 +8677,7 @@ _load_page_i18n()
 # Hausa FIRST, then the remaining languages. Serialized (one page at a time)
 # to respect rate limits; every result flows through the same QE judge and
 # cache; repo-committed native-reviewed files still always win.
-_WARM_ORDER = ("sw", "am", "ha", "hi", "pa", "bn", "tl", "to")
+_WARM_ORDER = ("sw", "am", "ha", "ru", "hi", "pa", "bn", "tl", "to")
 _WARM_PAGES = ("about", "how-it-works", "stories", "resources", "research",
                "safety", "privacy", "updates", "contact", "faq", "terms")
 _WARM_PATHS = {"about": "/about", "how-it-works": "/how-it-works", "stories": "/stories",
@@ -10411,6 +10582,7 @@ _NOEN_FALLBACK = {
     "ha": "Wani abu ya katse ha\u0257in na \u0257an lokaci \u2014 don Allah sake fa\u0257a. Idan kana bu\u1e99atar wani yanzu, kira ko aika sa\u1e99o zuwa 988.",
     "tl": "Naputol sandali ang koneksyon \u2014 pakisabi muli. Kung kailangan mo ng kausap ngayon din, tumawag o mag-text sa 988.",
     "to": "Na\u02bbe motuhia si\u02bbi \u02bba e fehokotak\u00ed \u2014 k\u0101taki \u02bbo toe lea \u02bbaki ia. Kapau \u02bbok\u00fa ke fiema\u02bbu ha taha he taim\u00ed ni, telefoni pe fai ha p\u014dpoaki ki he 988.",
+    "ru": "Связь на мгновение прервалась — пожалуйста, скажите это ещё раз. Если вам нужен кто-то прямо сейчас, позвоните или напишите на 988.",
 }
 
 

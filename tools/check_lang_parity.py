@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""Language parity guard: every per-language dictionary in the app must carry
+"""Language parity guard — AND the founder's internal translation law:
+EVERY page must be properly translated in EVERY language. Not a public
+principle; a build requirement. The page-coverage check below reports every
+missing page x language; once core/i18n_pages/COMPLETE exists, any missing
+baked page FAILS the build permanently.
+
+Original guard: every per-language dictionary in the app must carry
 EVERY language, with the same key count as its reference language. A feature
 that ships a private dictionary missing any language fails the build — this
 class of gap (found by the founder, twice) is now mechanically impossible."""
 import io, re, sys
 
 SRC = "core/axiom_harmony_unified_app.py"
-LANGS = ["es", "zh", "hi", "pa", "bn", "tl", "to", "sw", "am", "ha"]
+LANGS = ["es", "zh", "hi", "pa", "bn", "tl", "to", "sw", "am", "ha", "ru"]
 DICTS = [
     ("var I18N = {", False),          # en lives as inline HTML defaults
     ("var GATE_GREETINGS = {", True),
@@ -91,5 +97,30 @@ def main():
         sys.exit(1)
     print("language parity: every dictionary carries every language (%d dicts x %d languages)" % (len(DICTS), len(LANGS)))
 
+def page_coverage():
+    import os
+    pages = ("about", "how-it-works", "stories", "resources", "research",
+             "safety", "privacy", "updates", "contact", "faq", "terms")
+    baked_dir = os.path.join(os.path.dirname(SRC), "i18n_pages")
+    strict = os.path.exists(os.path.join(baked_dir, "COMPLETE"))
+    missing = []
+    for lg in LANGS:
+        for pg in pages:
+            if not os.path.exists(os.path.join(baked_dir, "%s_%s.json" % (lg, pg))):
+                missing.append("%s/%s" % (lg, pg))
+    total = len(LANGS) * len(pages)
+    print("page translation coverage: %d/%d baked" % (total - len(missing), total))
+    if missing:
+        print("  MISSING (founder's law: every page, every language):")
+        for m in missing[:40]:
+            print("   -", m)
+        if len(missing) > 40:
+            print("   ... and %d more" % (len(missing) - 40))
+        if strict:
+            print("STRICT MODE (COMPLETE marker present): build FAILED")
+            sys.exit(1)
+        print("  (bootstrap mode: run tools/bake_page_i18n.py with the API key, then create core/i18n_pages/COMPLETE)")
+
 if __name__ == "__main__":
     main()
+    page_coverage()

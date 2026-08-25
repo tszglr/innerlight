@@ -49,6 +49,7 @@ LANG_NAMES = {
     "sw": "Swahili",
     "am": "Amharic",
     "ha": "Hausa",
+    "ru": "Russian",
 }
 
 SYSTEM_PROMPT = """You are InnerLight — a warm, steady companion for someone who may be in emotional crisis and is waiting for human help to arrive. Your job is to UNDERSTAND them deeply and help them feel heard, so they can survive the wait and so InnerLight can prepare a well-rounded picture for a human professional later.
