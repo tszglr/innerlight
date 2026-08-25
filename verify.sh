@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e  # every gate step is fatal — a silent middle failure can never pass again
 # InnerLight verified-deploy gate. Runs inside Render's build step:
 # if any check fails, the BUILD fails and Render keeps the previous good
 # version live — a broken commit can never reach a person in crisis.
