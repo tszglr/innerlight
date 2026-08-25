@@ -97,6 +97,24 @@ def main():
         sys.exit(1)
     print("language parity: every dictionary carries every language (%d dicts x %d languages)" % (len(DICTS), len(LANGS)))
 
+def info_surfaces():
+    """No half-added languages: the info-page picker and the info chrome must
+    carry EVERY language. A language reachable on the landing page but absent
+    from any other surface fails the build."""
+    src = io.open(SRC, encoding="utf-8").read()
+    fails = []
+    for lg in LANGS:
+        if ('?lang=%s"' % lg) not in src:
+            fails.append("info-page picker missing ?lang=%s" % lg)
+        if ('"%s": {"back"' % lg) not in src:
+            fails.append("_INFO_CHROME missing %s" % lg)
+    if fails:
+        print("INFO-PAGE LANGUAGE FAILURES:")
+        for f in fails:
+            print("  -", f)
+        sys.exit(1)
+    print("info-page surfaces: picker + chrome carry all %d languages" % len(LANGS))
+
 def page_coverage():
     import os
     pages = ("about", "how-it-works", "stories", "resources", "research",
@@ -123,4 +141,5 @@ def page_coverage():
 
 if __name__ == "__main__":
     main()
+    info_surfaces()
     page_coverage()

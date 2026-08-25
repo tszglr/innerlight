@@ -8790,6 +8790,7 @@ _INFO_CHROME = {
     "bn": {"back": "&larr; InnerLight-এ ফিরুন", "about": "আমাদের সম্পর্কে", "how": "এটি কীভাবে কাজ করে", "research": "গবেষণা", "safety": "নিরাপত্তা ও সংকট প্রোটোকল", "privacy": "আপনার গোপনীয়তা", "contact": "যোগাযোগ", "resources": "সত্যিকারের সাহায্য", "stories": "একটি সাক্ষাৎ কেমন হয়", "updates": "নতুন খবর", "terms": "পরিষেবার শর্তাবলী"},
     "tl": {"back": "&larr; Bumalik sa InnerLight", "about": "Tungkol sa amin", "how": "Paano ito gumagana", "research": "Pananaliksik", "safety": "Kaligtasan at protocol sa krisis", "privacy": "Ang iyong privacy", "contact": "Makipag-ugnayan", "resources": "Totoong tulong", "stories": "Paano ang isang pagbisita", "updates": "Mga update", "terms": "Mga Tuntunin ng Serbisyo"},
     "to": {"back": "&larr; Foki ki InnerLight", "about": "Ko kimautolu", "how": "Founga ʻene ngāue", "research": "Fekumi", "safety": "Malu mo e founga ʻi ha faingataʻa", "privacy": "Hoʻo fakapulipuli", "contact": "Fetuʻutaki", "resources": "Tokoni moʻoni", "stories": "Ko e anga ʻo ha ʻaʻahi", "updates": "Ngaahi fakamatala foʻou", "terms": "Ngaahi Tuʻutuʻuni ʻo e Ngāue"},
+    "ru": {"back": "&larr; Назад в InnerLight", "about": "О нас", "how": "Как это работает", "research": "Исследования", "safety": "Безопасность и кризисный протокол", "privacy": "Ваша конфиденциальность", "contact": "Контакты", "resources": "Настоящая помощь", "stories": "Как проходит визит", "updates": "Обновления", "terms": "Условия обслуживания"},
 }
 
 def _info_lang():
@@ -8878,6 +8879,7 @@ def _info_page(title, inner, page_key=None):
       <a href="?lang=sw" onclick="try{document.cookie='il_lang=sw;path=/';sessionStorage.setItem('il_lang','sw')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='sw' else '' }}">Kiswahili</a>
       <a href="?lang=am" onclick="try{document.cookie='il_lang=am;path=/';sessionStorage.setItem('il_lang','am')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='am' else '' }}">&#4768;&#4635;&#4653;&#4763;</a>
       <a href="?lang=ha" onclick="try{document.cookie='il_lang=ha;path=/';sessionStorage.setItem('il_lang','ha')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='ha' else '' }}">Hausa</a>
+      <a href="?lang=ru" onclick="try{document.cookie='il_lang=ru;path=/';sessionStorage.setItem('il_lang','ru')}catch(e){}" style="color:#33567c;text-decoration:none;{{ 'font-weight:700;' if lang=='ru' else '' }}">Русский</a>
     </div>
     <div class="orb breathe" aria-hidden="true"></div>
     <div class="brand">InnerLight</div>
