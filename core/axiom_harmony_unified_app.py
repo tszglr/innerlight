@@ -10864,6 +10864,7 @@ def api_checkin():
     # If the layered reader sees crisis, force the crisis handoff regardless of phrasing
     handoff_risk = "critical" if cr["level"] == "crisis" else risk
     handoff = classify_handoff(crisis_text, risk=handoff_risk, legal_issue=legal_code, quantum_emotion=quantum_read)
+    handoff = _route_handoff(handoff, crisis_text)
     get_resolution_tracker().start(fp)
 
     # --- DEFER heavy persistence to the background so the person gets their
@@ -11123,6 +11124,7 @@ def api_innerlight_learn():
         legal_issue=legal_code,
         quantum_emotion=quantum,
     )
+    handoff = _route_handoff(handoff, crisis_text_l)
     learned["handoff"] = handoff
     learned["register"] = cultural["register"]
     if handoff.get("type") != "none":
@@ -15258,6 +15260,48 @@ def api_dest(name):
     if not url:
         return jsonify({"error": "unknown"}), 404
     return jsonify({"url": url})
+
+import re as _re_wg
+
+_WG_FAMILY = _re_wg.compile(r"\b(my|our)\s+(daughter|son|child|kid|baby|mom|mother|dad|father|wife|husband|partner|sister|brother|grandma|grandmother|grandpa|grandfather)\b", _re_wg.I)
+_WG_EVENT = _re_wg.compile(r"\b(5150|5585|psych(iatric)?\s*hold|72[- ]hour hold|involuntary|committed|hospitalized|in the (er|icu|hospital)|arrested|in jail|overdosed|on suicide watch|sectioned|baker act)\b", _re_wg.I)
+_WG_SELF = _re_wg.compile(r"\b(kill myself|want to die|hurt myself|end my life|suicidal|i overdosed|don'?t want to (be here|live))\b", _re_wg.I)
+
+def _witness_grief(text):
+    """The crisis belongs to someone they love, and they themselves are the
+    one holding it — grieving, not in danger. Holding comes first; no cards."""
+    t = str(text or "")
+    return bool(_WG_FAMILY.search(t)) and bool(_WG_EVENT.search(t)) and not _WG_SELF.search(t)
+
+def _clinical_on_call():
+    try:
+        with _ONCALL_LOCK:
+            conn = _oncall_db()
+            try:
+                row = conn.execute(
+                    "SELECT COUNT(*) FROM provider_availability WHERE side='clinical' AND available=1"
+                ).fetchone()
+            finally:
+                conn.close()
+        return bool(row and row[0])
+    except Exception:
+        return False
+
+def _route_handoff(handoff, text):
+    """The founder's two fatal laws, enforced at the moment a card is built:
+    1) HOLD THE GRIEVING FIRST — a loved-one crisis suppresses the telehealth
+       card entirely; the AI holds, the static 988/911 rail remains.
+    2) NO DEAD DOORS — a telehealth card may exist only when a clinical
+       provider is actually on call, checked right now, server-side."""
+    try:
+        if handoff.get("type") == "telehealth":
+            if _witness_grief(text):
+                return {"type": "none", "urgency": "none", "witness_grief": True}
+            if not _clinical_on_call():
+                return {"type": "none", "urgency": "none", "no_provider": True}
+    except Exception:
+        pass
+    return handoff
 
 APP_BUILD = "2026-08-24.1 realtime-presence"
 
