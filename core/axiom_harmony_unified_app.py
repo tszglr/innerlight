@@ -694,8 +694,12 @@ PUBLIC_PAGE = """
     /* Enter sends. The Send button stays hidden unless a device has no reliable
        Enter (touch keyboards that insert newlines) or the person taps into the box
        on a coarse pointer — then it appears as a fallback. */
+    /* The Send button exists ONLY for the microphone: it appears while
+       voice capture is live or a transcript awaits review, wired to the
+       exact same submit as Enter, and hides once the message sends.
+       Typists use Enter, everywhere. */
     .story-send { display:none; }
-    @media (pointer: coarse) { .story-send { display:inline-block; } }
+    body.mic-live .story-send { display:inline-block; }
     .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
     .story-send:hover { background:#9e6a40; }
@@ -6053,6 +6057,9 @@ function creatorApplyMode(mode){
   } catch(e){}
 }
 
+function ilMicSendDone(){
+  try { document.body.classList.remove('mic-live'); } catch(e){}
+}
 function changeMusic() {
   window._lastManualMusic = Date.now();   // the person's own hand outranks any schedule
   playNextTrackBlended();   // manages the crossfading flag itself (refills if the bag is empty)
@@ -6293,6 +6300,7 @@ async function startVoiceCapture() {
     if (voiceRecognizer) { try { voiceRecognizer.stop(); } catch (e) {} }
     stopDeepgramStream();
     stopMicStream();
+    try { if (_voiceWatchdog) clearTimeout(_voiceWatchdog); } catch(e){}
     restoreMusicAfterVoice();   // 2s pause, then gentle fade back in
     const micBtn = document.querySelector('.story-mic');
     if (micBtn) micBtn.innerHTML = _ilux('mic.speak');
@@ -6318,21 +6326,16 @@ async function startVoiceCapture() {
   const micBtn = document.querySelector('.story-mic');
   if (micBtn) micBtn.innerHTML = '&#128308; Listening\u2026 (tap to stop)';
 
-  // PRIMARY transcription: Deepgram live streaming (the Zoom way) — reliable on
-  // every browser and phone. Falls back to the browser's built-in speech-to-text
-  // only if Deepgram isn't configured. The MIC itself already works regardless.
-  let usingDeepgram = false;
-  try {
-    const tk = await fetch('/api/transcribe/token').then(r => r.json());
-    if (tk && tk.ok && tk.token) {
-      usingDeepgram = true;
-      startDeepgramStream(tk.token);
-    }
-  } catch (e) { /* fall through to browser STT */ }
-
-  if (usingDeepgram) return;
-
-  // FALLBACK: browser built-in speech-to-text (optional layer).
+  // THE VOICE LADDER (researched, 2026): the browser's OWN recognizer is
+  // PRIMARY — it covers Chrome, Edge, Safari and Android (the vast majority),
+  // streams interim words with no token, no socket, and no third pipe to
+  // break; modern Chrome runs it on-device and Safari can transcribe
+  // offline. Deepgram is the second rung for the browsers without it
+  // (Firefox, Brave, some WebViews). The last rung is honesty. A liveness
+  // watchdog walks us DOWN the ladder mid-session if words stop flowing —
+  // a hot mic with dead transcription can never happen again.
+  window._voiceGotText = false;
+  document.body.classList.add('mic-live');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SR) {
     if (!voiceRecognizer) {
@@ -6346,6 +6349,7 @@ async function startVoiceCapture() {
           const chunk = event.results[i][0].transcript;
           if (event.results[i].isFinal) finalText += chunk; else interimText += chunk;
         }
+        window._voiceGotText = true;
         if (finalText) voiceFinalTranscript = (voiceFinalTranscript + ' ' + finalText).trim();
         const shown = (voiceFinalTranscript + ' ' + interimText).trim();
         const tp = $('transcript-text');
@@ -6369,9 +6373,52 @@ async function startVoiceCapture() {
       };
     }
     try { voiceRecognizer.start(); } catch (e) {}
-  } else {
-    if (lbl) lbl.textContent = _ilux('mic.noauto');
+    armVoiceWatchdog('sr');
+    return;
   }
+  // SECOND RUNG: Deepgram live streaming, only where the browser has no
+  // recognizer of its own.
+  let usingDeepgram = false;
+  try {
+    const tk = await fetch('/api/transcribe/token').then(r => r.json());
+    if (tk && tk.ok && tk.token) {
+      usingDeepgram = true;
+      startDeepgramStream(tk.token);
+      armVoiceWatchdog('dg');
+    }
+  } catch (e) {}
+  if (usingDeepgram) return;
+  // LAST RUNG: the mic itself still works (voice features flow); words will
+  // not appear on their own — say so honestly.
+  if (lbl) lbl.textContent = _ilux('mic.noauto');
+}
+
+// Liveness watchdog: 8 seconds after a tier starts, words must have flowed.
+// A silent SR falls to Deepgram; a silent Deepgram falls to the honest
+// notice. Detection, not hope.
+let _voiceWatchdog = null;
+function armVoiceWatchdog(tier){
+  try { if (_voiceWatchdog) clearTimeout(_voiceWatchdog); } catch(e){}
+  _voiceWatchdog = setTimeout(async function(){
+    if (!voiceListening || window._voiceGotText) return;
+    const lbl = $('listen-label');
+    if (tier === 'sr') {
+      try {
+        if (voiceRecognizer) { try { voiceRecognizer.stop(); } catch(e){} }
+        const tk = await fetch('/api/transcribe/token').then(r => r.json());
+        if (tk && tk.ok && tk.token && voiceListening) {
+          if (lbl) lbl.textContent = _ilux('mic.reconn');
+          startDeepgramStream(tk.token);
+          armVoiceWatchdog('dg');
+          return;
+        }
+      } catch(e){}
+      if (lbl) lbl.textContent = _ilux('mic.noauto');
+    } else {
+      try { stopDeepgramStream(); } catch(e){}
+      if (lbl) lbl.textContent = _ilux('mic.noauto');
+    }
+  }, 8000);
 }
 
 // Stream live mic audio to Deepgram and show words on screen as they're spoken.
@@ -6402,6 +6449,7 @@ function startDeepgramStream(tempToken){
       if (!alt) return;
       const text = alt.transcript || '';
       if (!text) return;
+      window._voiceGotText = true;
       const tp = document.getElementById('transcript-text');
       const box = document.getElementById('conv-answer') || $('message');
       if (data.is_final) {
@@ -7018,6 +7066,7 @@ async function sendCheckin() {
   voiceFinalTranscript = '';
   try { stopAllSpeech(); } catch(e){}   // new turn: silence any lingering lines
   logTurn('user', msgVal);
+  ilMicSendDone();
   // INSTANT ACKNOWLEDGEMENT: the person must never wonder whether their words
   // went through. Their message appears in the thread and a soft listening
   // pulse shows the moment they press Enter — before the model is even asked.
@@ -7369,6 +7418,7 @@ async function continueConversation() {
   const answerBox = document.getElementById('conv-answer');
   if (!answerBox || !answerBox.value.trim()) return;
   const userAnswer = answerBox.value.trim();
+  ilMicSendDone();
   // They chose to send. Clear the mic's running buffer so the NEXT thing they
   // say starts fresh (mic can stay on). Their sent words are safe below.
   voiceFinalTranscript = '';
