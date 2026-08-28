@@ -12185,6 +12185,163 @@ def admin_live():
         "feed": list(reversed(feed[-18:]))
     })
 
+ZENISYS_LAB_ROOM = r"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zenisys Lab &mdash; the night studio</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial, sans-serif; background:#070a14; color:#dfe6ff; min-height:100vh; overflow-x:hidden; }
+  .aurora { position:fixed; inset:-20vh -20vw; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(60vw 40vh at 20% 20%, rgba(109,93,240,.22), transparent 60%),
+      radial-gradient(50vw 36vh at 80% 30%, rgba(47,196,201,.16), transparent 60%),
+      radial-gradient(70vw 50vh at 50% 90%, rgba(196,77,255,.12), transparent 65%);
+    animation: drift 26s ease-in-out infinite alternate; filter: blur(2px); }
+  @keyframes drift { 0% { transform: translate3d(-2%, -1%, 0) scale(1); } 100% { transform: translate3d(2%, 2%, 0) scale(1.06); } }
+  .wrap { position:relative; z-index:1; max-width:880px; margin:0 auto; padding:34px 18px 80px; }
+  h1 { font-size:26px; margin:0 0 4px; letter-spacing:.06em;
+       background:linear-gradient(90deg,#9f8cff,#2fc4c9,#c44dff); -webkit-background-clip:text; background-clip:text; color:transparent;
+       animation: glowshift 9s ease-in-out infinite alternate; }
+  @keyframes glowshift { from { filter: drop-shadow(0 0 10px rgba(109,93,240,.45)); } to { filter: drop-shadow(0 0 18px rgba(47,196,201,.5)); } }
+  .sub { color:#8a97cf; font-size:13px; margin-bottom:26px; }
+  .back { color:#8a97cf; text-decoration:none; font-size:13px; }
+  .room { background:rgba(13,18,38,.72); border:1px solid #232f5e; border-radius:18px; padding:20px; margin:18px 0;
+          box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 0 60px rgba(109,93,240,.05); backdrop-filter: blur(6px); }
+  h2 { font-size:14px; letter-spacing:.18em; text-transform:uppercase; color:#7f8fd8; margin:0 0 14px; }
+  .states { display:flex; flex-wrap:wrap; gap:8px; }
+  .state { background:rgba(109,93,240,.10); border:1px solid #35418a; color:#cfd6ff; border-radius:999px; padding:9px 18px;
+           cursor:pointer; font-size:13.5px; transition: all .25s; }
+  .state:hover, .state.on { background:linear-gradient(90deg,rgba(109,93,240,.35),rgba(47,196,201,.3)); border-color:#6d5df0;
+           box-shadow:0 0 18px rgba(109,93,240,.35); transform: translateY(-1px); }
+  pre { background:#0a0f22; border:1px solid #1e2a55; border-radius:12px; padding:14px; font-size:12px; color:#9fe8e8;
+        max-height:240px; overflow:auto; text-shadow:0 0 6px rgba(47,196,201,.35); }
+  .knobs { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; font-size:12.5px; color:#aab6e8; }
+  input[type=range] { width:100%; accent-color:#6d5df0; }
+  .row { display:flex; align-items:center; gap:12px; margin-top:16px; flex-wrap:wrap; }
+  .go { background:linear-gradient(90deg,#6d5df0,#2fc4c9); border:0; color:#fff; border-radius:12px; padding:11px 26px;
+        font-weight:800; cursor:pointer; box-shadow:0 6px 22px rgba(109,93,240,.4); }
+  .stop { background:transparent; border:1px solid #35418a; color:#aab6e8; border-radius:12px; padding:11px 22px; cursor:pointer; }
+  .pulse { width:14px; height:14px; border-radius:50%; background:#2fc4c9; opacity:.25; }
+  .pulse.live { animation: breathe 4s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { opacity:.25; transform:scale(.85); box-shadow:0 0 0 rgba(47,196,201,0);} 50% { opacity:1; transform:scale(1.25); box-shadow:0 0 22px rgba(47,196,201,.8);} }
+  .dna-head, .dna-row { display:grid; grid-template-columns:1.5fr repeat(5,1fr); gap:8px; padding:8px 12px; font-size:12px; }
+  .dna-head { color:#7f8fd8; letter-spacing:.1em; text-transform:uppercase; font-size:10.5px; }
+  .dna-row { border-top:1px solid #1a2450; color:#c6cff5; }
+  .dna-row b { color:#dfe6ff; } .calm { color:#2fc4c9; font-weight:800; text-shadow:0 0 8px rgba(47,196,201,.5); }
+  .doors a { display:inline-block; margin:6px 10px 0 0; color:#9f8cff; text-decoration:none; border:1px solid #35418a;
+             border-radius:10px; padding:9px 18px; font-size:13px; }
+  .doors a:hover { border-color:#6d5df0; box-shadow:0 0 14px rgba(109,93,240,.35); }
+</style></head><body>
+<div class="aurora"></div>
+<div class="wrap">
+  <a class="back" href="/admin#zenisyslab">&larr; back to The Watch</a>
+  <h1>ZENISYS LAB</h1>
+  <div class="sub">The night studio. Zenisys composes the state; you shape the sound.</div>
+
+  <div class="room"><h2>The states &mdash; what the Creator composes</h2>
+    <div class="states" id="states"></div>
+    <pre id="plan">touch a state to see its soundscape plan</pre>
+  </div>
+
+  <div class="room"><h2>The console &mdash; live sound in this room</h2>
+    <div class="knobs">
+      <label>Brightness <input id="k-bright" type="range" min="600" max="3800" value="1200"></label>
+      <label>Volume <input id="k-vol" type="range" min="0" max="100" value="18"></label>
+      <label>Warmth <input id="k-warm" type="range" min="0" max="18" value="6"></label>
+      <label>Breath / min <input id="k-breath" type="range" min="4" max="12" value="6"></label>
+    </div>
+    <div class="row">
+      <button class="go" id="go">Start sound</button>
+      <button class="stop" id="stop">Stop</button>
+      <div class="pulse" id="pulse"></div>
+      <span id="stat" style="color:#8a97cf;font-size:12.5px;">quiet</span>
+    </div>
+  </div>
+
+  <div class="room"><h2>The calm DNA &mdash; every track&rsquo;s fingerprint</h2>
+    <div class="dna-head"><span>track</span><span>tempo</span><span>key</span><span>energy</span><span>bright</span><span>calm</span></div>
+    <div id="dna"></div>
+  </div>
+
+  <div class="room doors"><h2>Doorways</h2>
+    <a href="/zenisys/lab" target="_blank" rel="noopener">The Lab instrument (touch &amp; voice)</a>
+    <a href="/zenisys" target="_blank" rel="noopener">Standalone Zenisys</a>
+  </div>
+</div>
+<script>
+(function(){
+  var EMOS=['calm','anxious','panic','angry','sad','grief','numb','hopeful','greeting'];
+  var st=document.getElementById('states');
+  EMOS.forEach(function(e){
+    var b=document.createElement('button'); b.className='state'; b.textContent=e;
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.state').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      fetch('/api/zenisys/plan?emotion='+encodeURIComponent(e)+'&binaural=1').then(function(r){return r.json();}).then(function(p){
+        document.getElementById('plan').textContent=JSON.stringify(p,null,2);
+        try {
+          if (p.brightness!=null) document.getElementById('k-bright').value=Math.round(600+p.brightness*3200);
+          if (p.volume!=null) document.getElementById('k-vol').value=Math.round(Math.min(1,p.volume)*100);
+        } catch(err){}
+        apply();
+      }).catch(function(){});
+    });
+    st.appendChild(b);
+  });
+  var ctx=null,o1=null,o2=null,filt=null,gain=null,lfo=null,lfoG=null;
+  function apply(){
+    if(!ctx) return;
+    var br=+document.getElementById('k-bright').value, vol=+document.getElementById('k-vol').value/100;
+    var warm=+document.getElementById('k-warm').value, bpm=+document.getElementById('k-breath').value;
+    filt.frequency.setTargetAtTime(br, ctx.currentTime, .4);
+    gain.gain.setTargetAtTime(vol, ctx.currentTime, .4);
+    o2.detune.setTargetAtTime(warm, ctx.currentTime, .4);
+    lfo.frequency.setTargetAtTime(bpm/60, ctx.currentTime, .4);
+    lfoG.gain.setTargetAtTime(vol*.35, ctx.currentTime, .4);
+    document.getElementById('stat').textContent='playing \u2014 '+Math.round(br)+' Hz, breath '+bpm+'/min';
+    document.getElementById('pulse').style.animationDuration=(60/bpm)+'s';
+  }
+  document.getElementById('go').addEventListener('click', function(){
+    if(ctx){ apply(); return; }
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    o1=ctx.createOscillator(); o2=ctx.createOscillator();
+    o1.type='sine'; o2.type='sine'; o1.frequency.value=216; o2.frequency.value=216;
+    filt=ctx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=.7;
+    gain=ctx.createGain(); gain.gain.value=0;
+    lfo=ctx.createOscillator(); lfoG=ctx.createGain(); lfo.frequency.value=.1; lfoG.gain.value=.05;
+    lfo.connect(lfoG); lfoG.connect(gain.gain);
+    o1.connect(filt); o2.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+    o1.start(); o2.start(); lfo.start();
+    document.getElementById('pulse').classList.add('live');
+    apply();
+  });
+  ['k-bright','k-vol','k-warm','k-breath'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', apply);
+  });
+  document.getElementById('stop').addEventListener('click', function(){
+    if(!ctx) return;
+    try{ gain.gain.setTargetAtTime(0, ctx.currentTime, .3); }catch(e){}
+    setTimeout(function(){ try{ctx.close();}catch(e){} ctx=null;
+      document.getElementById('pulse').classList.remove('live');
+      document.getElementById('stat').textContent='quiet'; }, 900);
+  });
+  fetch('/api/admin/zenisys/dna').then(function(r){return r.json();}).then(function(d){
+    var dna=d.dna||{}; var el=document.getElementById('dna');
+    el.innerHTML=Object.keys(dna).sort().map(function(f){ var t=dna[f];
+      return '<div class="dna-row"><b>'+f+'</b><span>'+t.bpm+'</span><span>'+t.key+'</span><span>'+t.energy+'</span><span>'+t.brightness+'</span><span class="calm">'+t.calm_score+'</span></div>';
+    }).join('');
+  }).catch(function(){});
+})();
+</script>
+</body></html>"""
+
+@app.route("/watch/lab")
+def watch_lab_room():
+    """The founder's night studio — its own room, its own world."""
+    if not session.get("founder_ok"):
+        return redirect("/admin")
+    return ZENISYS_LAB_ROOM
+
 @app.route("/admin")
 def admin_dashboard():
     """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
@@ -12567,110 +12724,11 @@ def admin_dashboard():
 
     <div class="hero">{{ kpi_cards|safe }}</div>
 
-    <h2 class="ledger" id="zenisyslab">Zenisys Lab &mdash; the sound studio</h2>
-    <div class="card" id="zlab-card">
-      <p style="margin-top:0;font-size:13.5px;color:#665;">The full instrument, in one room: the Creator&rsquo;s plans, a live tweak console, the Calm DNA of every track, and the standalone Lab itself. Zenisys composes the state; you shape the sound.</p>
-      <div style="margin:6px 0 12px;">
-        <a href="/zenisys/lab" target="_blank" rel="noopener" style="display:inline-block;background:#b8783a;color:#fff;border-radius:9px;padding:9px 18px;font-weight:700;text-decoration:none;margin-right:8px;">Open the Lab (full screen)</a>
-        <a href="/zenisys" target="_blank" rel="noopener" style="display:inline-block;background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:9px;padding:9px 18px;font-weight:700;text-decoration:none;">Standalone Zenisys</a>
-      </div>
-      <h3 style="margin:14px 0 6px;font-size:14px;color:#5a3d22;">The Creator&rsquo;s plans &mdash; what Zenisys composes for each state</h3>
-      <div id="zlab-emos" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
-      <pre id="zlab-plan" style="background:#faf5ec;border:1px solid #e7dccc;border-radius:10px;padding:10px;font-size:12px;max-height:220px;overflow:auto;">pick a state above</pre>
-      <h3 style="margin:14px 0 6px;font-size:14px;color:#5a3d22;">Live console &mdash; audition and tweak the plan in this room</h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;font-size:12.5px;color:#5a3d22;">
-        <label>Brightness <input id="zl-bright" type="range" min="600" max="3800" value="1200" style="width:100%;"></label>
-        <label>Volume <input id="zl-vol" type="range" min="0" max="100" value="18" style="width:100%;"></label>
-        <label>Warmth (detune) <input id="zl-warm" type="range" min="0" max="18" value="6" style="width:100%;"></label>
-        <label>Breath (pulse/min) <input id="zl-breath" type="range" min="4" max="12" value="6" style="width:100%;"></label>
-      </div>
-      <div style="margin-top:8px;">
-        <button id="zl-start" style="background:#1c7a3d;color:#fff;border:0;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Start sound</button>
-        <button id="zl-stop" style="background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;margin-left:8px;">Stop</button>
-        <span id="zl-status" style="margin-left:10px;font-size:12.5px;color:#8a6a4c;">quiet</span>
-      </div>
-      <h3 style="margin:16px 0 6px;font-size:14px;color:#5a3d22;">Calm DNA &mdash; the learned fingerprint of every track</h3>
-      <div id="zlab-dna" style="font-size:12px;max-height:260px;overflow:auto;border:1px solid #e7dccc;border-radius:10px;"></div>
-      <h3 style="margin:16px 0 6px;font-size:14px;color:#5a3d22;">The Lab, embedded</h3>
-      <iframe src="/zenisys/lab" title="Zenisys Lab" style="width:100%;height:430px;border:1px solid #e7dccc;border-radius:12px;background:#111;"></iframe>
+    <h2 class="ledger" id="zenisyslab">Zenisys Lab</h2>
+    <div class="card" style="background:linear-gradient(135deg,#0b0e1a,#141b33 60%,#1a1040);border:1px solid #2a3564;">
+      <p style="margin-top:0;color:#aab6e8;font-size:13.5px;">The sound studio is its own room now &mdash; a night studio with the Creator&rsquo;s plans, a live console, and the Calm DNA of every track.</p>
+      <a href="/watch/lab" style="display:inline-block;background:linear-gradient(90deg,#6d5df0,#2fc4c9);color:#fff;border-radius:12px;padding:12px 26px;font-weight:800;text-decoration:none;letter-spacing:.02em;box-shadow:0 6px 24px rgba(109,93,240,.35);">Enter the Lab &rarr;</a>
     </div>
-    <script>
-      (function(){
-        var EMOS = ['calm','anxious','panic','angry','sad','grief','numb','hopeful','greeting'];
-        var emosEl = document.getElementById('zlab-emos');
-        EMOS.forEach(function(e){
-          var b = document.createElement('button');
-          b.textContent = e;
-          b.style.cssText = 'background:#fff;border:1px solid #d9a86f;color:#7a5230;border-radius:999px;padding:6px 14px;cursor:pointer;font-size:12.5px;';
-          b.addEventListener('click', function(){ loadPlan(e); });
-          emosEl.appendChild(b);
-        });
-        function loadPlan(emo){
-          fetch('/api/zenisys/plan?emotion=' + encodeURIComponent(emo) + '&binaural=1')
-            .then(function(r){ return r.json(); })
-            .then(function(p){
-              document.getElementById('zlab-plan').textContent = JSON.stringify(p, null, 2);
-              try {
-                if (p.brightness != null) document.getElementById('zl-bright').value = Math.round(600 + p.brightness*3200);
-                if (p.volume != null) document.getElementById('zl-vol').value = Math.round(Math.min(1,p.volume)*100);
-              } catch(e){}
-              applyKnobs();
-            }).catch(function(){});
-        }
-        // Compact WebAudio creator: two warm detuned sines -> lowpass -> gain,
-        // with a slow breathing LFO on the gain. Real sound, in this room.
-        var ctx=null, o1=null, o2=null, filt=null, gain=null, lfo=null, lfoGain=null;
-        function applyKnobs(){
-          if (!ctx) return;
-          var br = parseFloat(document.getElementById('zl-bright').value);
-          var vol = parseFloat(document.getElementById('zl-vol').value)/100;
-          var warm = parseFloat(document.getElementById('zl-warm').value);
-          var bpm = parseFloat(document.getElementById('zl-breath').value);
-          filt.frequency.setTargetAtTime(br, ctx.currentTime, 0.4);
-          gain.gain.setTargetAtTime(vol, ctx.currentTime, 0.4);
-          o2.detune.setTargetAtTime(warm, ctx.currentTime, 0.4);
-          lfo.frequency.setTargetAtTime(bpm/60, ctx.currentTime, 0.4);
-          lfoGain.gain.setTargetAtTime(vol*0.35, ctx.currentTime, 0.4);
-          document.getElementById('zl-status').textContent = 'playing &mdash; ' + Math.round(br) + ' Hz bright, breath ' + bpm + '/min';
-          document.getElementById('zl-status').innerHTML = document.getElementById('zl-status').textContent;
-        }
-        document.getElementById('zl-start').addEventListener('click', function(){
-          if (ctx) { applyKnobs(); return; }
-          ctx = new (window.AudioContext || window.webkitAudioContext)();
-          o1 = ctx.createOscillator(); o2 = ctx.createOscillator();
-          o1.type='sine'; o2.type='sine'; o1.frequency.value=216; o2.frequency.value=216;
-          filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=0.7;
-          gain = ctx.createGain(); gain.gain.value=0.0;
-          lfo = ctx.createOscillator(); lfoGain = ctx.createGain();
-          lfo.frequency.value=0.1; lfoGain.gain.value=0.05;
-          lfo.connect(lfoGain); lfoGain.connect(gain.gain);
-          o1.connect(filt); o2.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
-          o1.start(); o2.start(); lfo.start();
-          applyKnobs();
-        });
-        ['zl-bright','zl-vol','zl-warm','zl-breath'].forEach(function(id){
-          document.getElementById(id).addEventListener('input', applyKnobs);
-        });
-        document.getElementById('zl-stop').addEventListener('click', function(){
-          if (!ctx) return;
-          try { gain.gain.setTargetAtTime(0, ctx.currentTime, 0.3); } catch(e){}
-          setTimeout(function(){ try { ctx.close(); } catch(e){} ctx=null; }, 900);
-          document.getElementById('zl-status').textContent = 'quiet';
-        });
-        fetch('/api/admin/zenisys/dna').then(function(r){ return r.json(); }).then(function(d){
-          var dna = d.dna || {};
-          var rows = Object.keys(dna).sort().map(function(f){
-            var t = dna[f];
-            return '<div style="display:grid;grid-template-columns:1.4fr repeat(5,1fr);gap:6px;padding:6px 10px;border-bottom:1px solid #f0e6d6;">'
-              + '<b>' + f + '</b><span>' + t.bpm + ' bpm</span><span>key ' + t.key + '</span>'
-              + '<span>energy ' + t.energy + '</span><span>bright ' + t.brightness + '</span>'
-              + '<span style="color:#1c7a3d;font-weight:700;">calm ' + t.calm_score + '</span></div>';
-          }).join('');
-          document.getElementById('zlab-dna').innerHTML =
-            '<div style="display:grid;grid-template-columns:1.4fr repeat(5,1fr);gap:6px;padding:6px 10px;background:#faf5ec;font-weight:700;color:#8a5a28;"><span>track</span><span>tempo</span><span>key</span><span>energy</span><span>brightness</span><span>calm score</span></div>' + rows;
-        }).catch(function(){});
-      })();
-    </script>
 
     <h2 class="ledger" id="exigent">Exigent circumstances &mdash; emergency dispatch readiness</h2>
     <div class="card" id="exigent-card">
