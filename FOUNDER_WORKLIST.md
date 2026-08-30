@@ -51,6 +51,12 @@ Ordered by his priority. Updated every session. (Aug 24, 2026)
     consistent sound with bloom/calm moments so the sound itself becomes a
     learned calming cue across sessions; measure in study metrics.
 
+## WHOLE-PERSON LENS (Rankin-inspired, Goldacre-filtered)
+16. v1 SHIPPED: Cairn Lens + loneliness-as-vital-sign + write-your-own-
+    prescription in the AI core; research §18. NEXT: measure prescription
+    follow-through in study metrics; Inner-Pilot-Light-style daily gentle
+    message (opt-in) as a future feature.
+
 ## PROCESS / DESIGN
 12. Figma-style tools rejected ("very difficult to use") — design happens
     directly in the product, in code, with the founder.
