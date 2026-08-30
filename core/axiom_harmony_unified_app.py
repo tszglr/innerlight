@@ -3286,6 +3286,7 @@ function openActivities(){
     ['wall','Push the wall','Let the body spend the charge'],
     ['categories','Categories game','Give a looping mind a job'],
     ['sevens','Count down by 7s','Busy math for a spinning mind'],
+    ['ritual','The Calm Ritual','A ritual that works because you do it on purpose'],
   ];
   const menu = actOverlay.querySelector('#act-menu');
   menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.75);border:1px solid #ecc9a0;border-radius:14px;padding:13px;cursor:pointer;color:#4a362c;box-shadow:0 2px 10px rgba(180,120,60,0.10);">
@@ -3530,6 +3531,41 @@ function startAct(name){
     inp.onkeydown=(e)=>{ if(e.key!=='Enter') return; const v=parseInt(inp.value,10); if(isNaN(v)) return;
       if(v===cur-7){ cur=v; right++; num.textContent=cur; h.textContent='yes.'; inp.value=''; if(right%3===0) bloom(); if(cur<7){ h.textContent='all the way down. well done.'; actTimers.push(setTimeout(()=>startAct('menuDone'),2000)); } }
       else { h.textContent='close \u2014 try '+(cur)+' minus 7'; inp.value=''; } };
+  }
+  if (name==='ritual'){
+    // THE CALM RITUAL — an honest, open-label ritual. The rationale is ON the
+    // card, because the research shows knowing how it works does not weaken
+    // it (Guevarra 2020, Nat Commun; 2024 remote RCT): rituals done on
+    // purpose measurably lower distress.
+    let round=0; const total=3;
+    st.innerHTML=`<div style="text-align:center;padding:14px;max-width:430px;margin:0 auto;">
+      <div style="font-size:13px;color:#7a5a3c;line-height:1.6;background:#fff7ea;border:1px solid #ecc9a0;border-radius:12px;padding:10px 14px;margin-bottom:14px;">There is nothing magic in this &mdash; and that is the point. Studies show that doing a small ritual <b>on purpose</b> measurably lowers distress, even when you know that is how it works. Your own intention is the active ingredient.</div>
+      <div id="rt-step" style="font-size:20px;color:#5a3d22;font-weight:700;min-height:56px;">Place a hand over your heart.</div>
+      <div id="rt-sub" style="font-size:14px;color:#7a5a3c;margin:8px 0 14px;min-height:40px;">Feel the warmth of your own hand. That warmth is yours.</div>
+      <div style="position:relative;width:120px;height:120px;margin:4px auto 12px;">
+        <div id="rt-glow" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#ffd7a3,#e89a3c);opacity:.55;transition:all 3s ease-in-out;"></div></div>
+      <button id="rt-next" style="background:#b8783a;color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;">I'm ready</button>
+      <div id="rt-round" style="font-size:12.5px;color:#a0805e;margin-top:8px;">round 1 of ${total}</div></div>`;
+    const stepEl=st.querySelector('#rt-step'), subEl=st.querySelector('#rt-sub'),
+          glow=st.querySelector('#rt-glow'), btn=st.querySelector('#rt-next'), rd=st.querySelector('#rt-round');
+    const seq=[
+      ['Place a hand over your heart.','Feel the warmth of your own hand. That warmth is yours.'],
+      ['Breathe in slowly through your nose.','Let the light grow as your chest rises.'],
+      ['Say, out loud or inside: \u201cI am doing this for myself.\u201d','Mean it. Intention is the ingredient.'],
+      ['Long, slow breath out.','Let the light soften with you.']];
+    let si=0;
+    btn.addEventListener('click', function(){
+      si++;
+      if(si>=seq.length){ round++; bloom();
+        if(round>=total){ stepEl.textContent='You did this on purpose. It counts.'; subEl.textContent='Carry the warmth of your hand with you.'; btn.style.display='none';
+          actTimers.push(setTimeout(()=>startAct('menuDone'),2600)); return; }
+        si=0; rd.textContent='round '+(round+1)+' of '+total;
+      }
+      stepEl.textContent=seq[si][0]; subEl.textContent=seq[si][1];
+      glow.style.transform = si===1 ? 'scale(1.28)' : (si===3 ? 'scale(.78)' : 'scale(1)');
+      glow.style.opacity = si===1 ? '0.95' : '0.55';
+      btn.textContent = si===seq.length-1 ? (round===total-1?'Finish':'Next round') : 'Next';
+    });
   }
   if (name==='words'){
     // WORD SEARCH — hidden calm words in a letter grid. More complex and more
@@ -9421,6 +9457,14 @@ def page_research():
     <h2>16. No dead doors &mdash; resilient handoff destinations</h2>
     <p>A crisis handoff that lands on an outage is a dead end by another name. Every critical external destination in InnerLight (legal aid, treatment finders, domestic-violence help, 211, 988 chat) is held as an ordered chain of verified alternatives; before a person is sent, the server checks that the door actually opens and routes to the first live one, logging any failover. If every door in a chain is closed the person still receives the primary target rather than nothing. Destinations that require choosing or installing an app are avoided by design: 211 opens as a website and 988 is reachable by chat as well as by phone.</p>
 
+    <h2>17. Honest expectancy &mdash; placebo science without deception</h2>
+    <p>The wait between reaching out and reaching a human is InnerLight&rsquo;s whole reason to exist &mdash; and placebo research offers real, honest leverage inside it. Modern trials show that placebos <em>administered openly, with full disclosure</em>, reduce emotional distress on both self-report and neural measures; that they work when delivered remotely online; and that they demand almost no cognitive effort &mdash; exactly what a person in distress has to spare. The mechanisms are expectation, deliberate ritual, and conditioning &mdash; and clinician <em>words</em> shape the effect in both directions, which is why InnerLight&rsquo;s language is audited against nocebo phrasing (no &ldquo;this may not work,&rdquo; no empty-time framing of the wait). Every efficacy statement InnerLight makes is true and cited; the science says honesty does not weaken the effect &mdash; it is part of it.</p>
+    <p class="cite">Guevarra D.A., Moser J.S., Wager T.D., Kross E. (2020). Placebos without deception reduce self-report and neural measures of emotional distress. <em>Nature Communications</em>, 11:3785.</p>
+    <p class="cite">Guevarra D.A., et al. (2024). Remotely administered non-deceptive placebos reduce COVID-related stress, anxiety, and depression. <em>Applied Psychology: Health and Well-Being</em> &mdash; randomized controlled trial, online delivery.</p>
+    <p class="cite">Schaefer M., et al. (2019). Open-label placebos reduce test anxiety and improve self-management skills. <em>Scientific Reports</em>, 9:13317.</p>
+    <p class="cite">Evers A.W.M., et al. (2018). Implications of placebo and nocebo effects for clinical practice: expert consensus. <em>Psychotherapy and Psychosomatics</em>, 87:204&ndash;210.</p>
+    <p class="cite">B&#261;bel P. (2019). Classical conditioning as a distinct mechanism of placebo effects. <em>Frontiers in Psychiatry</em>, 10:449.</p>
+
     <p style="margin-top:20px;font-size:13px;color:#8aa;">Citations above reference published, peer-reviewed literature supporting the <em>principles</em> InnerLight applies. They do not constitute evidence that InnerLight itself is effective; that evaluation is ongoing. Full reference details are available on request.</p>
     """
     return _info_page("Research &amp; Methods", inner, "research")
@@ -9806,6 +9850,10 @@ def page_updates():
     <p class="lead">We publish what we change, in plain language, because transparency is a founding value. Here is what has actually improved recently &mdash; and what we are working on next.</p>
 
     <h2>August 2026</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">Honest calm, backed by placebo science</h3>
+      <p style="margin-bottom:0;">New research shows that rituals and positive expectation measurably lower distress <em>even when you know exactly how they work</em> &mdash; no deception needed, and none used. InnerLight now speaks true efficacy evidence with every tool, frames your wait as the settling already beginning, audits its own language against negative-expectation phrasing, and offers The Calm Ritual: a small deliberate practice whose honest rationale is printed right on the card.</p>
+    </div>
     <div class="card">
       <h3 style="margin-top:0;">Zenisys awakened: the sound now listens to your words</h3>
       <p style="margin-bottom:0;">The Zenisys Sound System&rsquo;s full design is now active: every message you write steers the music &mdash; no camera needed &mdash; meeting your state and gently carrying it toward calm (the Iso principle, with the strongest effects around 24 minutes in controlled trials). Tracks play in a no-repeat shuffle so nothing loops, the generative Creator composes a soft under-bed matched to your state, and after deep-calm or lifting music the sound eases back toward calm on the researched schedule &mdash; unless you touch the music yourself, which always wins.</p>

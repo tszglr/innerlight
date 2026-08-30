@@ -45,6 +45,12 @@ Ordered by his priority. Updated every session. (Aug 24, 2026)
     original music — sampling in both senses (musical sampling and
     tone-mapping for the Creator). This is the founder's build target.
 
+## HONEST-PLACEBO PROGRAM (founder's research direction)
+15. v1 SHIPPED: expectancy + nocebo hygiene in the AI core, The Calm Ritual
+    activity, research §17. NEXT PHASE: conditioning motif — pair one
+    consistent sound with bloom/calm moments so the sound itself becomes a
+    learned calming cue across sessions; measure in study metrics.
+
 ## PROCESS / DESIGN
 12. Figma-style tools rejected ("very difficult to use") — design happens
     directly in the product, in code, with the founder.
