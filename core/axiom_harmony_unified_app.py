@@ -13356,7 +13356,7 @@ def admin_dashboard():
             + '<button id="inv-stop" style="background:transparent;color:rgba(242,231,210,.75);border:1px solid rgba(232,163,76,.3);border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer;">Stop</button>'
             + '<span id="inv-clock" style="color:#f4c977;font-size:13px;font-variant-numeric:tabular-nums;"></span></div>'
             + '<div id="inv-ledger" style="font-size:12px;color:rgba(242,231,210,.6);margin-top:6px;"></div>'
-            + '<button id="legal-pack-btn" style="margin-top:10px;background:#b8783a;color:#fff;border:0;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Prepare attorney package</button>'
+            + '<button id="legal-pack-btn" style="margin-top:10px;background:#b8783a;color:#fff;border:0;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Prepare attorney package (opens the document)</button> <a href="/api/admin/legal/evidence?enrich=1" target="_blank" style="font-size:11.5px;color:rgba(244,201,119,.6);margin-left:8px;">raw data</a>'
             + '<pre id="legal-pack-out" style="display:none;background:rgba(0,0,0,.35);border:1px solid rgba(232,163,76,.2);border-radius:10px;padding:12px;font-size:11.5px;color:#e8d9b8;max-height:340px;overflow:auto;margin-top:10px;white-space:pre-wrap;"></pre></div>';
           var kbKeys = Object.keys(window._secKB || {});
           if (kbKeys.length){
@@ -13457,12 +13457,8 @@ def admin_dashboard():
           if (lpb) lpb.addEventListener('click', function(){
             lpb.textContent = 'Preparing\u2026';
             invRun();  // package preparation is investigation work — the clock documents it
-            fetch('/api/admin/legal/evidence?enrich=1').then(function(r){ return r.json(); }).then(function(p){
-              var out = document.getElementById('legal-pack-out');
-              out.style.display = 'block';
-              out.textContent = JSON.stringify(p, null, 2);
-              lpb.textContent = 'Prepare attorney package';
-            }).catch(function(){ lpb.textContent = 'Prepare attorney package'; });
+            lpb.textContent = 'Prepare attorney package';
+            window.open('/watch/legal/package', '_blank');
           });
           el.querySelectorAll('.sec-kb').forEach(function(c){
             var go = function(){ kbWin(c.getAttribute('data-k')); };
@@ -15703,6 +15699,212 @@ def api_admin_legal_ledger():
     if not session.get("founder_ok"):
         return jsonify({"error": "unauthorized"}), 401
     return jsonify(_legal_ledger())
+
+def _ip_internal(ip):
+    try:
+        import ipaddress
+        a = ipaddress.ip_address(ip)
+        return a.is_private or a.is_loopback or a.is_reserved or a.is_link_local
+    except Exception:
+        return True
+
+@app.route("/watch/legal/package")
+def watch_legal_package():
+    """The attorney package as an actual document: printable, court-styled,
+    exhibits and letters pre-filled. The founder reads a document, not JSON."""
+    if not session.get("founder_ok"):
+        return redirect("/admin")
+    with app.test_request_context():
+        pass
+    with app.test_client() as tc:
+        pass
+    # Build from the same engine the data API uses
+    from flask import g
+    evid = None
+    try:
+        with _SECURITY_LOG_LOCK:
+            lines = []
+            if os.path.exists(_SECURITY_LOG_FILE):
+                with open(_SECURITY_LOG_FILE, "r", encoding="utf-8") as f:
+                    lines = [ln.strip() for ln in f if ln.strip()]
+    except Exception:
+        lines = []
+    intact, break_at = _sec_chain_verify(lines)
+    recs = []
+    for ln in lines[-2000:]:
+        try:
+            recs.append(json.loads(ln))
+        except Exception:
+            continue
+    by_ip = {}
+    for r in recs:
+        ip = r.get("ip", "?")
+        d = by_ip.setdefault(ip, {"events": 0, "reasons": {}, "paths": set(),
+                                  "first": r.get("ts"), "last": r.get("ts")})
+        d["events"] += 1
+        d["reasons"][r.get("reason", "?")] = d["reasons"].get(r.get("reason", "?"), 0) + 1
+        d["paths"].add(r.get("path", "?"))
+        d["last"] = r.get("ts")
+    hostile = {ip: d for ip, d in by_ip.items() if not _ip_internal(ip)}
+    internal = {ip: d for ip, d in by_ip.items() if _ip_internal(ip)}
+    enrich = {}
+    for ip in sorted(hostile, key=lambda k: -hostile[k]["events"])[:15]:
+        e = {"rdns": _rdns(ip)}
+        e.update(_rdap_owner(ip))
+        enrich[ip] = e
+    ledger = _legal_ledger()
+    kb_names = {k: v.get("name", k) for k, v in SECURITY_KB.items()}
+    def kbn(reason):
+        for k in kb_names:
+            if str(reason).startswith(k):
+                return kb_names[k]
+        return reason
+    span_first = min((r.get("ts", "") for r in recs), default="")
+    span_last = max((r.get("ts", "") for r in recs), default="")
+    prepared = utc_now()
+
+    exhibits = []
+    letters = 0
+    for idx, ip in enumerate(sorted(hostile, key=lambda k: -hostile[k]["events"])[:15]):
+        d = hostile[ip]
+        e = enrich.get(ip, {})
+        letter_owner = e.get("org") or e.get("network") or "[Network Owner — see RDAP]"
+        conduct = "".join(
+            "<tr><td>%s</td><td style='text-align:right'>%d</td></tr>" % (kbn(rz), ct)
+            for rz, ct in sorted(d["reasons"].items(), key=lambda kv: -kv[1]))
+        paths = ", ".join(sorted(d["paths"])[:12])
+        letters += 1
+        exhibits.append("""
+<section class="exhibit">
+  <h2>EXHIBIT %s &mdash; Source %s</h2>
+  <table class="meta">
+    <tr><th>Source address</th><td>%s</td></tr>
+    <tr><th>Network owner (public records)</th><td>%s%s</td></tr>
+    <tr><th>Reverse DNS</th><td>%s</td></tr>
+    <tr><th>First observed (UTC)</th><td>%s</td></tr>
+    <tr><th>Last observed (UTC)</th><td>%s</td></tr>
+    <tr><th>Documented events</th><td>%d</td></tr>
+    <tr><th>Decoy/system paths probed</th><td>%s</td></tr>
+  </table>
+  <h3>Documented conduct</h3>
+  <table class="conduct"><tr><th>Defense engaged</th><th>Count</th></tr>%s</table>
+  <h3>Draft preservation letter (for counsel&rsquo;s signature)</h3>
+  <div class="letter">RE: PRESERVATION DEMAND &mdash; %s (abuse contact)<br><br>
+  You are the registered owner of IP address <b>%s</b>. Between <b>%s</b> and
+  <b>%s</b> UTC, that address engaged in repeated unauthorized access attempts
+  against getinnerlight.com, a free crisis-support service, documented in
+  tamper-evident, hash-chained logs (integrity certification attached).
+  Demand is made that you preserve all subscriber, assignment, and session
+  records for this address covering that period, pending subpoena.<br><br>
+  [Counsel signature block]</div>
+</section>""" % (chr(65 + idx), ip, ip,
+                 (e.get("org") or "&mdash;"),
+                 ((" / " + e["network"]) if e.get("network") else ""),
+                 (e.get("rdns") or "&mdash;"),
+                 d["first"], d["last"], d["events"], paths, conduct,
+                 letter_owner, ip, d["first"], d["last"]))
+
+    sessions_rows = "".join(
+        "<tr><td>%s</td><td>%s</td><td>%s</td><td style='text-align:right'>%s</td></tr>"
+        % (s["started"], s["ended"], s["ip"], s["seconds"]) for s in ledger["sessions"][:40])
+    internal_rows = "".join(
+        "<tr><td>%s</td><td style='text-align:right'>%d</td></tr>" % (ip, d["events"])
+        for ip, d in internal.items())
+
+    body = """
+<div class="cover">
+  <div class="priv">PRIVILEGED &amp; CONFIDENTIAL &mdash; ATTORNEY WORK PRODUCT<br>Prepared in anticipation of litigation</div>
+  <h1>Incident &amp; Evidence Package</h1>
+  <div class="who">God&rsquo;s Love for Us LLC &mdash; operator of InnerLight (getinnerlight.com)<br>
+  Prepared %s by the InnerLight evidence system</div>
+  <div class="toc">Contents: I. Incident Summary &middot; II. Evidence Integrity Certification &middot;
+  III. Attacker Exhibits &amp; Preservation Letters &middot; IV. Loss Documentation &middot;
+  V. Applicable Statutes &amp; Referral Paths &middot; VI. Requested Actions of Counsel &middot; Appendix</div>
+</div>
+
+<section><h2>I. INCIDENT SUMMARY</h2>
+<p>InnerLight is a free, anonymous crisis-support service. Between <b>%s</b> and
+<b>%s</b> (UTC), its defense systems documented <b>%d</b> security events from
+<b>%d</b> distinct external hostile sources. The conduct consists of repeated
+unauthorized access attempts: probing decoy administrative interfaces, decoy
+credential files, and authentication surfaces, and continued attempts while
+locked out. No decoy is linked from any legitimate page; only automated attack
+tooling or deliberate intrusion attempts reach them. Each event was recorded at
+the moment it occurred into a tamper-evident log described in Section II.</p></section>
+
+<section><h2>II. EVIDENCE INTEGRITY CERTIFICATION</h2>
+<p>Each record in the evidence log carries the SHA-256 hash of the preceding
+record and a SHA-256 hash of its own canonical content. Any alteration,
+insertion, or deletion breaks the chain visibly at the exact record affected.</p>
+<table class="meta">
+<tr><th>Records in evidence file</th><td>%d</td></tr>
+<tr><th>Chain verification</th><td><b>%s</b></td></tr>
+<tr><th>Verification method</th><td>SHA-256 hash chain, verified from earliest retained record</td></tr>
+<tr><th>Package fingerprint</th><td class="mono">PKG_HASH_PLACEHOLDER</td></tr>
+</table></section>
+
+<section><h2>III. ATTACKER EXHIBITS &amp; PRESERVATION LETTERS</h2>
+<p>%d exhibits follow, one per external hostile source, ordered by event count.
+Network ownership is drawn from public registration records (RDAP). An IP
+address is an investigative lead, not a person; identification of account
+holders proceeds through counsel via preservation demand and subpoena.</p></section>
+%s
+
+<section><h2>IV. LOSS DOCUMENTATION</h2>
+<p>%s</p>
+<table class="conduct"><tr><th>Session start</th><th>End</th><th>Target</th><th>Seconds</th></tr>%s</table>
+<p><b>Total documented response time: %s hours</b> (%d seconds) across %d sessions.
+Machine-side defense engagements: %d documented events. Rates to be applied by counsel.</p></section>
+
+<section><h2>V. APPLICABLE STATUTES &amp; REFERRAL PATHS</h2>
+<pre class="stat">%s</pre></section>
+
+<section><h2>VI. REQUESTED ACTIONS OF COUNSEL</h2>
+<ol>
+<li>Review this package and the underlying hash-chained evidence file.</li>
+<li>Issue the enclosed preservation letters to the identified network owners.</li>
+<li>File FBI IC3 complaint (ic3.gov) and evaluate CISA incident report.</li>
+<li>Evaluate John Doe civil complaint(s) under CFAA &sect;1030(g) and Cal. Penal Code &sect;502(e), with ISP subpoenas to unmask account holders.</li>
+<li>Advise on damages documentation toward the &sect;1030(g) loss threshold.</li>
+</ol></section>
+
+<section><h2>APPENDIX &mdash; Internal / non-routable telemetry (excluded from exhibits)</h2>
+<p>The following source addresses are loopback, private-range, or reserved
+(e.g., development probes, in-network infrastructure). They are excluded from
+actionable exhibits and included here only for completeness of the record.</p>
+<table class="conduct"><tr><th>Address</th><th>Events</th></tr>%s</table></section>
+""" % (prepared, span_first, span_last, len(recs), len(hostile),
+       len(lines), ("INTACT from earliest retained record" if intact else ("BROKEN at record %s" % break_at)),
+       len(exhibits), "".join(exhibits),
+       ledger["basis"], sessions_rows, ledger["total_hours"], ledger["total_seconds"],
+       len(ledger["sessions"]), len(recs), _LEGAL_STATUTES, internal_rows or "<tr><td colspan=2>none</td></tr>")
+
+    pkg_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    body = body.replace("PKG_HASH_PLACEHOLDER", pkg_hash)
+
+    return """<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Incident &amp; Evidence Package &mdash; InnerLight</title>
+<style>
+ body { font-family: Georgia, 'Times New Roman', serif; color:#1a1a1a; background:#f2efe9; margin:0; }
+ .page { max-width: 820px; margin: 0 auto; background:#fff; padding: 56px 64px; box-shadow: 0 0 30px rgba(0,0,0,.15); }
+ .priv { text-align:center; font-size:12px; letter-spacing:.12em; color:#7a1f1f; border:1.5px solid #7a1f1f; padding:8px; margin-bottom:28px; }
+ h1 { text-align:center; font-size:26px; letter-spacing:.04em; margin:6px 0 10px; }
+ .who, .toc { text-align:center; font-size:13px; color:#444; line-height:1.7; }
+ .toc { margin-top:14px; font-style:italic; }
+ h2 { font-size:15px; letter-spacing:.08em; border-bottom:1.5px solid #1a1a1a; padding-bottom:5px; margin:34px 0 12px; }
+ h3 { font-size:13px; letter-spacing:.05em; margin:18px 0 8px; }
+ p, li { font-size:13.5px; line-height:1.75; }
+ table { border-collapse: collapse; width:100%%; font-size:12.5px; margin:8px 0; }
+ .meta th { text-align:left; width:250px; color:#444; font-weight:normal; }
+ .meta th, .meta td, .conduct th, .conduct td { border:1px solid #cfc9bd; padding:6px 10px; }
+ .conduct th { background:#efe9dc; text-align:left; }
+ .letter { border:1px solid #cfc9bd; background:#faf8f3; padding:14px 18px; font-size:12.5px; line-height:1.8; }
+ .stat { white-space: pre-wrap; font-family: Georgia, serif; font-size:12.5px; line-height:1.7; background:#faf8f3; border:1px solid #cfc9bd; padding:14px; }
+ .mono { font-family: monospace; font-size:11px; word-break: break-all; }
+ .exhibit { page-break-before: always; }
+ @media print { body { background:#fff; } .page { box-shadow:none; padding:24px 8px; } }
+</style></head><body><div class="page">""" + body + "</div></body></html>"
 
 @app.route("/api/admin/legal/evidence")
 def api_admin_legal_evidence():
