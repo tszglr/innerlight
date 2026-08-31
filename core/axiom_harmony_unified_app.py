@@ -11569,6 +11569,46 @@ _SECURITY_LOG_MAX = 5000     # keep at most this many lines; rotate (halve) when
 _SECURITY_COUNTS = {"attacks": 0, "honeypots": 0, "paths": {}}  # in-memory quick readout
 
 
+_SEC_CHAIN = {"last": "genesis"}
+
+def _sec_chain_boot():
+    """Resume the hash chain from the last record on disk (survives restarts)."""
+    try:
+        if os.path.exists(_SECURITY_LOG_FILE):
+            with open(_SECURITY_LOG_FILE, "rb") as f:
+                tail = f.readlines()[-1:]
+            if tail:
+                _SEC_CHAIN["last"] = json.loads(tail[0]).get("hash", "genesis")
+    except Exception:
+        pass
+_sec_chain_boot()
+
+def _sec_chain_verify(lines):
+    """Walk the chain; returns (intact_bool, first_break_index_or_None).
+    Anchors at the earliest RETAINED hashed record (size-cap rotation trims
+    the head, so the first record's prev_hash is accepted as given); every
+    record's self-hash proves it unaltered, and continuity is proven from
+    the anchor forward. Pre-chain records (no hash) are skipped."""
+    prev = None
+    for i, ln in enumerate(lines):
+        try:
+            r = json.loads(ln)
+        except Exception:
+            return False, i
+        if "hash" not in r:
+            prev = None
+            continue
+        if prev is not None and r.get("prev_hash") != prev:
+            return False, i
+        expect = hashlib.sha256(
+            ((r.get("prev_hash") or "") + "|" + json.dumps(
+                {k: r[k] for k in sorted(r) if k != "hash"},
+                ensure_ascii=False, sort_keys=True)).encode("utf-8")).hexdigest()
+        if expect != r.get("hash"):
+            return False, i
+        prev = r["hash"]
+    return True, None
+
 def _security_log(reason, path=None, extra=None):
     """Append one security event to the forensic JSONL evidence file.
     Records ONLY attacker/security metadata — never any user content, message,
@@ -11587,6 +11627,17 @@ def _security_log(reason, path=None, extra=None):
         }
         if extra:
             rec["note"] = str(extra)[:200]
+        # TAMPER-EVIDENT CHAIN: each record carries the previous record's
+        # hash and its own SHA-256 over canonical content. Alter, insert, or
+        # delete any line and the chain breaks from that point forward —
+        # this is what turns a log into courtroom evidence.
+        rec["prev_hash"] = _SEC_CHAIN.get("last", "genesis")
+        rec["hash"] = hashlib.sha256(
+            (rec["prev_hash"] + "|" + json.dumps(
+                {k: rec[k] for k in sorted(rec) if k != "hash"},
+                ensure_ascii=False, sort_keys=True)).encode("utf-8")
+        ).hexdigest()
+        _SEC_CHAIN["last"] = rec["hash"]
         line = json.dumps(rec, ensure_ascii=False)
     except Exception:
         return
@@ -11827,6 +11878,14 @@ SECURITY_KB = {
         "why_up": "Shows the lockout is absorbing sustained pressure rather than letting it through.",
         "harm_prevented": "Continued hammering of authentication or decoy surfaces.",
         "our_response": "The polite busy answer, zero server work spent, window continues; each knock is counted here.",
+    },
+    "legal-ledger": {
+        "name": "The legal ledger",
+        "what": "Every event on this wall is written into a hash-chained evidence file: each record carries the previous record's SHA-256, so altering or deleting any line breaks the chain visibly from that point on.",
+        "attacker_goal": "Attackers count on victims having sloppy logs that cannot survive a courtroom.",
+        "why_up": "Integrity is what turns a log into evidence. The chain lets counsel and a court verify that nothing was edited after the fact.",
+        "harm_prevented": "Losing the legal case before it starts. The chain preserves the path to CFAA 1030(g) and Cal. Penal Code 502(e) civil actions, IC3/CISA referral, and John Doe subpoenas that lawfully unmask attackers.",
+        "our_response": "One tap prepares the attorney package: verified chain, per-attacker dossiers with public-records network ownership, the statute sheet, and a preservation-letter skeleton.",
     },
     "rate-limit": {
         "name": "Rate limit (cost shield)",
@@ -13286,6 +13345,11 @@ def admin_dashboard():
             html += '<div style="color:rgba(242,231,210,.45);font-style:italic;margin-top:10px;">No attempts recorded. The walls are quiet.</div>';
           }
           // THE LEARNING MODULE: every defense explained even when quiet
+          html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:18px 0 4px;">Legal response</div>'
+            + '<div style="background:rgba(232,163,76,.05);border:1px solid rgba(232,163,76,.14);border-radius:10px;padding:12px 14px;">'
+            + '<div style="color:rgba(242,231,210,.8);font-size:13px;line-height:1.55;">Every event above is hash-chained evidence. Prepare the attorney package &mdash; verified chain, attacker dossiers with network ownership, the statute sheet (CFAA &sect;1030(g), Cal. Penal &sect;502(e)), and a preservation-letter skeleton.</div>'
+            + '<button id="legal-pack-btn" style="margin-top:10px;background:#b8783a;color:#fff;border:0;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Prepare attorney package</button>'
+            + '<pre id="legal-pack-out" style="display:none;background:rgba(0,0,0,.35);border:1px solid rgba(232,163,76,.2);border-radius:10px;padding:12px;font-size:11.5px;color:#e8d9b8;max-height:340px;overflow:auto;margin-top:10px;white-space:pre-wrap;"></pre></div>';
           var kbKeys = Object.keys(window._secKB || {});
           if (kbKeys.length){
             html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:18px 0 4px;">The defenses, explained &mdash; tap to open each lesson</div>';
@@ -13346,6 +13410,16 @@ def admin_dashboard():
             var go = function(){ eventWin(parseInt(c.getAttribute('data-i'),10)); };
             c.addEventListener('click', go);
             c.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+          });
+          var lpb = document.getElementById('legal-pack-btn');
+          if (lpb) lpb.addEventListener('click', function(){
+            lpb.textContent = 'Preparing\u2026';
+            fetch('/api/admin/legal/evidence?enrich=1').then(function(r){ return r.json(); }).then(function(p){
+              var out = document.getElementById('legal-pack-out');
+              out.style.display = 'block';
+              out.textContent = JSON.stringify(p, null, 2);
+              lpb.textContent = 'Prepare attorney package';
+            }).catch(function(){ lpb.textContent = 'Prepare attorney package'; });
           });
           el.querySelectorAll('.sec-kb').forEach(function(c){
             var go = function(){ kbWin(c.getAttribute('data-k')); };
@@ -15462,6 +15536,106 @@ def api_exigent_dispatch():
     return jsonify({"error": "provider_integration_pending",
                     "message": "Dispatch capability is armed but the provider "
                                "integration is not yet completed."}), 501
+
+def _rdap_owner(ip):
+    """Public-records network-owner lookup (RDAP). Lawful, read-only, and
+    best-effort — attribution leads, never conclusions."""
+    try:
+        import urllib.request
+        with urllib.request.urlopen("https://rdap.org/ip/" + ip, timeout=6) as r:
+            d = json.loads(r.read().decode("utf-8", "ignore"))
+        name = d.get("name") or ""
+        ent = ""
+        for e in (d.get("entities") or [])[:1]:
+            for v in (e.get("vcardArray") or [None, []])[1]:
+                if v and v[0] == "fn":
+                    ent = v[3]
+        return {"network": name[:120], "org": str(ent)[:120]}
+    except Exception:
+        return {}
+
+def _rdns(ip):
+    try:
+        import socket
+        return socket.gethostbyaddr(ip)[0][:200]
+    except Exception:
+        return ""
+
+_LEGAL_STATUTES = """APPLICABLE LAW (for attorney review — this package is preparation, not legal advice)
+FEDERAL — Computer Fraud and Abuse Act, 18 U.S.C. 1030: unauthorized access
+and attempted unauthorized access to a protected computer. CIVIL ACTION:
+1030(g) permits suit for compensatory damages and injunctive relief where
+loss aggregates $5,000+ in one year — investigation and response costs
+count toward loss. Criminal referral: FBI IC3 (ic3.gov); CISA incident
+reporting (InnerLight is health-adjacent critical service).
+CALIFORNIA — Penal Code 502 (Comprehensive Computer Data Access and Fraud
+Act): 502(e)(1) civil action for the owner — compensatory damages and
+injunctive relief; 502(e)(2) attorney's fees; punitive damages available
+for willful violations. Venue: operator is a California entity.
+IDENTIFICATION PATH (lawful): these logs establish IP, timestamps, and
+conduct. Counsel files a John Doe complaint and serves a subpoena on the
+identified network owner for subscriber records. An IP is a lead, not a
+person: attribution conclusions belong to counsel and the court, never to
+this software."""
+
+@app.route("/api/admin/legal/evidence")
+def api_admin_legal_evidence():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        with _SECURITY_LOG_LOCK:
+            lines = []
+            if os.path.exists(_SECURITY_LOG_FILE):
+                with open(_SECURITY_LOG_FILE, "r", encoding="utf-8") as f:
+                    lines = [ln.strip() for ln in f if ln.strip()]
+    except Exception:
+        lines = []
+    intact, break_at = _sec_chain_verify(lines)
+    recs = []
+    for ln in lines[-2000:]:
+        try:
+            recs.append(json.loads(ln))
+        except Exception:
+            continue
+    by_ip = {}
+    for r in recs:
+        ip = r.get("ip", "?")
+        d = by_ip.setdefault(ip, {"events": 0, "reasons": {}, "paths": set(),
+                                  "first": r.get("ts"), "last": r.get("ts")})
+        d["events"] += 1
+        d["reasons"][r.get("reason", "?")] = d["reasons"].get(r.get("reason", "?"), 0) + 1
+        d["paths"].add(r.get("path", "?"))
+        d["last"] = r.get("ts")
+    enrich = bool(request.args.get("enrich"))
+    dossiers = []
+    for ip, d in sorted(by_ip.items(), key=lambda kv: -kv[1]["events"])[:25]:
+        row = {"ip": ip, "events": d["events"], "first_seen": d["first"],
+               "last_seen": d["last"], "reasons": d["reasons"],
+               "paths_probed": sorted(d["paths"])[:20]}
+        if enrich and ip not in ("?", "127.0.0.1"):
+            row["rdns"] = _rdns(ip)
+            row.update(_rdap_owner(ip))
+        dossiers.append(row)
+    return jsonify({
+        "prepared": utc_now(),
+        "chain": {"records": len(lines), "intact": intact, "first_break_index": break_at},
+        "dossiers": dossiers,
+        "statutes": _LEGAL_STATUTES,
+        "narrative": ("InnerLight is a free crisis-support service operated by God's Love "
+                      "for Us LLC (California). The attached hash-chained log documents "
+                      "unauthorized access attempts against it. Each record chains to its "
+                      "predecessor by SHA-256; the verification result above attests "
+                      "integrity from genesis. Response and investigation costs are "
+                      "documented separately toward the CFAA loss threshold."),
+        "preservation_letter_skeleton": (
+            "RE: PRESERVATION DEMAND — [Network Owner], [Abuse Contact]\n"
+            "You are the registered owner of IP [IP]. Between [FIRST] and [LAST] UTC, "
+            "that address engaged in unauthorized access attempts against "
+            "getinnerlight.com, documented in tamper-evident logs. Demand is made that "
+            "you preserve all subscriber, assignment, and session records for [IP] for "
+            "that period pending subpoena. [Counsel signature block]"),
+        "for_attorney_review": True,
+    })
 
 @app.route("/api/admin/zenisys/dna")
 def api_admin_zenisys_dna():
