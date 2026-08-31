@@ -11315,6 +11315,9 @@ def _live_db():
     conn.execute("PRAGMA busy_timeout=4000")
     conn.execute("CREATE TABLE IF NOT EXISTS live_state ("
                  "key TEXT PRIMARY KEY, val TEXT, updated REAL)")
+    conn.execute("CREATE TABLE IF NOT EXISTS investigations ("
+                 "id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, note TEXT, "
+                 "started REAL, last_tick REAL, ended REAL, seconds INTEGER)")
     return conn
 
 def _live_set(key, obj):
@@ -13348,6 +13351,11 @@ def admin_dashboard():
           html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:18px 0 4px;">Legal response</div>'
             + '<div style="background:rgba(232,163,76,.05);border:1px solid rgba(232,163,76,.14);border-radius:10px;padding:12px 14px;">'
             + '<div style="color:rgba(242,231,210,.8);font-size:13px;line-height:1.55;">Every event above is hash-chained evidence. Prepare the attorney package &mdash; verified chain, attacker dossiers with network ownership, the statute sheet (CFAA &sect;1030(g), Cal. Penal &sect;502(e)), and a preservation-letter skeleton.</div>'
+            + '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+            + '<button id="inv-start" style="background:#1c7a3d;color:#fff;border:0;border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer;">Start investigation</button>'
+            + '<button id="inv-stop" style="background:transparent;color:rgba(242,231,210,.75);border:1px solid rgba(232,163,76,.3);border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer;">Stop</button>'
+            + '<span id="inv-clock" style="color:#f4c977;font-size:13px;font-variant-numeric:tabular-nums;"></span></div>'
+            + '<div id="inv-ledger" style="font-size:12px;color:rgba(242,231,210,.6);margin-top:6px;"></div>'
             + '<button id="legal-pack-btn" style="margin-top:10px;background:#b8783a;color:#fff;border:0;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Prepare attorney package</button>'
             + '<pre id="legal-pack-out" style="display:none;background:rgba(0,0,0,.35);border:1px solid rgba(232,163,76,.2);border-radius:10px;padding:12px;font-size:11.5px;color:#e8d9b8;max-height:340px;overflow:auto;margin-top:10px;white-space:pre-wrap;"></pre></div>';
           var kbKeys = Object.keys(window._secKB || {});
@@ -13411,9 +13419,44 @@ def admin_dashboard():
             c.addEventListener('click', go);
             c.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
           });
+          var invTimer = null, invStart = 0;
+          function invPost(action){
+            return fetch('/api/admin/legal/investigation', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action: action})}).then(function(r){ return r.json(); });
+          }
+          function invLedger(){
+            fetch('/api/admin/legal/ledger').then(function(r){ return r.json(); }).then(function(l){
+              var el2 = document.getElementById('inv-ledger');
+              if (el2) el2.textContent = 'Documented: ' + l.total_hours + ' h across ' + l.sessions.length + ' session(s)' + (l.in_progress ? ' \u2014 clock RUNNING' : '');
+            }).catch(function(){});
+          }
+          function invRun(){
+            invStart = Date.now();
+            if (invTimer) clearInterval(invTimer);
+            invTimer = setInterval(function(){
+              invPost('tick');
+              var s = Math.floor((Date.now() - invStart)/1000);
+              var ck = document.getElementById('inv-clock');
+              if (ck) ck.textContent = Math.floor(s/60) + 'm ' + (s%60) + 's on the clock';
+            }, 60000);
+            var ck = document.getElementById('inv-clock');
+            if (ck) ck.textContent = 'clock running \u2014 time is being documented';
+          }
+          var ivs = document.getElementById('inv-start');
+          if (ivs) ivs.addEventListener('click', function(){ invPost('start').then(function(){ invRun(); invLedger(); }); });
+          var ivx = document.getElementById('inv-stop');
+          if (ivx) ivx.addEventListener('click', function(){
+            invPost('stop').then(function(){
+              if (invTimer) clearInterval(invTimer);
+              var ck = document.getElementById('inv-clock');
+              if (ck) ck.textContent = 'clock stopped \u2014 session recorded';
+              invLedger();
+            });
+          });
+          invLedger();
           var lpb = document.getElementById('legal-pack-btn');
           if (lpb) lpb.addEventListener('click', function(){
             lpb.textContent = 'Preparing\u2026';
+            invRun();  // package preparation is investigation work — the clock documents it
             fetch('/api/admin/legal/evidence?enrich=1').then(function(r){ return r.json(); }).then(function(p){
               var out = document.getElementById('legal-pack-out');
               out.style.display = 'block';
@@ -15578,6 +15621,89 @@ identified network owner for subscriber records. An IP is a lead, not a
 person: attribution conclusions belong to counsel and the court, never to
 this software."""
 
+_INVEST_IDLE_CAP = 600  # a session with no heartbeat for 10 min auto-closes — idle time is never claimed
+
+def _invest_close_stale(conn):
+    now = time.time()
+    for row in conn.execute("SELECT id, started, last_tick FROM investigations WHERE ended IS NULL").fetchall():
+        iid, started, last_tick = row
+        if now - (last_tick or started) > _INVEST_IDLE_CAP:
+            end_at = (last_tick or started)
+            conn.execute("UPDATE investigations SET ended=?, seconds=? WHERE id=?",
+                         (end_at, int(end_at - started), iid))
+    conn.commit()
+
+@app.route("/api/admin/legal/investigation", methods=["POST"])
+def api_admin_legal_investigation():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    data = request.get_json(silent=True) or {}
+    action = str(data.get("action", ""))
+    now = time.time()
+    with _LIVE_DB_LOCK:
+        conn = _live_db()
+        try:
+            _invest_close_stale(conn)
+            if action == "start":
+                open_row = conn.execute("SELECT id FROM investigations WHERE ended IS NULL").fetchone()
+                if open_row:
+                    return jsonify({"ok": True, "id": open_row[0], "already": True})
+                cur = conn.execute("INSERT INTO investigations (ip, note, started, last_tick) VALUES (?,?,?,?)",
+                                   (str(data.get("ip", ""))[:60], str(data.get("note", ""))[:200], now, now))
+                conn.commit()
+                return jsonify({"ok": True, "id": cur.lastrowid})
+            if action == "tick":
+                conn.execute("UPDATE investigations SET last_tick=? WHERE ended IS NULL", (now,))
+                conn.commit()
+                return jsonify({"ok": True})
+            if action == "stop":
+                row = conn.execute("SELECT id, started FROM investigations WHERE ended IS NULL").fetchone()
+                if not row:
+                    return jsonify({"ok": True, "none": True})
+                conn.execute("UPDATE investigations SET ended=?, last_tick=?, seconds=? WHERE id=?",
+                             (now, now, int(now - row[1]), row[0]))
+                conn.commit()
+                return jsonify({"ok": True, "seconds": int(now - row[1])})
+        finally:
+            conn.close()
+    return jsonify({"error": "unknown action"}), 400
+
+def _legal_ledger():
+    with _LIVE_DB_LOCK:
+        conn = _live_db()
+        try:
+            _invest_close_stale(conn)
+            rows = conn.execute("SELECT ip, note, started, ended, seconds FROM investigations "
+                                "ORDER BY started DESC LIMIT 200").fetchall()
+            live = conn.execute("SELECT ip, started FROM investigations WHERE ended IS NULL").fetchone()
+        finally:
+            conn.close()
+    sessions = []
+    per_ip = {}
+    total = 0
+    for ip, note, started, ended, seconds in rows:
+        secs = seconds if seconds else (int(time.time() - started) if ended is None else 0)
+        sessions.append({"ip": ip or "(general)", "note": note,
+                         "started": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(started)),
+                         "ended": (time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(ended)) if ended else "in progress"),
+                         "seconds": secs})
+        total += secs
+        k = ip or "(general)"
+        per_ip[k] = per_ip.get(k, 0) + secs
+    return {"sessions": sessions, "total_seconds": total,
+            "total_hours": round(total / 3600.0, 2), "per_target_seconds": per_ip,
+            "in_progress": bool(live),
+            "basis": ("Hours recorded contemporaneously by the system at the moment of work; "
+                      "no retrospective estimates. Idle gaps over 10 minutes are never counted. "
+                      "Counsel applies rates. Under CFAA 18 U.S.C. 1030(e)(11)+(g), reasonable "
+                      "costs of responding, damage assessment, and restoration count toward loss.")}
+
+@app.route("/api/admin/legal/ledger")
+def api_admin_legal_ledger():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify(_legal_ledger())
+
 @app.route("/api/admin/legal/evidence")
 def api_admin_legal_evidence():
     if not session.get("founder_ok"):
@@ -15616,8 +15742,24 @@ def api_admin_legal_evidence():
             row["rdns"] = _rdns(ip)
             row.update(_rdap_owner(ip))
         dossiers.append(row)
+    # Preparing the package IS investigation work: auto-start a session if
+    # none is running, so even forgetting still documents the time.
+    try:
+        with _LIVE_DB_LOCK:
+            conn = _live_db()
+            try:
+                _invest_close_stale(conn)
+                if not conn.execute("SELECT id FROM investigations WHERE ended IS NULL").fetchone():
+                    conn.execute("INSERT INTO investigations (ip, note, started, last_tick) VALUES (?,?,?,?)",
+                                 ("", "attorney-package preparation", time.time(), time.time()))
+                    conn.commit()
+            finally:
+                conn.close()
+    except Exception:
+        pass
     return jsonify({
         "prepared": utc_now(),
+        "loss_documentation": _legal_ledger(),
         "chain": {"records": len(lines), "intact": intact, "first_break_index": break_at},
         "dossiers": dossiers,
         "statutes": _LEGAL_STATUTES,
