@@ -12457,6 +12457,134 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
 </script>
 </body></html>"""
 
+SIM_ROOM = r"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Proving Ground &mdash; InnerLight Simulation</title>
+<style>
+ *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:#08120e;color:#dcefe3;min-height:100vh}
+ .banner{position:sticky;top:0;z-index:50;background:repeating-linear-gradient(45deg,#0d3b2a,#0d3b2a 14px,#0a2e21 14px,#0a2e21 28px);color:#7ce8b0;text-align:center;font-weight:800;letter-spacing:.2em;padding:8px;font-size:12px;border-bottom:1px solid #1d5c42}
+ .wrap{max-width:1060px;margin:0 auto;padding:22px 16px 70px}
+ h1{font-size:22px;letter-spacing:.06em;color:#8ff0bd;margin:8px 0 2px} .sub{color:#6da88b;font-size:12.5px;margin-bottom:16px}
+ .grid{display:grid;grid-template-columns:340px 1fr;gap:16px} @media(max-width:900px){.grid{grid-template-columns:1fr}}
+ .panel{background:rgba(13,34,26,.75);border:1px solid #1d5c42;border-radius:14px;padding:16px}
+ h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5fcf96;margin:0 0 12px}
+ label{display:block;font-size:11.5px;color:#9ccbb2;margin:10px 0 2px} input[type=range]{width:100%;accent-color:#2fc98c}
+ .val{color:#8ff0bd;font-weight:700;font-size:11.5px;float:right}
+ .row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+ button{border:0;border-radius:9px;padding:10px 18px;font-weight:800;cursor:pointer;font-size:13px}
+ .go{background:linear-gradient(90deg,#1d9e63,#2fc98c);color:#04150c} .stop{background:transparent;border:1px solid #1d5c42;color:#9ccbb2}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+ .kpi{background:rgba(10,26,20,.8);border:1px solid #1d5c42;border-radius:10px;padding:10px;text-align:center}
+ .kpi b{display:block;font-size:22px;color:#8ff0bd} .kpi span{font-size:10.5px;color:#6da88b;letter-spacing:.08em;text-transform:uppercase}
+ .embers{display:flex;flex-wrap:wrap;gap:8px;min-height:70px}
+ .ember{border-radius:10px;padding:7px 10px;font-size:11px;border:1px solid #1d5c42;background:rgba(10,26,20,.85);min-width:118px}
+ .ember b{font-size:12px} .A{border-left:3px solid #5aa9e6}.B{border-left:3px solid #f2c94c}
+ .crisis{border-color:#e8534e;box-shadow:0 0 12px rgba(232,83,78,.35)}
+ .d{height:5px;border-radius:4px;background:#123326;margin-top:5px;overflow:hidden}.d i{display:block;height:100%;background:linear-gradient(90deg,#2fc98c,#f2c94c,#e8534e)}
+ .feed,.sec{font-size:11.5px;color:#9ccbb2;max-height:170px;overflow:auto;line-height:1.8}
+ .cohorts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ .coh{background:rgba(10,26,20,.8);border:1px solid #1d5c42;border-radius:10px;padding:10px;font-size:12px}
+ .coh b{color:#8ff0bd}
+ .model{font-size:12px;color:#9ccbb2;line-height:1.75}
+ .model code{color:#8ff0bd;background:#0a1f17;padding:1px 6px;border-radius:5px}
+ a.csv{color:#8ff0bd;font-size:12px}
+ .back{color:#6da88b;text-decoration:none;font-size:12.5px}
+</style></head><body>
+<div class="banner">SIMULATED ENVIRONMENT &mdash; SYNTHETIC PEOPLE ONLY &mdash; NO REAL DATA, NO REAL EVIDENCE</div>
+<div class="wrap">
+ <a class="back" href="/admin">&larr; The Watch</a>
+ <h1>THE PROVING GROUND</h1>
+ <div class="sub">InnerLight at full burn &mdash; every light lit, every measure firing. Turn the knobs; the world obeys.</div>
+ <div class="grid">
+  <div class="panel"><h2>Research console</h2>
+   <div id="knobs"></div>
+   <div class="row">
+    <button class="go" id="sim-start">Start</button>
+    <button class="stop" id="sim-stop">Pause</button>
+    <button class="stop" id="sim-reset">Reset</button>
+   </div>
+   <div style="margin-top:12px"><a class="csv" href="/api/sim/export.csv">Download dataset (CSV)</a></div>
+   <h2 style="margin-top:18px">Model card</h2>
+   <div class="model">
+    Arrivals: Poisson(<code>rate</code>/min). Assignment: alternating to cohort A (standard) or B (adaptive sound).
+    Distress D&isin;[0,10]: <code>D&larr;D &minus; pull&middot;boost&middot;D + N(0,&sigma;)</code> per sim-second, boost applies to B only.
+    Heart: <code>bpm = base + 3.2D + N(0,1.6)</code>, visible for the camera-consent fraction.
+    Settle: D &le; threshold after 90s &rarr; bloom + departure; cap at session max.
+    Crisis arrivals bypass to the crisis card; handoff fires only when the provider knob is on.
+    Seeded RNG &rarr; identical parameters reproduce identical runs.
+    Limits: a stylized process model &mdash; teaches method and load, not clinical truth.
+   </div>
+  </div>
+  <div>
+   <div class="kpis" id="kpis"></div>
+   <div class="panel" style="margin-bottom:14px"><h2>The room, live (simulated souls)</h2><div class="embers" id="embers"></div></div>
+   <div class="panel" style="margin-bottom:14px"><h2>Experiment &mdash; adaptive sound A/B</h2><div class="cohorts" id="cohorts"></div></div>
+   <div class="panel" style="margin-bottom:14px"><h2>Event feed</h2><div class="feed" id="feed"></div></div>
+   <div class="panel"><h2>Security wall (simulated probes)</h2><div class="sec" id="sec"></div></div>
+  </div>
+ </div>
+</div>
+<script>
+(function(){
+ var KN=[["arrival_rate","Arrivals / min",0.5,30,0.5],["init_distress_mean","Initial distress (mean)",1,10,0.1],
+  ["init_distress_sd","Initial distress (sd)",0.2,3,0.1],["calm_pull","Calm pull",0.005,0.2,0.005],
+  ["adaptive_boost","Adaptive boost (cohort B)",1,2.5,0.05],["noise","Distress noise",0,1,0.02],
+  ["camera_rate","Camera consent rate",0,1,0.05],["crisis_prob","Crisis probability",0,0.5,0.01],
+  ["provider_on","Provider on call (0/1)",0,1,1],["attack_rate","Attacks / min",0,20,0.2],
+  ["settle_threshold","Settle threshold",0.5,5,0.1],["session_max_min","Session cap (min)",5,60,1],
+  ["speed","Speed (sim s / real s)",1,60,1],["seed","Seed",1,99999,1]];
+ var kb=document.getElementById('knobs'), cfg={};
+ KN.forEach(function(k){
+  var w=document.createElement('div');
+  w.innerHTML='<label>'+k[1]+'<span class="val" id="v-'+k[0]+'"></span></label><input type="range" id="k-'+k[0]+'" min="'+k[2]+'" max="'+k[3]+'" step="'+k[4]+'">';
+  kb.appendChild(w);
+  var inp=w.querySelector('input');
+  inp.addEventListener('change', function(){
+   var b={}; b[k[0]]=parseFloat(inp.value); post(b);
+   document.getElementById('v-'+k[0]).textContent=inp.value;
+  });
+  inp.addEventListener('input', function(){ document.getElementById('v-'+k[0]).textContent=inp.value; });
+ });
+ function post(b){ return fetch('/api/sim/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json();}); }
+ function setKnobs(c){ KN.forEach(function(k){ var i=document.getElementById('k-'+k[0]); if(i && c[k[0]]!=null){ i.value=c[k[0]]; document.getElementById('v-'+k[0]).textContent=c[k[0]]; } }); }
+ document.getElementById('sim-start').addEventListener('click', function(){ post({action:'start'}); });
+ document.getElementById('sim-stop').addEventListener('click', function(){ post({action:'stop'}); });
+ document.getElementById('sim-reset').addEventListener('click', function(){ post({action:'reset'}); });
+ var first=true;
+ function tick(){
+  fetch('/api/sim/state').then(function(r){return r.json();}).then(function(s){
+   if(first){ setKnobs(s.cfg); first=false; }
+   var K=s.kpis;
+   document.getElementById('kpis').innerHTML =
+    '<div class="kpi"><b>'+K.live_now+'</b><span>live now</span></div>'
+    +'<div class="kpi"><b>'+K.arrivals+'</b><span>arrivals</span></div>'
+    +'<div class="kpi"><b>'+K.blooms+'</b><span>blooms</span></div>'
+    +'<div class="kpi"><b>'+K.crises+'</b><span>crisis</span></div>'
+    +'<div class="kpi"><b>'+K.handoffs+'</b><span>handoffs</span></div>'
+    +'<div class="kpi"><b>'+s.sim_clock_min+'m</b><span>sim clock</span></div>';
+   document.getElementById('embers').innerHTML = s.live.map(function(e){
+    return '<div class="ember '+e.cohort+(e.crisis?' crisis':'')+'"><b>'+e.name+'</b> &middot; '+e.cohort
+     +(e.bpm?(' &middot; '+e.bpm+' bpm'):'')+'<br><span style="color:#6da88b">'+e.lane+' &middot; '+e.held_min+'m</span>'
+     +'<div class="d"><i style="width:'+(e.d*10)+'%"></i></div></div>';
+   }).join('') || '<span style="color:#6da88b">the room is quiet &mdash; press Start</span>';
+   var A=s.cohorts.A_standard, B=s.cohorts.B_adaptive;
+   document.getElementById('cohorts').innerHTML =
+    '<div class="coh">A &middot; standard sound<br><b>'+(A.n||0)+'</b> completed &middot; <b>'+(A.settled_pct==null?'—':A.settled_pct+'%')+'</b> settled &middot; <b>'+(A.mean_minutes_to_calm==null?'—':A.mean_minutes_to_calm+'m')+'</b> to calm</div>'
+    +'<div class="coh">B &middot; adaptive sound<br><b>'+(B.n||0)+'</b> completed &middot; <b>'+(B.settled_pct==null?'—':B.settled_pct+'%')+'</b> settled &middot; <b>'+(B.mean_minutes_to_calm==null?'—':B.mean_minutes_to_calm+'m')+'</b> to calm</div>';
+   document.getElementById('feed').innerHTML = s.feed.map(function(f){ return Math.round(f.t/60)+'m &middot; '+f.type+' &middot; '+f.sid; }).join('<br>') || 'quiet';
+   document.getElementById('sec').innerHTML = s.security.map(function(a){ return Math.round(a.t/60)+'m &middot; '+a.ip+' probed '+a.what+' &rarr; '+a.resp; }).join('<br>') || 'no probes yet';
+  }).catch(function(){});
+ }
+ tick(); setInterval(tick, 2000);
+})();
+</script></body></html>"""
+
+@app.route("/watch/sim")
+def watch_sim_room():
+    if not session.get("founder_ok"):
+        return redirect("/admin")
+    return SIM_ROOM
+
 @app.route("/watch/lab")
 def watch_lab_room():
     """The founder's night studio — its own room, its own world."""
@@ -12850,6 +12978,11 @@ def admin_dashboard():
     <div class="card" style="background:linear-gradient(135deg,#0b0e1a,#141b33 60%,#1a1040);border:1px solid #2a3564;">
       <p style="margin-top:0;color:#aab6e8;font-size:13.5px;">The sound studio is its own room now &mdash; a night studio with the Creator&rsquo;s plans, a live console, and the Calm DNA of every track.</p>
       <a href="/watch/lab" style="display:inline-block;background:linear-gradient(90deg,#6d5df0,#2fc4c9);color:#fff;border-radius:12px;padding:12px 26px;font-weight:800;text-decoration:none;letter-spacing:.02em;box-shadow:0 6px 24px rgba(109,93,240,.35);">Enter the Lab &rarr;</a>
+    </div>
+    <h2 class="ledger" id="provingground">The Proving Ground</h2>
+    <div class="card" style="background:linear-gradient(135deg,#08120e,#0d2a1e 60%,#0a1f2e);border:1px solid #1d5c42;">
+      <p style="margin-top:0;color:#9ccbb2;font-size:13.5px;">A fully simulated InnerLight at full burn &mdash; for investors, for research students, for testing policies on synthetic souls before they ever touch real ones. Quarantined: nothing simulated can touch real evidence or real metrics.</p>
+      <a href="/watch/sim" style="display:inline-block;background:linear-gradient(90deg,#1d9e63,#2fc98c);color:#04150c;border-radius:12px;padding:12px 26px;font-weight:800;text-decoration:none;">Enter the Proving Ground &rarr;</a>
     </div>
 
     <h2 class="ledger" id="exigent">Exigent circumstances &mdash; emergency dispatch readiness</h2>
@@ -15628,6 +15761,177 @@ def _invest_close_stale(conn):
             conn.execute("UPDATE investigations SET ended=?, seconds=? WHERE id=?",
                          (end_at, int(end_at - started), iid))
     conn.commit()
+
+# ============================= THE PROVING GROUND =============================
+# A fully quarantined simulation of InnerLight under load — for investors,
+# for university research students, and as a policy testbed. LAW: simulation
+# NEVER touches real records. It writes only sim:* keys in the live store;
+# it can never write the security evidence chain, the study metrics, the
+# loss ledger, or real presence. Every screen carries the SIMULATED banner.
+_SIM_DEFAULTS = {
+    "arrival_rate": 6.0,        # sessions per simulated minute (Poisson)
+    "init_distress_mean": 7.0,  # 0..10 scale at arrival
+    "init_distress_sd": 1.6,
+    "calm_pull": 0.055,         # per-second pull toward calm (the room working)
+    "adaptive_boost": 1.35,     # multiplier on calm_pull for cohort B (adaptive sound ON)
+    "noise": 0.28,              # distress volatility
+    "camera_rate": 0.45,        # fraction consenting to camera (heart trace visible)
+    "crisis_prob": 0.06,        # arrivals in acute crisis
+    "provider_on": 1,           # provider on call (1) or the no-dead-door world (0)
+    "attack_rate": 1.2,         # simulated probe attempts per minute (security wall)
+    "session_max_min": 26.0,    # departure once settled or at cap
+    "settle_threshold": 2.5,
+    "speed": 8.0,               # simulated seconds per real second
+    "seed": 1042,
+}
+
+def _sim_get():
+    return _live_get("sim:state") or {"running": 0, "cfg": dict(_SIM_DEFAULTS),
+                                      "t": 0.0, "last_real": 0.0, "step": 0,
+                                      "sessions": [], "done": [], "feed": [],
+                                      "sec": [], "arrivals": 0, "blooms": 0,
+                                      "crises": 0, "handoffs": 0}
+
+def _sim_put(st):
+    st["sessions"] = st["sessions"][-160:]
+    st["done"] = st["done"][-2000:]
+    st["feed"] = st["feed"][-40:]
+    st["sec"] = st["sec"][-30:]
+    _live_set("sim:state", st)
+
+_SIM_NAMES = ("wren","ash","sage","rio","kai","noor","eli","mira","tovi","lena","remy","jude","suri","beck","nova","imani","kofi","aylin","mateo","yuki")
+_SIM_ATTACKS = (("198.51.100.23","/.env","credential-file decoy"), ("203.0.113.88","/wp-login.php","login decoy"),
+                ("192.0.2.14","/phpmyadmin","database-panel decoy"), ("198.51.100.77","/api/keys","API-keys decoy"))
+
+def _sim_advance(st):
+    import random as _rd
+    cfg = st["cfg"]
+    now = time.time()
+    if not st["running"]:
+        st["last_real"] = now
+        return st
+    real_dt = max(0.0, min(now - (st["last_real"] or now), 30.0))
+    st["last_real"] = now
+    steps = int(min(real_dt * float(cfg["speed"]), 600))
+    for _ in range(steps):
+        st["step"] += 1
+        st["t"] += 1.0
+        rng = _rd.Random(int(cfg["seed"]) * 1000003 + st["step"])
+        # arrivals (Poisson via exponential thinning per second)
+        if rng.random() < float(cfg["arrival_rate"]) / 60.0:
+            st["arrivals"] += 1
+            crisis = rng.random() < float(cfg["crisis_prob"])
+            cohort = "B" if (st["arrivals"] % 2 == 0) else "A"   # alternating assignment
+            d0 = max(1.0, min(10.0, rng.gauss(float(cfg["init_distress_mean"]), float(cfg["init_distress_sd"]))))
+            st["sessions"].append({
+                "sid": "sim-%d" % st["arrivals"],
+                "name": rng.choice(_SIM_NAMES) + "-" + str(st["arrivals"] % 97),
+                "cohort": cohort, "crisis": 1 if crisis else 0,
+                "d": 10.0 if crisis else d0, "d0": 10.0 if crisis else d0,
+                "cam": 1 if rng.random() < float(cfg["camera_rate"]) else 0,
+                "base": rng.randint(62, 78), "age_s": 0, "lane": "calm",
+                "hist": [],
+            })
+            if crisis:
+                st["crises"] += 1
+                st["feed"].append({"t": st["t"], "type": "crisis-card shown", "sid": "sim-%d" % st["arrivals"]})
+                if int(cfg["provider_on"]):
+                    st["handoffs"] += 1
+                    st["feed"].append({"t": st["t"], "type": "warm handoff (provider on call)", "sid": "sim-%d" % st["arrivals"]})
+        # security wall
+        if rng.random() < float(cfg["attack_rate"]) / 60.0:
+            ip, path, what = rng.choice(_SIM_ATTACKS)
+            st["sec"].append({"t": st["t"], "ip": ip, "path": path, "what": what,
+                              "resp": rng.choice(("flagged + delayed", "locked out 15 min", "honeytoken planted"))})
+        # session dynamics
+        alive = []
+        for s in st["sessions"]:
+            s["age_s"] += 1
+            pull = float(cfg["calm_pull"]) * (float(cfg["adaptive_boost"]) if s["cohort"] == "B" else 1.0)
+            srng = _rd.Random(int(cfg["seed"]) * 7919 + st["step"] * 31 + int(s["sid"][4:]))
+            s["d"] = max(0.0, min(10.0, s["d"] + (-pull * s["d"]) + srng.gauss(0, float(cfg["noise"]))))
+            want = "deepcalm" if s["d"] >= 7 else ("lifting" if s["d"] <= 3.2 and s["d0"] >= 6 else "calm")
+            if want != s["lane"] and s["age_s"] % 20 == 0:
+                s["lane"] = want
+                st["feed"].append({"t": st["t"], "type": "lane -> " + want + " (words)", "sid": s["sid"]})
+            if s["cam"] and s["age_s"] % 4 == 0:
+                bpm = int(s["base"] + s["d"] * 3.2 + srng.gauss(0, 1.6))
+                s["hist"] = (s["hist"] + [bpm])[-40:]
+            if s["d"] <= float(cfg["settle_threshold"]) and s["age_s"] > 90:
+                st["blooms"] += 1
+                st["feed"].append({"t": st["t"], "type": "bloom (settled)", "sid": s["sid"]})
+                st["done"].append({"sid": s["sid"], "cohort": s["cohort"], "d0": round(s["d0"], 2),
+                                   "settled": 1, "seconds": s["age_s"], "crisis": s["crisis"]})
+                continue
+            if s["age_s"] >= float(cfg["session_max_min"]) * 60:
+                st["done"].append({"sid": s["sid"], "cohort": s["cohort"], "d0": round(s["d0"], 2),
+                                   "settled": 1 if s["d"] <= float(cfg["settle_threshold"]) else 0,
+                                   "seconds": s["age_s"], "crisis": s["crisis"]})
+                continue
+            alive.append(s)
+        st["sessions"] = alive
+    return st
+
+@app.route("/api/sim/config", methods=["POST"])
+def api_sim_config():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    data = request.get_json(silent=True) or {}
+    st = _sim_advance(_sim_get())
+    for k in _SIM_DEFAULTS:
+        if k in data:
+            try:
+                st["cfg"][k] = float(data[k]) if k != "seed" else int(data[k])
+            except Exception:
+                pass
+    if data.get("action") == "start":
+        st["running"] = 1
+        st["last_real"] = time.time()
+    if data.get("action") == "stop":
+        st["running"] = 0
+    if data.get("action") == "reset":
+        st = {"running": 0, "cfg": st["cfg"], "t": 0.0, "last_real": 0.0, "step": 0,
+              "sessions": [], "done": [], "feed": [], "sec": [], "arrivals": 0,
+              "blooms": 0, "crises": 0, "handoffs": 0}
+    _sim_put(st)
+    return jsonify({"ok": True, "running": st["running"], "cfg": st["cfg"]})
+
+@app.route("/api/sim/state")
+def api_sim_state():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    st = _sim_advance(_sim_get())
+    _sim_put(st)
+    def cohort_stats(ch):
+        rows = [d for d in st["done"] if d["cohort"] == ch]
+        settled = [d for d in rows if d["settled"]]
+        mean_t = round(sum(d["seconds"] for d in settled) / len(settled) / 60.0, 1) if settled else None
+        return {"n": len(rows), "settled_pct": round(100.0 * len(settled) / len(rows), 1) if rows else None,
+                "mean_minutes_to_calm": mean_t}
+    return jsonify({
+        "SIMULATED": True, "running": st["running"], "sim_clock_min": round(st["t"] / 60.0, 1),
+        "cfg": st["cfg"],
+        "live": [{"sid": s["sid"], "name": s["name"], "cohort": s["cohort"], "d": round(s["d"], 2),
+                  "lane": s["lane"], "cam": s["cam"], "crisis": s["crisis"],
+                  "bpm": (s["hist"][-1] if s["hist"] else None), "hist": s["hist"][-24:],
+                  "held_min": round(s["age_s"] / 60.0, 1)} for s in st["sessions"][-80:]],
+        "kpis": {"live_now": len(st["sessions"]), "arrivals": st["arrivals"], "blooms": st["blooms"],
+                 "crises": st["crises"], "handoffs": st["handoffs"], "completed": len(st["done"])},
+        "cohorts": {"A_standard": cohort_stats("A"), "B_adaptive": cohort_stats("B")},
+        "feed": list(reversed(st["feed"][-18:])), "security": list(reversed(st["sec"][-12:])),
+    })
+
+@app.route("/api/sim/export.csv")
+def api_sim_export():
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    st = _sim_get()
+    rows = ["sid,cohort,crisis,initial_distress,settled,seconds"]
+    for d in st["done"]:
+        rows.append("%s,%s,%d,%.2f,%d,%d" % (d["sid"], d["cohort"], d["crisis"], d["d0"], d["settled"], d["seconds"]))
+    resp = app.response_class("\n".join(rows), mimetype="text/csv")
+    resp.headers["Content-Disposition"] = "attachment; filename=proving_ground_dataset.csv"
+    return resp
 
 @app.route("/api/admin/legal/investigation", methods=["POST"])
 def api_admin_legal_investigation():

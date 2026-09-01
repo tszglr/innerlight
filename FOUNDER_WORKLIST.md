@@ -57,6 +57,13 @@ Ordered by his priority. Updated every session. (Aug 24, 2026)
     follow-through in study metrics; Inner-Pilot-Light-style daily gentle
     message (opt-in) as a future feature.
 
+## THE PROVING GROUND (simulation lab)
+17. v1 SHIPPED: quarantined full-burn simulation (/watch/sim) — Poisson
+    arrivals, distress dynamics, A/B adaptive-sound experiment, seeded
+    reproducibility, CSV export, model card, security-wall sim. NEXT:
+    student access tokens (read/manipulate without founder key), richer
+    models (heterogeneous responders, dropout), classroom scenarios.
+
 ## PROCESS / DESIGN
 12. Figma-style tools rejected ("very difficult to use") — design happens
     directly in the product, in code, with the founder.
