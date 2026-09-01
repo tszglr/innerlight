@@ -11435,6 +11435,8 @@ def bio_ping():
 def admin_bio_live():
     if not session.get("founder_ok"):
         return jsonify({"error": "auth"}), 403
+    if session.get("sim_mode"):
+        return jsonify(_sim_mirror_bio())
     now = time.time()
     with _BIO_LOCK:
         live = _live_all("bio:")
@@ -11915,6 +11917,8 @@ def admin_security():
     Metadata only — never any user content. This is the evidence view."""
     if not session.get("founder_ok"):
         return jsonify({"error": "auth"}), 403
+    if session.get("sim_mode"):
+        return jsonify(_sim_mirror_security())
     events = []
     try:
         with _SECURITY_LOG_LOCK:
@@ -12288,6 +12292,8 @@ def admin_logout():
 def admin_live():
     if not session.get("founder_ok"):
         return jsonify({"error": "auth"}), 403
+    if session.get("sim_mode"):
+        return jsonify(_sim_mirror_live())
     day = time.strftime("%Y-%m-%d")
     with _METRICS_LOCK:
         m = _metrics_load()
@@ -12494,7 +12500,7 @@ SIM_ROOM = r"""<!doctype html>
 <div class="wrap">
  <a class="back" href="/admin">&larr; The Watch</a>
  <h1>THE PROVING GROUND</h1>
- <div class="sub">InnerLight at full burn &mdash; every light lit, every measure firing. Turn the knobs; the world obeys.</div>
+ <div class="sub">This is the research console. THE MIRROR IS THE WATCH ITSELF: turn on Simulation Mode from the Watch&rsquo;s Proving Ground card and the real dashboard &mdash; the exact panels and buttons &mdash; lights up with these souls. Knobs here steer that world live.</div>
  <div class="grid">
   <div class="panel"><h2>Research console</h2>
    <div id="knobs"></div>
@@ -12595,6 +12601,14 @@ def watch_lab_room():
 @app.route("/admin")
 def admin_dashboard():
     """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
+    _sim_banner = ""
+    if session.get("sim_mode") and session.get("founder_ok"):
+        _sim_banner = (
+            '<div style="position:sticky;top:0;z-index:9999;background:repeating-linear-gradient(45deg,#0d3b2a,#0d3b2a 14px,#0a2e21 14px,#0a2e21 28px);'
+            'color:#7ce8b0;text-align:center;font-weight:800;letter-spacing:.18em;padding:9px;font-size:12px;border-bottom:1px solid #1d5c42;">'
+            'SIMULATION MODE &mdash; EVERY PANEL BELOW IS LIT BY SYNTHETIC DATA &mdash; NO REAL PEOPLE, NO REAL EVIDENCE '
+            '<button onclick="fetch(&#39;/api/sim/mode&#39;,{method:&#39;POST&#39;,headers:{&#39;Content-Type&#39;:&#39;application/json&#39;},body:&#39;{&quot;on&quot;:0}&#39;}).then(function(){location.reload();})" '
+            'style="margin-left:14px;background:#7ce8b0;color:#04150c;border:0;border-radius:999px;padding:4px 14px;font-weight:800;cursor:pointer;font-size:11px;">Exit simulation</button></div>')
     admin_key = os.environ.get("ADMIN_KEY", "")
     if not admin_key:
         return ("<h2 style='font-family:Arial;padding:40px;'>Admin key not set yet.</h2>"
@@ -12734,7 +12748,7 @@ def admin_dashboard():
         f'<span class="lane-count">{v} {"time" if v == 1 else "times"} today</span></div>'
         f'<div class="band"><div class="band-fill" style="width:{(max(6, int(100 * v / _max_mv)) if v else 0)}%;animation-delay:-{i * 1.7}s"></div></div></div>'
         for i, (lbl, v) in enumerate(_today_moves))
-    return render_template_string("""
+    return _sim_banner + render_template_string("""
 <!doctype html><html lang="en"><head><title>The Watch — InnerLight</title>
 <meta charset="utf-8">
 <link rel="icon" href="data:,">
@@ -12982,8 +12996,20 @@ def admin_dashboard():
     <h2 class="ledger" id="provingground">The Proving Ground</h2>
     <div class="card" style="background:linear-gradient(135deg,#08120e,#0d2a1e 60%,#0a1f2e);border:1px solid #1d5c42;">
       <p style="margin-top:0;color:#9ccbb2;font-size:13.5px;">A fully simulated InnerLight at full burn &mdash; for investors, for research students, for testing policies on synthetic souls before they ever touch real ones. Quarantined: nothing simulated can touch real evidence or real metrics.</p>
-      <a href="/watch/sim" style="display:inline-block;background:linear-gradient(90deg,#1d9e63,#2fc98c);color:#04150c;border-radius:12px;padding:12px 26px;font-weight:800;text-decoration:none;">Enter the Proving Ground &rarr;</a>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="sim-mode-on" style="background:linear-gradient(90deg,#1d9e63,#2fc98c);color:#04150c;border:0;border-radius:12px;padding:12px 26px;font-weight:800;cursor:pointer;">Light THIS dashboard (Simulation Mode)</button>
+        <a href="/watch/sim" style="display:inline-block;background:transparent;border:1px solid #1d5c42;color:#9ccbb2;border-radius:12px;padding:12px 26px;font-weight:800;text-decoration:none;">Research console &rarr;</a>
+      </div>
     </div>
+    <script>
+      (function(){
+        var b = document.getElementById('sim-mode-on');
+        if (b) b.addEventListener('click', function(){
+          fetch('/api/sim/mode', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{"on":1}'})
+            .then(function(){ location.reload(); });
+        });
+      })();
+    </script>
 
     <h2 class="ledger" id="exigent">Exigent circumstances &mdash; emergency dispatch readiness</h2>
     <div class="card" id="exigent-card">
@@ -15871,6 +15897,79 @@ def _sim_advance(st):
             alive.append(s)
         st["sessions"] = alive
     return st
+
+@app.route("/api/sim/mode", methods=["POST"])
+def api_sim_mode():
+    """Simulation Mode: the REAL Watch, lit by synthetic data. Reads only."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    data = request.get_json(silent=True) or {}
+    on = bool(data.get("on"))
+    session["sim_mode"] = 1 if on else 0
+    if on:
+        st = _sim_advance(_sim_get())
+        st["running"] = 1
+        st["last_real"] = time.time()
+        _sim_put(st)
+    return jsonify({"ok": True, "sim_mode": session["sim_mode"]})
+
+def _sim_mirror_bio():
+    """Sim souls in the EXACT schema the real embers/heart panels consume."""
+    st = _sim_advance(_sim_get()); _sim_put(st)
+    now = time.time()
+    active = []
+    for i, s in enumerate(st["sessions"][-60:]):
+        hist = [{"t": time.strftime("%H:%M:%S", time.gmtime(now - (len(s["hist"]) - j) * 4)), "bpm": b}
+                for j, b in enumerate(s["hist"])]
+        bpm = s["hist"][-1] if s["hist"] else 0
+        active.append({
+            "n": i + 1, "sid": s["sid"][:4] + "\u2026",
+            "who": "Person " + str(i + 1),
+            "k": hashlib.sha1(("watch::" + s["sid"]).encode()).hexdigest()[:10],
+            "ago": 0,
+            "spark": list(s["hist"])[-24:],
+            "bpm": bpm,
+            "hasheart": 1 if bpm else 0, "cam": s["cam"],
+            "tier": ("rising" if s["d"] >= 7 else ("settling" if s["d"] <= 3 else "steady")),
+            "base": s["base"],
+            "state": ("rising" if s["d"] >= 7 else ("settling" if s["d"] <= 3 else "steady")),
+            "face": ("tense" if s["d"] >= 7 else ("soft" if s["d"] <= 3 else "")),
+            "held_min": round(s["age_s"] / 60.0, 1), "away": 0,
+            "last": now, "history": hist,
+        })
+    return {"active": active, "count": len(active),
+            "server_time": time.strftime("%H:%M:%S"), "store": "shared",
+            "last_write_ago": 0, "SIMULATED": True}
+
+def _sim_mirror_live():
+    st = _sim_advance(_sim_get()); _sim_put(st)
+    feed = [{"t": time.strftime("%H:%M:%S", time.gmtime(time.time() - (st["t"] - f["t"]))),
+             "type": f["type"], "val": "", "sid": f["sid"][:4] + "\u2026"}
+            for f in st["feed"][-18:]]
+    return {"events_today": st["arrivals"] * 6 + st["blooms"] * 2,
+            "sessions_today": st["arrivals"], "blooms_today": st["blooms"],
+            "messages_today": st["arrivals"] * 4,
+            "server_time": time.strftime("%H:%M:%S"), "store": "shared",
+            "feed": list(reversed(feed)), "SIMULATED": True}
+
+def _sim_mirror_security():
+    st = _sim_advance(_sim_get()); _sim_put(st)
+    reason_for = {"credential-file decoy": "honeypot:dotenv", "login decoy": "honeypot:wordpress",
+                  "database-panel decoy": "honeypot:phpmyadmin", "API-keys decoy": "honeypot:api-keys"}
+    recent = []
+    paths = {}
+    for a in reversed(st["sec"][-30:]):
+        rz = reason_for.get(a["what"], "honeypot:wordpress")
+        paths[a["path"]] = paths.get(a["path"], 0) + 1
+        recent.append({"ts": time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime()),
+                       "reason": rz, "path": a["path"], "method": "GET", "ip": a["ip"],
+                       "xff": "", "ua": "SimulatedScanner/1.0", "kb": rz})
+    return {"attacks_total": len(st["sec"]) * 3 + 17,
+            "honeypot_hits": len(st["sec"]) * 2 + 9,
+            "hostile_ips": len(set(a["ip"] for a in st["sec"])) or 0,
+            "locked_out_now": 1 if st["sec"] else 0,
+            "top_paths": [{"path": p, "count": ct} for p, ct in sorted(paths.items(), key=lambda x: -x[1])[:8]],
+            "recent": recent, "kb": SECURITY_KB, "SIMULATED": True}
 
 @app.route("/api/sim/config", methods=["POST"])
 def api_sim_config():
