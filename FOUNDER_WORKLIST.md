@@ -64,6 +64,30 @@ Ordered by his priority. Updated every session. (Aug 24, 2026)
     student access tokens (read/manipulate without founder key), richer
     models (heterogeneous responders, dropout), classroom scenarios.
 
+## THE FULL-BURN CRITIQUE (nine screenshots, Aug 31) — sim must FIRE everywhere
+18. Hero stats (held / door-to-first-sound / handoffs / messages) must MOVE
+    live in sim — seconds fluctuating, messages climbing, handoffs LARGE
+    (the whole purpose is handoffs; 4 is failure-scale)
+19. Ember connection visual: when a person is handed to a human, their
+    light CONNECTS to a second light of another color — visible human link
+20. "The room today" counters must fire (lane shifts, skies, words, thoughts)
+21. Daily 14-day ledger: sim at realistic national scale (thousands/day)
+22. "Asked for human help" list: sim-populated (never his real entry)
+23. On-call board: ALL roles ON in sim (both care and legal sides)
+24. Vetting: more vetted samples visible in sim
+25. "What people said": sim voices populated (never transferable to real)
+26. Crisis referral count: sim thousands
+27. Music: all lanes on; SONG PLAY LOG firing constantly in sim
+28. Live biometric panel: KEEP (founder loves it) — add legend explaining
+    the trend sparkline; offer non-brown palette accent
+29. Heart coverage / person-by-person / sessions-per-day / track reactions /
+    partners voices: all sim-populated at scale
+30. READABILITY BUG (real, not sim): white-on-white text — the hard-limits
+    wording + activity-log boxes render as blank white bars. Dark ink or
+    dark boxes. Broader palette beyond brown/white/yellow.
+31. LAYOUT: most important sections live at the bottom of The Watch —
+    reorder with founder's priority map (ask him for the order he wants)
+
 ## PROCESS / DESIGN
 12. Figma-style tools rejected ("very difficult to use") — design happens
     directly in the product, in code, with the founder.

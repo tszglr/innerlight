@@ -12509,7 +12509,7 @@ SIM_ROOM = r"""<!doctype html>
     <button class="stop" id="sim-stop">Pause</button>
     <button class="stop" id="sim-reset">Reset</button>
    </div>
-   <div style="margin-top:12px"><a class="csv" href="/api/sim/export.csv">Download dataset (CSV)</a></div>
+   <div style="margin-top:12px"><a class="csv" href="/api/sim/report.doc">Download research report (Word)</a> <a class="csv" href="/api/sim/export.csv" style="margin-left:14px;opacity:.6;font-size:11px;">raw CSV</a></div>
    <h2 style="margin-top:18px">Model card</h2>
    <div class="model">
     Arrivals: Poisson(<code>rate</code>/min). Assignment: alternating to cohort A (standard) or B (adaptive sound).
@@ -12568,11 +12568,15 @@ SIM_ROOM = r"""<!doctype html>
     +'<div class="kpi"><b>'+K.crises+'</b><span>crisis</span></div>'
     +'<div class="kpi"><b>'+K.handoffs+'</b><span>handoffs</span></div>'
     +'<div class="kpi"><b>'+s.sim_clock_min+'m</b><span>sim clock</span></div>';
-   document.getElementById('embers').innerHTML = s.live.map(function(e){
-    return '<div class="ember '+e.cohort+(e.crisis?' crisis':'')+'"><b>'+e.name+'</b> &middot; '+e.cohort
+   window._simLive = s.live;
+   document.getElementById('embers').innerHTML = s.live.map(function(e, i){
+    return '<div class="ember '+e.cohort+(e.crisis?' crisis':'')+'" data-i="'+i+'" style="cursor:pointer;"><b>'+e.name+'</b> &middot; '+e.cohort
      +(e.bpm?(' &middot; '+e.bpm+' bpm'):'')+'<br><span style="color:#6da88b">'+e.lane+' &middot; '+e.held_min+'m</span>'
      +'<div class="d"><i style="width:'+(e.d*10)+'%"></i></div></div>';
    }).join('') || '<span style="color:#6da88b">the room is quiet &mdash; press Start</span>';
+   document.querySelectorAll('.ember[data-i]').forEach(function(c){
+     c.addEventListener('click', function(){ openSoul(window._simLive[+c.getAttribute('data-i')]); });
+   });
    var A=s.cohorts.A_standard, B=s.cohorts.B_adaptive;
    document.getElementById('cohorts').innerHTML =
     '<div class="coh">A &middot; standard sound<br><b>'+(A.n||0)+'</b> completed &middot; <b>'+(A.settled_pct==null?'—':A.settled_pct+'%')+'</b> settled &middot; <b>'+(A.mean_minutes_to_calm==null?'—':A.mean_minutes_to_calm+'m')+'</b> to calm</div>'
@@ -12582,6 +12586,24 @@ SIM_ROOM = r"""<!doctype html>
   }).catch(function(){});
  }
  tick(); setInterval(tick, 2000);
+ window.openSoul = function(e){
+   if(!e) return;
+   var old=document.getElementById('soul-win'); if(old) old.remove();
+   var w=document.createElement('div'); w.id='soul-win';
+   w.style.cssText='position:fixed;inset:0;z-index:9700;background:rgba(4,12,8,.75);display:flex;align-items:center;justify-content:center;padding:18px;';
+   var rows=[['Cohort', e.cohort==='B'?'B — adaptive sound':'A — standard'],
+     ['State', e.crisis?'arrived in crisis':'ordinary arrival'],
+     ['Current distress', (e.d!=null?e.d.toFixed(1):'—')+' / 10'],
+     ['Sound lane', e.lane],['Heart', e.bpm?(e.bpm+' bpm'):'text-only (camera off)'],
+     ['Held', e.held_min+' min'],
+     ['What we may see', 'This is the ONLY view — synthetic, anonymous. In the real Watch this same card shows exactly these fields and never a person\u2019s words.']];
+   w.innerHTML='<div style="background:#0c1a13;border:1px solid #1d5c42;border-radius:16px;max-width:440px;width:100%;padding:20px 22px;color:#dcefe3;">'
+     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><b style="color:#8ff0bd;font-size:16px;">'+e.name+'</b>'
+     +'<button onclick="document.getElementById(\'soul-win\').remove()" style="background:none;border:1px solid #1d5c42;color:#9ccbb2;border-radius:999px;padding:5px 14px;cursor:pointer;">Close</button></div>'
+     +rows.map(function(r){return '<div style="margin:9px 0;"><div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#5fcf96;">'+r[0]+'</div><div style="font-size:14px;">'+r[1]+'</div></div>';}).join('')+'</div>';
+   w.addEventListener('click',function(ev){if(ev.target===w)w.remove();});
+   document.body.appendChild(w);
+ };
 })();
 </script></body></html>"""
 
@@ -12608,7 +12630,14 @@ def admin_dashboard():
             'color:#7ce8b0;text-align:center;font-weight:800;letter-spacing:.18em;padding:9px;font-size:12px;border-bottom:1px solid #1d5c42;">'
             'SIMULATION MODE &mdash; EVERY PANEL BELOW IS LIT BY SYNTHETIC DATA &mdash; NO REAL PEOPLE, NO REAL EVIDENCE '
             '<button onclick="fetch(&#39;/api/sim/mode&#39;,{method:&#39;POST&#39;,headers:{&#39;Content-Type&#39;:&#39;application/json&#39;},body:&#39;{&quot;on&quot;:0}&#39;}).then(function(){location.reload();})" '
-            'style="margin-left:14px;background:#7ce8b0;color:#04150c;border:0;border-radius:999px;padding:4px 14px;font-weight:800;cursor:pointer;font-size:11px;">Exit simulation</button></div>')
+            'style="margin-left:14px;background:#7ce8b0;color:#04150c;border:0;border-radius:999px;padding:4px 14px;font-weight:800;cursor:pointer;font-size:11px;">Exit simulation</button></div>'
+            '<script>(function(){function set(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}'
+            'function pulse(){fetch("/api/sim/pulse").then(function(r){return r.json();}).then(function(p){'
+            'set("kpi-sess",p.sessions);set("kpi-first",p.first_sound_s+"s");set("kpi-msgs",p.messages);'
+            'set("kpi-heart",p.avg_heart);set("kpi-hand",p.handoffs);'
+            'var rm=[p.room.lane_shifts,p.room.skies,p.room.words,p.room.thoughts];'
+            'for(var i=0;i<4;i++){set("room-mv-"+i,rm[i]+(rm[i]===1?" time today":" times today"));}'
+            '}).catch(function(){});}pulse();setInterval(pulse,2000);})();</script>')
     admin_key = os.environ.get("ADMIN_KEY", "")
     if not admin_key:
         return ("<h2 style='font-family:Arial;padding:40px;'>Admin key not set yet.</h2>"
@@ -12722,11 +12751,11 @@ def admin_dashboard():
     kpi_cards = (
         f'<div class="kpi ocean"><div class="kpi-v"><span class="dot"></span><span id="kpi-live-n">0</span></div>'
         f'<div class="kpi-l">Live right now</div><div class="kpi-s">people in a session</div></div>'
-        + _kpi(_tot_sessions, "Sessions", "last 14 days")
-        + _kpi((f"{_avg_first:.1f}s" if _fs_cnt else "&mdash;"), "To first sound", "lower is better")
-        + _kpi(_tot_messages, "Messages", "last 14 days")
-        + _kpi((f"{_avg_heart:.0f}" if h_n else "&mdash;"), "Avg heart rate", "bpm seen", ocean=True)
-        + _kpi(_tot_handoffs, "Human handoffs", "bridges to a person")
+        + _kpi(_tot_sessions, "Sessions", "last 14 days", vid="kpi-sess")
+        + _kpi((f"{_avg_first:.1f}s" if _fs_cnt else "&mdash;"), "To first sound", "lower is better", vid="kpi-first")
+        + _kpi(_tot_messages, "Messages", "last 14 days", vid="kpi-msgs")
+        + _kpi((f"{_avg_heart:.0f}" if h_n else "&mdash;"), "Avg heart rate", "bpm seen", ocean=True, vid="kpi-heart")
+        + _kpi(_tot_handoffs, "Human handoffs", "bridges to a person", vid="kpi-hand")
     )
     # ---- THE WATCH: real numbers for the night room above the fold ----
     _today_key = time.strftime("%Y-%m-%d")
@@ -12745,7 +12774,7 @@ def admin_dashboard():
     room_rows = "".join(
         f'<div class="lane" style="margin-top:20px;"><div class="lane-head">'
         f'<span class="lane-name">{lbl}</span>'
-        f'<span class="lane-count">{v} {"time" if v == 1 else "times"} today</span></div>'
+        f'<span class="lane-count" id="room-mv-{i}">{v} {"time" if v == 1 else "times"} today</span></div>'
         f'<div class="band"><div class="band-fill" style="width:{(max(6, int(100 * v / _max_mv)) if v else 0)}%;animation-delay:-{i * 1.7}s"></div></div></div>'
         for i, (lbl, v) in enumerate(_today_moves))
     return _sim_banner + render_template_string("""
@@ -13021,7 +13050,7 @@ def admin_dashboard():
       behind separate legal review. Current law mandates crisis <i>referral</i> (SB 243, OR SB 1546, NY &sect;1700);
       this engine is readiness for the day dispatch is required by statute or contract.</p>
       <div id="exigent-providers" style="font-size:13.5px;line-height:1.55;"></div>
-      <div id="exigent-never" style="font-size:13px;margin-top:10px;padding:10px 12px;background:#f0f6f3;border-radius:8px;"></div>
+      <div id="exigent-never" style="font-size:13px;margin-top:10px;padding:10px 12px;background:#f0f6f3;color:#26332c;border-radius:8px;"></div>
       <div id="exigent-log" style="font-size:12px;color:#776;margin-top:10px;"></div>
     </div>
     <script>
@@ -13064,7 +13093,7 @@ def admin_dashboard():
       change what any person in crisis experiences, and money can never buy routing (Principle 3, enforced in code
       and by a repository test).</p>
       <div id="dispatch-streams" style="font-size:13.5px;line-height:1.55;"></div>
-      <div id="dispatch-never" style="font-size:13px;margin-top:10px;padding:10px 12px;background:#fdf3f0;border-radius:8px;"></div>
+      <div id="dispatch-never" style="font-size:13px;margin-top:10px;padding:10px 12px;background:#fdf3f0;color:#4a2a20;border-radius:8px;"></div>
       <div id="dispatch-log" style="font-size:12px;color:#776;margin-top:10px;"></div>
     </div>
     <script>
@@ -13734,7 +13763,7 @@ def admin_dashboard():
 
     <h2 class="ledger" id="live">Live sessions — real-time biometric monitor</h2>
     <div class="panel">
-    <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. <span id="bio-clock" style="float:right;"></span></div>
+    <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. The small line at the right is that person&rsquo;s heart over the last minutes &mdash; a line drifting downward means a body settling. <span id="bio-clock" style="float:right;"></span></div>
     <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Waiting for a live session…</i></div>
     </div>
 
@@ -14115,6 +14144,7 @@ def admin_dashboard():
         /* the server knows the true held time — size follows it */
         e.born = performance.now() - (p.held_min || 0)*60000;
       }
+      e.link = !!p.link;
     }
     var keys = Object.keys(emberMap);
     for (var j=0;j<keys.length;j++){
@@ -14137,6 +14167,21 @@ def admin_dashboard():
     var dy = Math.cos(t*0.04 + e.driftPh2) * 5;
 
     var px = e.x*W + dx, py = e.y*H + dy;
+
+    /* HUMAN CONNECTION: when this person is being handed to a human, a
+       second light of another color appears, joined by a visible thread —
+       the founder's visual of a human reaching back. */
+    if (e.link && e.state === 'alive'){
+      var lx = px + 34, ly = py - 22;
+      ctx.strokeStyle = 'rgba(47,196,201,.55)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(lx, ly); ctx.stroke();
+      var lg = ctx.createRadialGradient(lx, ly, 0, lx, ly, 9);
+      lg.addColorStop(0, 'rgba(160,240,235,.95)');
+      lg.addColorStop(1, 'rgba(47,196,201,0)');
+      ctx.fillStyle = lg;
+      ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI*2); ctx.fill();
+    }
 
     var alpha = 1;
     var sinceBorn = (performance.now() - e.fadeIn)/1000;
@@ -15816,7 +15861,9 @@ def _sim_get():
                                       "t": 0.0, "last_real": 0.0, "step": 0,
                                       "sessions": [], "done": [], "feed": [],
                                       "sec": [], "arrivals": 0, "blooms": 0,
-                                      "crises": 0, "handoffs": 0}
+                                      "crises": 0, "handoffs": 0, "messages": 0,
+                                      "lane_shifts": 0, "skies": 0, "thoughts": 0,
+                                      "referrals": 0, "playlog": []}
 
 def _sim_put(st):
     st["sessions"] = st["sessions"][-160:]
@@ -15860,9 +15907,11 @@ def _sim_advance(st):
             })
             if crisis:
                 st["crises"] += 1
+                st["referrals"] = st.get("referrals", 0) + 1
                 st["feed"].append({"t": st["t"], "type": "crisis-card shown", "sid": "sim-%d" % st["arrivals"]})
                 if int(cfg["provider_on"]):
                     st["handoffs"] += 1
+                    st["sessions"][-1]["linked_until"] = 120
                     st["feed"].append({"t": st["t"], "type": "warm handoff (provider on call)", "sid": "sim-%d" % st["arrivals"]})
         # security wall
         if rng.random() < float(cfg["attack_rate"]) / 60.0:
@@ -15876,9 +15925,25 @@ def _sim_advance(st):
             pull = float(cfg["calm_pull"]) * (float(cfg["adaptive_boost"]) if s["cohort"] == "B" else 1.0)
             srng = _rd.Random(int(cfg["seed"]) * 7919 + st["step"] * 31 + int(s["sid"][4:]))
             s["d"] = max(0.0, min(10.0, s["d"] + (-pull * s["d"]) + srng.gauss(0, float(cfg["noise"]))))
+            # the room's activity: messages, thoughts, skies — and warm
+            # handoffs at the scale InnerLight exists for
+            if s["age_s"] % 17 == 0 and srng.random() < 0.75:
+                st["messages"] = st.get("messages", 0) + 1
+            if s["age_s"] % 23 == 0 and srng.random() < 0.35:
+                st["thoughts"] = st.get("thoughts", 0) + 1
+            if s["age_s"] % 47 == 0 and srng.random() < 0.25:
+                st["skies"] = st.get("skies", 0) + 1
+            if int(cfg["provider_on"]) and not s.get("linked_until") and s["age_s"] > 60 and s["age_s"] % 29 == 0 and srng.random() < 0.18:
+                st["handoffs"] += 1
+                st["referrals"] = st.get("referrals", 0) + 1
+                s["linked_until"] = s["age_s"] + 90
+                st["feed"].append({"t": st["t"], "type": "warm handoff to a human", "sid": s["sid"]})
             want = "deepcalm" if s["d"] >= 7 else ("lifting" if s["d"] <= 3.2 and s["d0"] >= 6 else "calm")
             if want != s["lane"] and s["age_s"] % 20 == 0:
                 s["lane"] = want
+                st["lane_shifts"] = st.get("lane_shifts", 0) + 1
+                st["playlog"] = (st.get("playlog", []) + [{"t": st["t"], "lane": want,
+                    "track": want + "_" + str(1 + (st["step"] % 13)) + ".mp3"}])[-40:]
                 st["feed"].append({"t": st["t"], "type": "lane -> " + want + " (words)", "sid": s["sid"]})
             if s["cam"] and s["age_s"] % 4 == 0:
                 bpm = int(s["base"] + s["d"] * 3.2 + srng.gauss(0, 1.6))
@@ -15924,6 +15989,7 @@ def _sim_mirror_bio():
         bpm = s["hist"][-1] if s["hist"] else 0
         active.append({
             "n": i + 1, "sid": s["sid"][:4] + "\u2026",
+            "link": (1 if (s.get("linked_until") and s["age_s"] < s.get("linked_until", 0)) else 0),
             "who": "Person " + str(i + 1),
             "k": hashlib.sha1(("watch::" + s["sid"]).encode()).hexdigest()[:10],
             "ago": 0,
@@ -15991,7 +16057,8 @@ def api_sim_config():
     if data.get("action") == "reset":
         st = {"running": 0, "cfg": st["cfg"], "t": 0.0, "last_real": 0.0, "step": 0,
               "sessions": [], "done": [], "feed": [], "sec": [], "arrivals": 0,
-              "blooms": 0, "crises": 0, "handoffs": 0}
+              "blooms": 0, "crises": 0, "handoffs": 0, "messages": 0,
+              "lane_shifts": 0, "skies": 0, "thoughts": 0, "referrals": 0, "playlog": []}
     _sim_put(st)
     return jsonify({"ok": True, "running": st["running"], "cfg": st["cfg"]})
 
@@ -16019,6 +16086,81 @@ def api_sim_state():
         "cohorts": {"A_standard": cohort_stats("A"), "B_adaptive": cohort_stats("B")},
         "feed": list(reversed(st["feed"][-18:])), "security": list(reversed(st["sec"][-12:])),
     })
+
+@app.route("/api/sim/pulse")
+def api_sim_pulse():
+    """One heartbeat for the lit dashboard: every number that must MOVE."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    st = _sim_advance(_sim_get()); _sim_put(st)
+    import random as _rd
+    j = _rd.Random(st["step"])
+    return jsonify({
+        "SIMULATED": True,
+        "sessions": st["arrivals"], "messages": st.get("messages", 0),
+        "handoffs": st["handoffs"], "live": len(st["sessions"]),
+        "first_sound_s": round(6.0 + j.random() * 7.5, 1),
+        "avg_heart": 64 + int(j.random() * 14),
+        "room": {"lane_shifts": st.get("lane_shifts", 0), "skies": st.get("skies", 0),
+                 "words": st.get("messages", 0), "thoughts": st.get("thoughts", 0)},
+        "referrals": st.get("referrals", 0),
+        "playlog": list(reversed(st.get("playlog", [])[-8:])),
+    })
+
+@app.route("/api/sim/report.doc")
+def api_sim_report():
+    """A Word research report — the founder asked for Word, not Excel, with
+    the experiment explained and shown as bars, not a raw grid."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "unauthorized"}), 401
+    st = _sim_advance(_sim_get()); _sim_put(st)
+    def stats(ch):
+        rows = [d for d in st["done"] if d["cohort"] == ch]
+        settled = [d for d in rows if d["settled"]]
+        mt = (sum(d["seconds"] for d in settled) / len(settled) / 60.0) if settled else 0
+        pct = (100.0 * len(settled) / len(rows)) if rows else 0
+        return len(rows), pct, mt
+    An, Apct, Amin = stats("A")
+    Bn, Bpct, Bmin = stats("B")
+    def bar(pct, color):
+        w = int(max(1, min(100, pct)) * 3)
+        return ('<table cellspacing="0" cellpadding="0"><tr>'
+                '<td style="background:%s;width:%dpx;height:16px;"></td>'
+                '<td style="padding-left:8px;">%.1f%%</td></tr></table>' % (color, w, pct))
+    cfg = st["cfg"]
+    html = """<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
+<head><meta charset='utf-8'><title>InnerLight Proving Ground — Research Report</title></head>
+<body style="font-family:Georgia,serif;color:#1a1a1a;">
+<h1 style="color:#1d6f47;">InnerLight Proving Ground</h1>
+<p style="color:#555;">Simulation research report &mdash; generated %s. Synthetic data only; no real people.</p>
+<h2>1. The experiment</h2>
+<p>Arriving synthetic people are assigned alternately to two cohorts. <b>Cohort A</b> hears the standard sound. <b>Cohort B</b> hears the <b>adaptive Zenisys sound</b> (calm pull multiplied by the adaptive-boost setting, currently %.2f). Everything else is identical. The question: does adaptive sound help people settle more often, and faster?</p>
+<h2>2. Results so far</h2>
+<table border='1' cellspacing='0' cellpadding='8' style='border-collapse:collapse;'>
+<tr style='background:#eaf5ee;'><th>Cohort</th><th>Completed</th><th>%% settled</th><th>Avg minutes to calm</th></tr>
+<tr><td><b>A &mdash; standard</b></td><td>%d</td><td>%.1f%%</td><td>%.1f</td></tr>
+<tr><td><b>B &mdash; adaptive</b></td><td>%d</td><td>%.1f%%</td><td>%.1f</td></tr>
+</table>
+<h2>3. Settling rate, shown</h2>
+<p>Cohort A &mdash; standard sound</p>%s
+<p>Cohort B &mdash; adaptive sound</p>%s
+<h2>4. Reading this</h2>
+<p>A higher settled percentage and a lower average time-to-calm in Cohort B is evidence the adaptive sound helps. If the two are equal, look at the settings: an extreme calm-pull creates a ceiling where every cohort settles and no difference can show &mdash; lower it toward realistic values and re-run. The seed (%s) makes any run reproducible: same knobs, same result.</p>
+<h2>5. Run parameters</h2>
+<table border='1' cellspacing='0' cellpadding='6' style='border-collapse:collapse;font-size:12px;'>
+<tr style='background:#eaf5ee;'><th>Arrivals/min</th><th>Initial distress</th><th>Calm pull</th><th>Adaptive boost</th><th>Crisis prob.</th><th>Seed</th></tr>
+<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>
+</table>
+<p style='color:#777;font-size:11px;margin-top:20px;'>Generated by InnerLight. Simulation only &mdash; never mixed with real session data or the learning module.</p>
+</body></html>""" % (
+        time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()), float(cfg["adaptive_boost"]),
+        An, Apct, Amin, Bn, Bpct, Bmin,
+        bar(Apct, "#8a9bb0"), bar(Bpct, "#1d9e63"),
+        cfg["seed"], cfg["arrival_rate"], cfg["init_distress_mean"], cfg["calm_pull"],
+        cfg["adaptive_boost"], cfg["crisis_prob"], cfg["seed"])
+    resp = app.response_class(html, mimetype="application/msword")
+    resp.headers["Content-Disposition"] = "attachment; filename=proving_ground_report.doc"
+    return resp
 
 @app.route("/api/sim/export.csv")
 def api_sim_export():
