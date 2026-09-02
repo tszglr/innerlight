@@ -12780,7 +12780,10 @@ def admin_dashboard():
             a = zagg.setdefault(zone, {"sum": 0, "n": 0})
             a["sum"] += e.get("sum", 0); a["n"] += e.get("n", 0)
     ZLABEL = {"underEyeL":"Under left eye","underEyeR":"Under right eye","noseBridge":"Nose bridge",
-              "mouthSideL":"Left of mouth","mouthSideR":"Right of mouth"}
+              "mouthSideL":"Left of mouth","mouthSideR":"Right of mouth",
+              # accept the snake_case variants the camera path and sim both emit
+              "under_eye_l":"Under left eye","under_eye_r":"Under right eye","nasal_bridge":"Nose bridge",
+              "mouth_corner_l":"Left of mouth","mouth_corner_r":"Right of mouth"}
     if zagg:
         subzone_rows = "".join(
             f'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(244,201,119,.14);">'
@@ -12843,6 +12846,7 @@ def admin_dashboard():
  :root{
    --night:#17100a; --night-2:#211508; --field:#1d1309;
    --ember:#e8a34c; --candle:#f4c977; --core:#ffe8bf;
+   --accent:#e8a34c;   /* drifts slowly through warm hues over ~8 min */
    --cream:#f2e7d2; --cream-dim:rgba(242,231,210,.62); --cream-faint:rgba(242,231,210,.38);
    --hairline:rgba(232,163,76,.16);
    --serif:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
@@ -12931,6 +12935,25 @@ def admin_dashboard():
    color:rgba(242,231,210,.30);line-height:1.8;}
  /* ---------- the ledgers (everything the operations room already had) ---------- */
  .ledgers{margin-top:96px;}
+ /* Gentle life in the palette: the accent hue drifts slowly through warm
+    tones so the room never feels like one flat brown. Backgrounds stay calm;
+    only accents breathe. Respects reduced-motion. */
+ @keyframes huedrift { 0%{filter:hue-rotate(0deg);} 50%{filter:hue-rotate(-14deg);} 100%{filter:hue-rotate(10deg);} }
+ h2.ledger::before, .kpi .dot, .flame { animation:huedrift 480s ease-in-out infinite; }
+ @media (prefers-reduced-motion: reduce){ h2.ledger::before,.kpi .dot,.flame{animation:none;} }
+ /* ---- BOX LAYOUT: paired sections sit side by side in cards ---- */
+ .lgrid{display:grid;grid-template-columns:1fr;gap:22px;margin-top:20px;}
+ @media(min-width:920px){ .lgrid.pair{grid-template-columns:1fr 1fr;} }
+ .lbox{background:rgba(30,19,9,.55);border:1px solid var(--hairline);border-radius:18px;padding:20px 22px;}
+ .lbox h2.ledger{margin-top:0;}
+ /* collapsible folders (security, music) */
+ details.fold{background:rgba(30,19,9,.55);border:1px solid var(--hairline);border-radius:18px;padding:6px 20px;margin-top:20px;}
+ details.fold>summary{cursor:pointer;list-style:none;font-family:var(--serif);font-size:19px;color:var(--cream);
+   padding:16px 0;display:flex;align-items:center;gap:12px;}
+ details.fold>summary::-webkit-details-marker{display:none;}
+ details.fold>summary::before{content:"\25B8";color:var(--ember);transition:transform .2s;}
+ details.fold[open]>summary::before{transform:rotate(90deg);}
+ details.fold[open]{padding-bottom:20px;}
  .ledgers-title{font-family:var(--serif);font-weight:400;font-size:23px;color:var(--cream);text-align:center;letter-spacing:.03em;}
  .ledgers-sub{text-align:center;margin-top:10px;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--cream-faint);}
  h2.ledger{font-family:var(--serif);font-weight:400;font-size:19px;color:var(--cream);letter-spacing:.02em;
@@ -13073,12 +13096,12 @@ def admin_dashboard():
 
     <div class="hero">{{ kpi_cards|safe }}</div>
 
-    <h2 class="ledger" id="zenisyslab">Zenisys Lab</h2>
+    <h2 class="ledger" id="zenisyslab" data-sec="sec-zenlab">Zenisys Lab</h2>
     <div class="card" style="background:linear-gradient(135deg,#0b0e1a,#141b33 60%,#1a1040);border:1px solid #2a3564;">
       <p style="margin-top:0;color:#aab6e8;font-size:13.5px;">The sound studio is its own room now &mdash; a night studio with the Creator&rsquo;s plans, a live console, and the Calm DNA of every track.</p>
       <a href="/watch/lab" style="display:inline-block;background:linear-gradient(90deg,#6d5df0,#2fc4c9);color:#fff;border-radius:12px;padding:12px 26px;font-weight:800;text-decoration:none;letter-spacing:.02em;box-shadow:0 6px 24px rgba(109,93,240,.35);">Enter the Lab &rarr;</a>
     </div>
-    <h2 class="ledger" id="provingground">The Proving Ground</h2>
+    <h2 class="ledger" id="provingground" data-sec="sec-proving">The Proving Ground</h2>
     <div class="card" style="background:linear-gradient(135deg,#08120e,#0d2a1e 60%,#0a1f2e);border:1px solid #1d5c42;">
       <p style="margin-top:0;color:#9ccbb2;font-size:13.5px;">A fully simulated InnerLight at full burn &mdash; for investors, for research students, for testing policies on synthetic souls before they ever touch real ones. Quarantined: nothing simulated can touch real evidence or real metrics.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -13096,7 +13119,7 @@ def admin_dashboard():
       })();
     </script>
 
-    <h2 class="ledger" id="exigent">Exigent circumstances &mdash; emergency dispatch readiness</h2>
+    <h2 class="ledger" id="exigent" data-sec="sec-exigent">Exigent circumstances &mdash; emergency dispatch readiness</h2>
     <div class="card" id="exigent-card">
       <p style="margin-top:0;"><b>Status:</b> <span id="exigent-status" style="font-weight:700;">loading&hellip;</span>
         <button id="exigent-toggle" onclick="exigentToggle()" style="margin-left:14px;padding:6px 16px;border-radius:8px;border:1px solid #b89;background:#fff;cursor:pointer;font-weight:700;">&hellip;</button></p>
@@ -13146,7 +13169,7 @@ def admin_dashboard():
       exigentLoad();
     </script>
 
-    <h2 class="ledger" id="dispatch">Dispatch — the monetary engine (Principle 7)</h2>
+    <h2 class="ledger" id="dispatch" data-sec="sec-dispatch">Dispatch — the monetary engine (Principle 7)</h2>
     <div class="card" id="dispatch-card">
       <p style="margin-top:0;"><b>Status:</b> <span id="dispatch-status" style="font-weight:700;">loading&hellip;</span>
         <button id="dispatch-toggle" onclick="dispatchToggle()" style="margin-left:14px;padding:6px 16px;border-radius:8px;border:1px solid #b89; background:#fff; cursor:pointer; font-weight:700;">&hellip;</button></p>
@@ -13190,7 +13213,7 @@ def admin_dashboard():
       dispatchLoad();
     </script>
 
-    <h2 class="ledger" id="overview">The daily ledger — the last fourteen days</h2>
+    <h2 class="ledger" id="overview" data-sec="sec-ledger">The daily ledger — the last fourteen days</h2>
     <div class="tablewrap">
     <table>
     <tr><th>Day</th><th>Sessions</th><th>Avg time to first sound</th><th>Messages</th>
@@ -13202,7 +13225,7 @@ def admin_dashboard():
     </table>
     </div>
 
-    <h2 class="ledger">People who asked for a human</h2>
+    <h2 class="ledger" data-sec="sec-humanreq">People who asked for a human</h2>
     <div class="panel" id="connects" style="font-size:13.5px;">Loading&hellip;</div>
     <script>
     fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
@@ -13218,7 +13241,7 @@ def admin_dashboard():
     }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
     </script>
 
-    <h2 class="ledger" id="oncall">On call right now</h2>
+    <h2 class="ledger" id="oncall" data-sec="sec-oncall">On call right now</h2>
     <div class="panel">
     <div class="hint">The founder rule, kept: <b style="color:#f4c977;">for anyone to click on a provider, they must be there and available.</b>
     Every role below starts off. Turn a role on only while a real person is truly reachable behind it &mdash;
@@ -13280,7 +13303,7 @@ def admin_dashboard():
     })();
     </script>
 
-    <h2 class="ledger" id="vetting">Vetting — scrutinize a provider before anyone reaches them</h2>
+    <h2 class="ledger" id="vetting" data-sec="sec-vetting">Vetting — scrutinize a provider before anyone reaches them</h2>
     <div class="panel">
     <div class="hint">Principle 4, kept: we do not toss a person to just any provider. Enter a provider here, check their credential and record, and categorize them &mdash; nothing is exposed to anyone by this. A new provider starts <b style="color:#f4c977;">pending</b>. Review, then mark <b style="color:#f4c977;">Vetted</b> or <b>Rejected</b>. Only after that can you (separately, by choice) promote a vetted provider into Partners or light their role on the On-Call board. This engine holds provider records only &mdash; never any person&rsquo;s words or identity.</div>
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin:14px 0 14px;">
@@ -13430,7 +13453,7 @@ def admin_dashboard():
     })();
     </script>
 
-    <h2 class="ledger" id="demo">Demonstration mode — show the whole flow, safely</h2>
+    <h2 class="ledger" id="demo" data-sec="sec-demo">Demonstration mode — show the whole flow, safely</h2>
     <div class="panel">
     <div class="hint">Turn on a <b style="color:#f4c977;">sample</b> network so you can show how InnerLight works start to finish &mdash; even when nobody real is on call. <b>This only affects your own session (or a visitor who opens your demo link).</b> Real people are never touched: while demo is on for you, anyone else opening a handoff page still sees the honest empty state. Every demo page carries a fixed <b style="color:#e8a34c;">SAMPLE &mdash; DEMONSTRATION MODE</b> banner, and a demo send opens no room and pages no one. Turn it off and your session returns to the real, honest product.</div>
     <div id="demo-state" style="font-size:14px;color:rgba(242,231,210,.8);margin:12px 0;">Loading&hellip;</div>
@@ -13488,7 +13511,7 @@ def admin_dashboard():
     })();
     </script>
 
-    <h2 class="ledger">What people said — voices from real sessions</h2>
+    <h2 class="ledger" data-sec="sec-said">What people said — voices from real sessions</h2>
     <div class="panel">
     <div class="hint">Anonymous feedback from people who used InnerLight. Identifying details are automatically removed. This is the human evidence alongside the numbers.</div>
     <div id="fb-report"><i style="color:rgba(242,231,210,.45);">Loading feedback…</i></div>
@@ -13523,7 +13546,7 @@ def admin_dashboard():
     })();
     </script>
 
-    <h2 class="ledger">Crisis referrals — the count for the state report</h2>
+    <h2 class="ledger" data-sec="sec-referrals">Crisis referrals — the count for the state report</h2>
     <div class="panel">
     <div class="hint">Each time the crisis protocol activates and 988 is put in front of a person, it is counted here — counts only, never content. This is the number for the state Office of Suicide Prevention report (due each July starting 2027).</div>
     <div id="crisis-referrals"><i style="color:rgba(242,231,210,.45);">Loading&hellip;</i></div>
@@ -13545,7 +13568,7 @@ def admin_dashboard():
     })();
     </script>
 
-    <h2 class="ledger" id="security">Security — the watch on the walls</h2>
+    <h2 class="ledger" id="security" data-sec="sec-security">Security — the watch on the walls</h2>
     <div class="panel">
     <div class="hint">Lawful active defense only &mdash; <b style="color:#f4c977;">deter, deceive, withstand, deliver-to-justice</b>.
     InnerLight never hacks back. These are attacker/security metadata counts pulled from the forensic evidence log &mdash;
@@ -13722,7 +13745,7 @@ def admin_dashboard():
     })();
     </script>
 
-    <h2 class="ledger" id="music">Music control — listen to any track, switch any track off</h2>
+    <h2 class="ledger" id="music" data-sec="sec-music">Music control — listen to any track, switch any track off</h2>
     <div class="panel">
     <div class="hint">Press <b style="color:#f4c977;">Listen</b> to hear any track right here. Press <b style="color:#f4c977;">Turn off</b> and that exact song stops being offered — no redeploy needed, and you can turn it back on any time. Honest note: someone already listening may still hear their current list until their music next shifts; every new playlist skips it.</div>
     <div id="tc-status" style="font-size:12px;color:#e8a34c;font-weight:700;margin-bottom:6px;"></div>
@@ -13794,7 +13817,7 @@ def admin_dashboard():
     })();
     </script>
 
-    <h2 class="ledger">Song play log — every track, every timestamp</h2>
+    <h2 class="ledger" data-sec="sec-playlog">Song play log — every track, every timestamp</h2>
     <div class="panel">
     <div class="hint">Exactly what played and when. Every play is stamped to the second, so you can see if a track repeats within an hour. Use this to spot any song that plays too often. <button onclick="loadPlays()" style="background:rgba(232,163,76,.16);color:#f4c977;border:1px solid rgba(232,163,76,.4);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:8px;">Refresh</button></div>
     <div id="plays-report"><i style="color:rgba(242,231,210,.45);">Loading play log…</i></div>
@@ -13824,28 +13847,28 @@ def admin_dashboard():
     loadPlays();
     </script>
 
-    <h2 class="ledger" id="live">Live sessions — real-time biometric monitor</h2>
+    <h2 class="ledger" id="live" data-sec="sec-live">Live sessions — real-time biometric monitor</h2>
     <div class="panel">
     <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. The small line at the right is that person&rsquo;s heart over the last minutes &mdash; a line drifting downward means a body settling. <span id="bio-clock" style="float:right;"></span></div>
     <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Waiting for a live session…</i></div>
     </div>
 
-    <h2 class="ledger">Heart signal coverage — research integrity</h2>
+    <h2 class="ledger" data-sec="sec-heart">Heart signal coverage — research integrity</h2>
     <div class="panel" style="font-size:13.5px;">
     <div class="hint">Every camera session records a heart value — never blank. Each reading is tagged by how it was obtained, so the data is complete AND honest. Measured = high-confidence true reading; Estimated = best inference from a weaker signal; Baseline-held = last good value briefly held. This is what lets you claim full coverage without overclaiming precision.</div>
     {{ heart_rows|safe }}
     </div>
 
-    <h2 class="ledger">Experimental biometric sub-zones — the frontier map</h2>
+    <h2 class="ledger" data-sec="sec-subzones">Experimental biometric sub-zones — the frontier map</h2>
     <div class="panel" id="subzones" style="font-size:13.5px;">
     <div class="hint">How often each experimental skin zone (near eyes/mouth) agreed with the trusted forehead+cheek reading. Higher % = more trustworthy. This is your own data revealing which frontier zones can be read accurately.</div>
     {{ subzone_rows|safe }}
     </div>
 
-    <h2 class="ledger">Sessions per day</h2>
+    <h2 class="ledger" data-sec="sec-sessperday">Sessions per day</h2>
     <div class="graph">{{ bars|safe }}</div>
 
-    <h2 class="ledger" id="people">Today, person by person — anonymous session breakdown</h2>
+    <h2 class="ledger" id="people" data-sec="sec-personby">Today, person by person — anonymous session breakdown</h2>
     <div class="tablewrap">
     <table>
     <tr><th>Session</th><th>Expression shifts</th><th>Messages</th><th>Hesitations</th>
@@ -13854,7 +13877,7 @@ def admin_dashboard():
     </table>
     </div>
 
-    <h2 class="ledger">Track reactions — the research core (all days shown)</h2>
+    <h2 class="ledger" data-sec="sec-trackreact">Track reactions — the research core (all days shown)</h2>
     <div class="tablewrap">
     <table>
     <tr><th>Track</th><th>Liked (face eased)</th><th>Neutral</th><th>Disliked (face turned)</th></tr>
@@ -13862,7 +13885,7 @@ def admin_dashboard():
     </table>
     </div>
 
-    <h2 class="ledger" id="research">The scientific method — where this study stands</h2>
+    <h2 class="ledger" id="research" data-sec="sec-scimethod">The scientific method — where this study stands</h2>
     <div class="sci-grid">
      <div class="sci"><b>1. Observation (complete)</b><br>Across ~2,500 rideshare trips, agitated passengers reliably settled when calm instrumental music was already playing on entry. Repeated, real-world, years-long observation.</div>
      <div class="sci"><b>2. Question (framed)</b><br>Can adaptive calming sound, delivered during the crisis wait-gap, measurably reduce acute distress?</div>
@@ -13874,7 +13897,7 @@ def admin_dashboard():
      <div class="sci"><b>9. Peer review (sought)</b><br>University research partnership in progress — independent eyes on the method, the data, and the conclusions.</div>
     </div>
 
-    <h2 class="ledger">The research basis for every number</h2>
+    <h2 class="ledger" data-sec="sec-research-basis">The research basis for every number</h2>
     <div class="sci-grid">
      <div class="sci"><b>Sessions &amp; uptake</b><br>
      Meta-analytic reviews of digital mental-health trials converged on five reportable engagement checkpoints:
@@ -14073,6 +14096,75 @@ def admin_dashboard():
       load();
     })();
     </script>
+  <script>
+  (function(){
+    // FOUNDER'S LAYOUT: reorder the operations room into boxes without moving
+    // any script — we relocate whole section nodes (heading + its content) by
+    // their data-sec id. Pairs sit side by side; security & music become
+    // click-to-open folders; demo drops to the bottom.
+    var root = document.getElementById('ledgers');
+    if(!root) return;
+    // group each h2[data-sec] with the siblings that follow it until the next h2
+    var heads = Array.prototype.slice.call(root.querySelectorAll('h2.ledger[data-sec]'));
+    var groups = {};
+    heads.forEach(function(h){
+      var id = h.getAttribute('data-sec');
+      var nodes = [h];
+      var el = h.nextElementSibling;
+      while(el && !(el.tagName==='H2' && el.classList.contains('ledger'))){
+        var nx = el.nextElementSibling; nodes.push(el); el = nx;
+      }
+      groups[id] = nodes;
+    });
+    function box(ids, cls){
+      var d = document.createElement('div'); d.className = 'lbox';
+      ids.forEach(function(id){ (groups[id]||[]).forEach(function(nd){ d.appendChild(nd); }); });
+      return d;
+    }
+    function fold(title, ids){
+      var det = document.createElement('details'); det.className='fold';
+      var s = document.createElement('summary'); s.textContent = title; det.appendChild(s);
+      ids.forEach(function(id){ (groups[id]||[]).forEach(function(nd){ det.appendChild(nd); }); });
+      return det;
+    }
+    function row(a, b){ var g=document.createElement('div'); g.className='lgrid pair'; g.appendChild(a); g.appendChild(b); return g; }
+    function single(node){ var g=document.createElement('div'); g.className='lgrid'; g.appendChild(node); return g; }
+    var frag = document.createDocumentFragment();
+    // 2. Zenisys Lab | Light-this-dashboard(proving)  — side by side
+    frag.appendChild(row(box(['sec-zenlab']), box(['sec-proving'])));
+    // 3. live biometric monitor — own box (above people-who-asked)
+    frag.appendChild(single(box(['sec-live'])));
+    // 4. people who asked | on call — side by side
+    frag.appendChild(row(box(['sec-humanreq']), box(['sec-oncall'])));
+    // 5. exigent | dispatch — side by side, lower
+    frag.appendChild(row(box(['sec-exigent']), box(['sec-dispatch'])));
+    // 6. what people said | crisis referrals — side by side
+    frag.appendChild(row(box(['sec-said']), box(['sec-referrals'])));
+    // 7. security — collapsible folder, its own color
+    var secFold = fold('Security — the watch on the walls (click to open)', ['sec-security']);
+    secFold.style.borderColor = 'rgba(90,200,180,.4)';
+    secFold.style.background = 'rgba(10,30,26,.5)';
+    frag.appendChild(secFold);
+    // 8. music + song play log — collapsible folder
+    frag.appendChild(fold('Music control & song play log (click to open)', ['sec-music','sec-playlog']));
+    // 9. heart coverage + sub-zones — one clickable box (folder)
+    frag.appendChild(fold('Biometric research — heart coverage & frontier sub-zones (click to open)', ['sec-heart','sec-subzones']));
+    // 10. person-by-person -> sessions per day -> track reactions
+    frag.appendChild(single(box(['sec-personby'])));
+    frag.appendChild(single(box(['sec-sessperday'])));
+    frag.appendChild(single(box(['sec-trackreact'])));
+    // ledger (daily 14 days) stays visible near its group
+    frag.appendChild(single(box(['sec-ledger'])));
+    // vetting stays (provider tooling)
+    frag.appendChild(single(box(['sec-vetting'])));
+    // 11. scientific method + research basis — bottom, unchanged content
+    frag.appendChild(single(box(['sec-scimethod','sec-research-basis'])));
+    // demo — very bottom, folded
+    frag.appendChild(fold('Demo link — share a simulated view (click to open)', ['sec-demo']));
+    root.appendChild(frag);
+  })();
+  </script>
+
   </section>
 
   <div class="vow">
