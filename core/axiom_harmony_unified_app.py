@@ -16099,7 +16099,8 @@ def _sim_get():
                                       "sec": [], "arrivals": 0, "blooms": 0,
                                       "crises": 0, "handoffs": 0, "messages": 0,
                                       "lane_shifts": 0, "skies": 0, "thoughts": 0,
-                                      "referrals": 0, "playlog": []}
+                                      "referrals": 0, "playlog": [],
+                                      "acc": {}}   # lifetime cohort accumulators (uncapped)
 
 def _sim_put(st):
     st["sessions"] = st["sessions"][-160:]
@@ -16158,7 +16159,14 @@ def _sim_advance(st):
         alive = []
         for s in st["sessions"]:
             s["age_s"] += 1
-            pull = float(cfg["calm_pull"]) * (float(cfg["adaptive_boost"]) if s["cohort"] == "B" else 1.0)
+            # Cohort B (adaptive sound) gets a per-person boost that VARIES —
+            # some respond strongly, some barely — so the cohorts overlap and
+            # the statistics are honest, not a rigged 100%.
+            b_boost = 1.0
+            if s["cohort"] == "B":
+                pr = _rd.Random(int(cfg["seed"]) * 5273 + int(s["sid"][4:]))
+                b_boost = 1.0 + (float(cfg["adaptive_boost"]) - 1.0) * (0.35 + 0.65 * pr.random())
+            pull = float(cfg["calm_pull"]) * b_boost
             srng = _rd.Random(int(cfg["seed"]) * 7919 + st["step"] * 31 + int(s["sid"][4:]))
             s["d"] = max(0.0, min(10.0, s["d"] + (-pull * s["d"]) + srng.gauss(0, float(cfg["noise"]))))
             # the room's activity: messages, thoughts, skies — and warm
@@ -16184,16 +16192,30 @@ def _sim_advance(st):
             if s["cam"] and s["age_s"] % 4 == 0:
                 bpm = int(s["base"] + s["d"] * 3.2 + srng.gauss(0, 1.6))
                 s["hist"] = (s["hist"] + [bpm])[-40:]
+            done_row = None
             if s["d"] <= float(cfg["settle_threshold"]) and s["age_s"] > 90:
                 st["blooms"] += 1
                 st["feed"].append({"t": st["t"], "type": "bloom (settled)", "sid": s["sid"]})
-                st["done"].append({"sid": s["sid"], "cohort": s["cohort"], "d0": round(s["d0"], 2),
-                                   "settled": 1, "seconds": s["age_s"], "crisis": s["crisis"]})
-                continue
-            if s["age_s"] >= float(cfg["session_max_min"]) * 60:
-                st["done"].append({"sid": s["sid"], "cohort": s["cohort"], "d0": round(s["d0"], 2),
-                                   "settled": 1 if s["d"] <= float(cfg["settle_threshold"]) else 0,
-                                   "seconds": s["age_s"], "crisis": s["crisis"]})
+                done_row = {"sid": s["sid"], "cohort": s["cohort"], "d0": round(s["d0"], 2),
+                            "settled": 1, "seconds": s["age_s"], "crisis": s["crisis"]}
+            elif s["age_s"] >= float(cfg["session_max_min"]) * 60:
+                # Reached the cap without crossing threshold: a realistic
+                # fraction leave still-unsettled (no artificial 100% ceiling).
+                done_row = {"sid": s["sid"], "cohort": s["cohort"], "d0": round(s["d0"], 2),
+                            "settled": 1 if s["d"] <= float(cfg["settle_threshold"]) else 0,
+                            "seconds": s["age_s"], "crisis": s["crisis"]}
+            if done_row is not None:
+                # lifetime accumulator (never trimmed): count, settled, time, sum of squares
+                acc = st.setdefault("acc", {})
+                a = acc.setdefault(s["cohort"], {"n": 0, "settled": 0, "sec_sum": 0.0,
+                                                 "sec_sq": 0.0, "crisis_n": 0, "crisis_settled": 0,
+                                                 "d0_sum": 0.0})
+                a["n"] += 1; a["settled"] += done_row["settled"]
+                a["sec_sum"] += done_row["seconds"]; a["sec_sq"] += done_row["seconds"] ** 2
+                a["d0_sum"] += done_row["d0"]
+                if done_row["crisis"]:
+                    a["crisis_n"] += 1; a["crisis_settled"] += done_row["settled"]
+                st["done"].append(done_row)
                 continue
             alive.append(s)
         st["sessions"] = alive
@@ -16345,55 +16367,147 @@ def api_sim_pulse():
 
 @app.route("/api/sim/report.doc")
 def api_sim_report():
-    """A Word research report — the founder asked for Word, not Excel, with
-    the experiment explained and shown as bars, not a raw grid."""
+    """A full, comprehensive Word research report for the Proving Ground —
+    real descriptive and inferential statistics computed from lifetime
+    accumulators (not the display-trimmed buffer), written to a standard a
+    reviewer would expect: abstract, methods, results with distributions and
+    effect size, interpretation with an honest significance read, subgroup
+    analyses, limitations, ethics, and references."""
     if not session.get("founder_ok"):
         return jsonify({"error": "unauthorized"}), 401
+    import math
     st = _sim_advance(_sim_get()); _sim_put(st)
-    def stats(ch):
-        rows = [d for d in st["done"] if d["cohort"] == ch]
-        settled = [d for d in rows if d["settled"]]
-        mt = (sum(d["seconds"] for d in settled) / len(settled) / 60.0) if settled else 0
-        pct = (100.0 * len(settled) / len(rows)) if rows else 0
-        return len(rows), pct, mt
-    An, Apct, Amin = stats("A")
-    Bn, Bpct, Bmin = stats("B")
-    def bar(pct, color):
-        w = int(max(1, min(100, pct)) * 3)
-        return ('<table cellspacing="0" cellpadding="0"><tr>'
-                '<td style="background:%s;width:%dpx;height:16px;"></td>'
-                '<td style="padding-left:8px;">%.1f%%</td></tr></table>' % (color, w, pct))
     cfg = st["cfg"]
+    acc = st.get("acc", {})
+    A = acc.get("A", {"n": 0, "settled": 0, "sec_sum": 0.0, "sec_sq": 0.0, "crisis_n": 0, "crisis_settled": 0, "d0_sum": 0.0})
+    B = acc.get("B", {"n": 0, "settled": 0, "sec_sum": 0.0, "sec_sq": 0.0, "crisis_n": 0, "crisis_settled": 0, "d0_sum": 0.0})
+
+    def rate(g): return (g["settled"] / g["n"]) if g["n"] else 0.0
+    def mean_t(g):  # minutes to calm among settled
+        return (g["sec_sum"] / g["settled"] / 60.0) if g["settled"] else 0.0
+    def sd_t(g):
+        if g["settled"] < 2: return 0.0
+        m = g["sec_sum"] / g["settled"]
+        var = max(0.0, g["sec_sq"] / g["settled"] - m * m)
+        return math.sqrt(var) / 60.0
+    pA, pB = rate(A), rate(B)
+    nA, nB = A["n"], B["n"]
+    mtA, mtB = mean_t(A), mean_t(B)
+    sdA, sdB = sd_t(A), sd_t(B)
+
+    # Two-proportion z-test on settle rate
+    ztxt, ptxt, sig = "n/a", "n/a", "insufficient data"
+    if nA >= 5 and nB >= 5:
+        pp = (A["settled"] + B["settled"]) / (nA + nB)
+        se = math.sqrt(max(1e-9, pp * (1 - pp) * (1 / nA + 1 / nB)))
+        z = (pB - pA) / se if se else 0.0
+        # normal-approx two-sided p
+        p = math.erfc(abs(z) / math.sqrt(2))
+        ztxt, ptxt = "%.2f" % z, ("%.4f" % p if p >= 0.0001 else "< 0.0001")
+        sig = ("statistically significant (p < 0.05): the cohorts differ by more than chance"
+               if p < 0.05 else
+               "not statistically significant (p \u2265 0.05): any gap could be chance at this sample size")
+    # Absolute + relative lift, and Cohen's h effect size for proportions
+    lift = (pB - pA) * 100
+    rel = ((pB - pA) / pA * 100) if pA else 0.0
+    def _phi(x): return 2 * math.asin(math.sqrt(min(1.0, max(0.0, x))))
+    h = abs(_phi(pB) - _phi(pA))
+    hmag = "negligible" if h < 0.2 else "small" if h < 0.5 else "medium" if h < 0.8 else "large"
+
+    crisis_rate_A = (A["crisis_settled"] / A["crisis_n"]) if A["crisis_n"] else 0.0
+    crisis_rate_B = (B["crisis_settled"] / B["crisis_n"]) if B["crisis_n"] else 0.0
+    total_n = nA + nB
+    total_settled = A["settled"] + B["settled"]
+
+    def bar(pct, color):
+        w = int(max(1, min(100, pct)) * 3.2)
+        return ('<table cellspacing="0" cellpadding="0" style="margin:4px 0;"><tr>'
+                '<td style="background:%s;width:%dpx;height:18px;border-radius:3px;"></td>'
+                '<td style="padding-left:10px;font-size:13px;">%.1f%%</td></tr></table>' % (color, w, pct))
+
+    gen = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())
+    sim_hours = st.get("t", 0) / 3600.0
+
     html = """<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
-<head><meta charset='utf-8'><title>InnerLight Proving Ground — Research Report</title></head>
-<body style="font-family:Georgia,serif;color:#1a1a1a;">
-<h1 style="color:#1d6f47;">InnerLight Proving Ground</h1>
-<p style="color:#555;">Simulation research report &mdash; generated %s. Synthetic data only; no real people.</p>
-<h2>1. The experiment</h2>
-<p>Arriving synthetic people are assigned alternately to two cohorts. <b>Cohort A</b> hears the standard sound. <b>Cohort B</b> hears the <b>adaptive Zenisys sound</b> (calm pull multiplied by the adaptive-boost setting, currently %.2f). Everything else is identical. The question: does adaptive sound help people settle more often, and faster?</p>
-<h2>2. Results so far</h2>
+<head><meta charset='utf-8'><title>InnerLight Proving Ground &mdash; Research Report</title></head>
+<body style="font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;line-height:1.5;">
+<div style="text-align:center;border-bottom:2px solid #1d6f47;padding-bottom:14px;margin-bottom:18px;">
+  <h1 style="color:#1d6f47;margin:0;font-size:26px;">InnerLight Proving Ground</h1>
+  <div style="font-size:15px;color:#444;margin-top:4px;">Simulation Research Report &mdash; Adaptive Sound and Time-to-Calm in the Crisis-Wait Window</div>
+  <div style="font-size:12px;color:#777;margin-top:8px;">God&rsquo;s Love for Us LLC &nbsp;&bull;&nbsp; Generated %s &nbsp;&bull;&nbsp; Synthetic data only &mdash; no real people, never mixed with real sessions</div>
+</div>
+
+<h2 style="color:#1d6f47;">Abstract</h2>
+<p>This report presents results from a controlled, seeded discrete-event simulation of InnerLight&rsquo;s crisis-support room. Synthetic arrivals are randomized between a standard-sound condition (Cohort A) and an adaptive-sound condition (Cohort B, the Zenisys engine), holding all else equal, to estimate whether adaptive sound increases the proportion of people who reach a settled state and reduces the time required to do so. Across <b>%d</b> completed synthetic sessions (%d in A, %d in B) over %.1f simulated hours, the settle rate was <b>%.1f%%</b> in Cohort A and <b>%.1f%%</b> in Cohort B (absolute difference %+.1f percentage points; relative %+.1f%%; Cohen&rsquo;s h = %.2f, %s effect). A two-proportion z-test returned z = %s, p = %s &mdash; %s. Mean time-to-calm among those who settled was %.1f min (SD %.1f) in A versus %.1f min (SD %.1f) in B. These are simulated estimates intended to exercise the measurement pipeline and generate hypotheses for a registered human study; they are not clinical findings.</p>
+
+<h2 style="color:#1d6f47;">1. Background and rationale</h2>
+<p>InnerLight exists to hold a person in the interval between reaching out and reaching a human. The field&rsquo;s own evaluations name outcome data during that interval as a gap; the single outcome InnerLight was built to measure is time-to-resolution. Sound is one of the few levers available in that window that requires no clinician, no scheduling, and minimal cognitive effort from a person in distress. The Iso principle &mdash; meeting a person&rsquo;s arousal and then gradually guiding it downward &mdash; and dose-response findings (strongest anxiety reduction near 24 minutes) motivate an adaptive rather than static soundscape. This simulation operationalizes that hypothesis so the measurement instrument, the cohort machinery, and the reporting can be validated before any human is enrolled.</p>
+
+<h2 style="color:#1d6f47;">2. Methods</h2>
+<p><b>Design.</b> Two-arm, parallel-group, individually randomized controlled simulation with alternating allocation. <b>Population.</b> Synthetic arrivals generated by a Poisson process at %.1f per simulated minute, each assigned an initial distress score drawn from a normal distribution (mean %.1f, SD %.1f, bounded 0&ndash;10); a proportion (%.0f%%) arrive in acute crisis and enter at maximum distress. <b>Conditions.</b> Cohort A receives the standard calm-pull; Cohort B receives an adaptive boost drawn per-person from the adaptive-boost setting (%.2f), so response varies across individuals rather than applying uniformly. <b>Dynamics.</b> Each simulated second, distress evolves as D &larr; D &minus; (pull &middot; D) + &epsilon;, &epsilon; ~ N(0, %.2f). <b>Primary outcome:</b> settled, defined as distress &le; %.1f sustained past 90 seconds. <b>Secondary outcome:</b> time-to-calm in minutes among those who settled. <b>Session cap:</b> %.0f minutes; sessions reaching the cap unsettled are recorded as not-settled. <b>Reproducibility:</b> a fixed random seed (%s) makes any run bit-for-bit reproducible under identical parameters.</p>
+<p><b>Analysis.</b> Settle rates are compared with a two-proportion z-test (normal approximation) and summarized with absolute and relative differences and Cohen&rsquo;s h effect size. Time-to-calm is summarized as mean and standard deviation. Statistics are computed from lifetime accumulators that are never truncated, so sample size grows with the run and is not limited by any display buffer.</p>
+
+<h2 style="color:#1d6f47;">3. Results</h2>
+<h3>3.1 Primary outcome &mdash; settle rate</h3>
+<table border='1' cellspacing='0' cellpadding='8' style='border-collapse:collapse;width:100%%;'>
+<tr style='background:#eaf5ee;'><th align="left">Cohort</th><th>Completed (n)</th><th>Settled</th><th>Settle rate</th><th>Mean min to calm</th><th>SD</th></tr>
+<tr><td><b>A &mdash; standard</b></td><td align="center">%d</td><td align="center">%d</td><td align="center">%.1f%%</td><td align="center">%.1f</td><td align="center">%.1f</td></tr>
+<tr><td><b>B &mdash; adaptive</b></td><td align="center">%d</td><td align="center">%d</td><td align="center">%.1f%%</td><td align="center">%.1f</td><td align="center">%.1f</td></tr>
+<tr style='background:#f5f9f6;'><td><b>Difference (B &minus; A)</b></td><td align="center">&mdash;</td><td align="center">&mdash;</td><td align="center"><b>%+.1f pp</b></td><td align="center"><b>%+.1f</b></td><td align="center">&mdash;</td></tr>
+</table>
+<h3>3.2 Settle rate, visualized</h3>
+<p style="margin-bottom:2px;">Cohort A &mdash; standard sound</p>%s
+<p style="margin-bottom:2px;">Cohort B &mdash; adaptive sound</p>%s
+<h3>3.3 Inferential statistics</h3>
 <table border='1' cellspacing='0' cellpadding='8' style='border-collapse:collapse;'>
-<tr style='background:#eaf5ee;'><th>Cohort</th><th>Completed</th><th>%% settled</th><th>Avg minutes to calm</th></tr>
-<tr><td><b>A &mdash; standard</b></td><td>%d</td><td>%.1f%%</td><td>%.1f</td></tr>
-<tr><td><b>B &mdash; adaptive</b></td><td>%d</td><td>%.1f%%</td><td>%.1f</td></tr>
+<tr style='background:#eaf5ee;'><th align="left">Test / measure</th><th align="left">Value</th></tr>
+<tr><td>Two-proportion z-statistic</td><td>%s</td></tr>
+<tr><td>Two-sided p-value</td><td>%s</td></tr>
+<tr><td>Absolute difference</td><td>%+.1f percentage points</td></tr>
+<tr><td>Relative difference</td><td>%+.1f%%</td></tr>
+<tr><td>Effect size (Cohen&rsquo;s h)</td><td>%.2f (%s)</td></tr>
 </table>
-<h2>3. Settling rate, shown</h2>
-<p>Cohort A &mdash; standard sound</p>%s
-<p>Cohort B &mdash; adaptive sound</p>%s
-<h2>4. Reading this</h2>
-<p>A higher settled percentage and a lower average time-to-calm in Cohort B is evidence the adaptive sound helps. If the two are equal, look at the settings: an extreme calm-pull creates a ceiling where every cohort settles and no difference can show &mdash; lower it toward realistic values and re-run. The seed (%s) makes any run reproducible: same knobs, same result.</p>
-<h2>5. Run parameters</h2>
+<p style="margin-top:8px;"><b>Plain-language read:</b> %s.</p>
+<h3>3.4 Subgroup &mdash; arrivals in acute crisis</h3>
+<p>Among synthetic arrivals entering at maximum distress, the settle rate was %.1f%% in Cohort A (n = %d) and %.1f%% in Cohort B (n = %d). Crisis arrivals are the hardest subgroup and the most important to watch; a widening or narrowing gap here is a primary signal for a human study.</p>
+
+<h2 style="color:#1d6f47;">4. Interpretation</h2>
+<p>%s If Cohort B shows a higher settle rate and a lower mean time-to-calm, that is simulated evidence consistent with the adaptive-sound hypothesis. If the arms are equal, the most common cause is a parameter ceiling: an extreme calm-pull settles nearly everyone quickly, leaving no room for an effect to appear. Lower the calm-pull toward realistic values, keep the adaptive boost modest, and increase run length before drawing conclusions. Because outcomes here are generated by a stylized model, the direction and rough magnitude of effects are informative for planning; the precise numbers are not.</p>
+
+<h2 style="color:#1d6f47;">5. Limitations</h2>
+<p>This is a process simulation, not a clinical trial. Distress is a single scalar, not a validated instrument; the settle definition is a modeling convenience; individual heterogeneity, dropout, comorbidity, environment, and the therapeutic content of human handoff are simplified or absent. The adaptive effect is assumed by construction and then measured &mdash; the simulation cannot prove that adaptive sound works in people; it can only show whether the measurement and analysis pipeline would detect such an effect if it exists. No result here should be cited as evidence of real-world efficacy.</p>
+
+<h2 style="color:#1d6f47;">6. Ethics and data governance</h2>
+<p>All data in this report are synthetic. No real person&rsquo;s session, words, biometrics, or identity are present, and simulation data are quarantined from the live measurement store and the learning module by construction. When a human study is conducted, it will require informed consent, IRB or equivalent review, and pre-registration of the primary outcome and analysis plan.</p>
+
+<h2 style="color:#1d6f47;">7. Reproducibility &mdash; exact run parameters</h2>
 <table border='1' cellspacing='0' cellpadding='6' style='border-collapse:collapse;font-size:12px;'>
-<tr style='background:#eaf5ee;'><th>Arrivals/min</th><th>Initial distress</th><th>Calm pull</th><th>Adaptive boost</th><th>Crisis prob.</th><th>Seed</th></tr>
-<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>
+<tr style='background:#eaf5ee;'><th>Arrivals/min</th><th>Init distress (mean, SD)</th><th>Calm pull</th><th>Adaptive boost</th><th>Noise</th><th>Crisis prob.</th><th>Settle threshold</th><th>Session cap (min)</th><th>Seed</th></tr>
+<tr><td align="center">%.1f</td><td align="center">%.1f, %.1f</td><td align="center">%.3f</td><td align="center">%.2f</td><td align="center">%.2f</td><td align="center">%.2f</td><td align="center">%.1f</td><td align="center">%.0f</td><td align="center">%s</td></tr>
 </table>
-<p style='color:#777;font-size:11px;margin-top:20px;'>Generated by InnerLight. Simulation only &mdash; never mixed with real session data or the learning module.</p>
+<p style="font-size:12px;color:#555;">Total synthetic sessions completed: %d over %.1f simulated hours. Rerunning with these exact parameters reproduces this dataset.</p>
+
+<h2 style="color:#1d6f47;">8. Selected references</h2>
+<p style="font-size:12px;">Lowe-Brown et al. (2026), guided vs self-ordered music sequencing, <i>Musicae Scientiae</i>. Starcke &amp; von Georgi (2024), Iso principle and affect regulation. Russo lab RCTs on music dose-response and anxiety. Guevarra et al. (2020), <i>Nature Communications</i> 11:3785, non-deceptive placebo and emotional distress. Holt-Lunstad et al. (2010), <i>PLoS Medicine</i>, social connection and mortality. Full citations appear in the InnerLight research page.</p>
+
+<p style='color:#777;font-size:11px;margin-top:22px;border-top:1px solid #ccc;padding-top:10px;'>Generated by the InnerLight Proving Ground. Simulation only &mdash; never mixed with real session data, real evidence, or the learning module.</p>
 </body></html>""" % (
-        time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()), float(cfg["adaptive_boost"]),
-        An, Apct, Amin, Bn, Bpct, Bmin,
-        bar(Apct, "#8a9bb0"), bar(Bpct, "#1d9e63"),
-        cfg["seed"], cfg["arrival_rate"], cfg["init_distress_mean"], cfg["calm_pull"],
-        cfg["adaptive_boost"], cfg["crisis_prob"], cfg["seed"])
+        gen, total_n, nA, nB, sim_hours, pA * 100, pB * 100, lift, rel, h, hmag,
+        ztxt, ptxt, sig, mtA, sdA, mtB, sdB,
+        cfg["arrival_rate"], cfg["init_distress_mean"], cfg["init_distress_sd"],
+        float(cfg["crisis_prob"]) * 100, float(cfg["adaptive_boost"]), float(cfg["noise"]),
+        float(cfg["settle_threshold"]), float(cfg["session_max_min"]), cfg["seed"],
+        nA, A["settled"], pA * 100, mtA, sdA,
+        nB, B["settled"], pB * 100, mtB, sdB,
+        lift, (mtB - mtA),
+        bar(pA * 100, "#8a9bb0"), bar(pB * 100, "#1d9e63"),
+        ztxt, ptxt, lift, rel, h, hmag, sig,
+        crisis_rate_A * 100, A["crisis_n"], crisis_rate_B * 100, B["crisis_n"],
+        ("The simulation exercises the full measurement and analysis pipeline end to end."),
+        cfg["arrival_rate"], cfg["init_distress_mean"], cfg["init_distress_sd"], cfg["calm_pull"],
+        float(cfg["adaptive_boost"]), float(cfg["noise"]), float(cfg["crisis_prob"]),
+        float(cfg["settle_threshold"]), float(cfg["session_max_min"]), cfg["seed"],
+        total_n, sim_hours)
     resp = app.response_class(html, mimetype="application/msword")
     resp.headers["Content-Disposition"] = "attachment; filename=proving_ground_report.doc"
     return resp
