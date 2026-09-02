@@ -12941,6 +12941,20 @@ def admin_dashboard():
  @keyframes huedrift { 0%{filter:hue-rotate(0deg);} 50%{filter:hue-rotate(-14deg);} 100%{filter:hue-rotate(10deg);} }
  h2.ledger::before, .kpi .dot, .flame { animation:huedrift 480s ease-in-out infinite; }
  @media (prefers-reduced-motion: reduce){ h2.ledger::before,.kpi .dot,.flame{animation:none;} }
+ /* ===== SELECTABLE THEMES — the whole scheme changes, not just a drift ===== */
+ body[data-theme="ember"]   { --night:#17100a; --night-2:#211508; --field:#1d1309; --ember:#e8a34c; --candle:#f4c977; --cream:#f2e7d2; }
+ body[data-theme="rose"]    { --night:#1a0f12; --night-2:#251319; --field:#241016; --ember:#e07a9a; --candle:#f4b9c9; --cream:#f6e4ea; }
+ body[data-theme="forest"]  { --night:#0c1512; --night-2:#12211c; --field:#0f1e18; --ember:#5fc9a0; --candle:#b6e8cf; --cream:#e0f2e8; }
+ body[data-theme="ocean"]   { --night:#0b1220; --night-2:#12203a; --field:#0f1c33; --ember:#5aa9e6; --candle:#a9d3f2; --cream:#dceaf6; }
+ body[data-theme="dusk"]    { --night:#160d1c; --night-2:#22132e; --field:#1e1029; --ember:#b98cf0; --candle:#d8c4f4; --cream:#ece2f8; }
+ body[data-theme="sand"]    { --night:#191512; --night-2:#241d16; --field:#211a12; --ember:#d9a86f; --candle:#f0d9b8; --cream:#f3ead9; }
+ /* theme picker in the nav */
+ .theme-bar{display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;margin:14px 0 2px;}
+ .theme-bar .lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-right:4px;}
+ .swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;}
+ .swatch:hover{transform:scale(1.18);} .swatch.on{border-color:var(--cream);}
+ .theme-auto{font-size:11px;color:var(--cream-faint);cursor:pointer;border:1px solid var(--hairline);border-radius:999px;padding:3px 11px;margin-left:6px;}
+ .theme-auto.on{color:#04150c;background:var(--candle);border-color:var(--candle);}
  /* ---- BOX LAYOUT: paired sections sit side by side in cards ---- */
  .lgrid{display:grid;grid-template-columns:1fr;gap:22px;margin-top:20px;}
  @media(min-width:920px){ .lgrid.pair{grid-template-columns:1fr 1fr;} }
@@ -13022,6 +13036,45 @@ def admin_dashboard():
   <nav class="quiet-nav" aria-label="Ledger sections">
     <a href="#overview">ledger</a><a href="#live">live</a><a href="#music">music</a><a href="#people">people</a><a href="#vetting">vetting</a><a href="#partners">partners</a><a href="#demo">demo</a><a href="#security">security</a><a href="#research">research</a><a href="/admin/study">the study</a><a href="/admin/logout">sign out</a>
   </nav>
+  <div class="theme-bar" id="themeBar">
+    <span class="lbl">theme</span>
+    <span class="swatch" data-theme="ember"  title="Ember"  style="background:#e8a34c;"></span>
+    <span class="swatch" data-theme="rose"   title="Rose"   style="background:#e07a9a;"></span>
+    <span class="swatch" data-theme="forest" title="Forest" style="background:#5fc9a0;"></span>
+    <span class="swatch" data-theme="ocean"  title="Ocean"  style="background:#5aa9e6;"></span>
+    <span class="swatch" data-theme="dusk"   title="Dusk"   style="background:#b98cf0;"></span>
+    <span class="swatch" data-theme="sand"   title="Sand"   style="background:#d9a86f;"></span>
+    <span class="theme-auto" id="themeAuto" title="Rotate the scheme automatically">auto-rotate</span>
+  </div>
+  <script>
+  (function(){
+    var THEMES=['ember','rose','forest','ocean','dusk','sand'];
+    var bar=document.getElementById('themeBar'), autoBtn=document.getElementById('themeAuto');
+    var timer=null;
+    function apply(t){
+      document.body.setAttribute('data-theme',t);
+      try{localStorage.setItem('il_theme',t);}catch(e){}
+      bar.querySelectorAll('.swatch').forEach(function(s){ s.classList.toggle('on', s.getAttribute('data-theme')===t); });
+    }
+    function startAuto(){
+      autoBtn.classList.add('on');
+      try{localStorage.setItem('il_theme_auto','1');}catch(e){}
+      if(timer) clearInterval(timer);
+      timer=setInterval(function(){
+        var cur=document.body.getAttribute('data-theme')||'ember';
+        var i=(THEMES.indexOf(cur)+1)%THEMES.length; apply(THEMES[i]);
+      }, 180000); // a fresh scheme every 3 minutes
+    }
+    function stopAuto(){ autoBtn.classList.remove('on'); try{localStorage.setItem('il_theme_auto','0');}catch(e){} if(timer){clearInterval(timer);timer=null;} }
+    bar.querySelectorAll('.swatch').forEach(function(s){ s.addEventListener('click',function(){ stopAuto(); apply(s.getAttribute('data-theme')); }); });
+    autoBtn.addEventListener('click',function(){ if(autoBtn.classList.contains('on')) stopAuto(); else startAuto(); });
+    // restore
+    var saved='ember', auto='0';
+    try{ saved=localStorage.getItem('il_theme')||'ember'; auto=localStorage.getItem('il_theme_auto')||'0'; }catch(e){}
+    apply(saved);
+    if(auto==='1') startAuto();
+  })();
+  </script>
 
   <section class="field-wrap" aria-label="People being held right now">
     <div class="field-frame">
