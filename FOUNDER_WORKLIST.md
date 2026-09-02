@@ -88,6 +88,31 @@ Ordered by his priority. Updated every session. (Aug 24, 2026)
 31. LAYOUT: most important sections live at the bottom of The Watch —
     reorder with founder's priority map (ask him for the order he wants)
 
+## SIM FULL-BURN, ROUND 2 (seven screenshots, Sep 1) — every panel must fire
+32. Ember field: at high counts it becomes one white blob — CANNOT tell
+    people apart. Cap/space/dim so individuals stay readable at any load;
+    give held-people a distinct color from handed-off people (BOTH modes).
+33. Hero strip (34 held / 11s / 4 handoffs / 0 messages) STILL static under
+    the ember field — must move in sim (pulse reaches the ember-page KPIs,
+    not just the lower KPI cards).
+34. The Night Log: founder has never seen it populate — either feed it
+    (sim: constant; real: from live event feed) or explain it on-page.
+35. Exigent: "no provider configured" must not show once ARMED — founder's
+    point: 988/911 are free public services reachable now; wire the always-
+    free tiers so ARMED shows real reachable public doors, not "unconfigured".
+36. "People who asked for a human": in sim, SIMULATED requesters (never the
+    founder's real entries). Real ones never enter research — sim-only.
+37. On-call board: ALL roles ON in sim (care + legal). Currently OFF.
+38. "What people said": sim feedback voices populated (never transferable).
+39. Experimental sub-zones: sim data flowing; AND real-session bug — never
+    populates even after founder camera use → fix or remove (long-standing).
+40. Sessions-per-day, person-by-person breakdown, track reactions: all
+    sim-populated at scale and updating.
+41. Crisis referrals: sim thousands.
+42. COLOR: stop the all-brown. Real Watch may keep its warmth, but add
+    life — e.g. slow background-hue drift over time, warmer accent variety.
+    THE STUDY: drop purple/blue/white; give it a flowery, warm palette.
+
 ## PROCESS / DESIGN
 12. Figma-style tools rejected ("very difficult to use") — design happens
     directly in the product, in code, with the founder.

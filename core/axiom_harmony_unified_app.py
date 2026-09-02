@@ -12620,6 +12620,56 @@ def watch_lab_room():
         return redirect("/admin")
     return ZENISYS_LAB_ROOM
 
+def _sim_metrics():
+    """A complete synthetic metrics dataset at national scale so EVERY
+    server-rendered Watch panel lights in simulation mode: daily ledger,
+    sessions-per-day, person-by-person, track reactions, sub-zones,
+    handoffs. Derives from the running sim where possible; never persisted,
+    never mixed with real metrics."""
+    import random as _rd
+    st = _sim_advance(_sim_get()); _sim_put(st)
+    seed = int(st.get("cfg", {}).get("seed", 1042))
+    R = _rd.Random(seed * 131 + 7)
+    m = {}
+    tracks = ["deepcalm", "lifting", "calm"]
+    for i in range(14):
+        day = time.strftime("%Y-%m-%d", time.gmtime(time.time() - i * 86400))
+        base = int(8000 + R.random() * 4000) if i < 7 else int(4000 + R.random() * 3000)
+        sessions = base
+        by = {}
+        for k in range(min(40, sessions)):   # a representative person-by-person sample
+            by["sim%04d" % k] = {
+                "expression_shifts": R.randint(0, 22), "messages": R.randint(1, 30),
+                "hesitations": R.randint(0, 9), "scene_changes": R.randint(0, 6),
+                "distractions": R.randint(0, 5), "word_plays": R.randint(0, 8),
+                "lane_switches": R.randint(0, 7),
+            }
+        tr = {}
+        for t in tracks:
+            tr[t] = {"liked": R.randint(200, 1400), "neutral": R.randint(120, 700),
+                     "disliked": R.randint(10, 130)}
+        sub = {}
+        for z in ("under_eye_l", "under_eye_r", "mouth_corner_l", "mouth_corner_r", "nasal_bridge"):
+            sub[z] = {"sum": R.randint(55, 96) * R.randint(20, 90), "n": R.randint(20, 90)}
+        heart_meas = int(sessions * 0.06); heart_est = int(sessions * 0.34)
+        m[day] = {
+            "sessions": sessions, "messages": int(sessions * 3.4),
+            "first_sound_ms_sum": int(sessions * R.randint(5000, 13000)),
+            "first_sound_count": sessions,
+            "lane_switches": int(sessions * 0.4), "scene_changes": int(sessions * 0.22),
+            "hesitations": int(sessions * 0.3),
+            "handoffs": {"telehealth": int(sessions * 0.18), "crisis_988": int(sessions * 0.07),
+                         "legal": int(sessions * 0.05), "community": int(sessions * 0.04)},
+            "track_reactions": tr,
+            "track_dislikes": {t: tr[t]["disliked"] for t in tracks},
+            "by_session": by,
+            "subzones": sub,
+            "heart_sum": int(sessions * 66), "heart_count": sessions,
+            "heart_measured": heart_meas, "heart_estimated": heart_est,
+            "heart_baseline": sessions - heart_meas - heart_est,
+        }
+    return m
+
 @app.route("/admin")
 def admin_dashboard():
     """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
@@ -12635,6 +12685,9 @@ def admin_dashboard():
             'function pulse(){fetch("/api/sim/pulse").then(function(r){return r.json();}).then(function(p){'
             'set("kpi-sess",p.sessions);set("kpi-first",p.first_sound_s+"s");set("kpi-msgs",p.messages);'
             'set("kpi-heart",p.avg_heart);set("kpi-hand",p.handoffs);'
+            'set("hero-held",p.sessions);set("hero-first",p.first_sound_s);set("hero-hand",p.handoffs);set("hero-msgs",p.messages);'
+            'var nc=document.getElementById("nowCount");if(nc)nc.textContent=p.live;'
+            'var wh=document.getElementById("weekHandoffLine");if(wh)wh.textContent=p.handoffs;'
             'var rm=[p.room.lane_shifts,p.room.skies,p.room.words,p.room.thoughts];'
             'for(var i=0;i<4;i++){set("room-mv-"+i,rm[i]+(rm[i]===1?" time today":" times today"));}'
             '}).catch(function(){});}pulse();setInterval(pulse,2000);})();</script>')
@@ -12646,8 +12699,11 @@ def admin_dashboard():
                 "you know &rarr; Save &amp; redeploy. Then sign in at /admin</p>"), 200
     if not session.get("founder_ok"):
         return render_template_string(LOGIN_PAGE), 200
-    with _METRICS_LOCK:
-        m = _metrics_load()
+    if session.get("sim_mode"):
+        m = _sim_metrics()          # full synthetic dataset — every panel lights
+    else:
+        with _METRICS_LOCK:
+            m = _metrics_load()
     days = sorted(m.keys(), reverse=True)[:14]
     rows = []
     for day in days:
@@ -12958,22 +13014,22 @@ def admin_dashboard():
 
   <section class="moments" aria-label="The last fourteen days">
     <div class="moment">
-      <div class="num" data-n="{{ w_sessions }}">0</div>
+      <div class="num" id="hero-held" data-n="{{ w_sessions }}">0</div>
       <div class="cap">held — fourteen days</div>
       <div class="sub">every one of them anonymous,<br>every one of them met.</div>
     </div>
     <div class="moment">
-      <div class="num"><span data-n="{{ w_first|safe }}">{{ w_first|safe }}</span><small>s</small></div>
+      <div class="num"><span id="hero-first" data-n="{{ w_first|safe }}">{{ w_first|safe }}</span><small>s</small></div>
       <div class="cap">from door to first sound</div>
       <div class="sub">the silence before company arrives,<br>measured so it can shrink.</div>
     </div>
     <div class="moment">
-      <div class="num" data-n="{{ w_handoffs }}">0</div>
+      <div class="num" id="hero-hand" data-n="{{ w_handoffs }}">0</div>
       <div class="cap">handoffs toward human help</div>
       <div class="sub">carried all the way<br>to a human hand.</div>
     </div>
     <div class="moment">
-      <div class="num" data-n="{{ w_messages }}">0</div>
+      <div class="num" id="hero-msgs" data-n="{{ w_messages }}">0</div>
       <div class="cap">messages received</div>
       <div class="sub">each one answered.<br>none of them kept.</div>
     </div>
@@ -13049,6 +13105,13 @@ def admin_dashboard():
       card only when this engine is active AND a provider below is configured). <b>Tier 3</b> break-glass stays locked
       behind separate legal review. Current law mandates crisis <i>referral</i> (SB 243, OR SB 1546, NY &sect;1700);
       this engine is readiness for the day dispatch is required by statute or contract.</p>
+      <div style="font-size:13px;margin-top:8px;padding:10px 12px;background:#eef6f1;color:#26332c;border-radius:8px;">
+        <b>Always-live public doors (free, no integration needed):</b><br>
+        &bull; 988 Suicide &amp; Crisis Lifeline &mdash; call or text 988, and 988 chat, reachable right now on every screen<br>
+        &bull; 911 &mdash; the person&rsquo;s own device dials emergency services directly<br>
+        &bull; 211 &mdash; community crisis and resource line, opened as a web link
+        <div style="margin-top:6px;color:#4a5b52;">The integrations below add <i>data-rich, location-aware</i> dispatch on top of these free doors &mdash; what a contract or statute would require, not what a person needs to reach help today.</div>
+      </div>
       <div id="exigent-providers" style="font-size:13.5px;line-height:1.55;"></div>
       <div id="exigent-never" style="font-size:13px;margin-top:10px;padding:10px 12px;background:#f0f6f3;color:#26332c;border-radius:8px;"></div>
       <div id="exigent-log" style="font-size:12px;color:#776;margin-top:10px;"></div>
@@ -14131,6 +14194,8 @@ def admin_dashboard():
 
   function syncEmbers(list){
     var seen = {};
+    var MAX_EMBERS = 70;   // past this the field is an unreadable blaze; the true count still shows below
+    if (list.length > MAX_EMBERS) list = list.slice(0, MAX_EMBERS);
     for (var i=0;i<list.length;i++){
       var p = list[i];
       var k = p.k || ('p'+i);
@@ -14211,21 +14276,25 @@ def admin_dashboard():
 
     var glowA = (0.5 + 0.22*Math.sin(t/e.period*2*Math.PI + e.phase)) * alpha;
 
+    var HALO = e.link ? ['rgba(70,200,190,','rgba(50,170,165,','rgba(40,140,140,']
+                      : ['rgba(244,180,90,','rgba(220,140,55,','rgba(200,110,40,'];
+    var CORE = e.link ? ['rgba(200,248,242,','rgba(120,220,210,','rgba(60,180,175,']
+                      : ['rgba(255,236,200,','rgba(250,196,110,','rgba(226,140,50,'];
     var g = ctx.createRadialGradient(px,py,0, px,py, r*5.2);
-    g.addColorStop(0,   'rgba(244,180,90,'+(0.34*glowA)+')');
-    g.addColorStop(0.4, 'rgba(220,140,55,'+(0.13*glowA)+')');
-    g.addColorStop(1,   'rgba(200,110,40,0)');
+    g.addColorStop(0,   HALO[0]+(0.34*glowA)+')');
+    g.addColorStop(0.4, HALO[1]+(0.13*glowA)+')');
+    g.addColorStop(1,   HALO[2]+'0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(px,py,r*5.2,0,7); ctx.fill();
 
     g = ctx.createRadialGradient(px,py,0, px,py, r*1.9);
-    g.addColorStop(0,   'rgba(255,236,200,'+(0.95*alpha)+')');
-    g.addColorStop(0.35,'rgba(250,196,110,'+(0.75*alpha)+')');
-    g.addColorStop(1,   'rgba(226,140,50,0)');
+    g.addColorStop(0,   CORE[0]+(0.95*alpha)+')');
+    g.addColorStop(0.35,CORE[1]+(0.75*alpha)+')');
+    g.addColorStop(1,   CORE[2]+'0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(px,py,r*1.9,0,7); ctx.fill();
 
-    ctx.fillStyle = 'rgba(255,246,225,'+(0.9*alpha)+')';
+    ctx.fillStyle = (e.link ? 'rgba(220,255,250,' : 'rgba(255,246,225,')+(0.9*alpha)+')';
     ctx.beginPath(); ctx.arc(px,py,r*0.42,0,7); ctx.fill();
   }
 
@@ -14882,6 +14951,13 @@ def providers_available():
 def admin_oncall_list():
     if not session.get("founder_ok"):
         return jsonify({"error": "auth"}), 403
+    if session.get("sim_mode"):
+        rows = []
+        for s, r, lb in _PROVIDER_ROLES:
+            rows.append({"side": s, "role": r, "label": lb, "available": 1,
+                         "updated_at": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()),
+                         "access_tier": "24h"})
+        return jsonify({"providers": rows, "SIMULATED": True})
     labels = {(s, r): lb for s, r, lb in _PROVIDER_ROLES}
     with _ONCALL_LOCK:
         conn = _oncall_db()
@@ -15058,20 +15134,20 @@ def admin_study_page():
 <!doctype html><html><head><title>Founder's Study — InnerLight</title>
 <meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
- body{font-family:Arial;margin:0;padding:28px;color:#1e293b;
-      background:linear-gradient(160deg,#2a1e14 0%,#3c2c1e 30%,#fbf3e9 30.5%,#fbf7f1 100%);}
+ body{font-family:Georgia,serif;margin:0;padding:28px;color:#3a2e33;
+      background:linear-gradient(160deg,#7a4a5c 0%,#a86b6b 22%,#f5e9e2 22.5%,#fbf5ee 60%,#eef3e6 100%);}
  .top{display:flex;justify-content:space-between;align-items:flex-start;color:#fff;margin-bottom:22px;}
- h1{color:#fff;font-size:23px;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
- .sub{color:#e8d8c4;font-size:13px;margin-top:5px;max-width:760px;line-height:1.5;}
- .nav a{color:#e8d8c4;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
+ h1{color:#fff;font-size:23px;margin:0;text-shadow:0 2px 8px rgba(122,74,92,0.4);letter-spacing:.02em;}
+ .sub{color:#f3e2e2;font-size:13px;margin-top:5px;max-width:760px;line-height:1.5;}
+ .nav a{color:#f3e2e2;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);
         padding:7px 14px;border-radius:999px;margin-left:8px;} .nav a:hover{background:rgba(255,255,255,0.12);}
- .card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 8px 28px rgba(15,36,71,0.14);margin-bottom:18px;}
+ .card{background:#fffdfb;border-radius:14px;padding:22px;box-shadow:0 8px 28px rgba(122,74,92,0.16);border:1px solid #f0e0e0;margin-bottom:18px;}
  label{font-size:12px;font-weight:700;color:#334155;display:block;margin-bottom:6px;}
  textarea{width:100%;box-sizing:border-box;min-height:110px;padding:12px;border:1px solid #cbd5e1;
           border-radius:9px;font-size:15px;font-family:Arial;} textarea:focus{outline:2px solid #c56a2c;}
  select{padding:10px;border:1px solid #cbd5e1;border-radius:9px;font-size:14px;margin-right:10px;}
  button{padding:11px 26px;border:0;border-radius:9px;font-size:15px;font-weight:700;color:#fff;
-        background:linear-gradient(90deg,#c56a2c,#b24a2a);cursor:pointer;margin-top:12px;}
+        background:linear-gradient(90deg,#c0687f,#d98a6a);cursor:pointer;margin-top:12px;}
  #out{font-size:14.5px;line-height:1.7;color:#1e293b;display:none;}
  .stamp{display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;
         font-weight:700;border-radius:6px;padding:4px 10px;margin-bottom:12px;letter-spacing:0.4px;}
@@ -15150,7 +15226,7 @@ Nothing here is ever shown to users. Nothing here is legal or medical advice.</d
     <option value="legislative">Legislative — how a bill/policy change would work</option>
   </select>
   <button onclick="runStudy()">Study this one lens</button>
-  <button onclick="runAllLenses()" style="margin-left:6px;background:linear-gradient(90deg,#c56a2c,#b24a2a);">Study all three: legal &bull; legislative &bull; medical</button>
+  <button onclick="runAllLenses()" style="margin-left:6px;background:linear-gradient(90deg,#c0687f,#8aa06a);">Study all three: legal &bull; legislative &bull; medical</button>
  </div>
  <div style="font-size:12px;color:#64748b;margin-top:8px;">Each lens is a separate, independent study with its own conclusion. A scenario may reach one, two, or all three levels &mdash; and if it doesn't truly reach a level, that study says so plainly.</div>
  <div class="wait" id="wait">Preparing your study material&hellip; (this uses your comprehension credit, so it only runs when you press the button)</div>
@@ -15377,6 +15453,21 @@ def feedback_submit():
 def admin_feedback():
     if not session.get("founder_ok"):
         return jsonify({"error": "auth"}), 403
+    if session.get("sim_mode"):
+        import random as _rd
+        R = _rd.Random(555)
+        voices = ["it was the first time all week i could breathe",
+                  "i didn't feel judged. i just felt company.",
+                  "the music slowed me down before i knew it was working",
+                  "i came in shaking and left able to call my sister",
+                  "someone was there at 3am when no one else was",
+                  "i almost closed the tab. i'm glad i stayed."]
+        rows = [{"helped": R.choice(["yes", "yes", "somewhat"]),
+                 "text": R.choice(voices),
+                 "when": time.strftime("%Y-%m-%d", time.gmtime(time.time() - i * 43200))}
+                for i in range(9)]
+        return jsonify({"total": 1240, "helped": {"yes": 968, "somewhat": 214, "no": 58},
+                        "recent": rows, "SIMULATED": True})
     with _FEEDBACK_LOCK:
         fb = _fb_load()
     # aggregate
@@ -16564,6 +16655,18 @@ def api_admin_dispatch():
 def admin_connects():
     if not session.get("founder_ok"):
         return jsonify({"status": "locked"}), 403
+    if session.get("sim_mode"):
+        import random as _rd
+        R = _rd.Random(909)
+        kinds = [("care", "Crisis-trained counselor"), ("care", "Therapist / licensed counselor"),
+                 ("care", "Psychiatrist"), ("legal", "Housing / tenant attorney"),
+                 ("legal", "Family law attorney"), ("care", "Nurse practitioner")]
+        sims = []
+        for i in range(14):
+            k, pro = R.choice(kinds)
+            sims.append({"when": time.strftime("%Y-%m-%d %H:%M", time.gmtime(time.time() - i * 5400)),
+                         "kind": k, "pro": pro, "room": "#", "summary": "(simulated request \u2014 synthetic, never used in research)"})
+        return jsonify({"connects": sims, "SIMULATED": True})
     try:
         with open(_CONNECT_FILE) as f:
             log = json.load(f)
