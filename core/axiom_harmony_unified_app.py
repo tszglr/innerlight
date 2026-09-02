@@ -16365,6 +16365,104 @@ def api_sim_pulse():
         "playlog": list(reversed(st.get("playlog", [])[-8:])),
     })
 
+def _svg_bars(data, w=520, h=260, colors=None, ymax=None, ylabel=""):
+    """Vertical bar chart as inline SVG (Word renders it). data=[(label,value),...]"""
+    colors = colors or ["#1d9e63", "#8a9bb0", "#c0687f", "#d9a86f", "#5aa9e6"]
+    pad_l, pad_b, pad_t = 48, 46, 20
+    vals = [v for _, v in data] or [0]
+    ymax = ymax or (max(vals) * 1.15 or 1)
+    bw = (w - pad_l - 20) / max(1, len(data))
+    bars = []
+    for i, (lab, v) in enumerate(data):
+        bh = (h - pad_b - pad_t) * (v / ymax)
+        x = pad_l + i * bw + bw * 0.15
+        y = h - pad_b - bh
+        c = colors[i % len(colors)]
+        bars.append('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" fill="%s" rx="3"/>' % (x, y, bw * 0.7, bh, c))
+        bars.append('<text x="%.1f" y="%.1f" font-size="12" text-anchor="middle" fill="#333">%s</text>' % (x + bw * 0.35, y - 6, (("%.1f" % v) if isinstance(v, float) else str(v))))
+        bars.append('<text x="%.1f" y="%.1f" font-size="11" text-anchor="middle" fill="#555">%s</text>' % (x + bw * 0.35, h - pad_b + 16, lab))
+    grid = []
+    for g in range(5):
+        gy = pad_t + (h - pad_b - pad_t) * g / 4
+        gv = ymax * (1 - g / 4)
+        grid.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="#e5e5e5"/>' % (pad_l, gy, w - 10, gy))
+        grid.append('<text x="%d" y="%.1f" font-size="10" text-anchor="end" fill="#999">%.0f</text>' % (pad_l - 6, gy + 3, gv))
+    yl = '<text x="14" y="%d" font-size="11" fill="#666" transform="rotate(-90 14 %d)">%s</text>' % (h // 2, h // 2, ylabel) if ylabel else ""
+    return '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">%s%s%s</svg>' % (w, h, "".join(grid), "".join(bars), yl)
+
+def _svg_line(series, labels, w=560, h=260, colors=None, ylabel=""):
+    """Multi-series line chart. series=[(name,[y...]),...]"""
+    colors = colors or ["#1d9e63", "#c0687f", "#5aa9e6"]
+    pad_l, pad_b, pad_t = 48, 46, 24
+    allv = [y for _, ys in series for y in ys] or [0]
+    ymax = max(allv) * 1.15 or 1
+    ymin = min(allv + [0])
+    n = max(1, len(labels))
+    def X(i): return pad_l + (w - pad_l - 16) * (i / max(1, n - 1))
+    def Y(v): return h - pad_b - (h - pad_b - pad_t) * ((v - ymin) / (ymax - ymin or 1))
+    grid = []
+    for g in range(5):
+        gy = pad_t + (h - pad_b - pad_t) * g / 4
+        gv = ymax - (ymax - ymin) * g / 4
+        grid.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="#eee"/>' % (pad_l, gy, w - 10, gy))
+        grid.append('<text x="%d" y="%.1f" font-size="10" text-anchor="end" fill="#999">%.0f</text>' % (pad_l - 6, gy + 3, gv))
+    lines = []
+    for si, (name, ys) in enumerate(series):
+        pts = " ".join("%.1f,%.1f" % (X(i), Y(v)) for i, v in enumerate(ys))
+        c = colors[si % len(colors)]
+        lines.append('<polyline points="%s" fill="none" stroke="%s" stroke-width="2.5"/>' % (pts, c))
+        for i, v in enumerate(ys):
+            lines.append('<circle cx="%.1f" cy="%.1f" r="2.5" fill="%s"/>' % (X(i), Y(v), c))
+        lines.append('<text x="%d" y="%d" font-size="11" fill="%s">%s</text>' % (w - 130, pad_t + si * 15, c, name))
+    xl = []
+    step = max(1, n // 7)
+    for i in range(0, n, step):
+        xl.append('<text x="%.1f" y="%d" font-size="9" text-anchor="middle" fill="#777">%s</text>' % (X(i), h - pad_b + 15, labels[i][5:]))
+    return '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">%s%s%s</svg>' % (w, h, "".join(grid), "".join(lines), "".join(xl))
+
+def _svg_hist(values, bins=10, w=520, h=240, color="#1d9e63", xlabel=""):
+    if not values:
+        return '<svg width="%d" height="%d"></svg>' % (w, h)
+    lo, hi = min(values), max(values) or 1
+    if hi == lo: hi = lo + 1
+    counts = [0] * bins
+    for v in values:
+        b = min(bins - 1, int((v - lo) / (hi - lo) * bins))
+        counts[b] += 1
+    pad_l, pad_b, pad_t = 42, 40, 16
+    cmax = max(counts) or 1
+    bw = (w - pad_l - 16) / bins
+    rects = []
+    for i, ct in enumerate(counts):
+        bh = (h - pad_b - pad_t) * (ct / cmax)
+        x = pad_l + i * bw
+        rects.append('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" fill="%s" opacity="0.85"/>' % (x + 1, h - pad_b - bh, bw - 2, bh, color))
+    rects.append('<text x="%d" y="%d" font-size="11" text-anchor="middle" fill="#666">%s</text>' % (w // 2, h - 6, xlabel))
+    return '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">%s</svg>' % (w, h, "".join(rects))
+
+def _svg_donut(parts, w=240, h=240, colors=None):
+    """parts=[(label,value),...] -> donut with legend."""
+    import math
+    colors = colors or ["#1d9e63", "#e8a34c", "#8a9bb0", "#c0687f"]
+    tot = sum(v for _, v in parts) or 1
+    cx, cy, r, ir = 120, 110, 80, 46
+    a0 = -math.pi / 2
+    segs = []
+    leg = []
+    for i, (lab, v) in enumerate(parts):
+        frac = v / tot
+        a1 = a0 + frac * 2 * math.pi
+        large = 1 if frac > 0.5 else 0
+        x0, y0 = cx + r * math.cos(a0), cy + r * math.sin(a0)
+        x1, y1 = cx + r * math.cos(a1), cy + r * math.sin(a1)
+        xi0, yi0 = cx + ir * math.cos(a1), cy + ir * math.sin(a1)
+        xi1, yi1 = cx + ir * math.cos(a0), cy + ir * math.sin(a0)
+        c = colors[i % len(colors)]
+        segs.append('<path d="M%.1f,%.1f A%d,%d 0 %d,1 %.1f,%.1f L%.1f,%.1f A%d,%d 0 %d,0 %.1f,%.1f Z" fill="%s"/>' % (x0, y0, r, r, large, x1, y1, xi0, yi0, ir, ir, large, xi1, yi1, c))
+        leg.append('<rect x="10" y="%d" width="11" height="11" fill="%s"/><text x="26" y="%d" font-size="11" fill="#444">%s (%.0f%%)</text>' % (200 + i * 16, c, 209 + i * 16, lab, frac * 100))
+        a0 = a1
+    return '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">%s%s</svg>' % (w, h + len(parts) * 16, "".join(segs), "".join(leg))
+
 @app.route("/api/sim/report.doc")
 def api_sim_report():
     """A full, comprehensive Word research report for the Proving Ground —
@@ -16379,6 +16477,14 @@ def api_sim_report():
     st = _sim_advance(_sim_get()); _sim_put(st)
     cfg = st["cfg"]
     acc = st.get("acc", {})
+    # Operational metrics at national scale (same source the Watch panels use)
+    mets = _sim_metrics()
+    mdays = sorted(mets.keys())
+    # distress distribution from completed sessions (for the histogram)
+    _distA = [d["d0"] for d in st.get("done", []) if d["cohort"] == "A"]
+    _distB = [d["d0"] for d in st.get("done", []) if d["cohort"] == "B"]
+    _timesA = [d["seconds"] / 60.0 for d in st.get("done", []) if d["cohort"] == "A" and d["settled"]]
+    _timesB = [d["seconds"] / 60.0 for d in st.get("done", []) if d["cohort"] == "B" and d["settled"]]
     A = acc.get("A", {"n": 0, "settled": 0, "sec_sum": 0.0, "sec_sq": 0.0, "crisis_n": 0, "crisis_settled": 0, "d0_sum": 0.0})
     B = acc.get("B", {"n": 0, "settled": 0, "sec_sum": 0.0, "sec_sq": 0.0, "crisis_n": 0, "crisis_settled": 0, "d0_sum": 0.0})
 
@@ -16427,6 +16533,42 @@ def api_sim_report():
 
     gen = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())
     sim_hours = st.get("t", 0) / 3600.0
+    # ---- figures ----
+    fig1 = _svg_bars([("A standard", pA * 100), ("B adaptive", pB * 100)], ymax=100, ylabel="% settled", colors=["#8a9bb0", "#1d9e63"])
+    fig2 = _svg_bars([("A standard", mtA), ("B adaptive", mtB)], ylabel="min to calm", colors=["#8a9bb0", "#1d9e63"])
+    fig3 = _svg_hist(_distB or [cfg["init_distress_mean"]], bins=10, xlabel="arrival distress (0-10), Cohort B")
+    # daily sessions trend (last 14 sim-metric days)
+    _sess = [mets[d].get("sessions", 0) for d in mdays]
+    fig4 = _svg_line([("sessions/day", _sess)], mdays, ylabel="sessions")
+    # handoff destinations (sum across days)
+    _hd = {"telehealth": 0, "crisis_988": 0, "legal": 0, "community": 0}
+    for d in mdays:
+        for k, v in mets[d].get("handoffs", {}).items():
+            _hd[k] = _hd.get(k, 0) + v
+    fig5 = _svg_bars([("Telehealth", _hd["telehealth"]), ("988 crisis", _hd["crisis_988"]),
+                      ("Legal", _hd["legal"]), ("Community", _hd["community"])],
+                     colors=["#1d9e63", "#c0687f", "#d9a86f", "#5aa9e6"], ylabel="handoffs")
+    # track reactions stacked-ish: liked per lane
+    _tr = {}
+    for d in mdays:
+        for lane, r in mets[d].get("track_reactions", {}).items():
+            a = _tr.setdefault(lane, {"liked": 0, "neutral": 0, "disliked": 0})
+            for kk in a: a[kk] += r.get(kk, 0)
+    fig6 = _svg_bars([(lane[:8] + " liked", _tr[lane]["liked"]) for lane in _tr],
+                     colors=["#1d9e63", "#7bbf95", "#a9d8bd"], ylabel="liked")
+    # heart coverage donut (measured/estimated/baseline)
+    _hm = sum(mets[d].get("heart_measured", 0) for d in mdays)
+    _he = sum(mets[d].get("heart_estimated", 0) for d in mdays)
+    _hb = sum(mets[d].get("heart_baseline", 0) for d in mdays)
+    fig7 = _svg_donut([("Measured", _hm), ("Estimated", _he), ("Baseline-held", _hb)])
+    # 14-day operational totals
+    op_sessions = sum(mets[d].get("sessions", 0) for d in mdays)
+    op_messages = sum(mets[d].get("messages", 0) for d in mdays)
+    op_fs = (sum(mets[d].get("first_sound_ms_sum", 0) for d in mdays) / max(1, sum(mets[d].get("first_sound_count", 0) for d in mdays))) / 1000.0
+    op_lane = sum(mets[d].get("lane_switches", 0) for d in mdays)
+    op_hand = sum(sum(mets[d].get("handoffs", {}).values()) for d in mdays)
+    op_heart = sum(mets[d].get("heart_count", 0) for d in mdays)
+    n_days = len(mdays)
 
     html = """<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
 <head><meta charset='utf-8'><title>InnerLight Proving Ground &mdash; Research Report</title></head>
@@ -16458,7 +16600,14 @@ def api_sim_report():
 <h3>3.2 Settle rate, visualized</h3>
 <p style="margin-bottom:2px;">Cohort A &mdash; standard sound</p>%s
 <p style="margin-bottom:2px;">Cohort B &mdash; adaptive sound</p>%s
-<h3>3.3 Inferential statistics</h3>
+<h3>3.3 Charts &mdash; settle rate and time-to-calm</h3>
+<p><b>Figure 1. Settle rate by cohort (%%).</b></p>
+@@FIG1@@
+<p style="margin-top:14px;"><b>Figure 2. Mean time-to-calm by cohort (minutes, lower is better).</b></p>
+@@FIG2@@
+<p style="margin-top:14px;"><b>Figure 3. Distribution of arrival distress, Cohort B.</b> Shows the spread of how distressed people were on arrival &mdash; a real study needs this to know the sample was not uniform.</p>
+@@FIG3@@
+<h3>3.4 Inferential statistics</h3>
 <table border='1' cellspacing='0' cellpadding='8' style='border-collapse:collapse;'>
 <tr style='background:#eaf5ee;'><th align="left">Test / measure</th><th align="left">Value</th></tr>
 <tr><td>Two-proportion z-statistic</td><td>%s</td></tr>
@@ -16468,26 +16617,46 @@ def api_sim_report():
 <tr><td>Effect size (Cohen&rsquo;s h)</td><td>%.2f (%s)</td></tr>
 </table>
 <p style="margin-top:8px;"><b>Plain-language read:</b> %s.</p>
-<h3>3.4 Subgroup &mdash; arrivals in acute crisis</h3>
+<h3>3.5 Subgroup &mdash; arrivals in acute crisis</h3>
 <p>Among synthetic arrivals entering at maximum distress, the settle rate was %.1f%% in Cohort A (n = %d) and %.1f%% in Cohort B (n = %d). Crisis arrivals are the hardest subgroup and the most important to watch; a widening or narrowing gap here is a primary signal for a human study.</p>
 
-<h2 style="color:#1d6f47;">4. Interpretation</h2>
+<h2 style="color:#1d6f47;">4. Operational measures &mdash; the full room</h2>
+<p>Beyond the two-cohort experiment, the simulation exercises every measure the live operations room tracks. These are the figures a funder or partner asks for: volume, the door-to-first-sound latency the whole product optimizes, where people are bridged to human help, how the sound is received, and the integrity of the biometric signal.</p>
+<p><b>Figure 4. Daily sessions held, last %d days.</b></p>
+@@FIG4@@
+<p style="margin-top:14px;"><b>Figure 5. Where people were bridged to human help (handoff destinations).</b></p>
+@@FIG5@@
+<p style="margin-top:14px;"><b>Figure 6. Track reactions &mdash; how the adaptive sound was received.</b> Faces eased (liked), neutral, or turned away (disliked), by lane.</p>
+@@FIG6@@
+<p style="margin-top:14px;"><b>Figure 7. Heart-signal coverage &mdash; research integrity.</b> Every camera session yields a heart value; each is labeled by how it was obtained, so coverage can be claimed honestly without overclaiming precision.</p>
+@@FIG7@@
+<table border='1' cellspacing='0' cellpadding='7' style='border-collapse:collapse;width:100%%;margin-top:12px;font-size:12px;'>
+<tr style='background:#eaf5ee;'><th align="left">Operational measure (14-day total)</th><th>Value</th></tr>
+<tr><td>Sessions held</td><td>%s</td></tr>
+<tr><td>Messages received</td><td>%s</td></tr>
+<tr><td>Mean time to first sound</td><td>%.1f s</td></tr>
+<tr><td>Music lane shifts (adaptation events)</td><td>%s</td></tr>
+<tr><td>Human handoffs (all destinations)</td><td>%s</td></tr>
+<tr><td>Heart readings recorded</td><td>%s</td></tr>
+</table>
+
+<h2 style="color:#1d6f47;">5. Interpretation</h2>
 <p>%s If Cohort B shows a higher settle rate and a lower mean time-to-calm, that is simulated evidence consistent with the adaptive-sound hypothesis. If the arms are equal, the most common cause is a parameter ceiling: an extreme calm-pull settles nearly everyone quickly, leaving no room for an effect to appear. Lower the calm-pull toward realistic values, keep the adaptive boost modest, and increase run length before drawing conclusions. Because outcomes here are generated by a stylized model, the direction and rough magnitude of effects are informative for planning; the precise numbers are not.</p>
 
-<h2 style="color:#1d6f47;">5. Limitations</h2>
+<h2 style="color:#1d6f47;">6. Limitations</h2>
 <p>This is a process simulation, not a clinical trial. Distress is a single scalar, not a validated instrument; the settle definition is a modeling convenience; individual heterogeneity, dropout, comorbidity, environment, and the therapeutic content of human handoff are simplified or absent. The adaptive effect is assumed by construction and then measured &mdash; the simulation cannot prove that adaptive sound works in people; it can only show whether the measurement and analysis pipeline would detect such an effect if it exists. No result here should be cited as evidence of real-world efficacy.</p>
 
-<h2 style="color:#1d6f47;">6. Ethics and data governance</h2>
+<h2 style="color:#1d6f47;">7. Ethics and data governance</h2>
 <p>All data in this report are synthetic. No real person&rsquo;s session, words, biometrics, or identity are present, and simulation data are quarantined from the live measurement store and the learning module by construction. When a human study is conducted, it will require informed consent, IRB or equivalent review, and pre-registration of the primary outcome and analysis plan.</p>
 
-<h2 style="color:#1d6f47;">7. Reproducibility &mdash; exact run parameters</h2>
+<h2 style="color:#1d6f47;">8. Reproducibility &mdash; exact run parameters</h2>
 <table border='1' cellspacing='0' cellpadding='6' style='border-collapse:collapse;font-size:12px;'>
 <tr style='background:#eaf5ee;'><th>Arrivals/min</th><th>Init distress (mean, SD)</th><th>Calm pull</th><th>Adaptive boost</th><th>Noise</th><th>Crisis prob.</th><th>Settle threshold</th><th>Session cap (min)</th><th>Seed</th></tr>
 <tr><td align="center">%.1f</td><td align="center">%.1f, %.1f</td><td align="center">%.3f</td><td align="center">%.2f</td><td align="center">%.2f</td><td align="center">%.2f</td><td align="center">%.1f</td><td align="center">%.0f</td><td align="center">%s</td></tr>
 </table>
 <p style="font-size:12px;color:#555;">Total synthetic sessions completed: %d over %.1f simulated hours. Rerunning with these exact parameters reproduces this dataset.</p>
 
-<h2 style="color:#1d6f47;">8. Selected references</h2>
+<h2 style="color:#1d6f47;">9. Selected references</h2>
 <p style="font-size:12px;">Lowe-Brown et al. (2026), guided vs self-ordered music sequencing, <i>Musicae Scientiae</i>. Starcke &amp; von Georgi (2024), Iso principle and affect regulation. Russo lab RCTs on music dose-response and anxiety. Guevarra et al. (2020), <i>Nature Communications</i> 11:3785, non-deceptive placebo and emotional distress. Holt-Lunstad et al. (2010), <i>PLoS Medicine</i>, social connection and mortality. Full citations appear in the InnerLight research page.</p>
 
 <p style='color:#777;font-size:11px;margin-top:22px;border-top:1px solid #ccc;padding-top:10px;'>Generated by the InnerLight Proving Ground. Simulation only &mdash; never mixed with real session data, real evidence, or the learning module.</p>
@@ -16503,11 +16672,16 @@ def api_sim_report():
         bar(pA * 100, "#8a9bb0"), bar(pB * 100, "#1d9e63"),
         ztxt, ptxt, lift, rel, h, hmag, sig,
         crisis_rate_A * 100, A["crisis_n"], crisis_rate_B * 100, B["crisis_n"],
+        n_days,
+        op_sessions, op_messages, op_fs, op_lane, op_hand, op_heart,
         ("The simulation exercises the full measurement and analysis pipeline end to end."),
         cfg["arrival_rate"], cfg["init_distress_mean"], cfg["init_distress_sd"], cfg["calm_pull"],
         float(cfg["adaptive_boost"]), float(cfg["noise"]), float(cfg["crisis_prob"]),
         float(cfg["settle_threshold"]), float(cfg["session_max_min"]), cfg["seed"],
         total_n, sim_hours)
+    for tok, svg in (("@@FIG1@@", fig1), ("@@FIG2@@", fig2), ("@@FIG3@@", fig3),
+                     ("@@FIG4@@", fig4), ("@@FIG5@@", fig5), ("@@FIG6@@", fig6), ("@@FIG7@@", fig7)):
+        html = html.replace(tok, svg)
     resp = app.response_class(html, mimetype="application/msword")
     resp.headers["Content-Disposition"] = "attachment; filename=proving_ground_report.doc"
     return resp
