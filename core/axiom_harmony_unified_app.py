@@ -704,6 +704,26 @@ PUBLIC_PAGE = """
       font-size:20px; line-height:1; cursor:pointer; box-shadow:0 2px 8px rgba(120,70,30,.3); transition:background .15s; }
     .story-arrow:hover { background:#9e6a40; }
     .story-arrow:active { transform:translateY(1px); }
+    /* ===== CHAT LAYOUT: history above, one composer below (like a modern chat) ===== */
+    .il-history { display:flex; flex-direction:column; gap:2px; max-height:52vh; overflow-y:auto;
+      padding:6px 2px 10px; margin:6px 0 12px; scroll-behavior:smooth; }
+    .il-composer { display:flex; align-items:flex-end; gap:8px; background:#fff; border:1.5px solid #e0d3c6;
+      border-radius:22px; padding:8px 10px; box-shadow:0 4px 18px rgba(120,80,40,.10); position:sticky; bottom:8px; }
+    .il-input { flex:1; border:0 !important; outline:none; resize:none; background:transparent; font-size:16px;
+      line-height:1.4; max-height:140px; min-height:26px; padding:8px 6px; color:#302018; box-shadow:none !important; }
+    .il-mic, .il-arrow, .il-more { flex:0 0 auto; border:0; border-radius:50%; width:42px; height:42px; cursor:pointer;
+      font-size:18px; line-height:1; transition:background .15s, transform .1s; }
+    .il-mic { background:#f0e6dc; color:#8a5a30; }
+    .il-mic:hover { background:#e6d8ca; }
+    .il-mic.live { background:#e05a5a; color:#fff; animation:listenpulse 1.1s ease-in-out infinite; }
+    .il-arrow { background:#b27849; color:#fff; box-shadow:0 2px 8px rgba(120,70,30,.3); }
+    .il-arrow:hover { background:#9e6a40; }
+    .il-arrow:active { transform:translateY(1px); }
+    .il-more { background:#f0e6dc; color:#8a5a30; }
+    .il-more:hover { background:#e6d8ca; }
+    #more-menu { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 4px; }
+    /* the old separate mic transcript panel is retired in chat layout */
+    #live-transcript { display:none !important; }
     .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
     .story-send:hover { background:#9e6a40; }
@@ -2979,14 +2999,26 @@ PUBLIC_PAGE = """
         <video id="visual-preview" class="story-video" autoplay muted playsinline aria-hidden="true"></video>
               </div>
       <div class="story-wrap">
-        <h2 class="story-title" data-i18n="story.title">Tell me your story.</h2>
-        <p class="story-sub"><span data-i18n="story.sub">Take your time. Say whatever feels true. I am listening.</span> &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;" data-i18n="story.resume">Been here before? Continue your story</a></p>
-        <p style="font-size:12px;color:#6a402b;font-weight:500;margin:-6px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
-        <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" aria-label="Start wherever you would like... (press Enter to send)" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
-        <div class="story-actions">
-          <button class="story-arrow" type="button" onclick="sendCheckin()" title="Send" aria-label="Send">&#8593;</button>
-          <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
-          <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
+        <h2 class="story-title" data-i18n="story.title" style="font-size:20px;margin-bottom:2px;">Tell me your story.</h2>
+        <p style="font-size:12px;color:#6a402b;font-weight:500;margin:2px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a> &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;" data-i18n="story.resume">Continue your story</a></p>
+
+        <!-- CHAT LAYOUT: history above (scrollable), one composer below -->
+        <div id="conversation-thread" role="log" aria-live="polite" class="il-history"></div>
+
+        <div class="il-composer">
+          <textarea id="message" class="story-input il-input" data-i18n-ph="story.placeholder" aria-label="Type or tap the mic to talk (press Enter to send)" placeholder="Start wherever you would like\u2026 type or tap the mic" rows="1" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();ilSend();}"></textarea>
+          <button class="il-mic" type="button" onclick="startVoiceCapture()" title="Tap to talk" aria-label="Tap to talk">&#127908;</button>
+          <button class="il-arrow" type="button" onclick="ilSend()" title="Send" aria-label="Send">&#8593;</button>
+          <button class="il-more" type="button" onclick="toggleMore()" title="More help options" aria-label="More">&#8943;</button>
+        </div>
+        <div id="more-menu" style="display:none;">
+          <a href="tel:988" class="rail-btn rail-988">&#128222; 988</a>
+          <button type="button" class="rail-btn" onclick="openHelp('telehealth')" data-i18n="rail.provider">Provider</button>
+          <button type="button" class="rail-btn" onclick="openHelp('attorney')" data-i18n="rail.legal">Legal</button>
+          <button type="button" class="rail-btn" onclick="openFacilities()" data-i18n="rail.nearby">Nearby help</button>
+          <button type="button" class="rail-btn" onclick="openActivities()" data-i18n="rail.activities">Activities</button>
+          <button type="button" class="rail-btn" onclick="openSaveNow()" data-i18n="rail.save">&#128278; Save</button>
+          <button type="button" class="rail-btn" onclick="testMic()" data-i18n="rail.testmic">Test mic</button>
         </div>
         <div class="music-bar">
           <button type="button" id="mute-btn" onclick="toggleMute()" aria-label="Mute music" aria-pressed="false" style="background:none;border:1px solid #ddd1c8;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px;">&#128266;</button><input type="range" id="vol-slider" min="0" max="100" value="24" oninput="setVol(this.value)" style="width:80px;vertical-align:middle;margin-right:8px;" title="Volume" aria-label="Music volume"><span id="music-now" data-i18n="music.now">&#9834; soft music playing</span>
@@ -3008,16 +3040,7 @@ PUBLIC_PAGE = """
           </div>
           <canvas id="calm-touch" tabindex="0" role="application" aria-label="Calm space. Touch and move, or use the arrow keys and Enter, to make gentle light and sound." style="width:100%;height:240px;display:block;border-radius:14px;background:radial-gradient(circle at 50% 50%, #16314a, #0c1322);touch-action:none;cursor:pointer;transition:height 0.5s ease;"></canvas>
         </div>
-        <div id="conversation-thread" role="log" aria-live="polite" style="margin-top:22px;"></div>
-        <div id="help-rail" role="group" aria-label="Reach real help">
-          <a href="tel:988" class="rail-btn rail-988" title="Call 988 now" aria-label="Call 988, the Suicide and Crisis Lifeline, now">&#128222; 988</a>
-          <button type="button" class="rail-btn" onclick="openHelp('telehealth')" title="Talk to a provider" data-i18n="rail.provider">Provider</button>
-          <button type="button" class="rail-btn" onclick="openHelp('attorney')" title="Legal help" data-i18n="rail.legal">Legal</button>
-          <button type="button" class="rail-btn" onclick="openFacilities()" title="Find nearby help" data-i18n="rail.nearby">Nearby help</button>
-          <button type="button" class="rail-btn" onclick="openActivities()" title="Calming activities" data-i18n="rail.activities">Activities</button>
-          <button type="button" class="rail-btn" onclick="openSaveNow()" title="Save the conversation with a private return code" data-i18n="rail.save">&#128278; Save</button>
-          <button type="button" class="rail-btn" onclick="testMic()" title="Test my microphone" data-i18n="rail.testmic">Test mic</button>
-        </div>
+        <!-- rail collapsed into one More button in the composer; see below -->
         <div id="urgent-help" style="display:none;margin:6px auto;max-width:560px;text-align:center;padding:12px;background:rgba(232,83,78,0.1);border:1px solid rgba(232,83,78,0.4);border-radius:14px;color:#b3322e;font-weight:600;"></div>
         <div id="live-transcript" style="display:none;margin-top:14px;padding:14px 16px;background:rgba(111,179,212,0.12);border:1px solid rgba(111,179,212,0.4);border-radius:14px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -6100,7 +6123,26 @@ function creatorApplyMode(mode){
 
 function ilMicSendDone(){
   try { document.body.classList.remove('mic-live'); } catch(e){}
+  try { var _m=document.querySelector('.il-mic'); if(_m) _m.classList.remove('live'); } catch(e){}
 }
+function toggleMore(){
+  var m = document.getElementById('more-menu');
+  if (m) m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
+}
+function ilScrollHistory(){
+  try { var h=document.querySelector('.il-history'); if(h) h.scrollTop = h.scrollHeight; } catch(e){}
+}
+function ilSend(){
+  if (window._ilStarted) { continueConversation(); } else { sendCheckin(); }
+}
+// auto-grow the composer textarea as the person types or dictates
+function ilGrowInput(){
+  var t = document.getElementById('message');
+  if (!t) return;
+  t.style.height = 'auto';
+  t.style.height = Math.min(140, t.scrollHeight) + 'px';
+}
+try { document.addEventListener('input', function(e){ if(e.target && e.target.id==='message') ilGrowInput(); }); } catch(e){}
 function changeMusic() {
   window._lastManualMusic = Date.now();   // the person's own hand outranks any schedule
   playNextTrackBlended();   // manages the crossfading flag itself (refills if the bag is empty)
@@ -6365,6 +6407,7 @@ async function startVoiceCapture() {
   }
   voiceListening = true;
   voiceFinalTranscript = '';
+  try { var _m=document.querySelector('.il-mic'); if(_m) _m.classList.add('live'); } catch(e){}
   duckMusicForVoice();   // stop the music while they speak
   // (meter runs only when we hold our own stream; native SR owns the mic)
   const panel = $('live-transcript'); const dot = $('listen-dot'); const lbl = $('listen-label'); const tEl = $('transcript-text');
@@ -6385,11 +6428,32 @@ async function startVoiceCapture() {
   // a hot mic with dead transcription can never happen again.
   window._voiceGotText = false;
   document.body.classList.add('mic-live');
+  // FOUNDER DIRECTIVE: transcription must "just work" automatically on every
+  // device (iPhone, Android, Windows) the moment the mic is allowed — the way
+  // it does in Claude/ChatGPT. That reliability comes from the SERVER path
+  // (Deepgram), not the flaky in-browser engine. So we try Deepgram FIRST on
+  // every device; the browser recognizer is only a free fallback if the
+  // server has no transcription key configured.
+  try {
+    if (lbl) lbl.textContent = _ilux('mic.now');
+    const tk = await fetch('/api/transcribe/token').then(r => r.json());
+    if (tk && tk.ok && tk.token) { startDeepgramStream(tk.token); armVoiceWatchdog('dg'); return; }
+  } catch(e) {}
+  // No server key: fall back to the browser's own recognizer where it exists.
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    if (lbl) lbl.textContent = _ilux('mic.noauto');
+    return;
+  }
   if (SR) {
     if (!voiceRecognizer) {
       voiceRecognizer = new SR();
-      voiceRecognizer.continuous = true;
+      // iOS Safari does NOT support continuous recognition — setting it makes
+      // Safari emit NO results at all (the founder's iPhone symptom). Detect
+      // iOS and use single-utterance mode, restarting after each phrase so it
+      // still feels continuous. Everywhere else, true continuous is fine.
+      var _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      voiceRecognizer.continuous = _isIOS ? false : true;
       voiceRecognizer.interimResults = true;
       voiceRecognizer.lang = (typeof ilBcp47 === 'function') ? ilBcp47(window._ilLang || 'en') : 'en-US';
       voiceRecognizer.onresult = event => {
@@ -6418,7 +6482,8 @@ async function startVoiceCapture() {
         }
       };
       voiceRecognizer.onend = () => {
-        if (voiceListening) { try { voiceRecognizer.start(); return; } catch (e) {} }
+        // Single-utterance (iOS) ends after each phrase; restart to keep going.
+        if (voiceListening) { setTimeout(function(){ try { voiceRecognizer.start(); } catch (e) {} }, _isIOS ? 250 : 0); }
       };
     }
     try { voiceRecognizer.start(); } catch (e) {}
@@ -6437,8 +6502,8 @@ async function startVoiceCapture() {
     }
   } catch (e) {}
   if (usingDeepgram) return;
-  // LAST RUNG: the mic itself still works (voice features flow); words will
-  // not appear on their own — say so honestly.
+  // LAST RUNG: the mic itself still works but this browser has no transcription
+  // engine and no server token. Words will not appear on their own.
   if (lbl) lbl.textContent = _ilux('mic.noauto');
 }
 
@@ -7414,18 +7479,10 @@ function showExit(thread, exitMsg, resolution) {
   politeScrollIntoView(el);
 }
 function restartConversation() {
-  const box = document.createElement('div');
-  box.className = 'reply-box';
-  box.style.cssText = 'margin-top:16px;';
-  box.innerHTML = `
-    <textarea id="conv-answer" class="story-input" style="min-height:80px;" placeholder="${_ilux('listen.ph')}" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
-    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="story-send" onclick="continueConversation()">${_ilux('reply')}</button>
-      <button class="story-mic" type="button" onclick="startVoiceCapture()">${_ilux('mic.speak')}</button>
-    </div>
-  `;
-  document.getElementById('conversation-thread').appendChild(box);
-  document.getElementById('conv-answer').focus({preventScroll:true});
+  window._ilStarted = true;
+  const ta = document.getElementById('message');
+  if (ta) { ta.value=''; ta.focus({preventScroll:true}); }
+  ilScrollHistory();
 }
 function appendExchange(thread, reply, question, safetyHtml) {
   // Remove any previous reply box (keep conversation flat)
@@ -7443,24 +7500,12 @@ function appendExchange(thread, reply, question, safetyHtml) {
     ${questionHtml}
   `;
   thread.appendChild(exchange);
-  // SPEAK the response aloud (AI voice) — include question only if present
   speak(question && question.trim() ? (reply + '. ' + question) : reply);
-  // Add a fresh reply box at the bottom (always exactly one)
-  const replyBox = document.createElement('div');
-  replyBox.className = 'reply-box';
-  replyBox.style.cssText = 'margin-top:16px;';
-  replyBox.innerHTML = `
-    <textarea id="conv-answer" class="story-input" style="min-height:80px;" aria-label="${_ilux('take.ph')}" placeholder="${_ilux('take.ph')}" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();continueConversation();}"></textarea>
-    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="story-send" onclick="continueConversation()">${_ilux('reply')}</button>
-      <button class="story-mic" type="button" onclick="startVoiceCapture()">${_ilux('mic.speak')}</button>
-    </div>
-  `;
-  thread.appendChild(replyBox);
-  // Focus and scroll
-  const ta = document.getElementById('conv-answer');
-  if (ta) ta.focus({preventScroll:true});
-  politeScrollIntoView(replyBox);
+  // Chat layout: the ONE persistent composer stays; clear + refocus + scroll.
+  window._ilStarted = true;
+  const ta = document.getElementById('message');
+  if (ta) { ta.value=''; ta.style.height='auto'; ta.focus({preventScroll:true}); }
+  ilScrollHistory();
 }
 async function updateMusicForEmotion(data) {
   const textEmotion = (data.zenisys_music || {}).emotion || 'calm';
@@ -7487,7 +7532,7 @@ async function updateMusicForEmotion(data) {
   } catch (e) {}
 }
 async function continueConversation() {
-  const answerBox = document.getElementById('conv-answer');
+  const answerBox = document.getElementById('message') || document.getElementById('conv-answer');
   if (!answerBox || !answerBox.value.trim()) return;
   const userAnswer = answerBox.value.trim();
   ilMicSendDone();
