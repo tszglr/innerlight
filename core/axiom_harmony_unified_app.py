@@ -913,7 +913,8 @@ PUBLIC_PAGE = """
             <a href="/terms" data-i18n="glink.terms">Terms</a><span>&middot;</span>
             <a href="/privacy" data-i18n="glink.privacy">Your privacy</a><span>&middot;</span>
             <a href="/updates" data-i18n="glink.updates">Updates</a><span>&middot;</span>
-            <a href="/contact" data-i18n="glink.contact">Contact</a>
+            <a href="/contact" data-i18n="glink.contact">Contact</a><span>&middot;</span>
+            <a href="/join" style="color:#b8783a;font-weight:600;">For providers &rarr; Join</a>
           </div>
         </div>
       </div>
@@ -17885,6 +17886,148 @@ def admin_vetting_list():
     return jsonify({"status": "ok", "providers": out,
                     "roles": [{"side": s, "role": r, "label": lb}
                               for s, r, lb in _PROVIDER_ROLES]})
+
+JOIN_PAGE = r"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join InnerLight as a Provider</title>
+<style>
+ *{box-sizing:border-box} body{margin:0;font-family:Georgia,'Times New Roman',serif;color:#2a1e14;
+   background:linear-gradient(160deg,#faf5ec,#f3e9dc);min-height:100vh;}
+ .wrap{max-width:640px;margin:0 auto;padding:38px 20px 80px;}
+ .logo{font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:#b8783a;text-align:center;}
+ h1{font-size:27px;text-align:center;margin:6px 0 4px;color:#5a3d22;}
+ .sub{text-align:center;color:#7a5a3c;font-size:14px;line-height:1.6;margin-bottom:24px;}
+ .card{background:#fffdf8;border:1px solid #ecdcc6;border-radius:16px;padding:24px;box-shadow:0 8px 30px rgba(120,80,40,.10);}
+ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#8a6a4c;margin:14px 0 4px;}
+ input,select,textarea{width:100%;border:1.5px solid #e0d3c6;border-radius:10px;padding:11px 13px;font-size:15px;
+   font-family:inherit;color:#2a1e14;background:#fff;}
+ input:focus,select:focus,textarea:focus{outline:none;border-color:#b8783a;}
+ textarea{resize:vertical;min-height:70px;}
+ .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+ @media(max-width:520px){.row{grid-template-columns:1fr;}}
+ .req{color:#b8783a;}
+ button{margin-top:22px;width:100%;background:linear-gradient(90deg,#b8783a,#9e6a40);color:#fff;border:0;
+   border-radius:999px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+ button:hover{background:#9e6a40;}
+ .note{font-size:12px;color:#8a6a4c;line-height:1.6;margin-top:14px;}
+ .ok{display:none;text-align:center;padding:30px 10px;}
+ .ok h2{color:#1d7a47;} .backlink{text-align:center;margin-top:18px;} .backlink a{color:#b8783a;font-size:13px;}
+</style></head><body>
+<div class="wrap">
+  <div class="logo">InnerLight</div>
+  <h1>Join our care network</h1>
+  <p class="sub">InnerLight holds people in crisis until a real human can reach them &mdash; and you can be that human. Tell us about yourself below. Every provider is reviewed and credential-checked before anyone is ever connected to you. Nothing here is shared publicly.</p>
+  <div class="card" id="form-card">
+    <label>I am a <span class="req">*</span></label>
+    <select id="role">
+      <optgroup label="Care">
+        <option value="crisis_counselor">Crisis-trained counselor</option>
+        <option value="therapist">Therapist / licensed counselor</option>
+        <option value="psychiatrist">Psychiatrist</option>
+        <option value="nurse_practitioner">Nurse practitioner</option>
+      </optgroup>
+      <optgroup label="Legal">
+        <option value="housing_attorney">Housing / tenant attorney</option>
+        <option value="family_attorney">Family law attorney</option>
+        <option value="criminal_attorney">Criminal defense attorney</option>
+        <option value="civil_attorney">Consumer / civil attorney</option>
+        <option value="legal_aid">Legal aid office</option>
+      </optgroup>
+    </select>
+    <label>Organization / practice name <span class="req">*</span></label>
+    <input id="org" placeholder="e.g. Harbor Family Law, or your practice name">
+    <label>Your name</label>
+    <input id="contact" placeholder="optional">
+    <div class="row">
+      <div><label>License / NPI / Bar #</label><input id="credential_id" placeholder="your credential number"></div>
+      <div><label>State</label><input id="credential_state" placeholder="e.g. CA"></div>
+    </div>
+    <div class="row">
+      <div><label>Credential type</label><input id="credential_type" placeholder="e.g. LMFT, MD, Bar #"></div>
+      <div><label>Contact email or phone <span class="req">*</span></label><input id="reach" placeholder="how we reach you"></div>
+    </div>
+    <label>Specialty / focus (optional)</label>
+    <input id="specialty" placeholder="e.g. trauma, eviction defense, adolescents">
+    <label>Anything else we should know</label>
+    <textarea id="notes" placeholder="Availability, populations you serve, languages, etc."></textarea>
+    <button id="submit-btn" onclick="submitJoin()">Submit for review</button>
+    <p class="note">By submitting, you confirm the credentials above are accurate and current. InnerLight verifies every provider before any person is connected to you. We never share this with anyone outside our review team.</p>
+  </div>
+  <div class="ok card" id="ok-card">
+    <h2>Thank you &mdash; we've got it.</h2>
+    <p>Your information is in our review queue. Our team verifies every provider before anyone is connected. We'll reach out at the contact you gave once the review is complete.</p>
+  </div>
+  <div class="backlink"><a href="/">&larr; Back to InnerLight</a></div>
+</div>
+<script>
+function submitJoin(){
+  var role=document.getElementById('role').value;
+  var org=document.getElementById('org').value.trim();
+  var reach=document.getElementById('reach').value.trim();
+  if(!org){ alert('Please enter your organization or practice name.'); return; }
+  if(!reach){ alert('Please enter an email or phone so we can reach you.'); return; }
+  var btn=document.getElementById('submit-btn'); btn.textContent='Submitting\u2026'; btn.disabled=true;
+  fetch('/api/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    role:role, org:org, contact:document.getElementById('contact').value,
+    credential_id:document.getElementById('credential_id').value,
+    credential_state:document.getElementById('credential_state').value,
+    credential_type:document.getElementById('credential_type').value,
+    specialty:document.getElementById('specialty').value,
+    reach:reach, notes:document.getElementById('notes').value
+  })}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){ document.getElementById('form-card').style.display='none'; document.getElementById('ok-card').style.display='block'; window.scrollTo(0,0); }
+    else { alert('Something went wrong. Please try again.'); btn.textContent='Submit for review'; btn.disabled=false; }
+  }).catch(function(){ alert('Could not connect. Please try again.'); btn.textContent='Submit for review'; btn.disabled=false; });
+}
+</script></body></html>"""
+
+@app.route("/join")
+def public_join_page():
+    """Public provider sign-up front door. Shows ONLY the sign-up form —
+    never the Watch or any proprietary background."""
+    return JOIN_PAGE
+
+@app.route("/api/join", methods=["POST"])
+def api_public_join():
+    """A provider submits themselves. Lands in the SAME vetting queue the
+    founder already reviews on the Watch, status='pending'. Rate-limited to
+    deter spam; no founder auth (this is the public door)."""
+    if not _rate_ok("join", 5, 3600):
+        return jsonify({"error": "rate"}), 429
+    data = request.get_json(silent=True) or {}
+    role = str(data.get("role", ""))[:40]
+    if role not in _PARTNER_ROLE_SIDE:
+        return jsonify({"error": "unknown role"}), 400
+    org = _partner_scrub(data.get("org", ""), 120).strip()
+    if not org:
+        return jsonify({"error": "org required"}), 400
+    side = _PARTNER_ROLE_SIDE[role]
+    contact = _partner_scrub(data.get("contact", ""), 120).strip()
+    cid = str(data.get("credential_id", ""))[:60].strip()
+    cstate = str(data.get("credential_state", ""))[:24].strip()
+    ctype = str(data.get("credential_type", ""))[:40].strip()
+    specialty = _partner_scrub(data.get("specialty", ""), 120).strip()
+    reach = str(data.get("reach", ""))[:120].strip()
+    notes = _partner_scrub(data.get("notes", ""), 500).strip()
+    # fold the reach + notes into discipline_notes so the founder sees it in
+    # the existing vetting card; mark it self-submitted for clarity.
+    combined = ("SELF-SUBMITTED via /join. Contact: " + reach +
+                (" | " + notes if notes else ""))[:500]
+    with _VETTING_LOCK:
+        conn = _vetting_db()
+        try:
+            conn.execute(
+                "INSERT INTO vetted_providers (org, contact_name, side, role, "
+                "credential_type, credential_id, credential_state, category, "
+                "specialty, discipline_checked, discipline_notes, status, "
+                "is_sample, created_at, decided_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,0,?,'pending',0,?,NULL)",
+                (org, contact, side, role, ctype, cid, cstate, "self-submitted",
+                 specialty, combined, utc_now()))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"ok": True})
 
 @app.route("/api/admin/vetting/create", methods=["POST"])
 def admin_vetting_create():
