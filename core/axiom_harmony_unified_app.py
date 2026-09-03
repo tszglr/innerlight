@@ -665,6 +665,16 @@ PUBLIC_PAGE = """
        to the centered spot. Smooth, never growing, never taking over. */
     .story-video-bar { padding:18px 0 10px; width:100%; text-align:center;
       transition:all 0.4s ease; }
+    /* Stationary pinned preview: fixed corner, its own compositing layer so
+       scrolling never triggers a page reflow. */
+    .story-video-bar.pinned { position:fixed; top:84px; right:20px; left:auto; width:auto; text-align:right;
+      z-index:40; will-change:transform; transform:translateZ(0); transition:none; padding:0; }
+    .story-video-bar.pinned #visual-preview, .story-video-bar.pinned #preview-hide { position:relative; }
+    .story-video-bar.pinned { display:inline-block; }
+    .story-video-bar.pinned .story-video { width:96px; height:96px; border-radius:50%; border:3px solid #ddd1c8;
+      box-shadow:0 4px 16px rgba(0,0,0,.18); }
+    @media (max-width:640px){ .story-video-bar.pinned { top:70px; right:12px; }
+      .story-video-bar.pinned .story-video { width:72px; height:72px; } }
     .story-video-bar.floating { position:fixed; top:84px; right:20px; left:auto;
       width:auto; padding:0; z-index:40; text-align:right; }
     .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
@@ -806,7 +816,7 @@ PUBLIC_PAGE = """
       opacity:0 !important; pointer-events:none !important; }
     /* While the one-time readiness notice is open at the top, the top-corner
        floaters rest so nothing sits on the notice (they return on dismiss). */
-    body:has(#readiness-bar) :is(#il-anchor-pill, .story-video-bar.floating) {
+    body:has(#readiness-bar) :is(#il-anchor-pill, .story-video-bar.floating, .story-video-bar.pinned) {
       opacity:0 !important; pointer-events:none !important; }
     .story-mic { background:#fff; color:#99673e; border:1px solid #ddd1c8; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
@@ -2997,7 +3007,9 @@ PUBLIC_PAGE = """
       </div>
       <div class="story-video-bar">
         <video id="visual-preview" class="story-video" autoplay muted playsinline aria-hidden="true"></video>
-              </div>
+        <button type="button" id="preview-hide" onclick="togglePreview()" title="Hide my preview" aria-label="Hide my camera preview" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(40,25,15,.75);color:#fff;font-size:13px;line-height:1;cursor:pointer;z-index:2;">&times;</button>
+        <span id="preview-seen" style="display:none;align-items:center;gap:6px;background:rgba(30,100,60,.92);color:#fff;font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;" onclick="togglePreview()" title="Show my preview"><span style="width:8px;height:8px;border-radius:50%;background:#7ee8a0;display:inline-block;"></span>We can see you</span>
+      </div>
       <div class="story-wrap">
         <h2 class="story-title" data-i18n="story.title" style="font-size:20px;margin-bottom:2px;">Tell me your story.</h2>
         <p style="font-size:12px;color:#6a402b;font-weight:500;margin:2px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a> &middot; <a href="#" onclick="openResume();return false;" style="color:#2e6e8e;" data-i18n="story.resume">Continue your story</a></p>
@@ -6129,6 +6141,13 @@ function toggleMore(){
   var m = document.getElementById('more-menu');
   if (m) m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
 }
+function togglePreview(){
+  var v=document.getElementById('visual-preview'), x=document.getElementById('preview-hide'), s=document.getElementById('preview-seen');
+  if(!v||!s) return;
+  var hidden = v.style.display==='none';
+  if(hidden){ v.style.display=''; if(x) x.style.display=''; s.style.display='none'; }
+  else { v.style.display='none'; if(x) x.style.display='none'; s.style.display='inline-flex'; }
+}
 function ilScrollHistory(){
   try { var h=document.querySelector('.il-history'); if(h) h.scrollTop = h.scrollHeight; } catch(e){}
 }
@@ -6813,22 +6832,14 @@ document.addEventListener('keydown', function(){ window._lastTypedAt = performan
 // FACE VIDEO floats to the side when you scroll down, and returns to its
 // centered spot when you scroll back to the top. Smooth and calm.
 (function(){
-  let ticking = false;
-  function onScroll(){
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function(){
-      const bar = document.querySelector('.story-video-bar');
-      if (bar) {
-        // Float once the page is scrolled past a gentle threshold; return to
-        // center when near the top.
-        if (window.scrollY > 140) bar.classList.add('floating');
-        else bar.classList.remove('floating');
-      }
-      ticking = false;
-    });
-  }
-  window.addEventListener('scroll', onScroll, {passive:true});
+  // FOUNDER FIX: the preview used to reposition on every scroll, which forces
+  // the browser to re-render the whole page each frame — the glitchy stutter
+  // felt while talking or tapping. The preview is now STATIONARY: pinned once
+  // in a fixed corner spot and never moved by scrolling. The person may not
+  // always watch their own face, but the small live preview stays put so they
+  // know we can see them. (They can still hide it with the corner button.)
+  const bar = document.querySelector('.story-video-bar');
+  if (bar) bar.classList.add('pinned');
 })();
 
 // ===================== SPEECH QUEUE — ONE VOICE AT A TIME =====================
