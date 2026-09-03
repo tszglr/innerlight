@@ -700,6 +700,10 @@ PUBLIC_PAGE = """
        Typists use Enter, everywhere. */
     .story-send { display:none; }
     body.mic-live .story-send { display:inline-block; }
+    .story-arrow { background:#b27849; color:#fff; border:0; border-radius:50%; width:44px; height:44px;
+      font-size:20px; line-height:1; cursor:pointer; box-shadow:0 2px 8px rgba(120,70,30,.3); transition:background .15s; }
+    .story-arrow:hover { background:#9e6a40; }
+    .story-arrow:active { transform:translateY(1px); }
     .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
     .story-send:hover { background:#9e6a40; }
@@ -2980,6 +2984,7 @@ PUBLIC_PAGE = """
         <p style="font-size:12px;color:#6a402b;font-weight:500;margin:-6px 0 10px;text-shadow:0 1px 2px rgba(255,255,255,0.9);"><span data-i18n="story.ainote">InnerLight is an AI program &mdash; not a human, and not a therapist, doctor, or lawyer.</span> <a href="/safety" style="color:#1d5f7e;" data-i18n="story.safetylink">Safety &amp; crisis protocol</a></p>
         <textarea id="message" class="story-input" data-i18n-ph="story.placeholder" aria-label="Start wherever you would like... (press Enter to send)" placeholder="Start wherever you would like... (press Enter to send)" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendCheckin();}"></textarea>
         <div class="story-actions">
+          <button class="story-arrow" type="button" onclick="sendCheckin()" title="Send" aria-label="Send">&#8593;</button>
           <button class="story-send" onclick="sendCheckin()" data-i18n="story.send">Send</button>
           <button class="story-mic" type="button" onclick="startVoiceCapture()" title="Speak instead of typing" data-i18n="story.speak">&#127908; Speak</button>
         </div>
@@ -6343,17 +6348,25 @@ async function startVoiceCapture() {
     const lbl = $('listen-label'); if (lbl) lbl.textContent = _ilux('mic.saved');
     return;
   }
-  try {
-    await ensureMicStream();
-  } catch (e) {
-    const lbl = $('listen-label');
-    if (lbl) lbl.textContent = _ilux('mic.na');
-    const panel = $('live-transcript'); if (panel) panel.style.display = 'block';
-    return;
+  // Chrome/Edge on Windows silently produce NO transcription if another
+  // getUserMedia stream already holds the microphone. So when the browser's
+  // own SpeechRecognition exists, we let IT own the mic and skip our stream.
+  // We only grab our own stream for the meter/Deepgram path (no native SR).
+  const _hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (!_hasSR) {
+    try {
+      await ensureMicStream();
+    } catch (e) {
+      const lbl = $('listen-label');
+      if (lbl) lbl.textContent = _ilux('mic.na');
+      const panel = $('live-transcript'); if (panel) panel.style.display = 'block';
+      return;
+    }
   }
   voiceListening = true;
   voiceFinalTranscript = '';
   duckMusicForVoice();   // stop the music while they speak
+  // (meter runs only when we hold our own stream; native SR owns the mic)
   const panel = $('live-transcript'); const dot = $('listen-dot'); const lbl = $('listen-label'); const tEl = $('transcript-text');
   if (panel) panel.style.display = 'block';
   if (dot) dot.style.background = '#e05a5a';
@@ -7116,18 +7129,25 @@ async function sendCheckin() {
       _thread0.appendChild(_um);
       const _lp = document.createElement('div');
       _lp.id = 'listening-pulse';
-      _lp.style.cssText = 'margin:6px 0 4px;color:#8a6a4c;font-size:13.5px;font-style:italic;';
-      _lp.textContent = (typeof _ilux==='function' ? _ilux('mic.now').split('\u2026')[0].split('...')[0].trim() : 'Listening') + '\u2026';
+      _lp.style.cssText = 'margin:6px 0 4px;color:#8a6a4c;font-size:14px;font-style:italic;';
+      _lp.innerHTML = '<span style="display:inline-block;">Reflecting<span class="il-dots"></span></span>';
+      // animate three dots so the wait never feels dead
+      try {
+        var _dotN = 0;
+        _lp._timer = setInterval(function(){
+          _dotN = (_dotN + 1) % 4;
+          var d = _lp.querySelector('.il-dots');
+          if (d) d.textContent = '.'.repeat(_dotN);
+          else { clearInterval(_lp._timer); }
+        }, 450);
+      } catch(e){}
       _thread0.appendChild(_lp);
       const _ta = document.getElementById('message'); if (_ta) _ta.value = '';
       try { _thread0.scrollIntoView({behavior:'smooth', block:'end'}); } catch(e){}
     }
   } catch(e){}
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
-  const res = await fetch('/api/checkin', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(Object.assign({
+  const _payload = JSON.stringify(Object.assign({
       ui_lang:(window._ilLang||'en'),
       client_time: new Date().toString(),
       name:val('name'),
@@ -7137,16 +7157,32 @@ async function sendCheckin() {
       culture:val('culture'),
       language:val('language') || 'English',
       known_diagnoses:val('known_diagnoses'),
-      message:val('message'),
+      message:msgVal,
       legal_issue:val('legal_issue'),
       support_preference:val('support_preference') || 'Help me decide',
       sound_preference:val('sound_preference') || 'Warm ambient',
       telehealth_requested:chk('telehealth_requested'),
       consent_case_file:chk('consent_case_file'),
       conversation: conversationLog
-    }, multimodalPayload()))
-  });
-  const data = await res.json();
+    }, multimodalPayload()));
+  // Resilient send: one automatic retry on a transient failure, so a single
+  // network blip never greets a person with an error on their first words.
+  let data = null;
+  for (let _try = 0; _try < 2 && !data; _try++) {
+    try {
+      const res = await fetch('/api/checkin', {method:'POST', headers:{'Content-Type':'application/json'}, body:_payload});
+      if (res.ok) { data = await res.json(); }
+    } catch(e) {}
+    if (!data && _try === 0) { await new Promise(r=>setTimeout(r, 700)); }
+  }
+  if (!data || !data.response) {
+    // Genuine failure after retry: keep the person's words in the box so they
+    // lose nothing, and say honestly what happened — no fake warmth.
+    try { const _lp=document.getElementById('listening-pulse'); if(_lp) _lp.remove(); } catch(e){}
+    const _box = document.getElementById('message'); if (_box && !_box.value) _box.value = msgVal;
+    const em = $('emotion-status'); if (em){ em.style.display='block'; em.textContent = _ilux('interrupted'); }
+    return;
+  }
   steerLaneFromMode(data.sound_mode || 'greeting');
   adaptZenisys(data.sound_mode || 'greeting');
   revealUrgentHelp(data);
@@ -7154,7 +7190,7 @@ async function sendCheckin() {
   innerLightLearningState = data.learning_state || null;
   innerLightSessionReference = data.message_fingerprint || '';
   innerLightContext = data;
-  try { const _lp=document.getElementById('listening-pulse'); if (_lp) _lp.remove(); } catch(e){}
+  try { const _lp=document.getElementById('listening-pulse'); if (_lp) { if(_lp._timer) clearInterval(_lp._timer); _lp.remove(); } } catch(e){}
   // Server-side multilingual signals: same protections in every language.
   if (data.minor_signal) { window._minorLock = true; try { showMinorBridge(); } catch(e){} }
   if (data.substitution_signal) { try { gentlyRedirectFromSubstitution(); } catch(e){} }
