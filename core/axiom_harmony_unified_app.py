@@ -13491,8 +13491,17 @@ def admin_dashboard():
         var cut = t.indexOf('.'); if (cut > 0) t = t.slice(0, cut);
         return 'set ' + t.slice(0, 16) + ' UTC';
       }
+      var _provByRole = {};
+      async function loadProviders(){
+        try{
+          var r = await fetch('/api/admin/provider/scores'); if(!r.ok) return;
+          var d = await r.json(); _provByRole = {};
+          (d.providers||[]).forEach(function(p){ (_provByRole[p.role]=_provByRole[p.role]||[]).push(p); });
+        }catch(e){}
+      }
       async function loadOncall(){
         try{
+          await loadProviders();
           var r = await fetch('/api/admin/oncall'); if (!r.ok) return;
           var d = await r.json();
           var el = document.getElementById('oncall-list'); if (!el) return;
@@ -13512,6 +13521,22 @@ def admin_dashboard():
                 + ' style="border-radius:999px;padding:7px 16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;min-width:96px;'
                 + (x.available ? onStyle : offStyle) + '">' + (x.available ? 'On call' : 'Off') + '</button>'
                 + '</div>';
+              // the actual providers vetted for this role
+              var provs = _provByRole[x.role] || [];
+              if (provs.length){
+                html += '<div style="margin:2px 0 10px 4px;font-size:12px;">';
+                provs.forEach(function(p){
+                  var dot = p.online ? '<span style="color:#7ee8a0;">&#9679; online</span>' : '<span style="color:rgba(242,231,210,.35);">&#9679; offline</span>';
+                  var sc = (p.score!=null) ? (' &middot; <span style="color:#f4c977;">'+p.score+'&#9733; ('+p.ratings+')</span>') : ' &middot; <span style="color:rgba(242,231,210,.3);">no ratings yet</span>';
+                  html += '<div style="padding:4px 0;color:rgba(242,231,210,.7);border-bottom:1px dotted rgba(232,163,76,.12);">'
+                    + esc2(p.org) + ' &middot; ' + dot + sc + ' &middot; <span style="color:rgba(242,231,210,.5);">' + p.people_seen + ' seen</span>'
+                    + (p.has_portal ? '' : ' &middot; <span style="color:#e8988e;">no portal yet</span>')
+                    + '</div>';
+                });
+                html += '</div>';
+              } else {
+                html += '<div style="margin:0 0 8px 4px;font-size:11.5px;color:rgba(242,231,210,.3);font-style:italic;">No vetted providers in this role yet.</div>';
+              }
             });
             html += '</div>';
           });
@@ -13612,7 +13637,8 @@ def admin_dashboard():
                 + '<button data-vt-decide="' + p.id + '" data-vt-to="rejected" style="background:rgba(150,150,150,.12);color:rgba(242,231,210,.6);border:1px solid rgba(150,150,150,.3);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Reject</button>';
             } else if(p.status === 'vetted' && !p.is_sample){
               actions = '<button data-vt-promote="' + p.id + '" data-vt-target="partner" style="background:linear-gradient(90deg,#b06a2a,#e8a34c);color:#ffe8bf;border:0;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Promote to partner</button>'
-                + '<button data-vt-promote="' + p.id + '" data-vt-target="oncall" style="background:rgba(232,163,76,.14);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Light on-call</button>';
+                + '<button data-vt-promote="' + p.id + '" data-vt-target="oncall" style="background:rgba(232,163,76,.14);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Light on-call</button>'
+                + '<button data-issue-portal="' + p.id + '" style="background:rgba(90,169,230,.16);color:#a9d3f2;border:1px solid rgba(90,169,230,.4);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;margin-left:6px;">Issue portal login</button>';
             } else if(p.status === 'vetted' && p.is_sample){
               actions = '<span style="font-size:11px;color:rgba(242,231,210,.4);margin-left:8px;">sample &mdash; not promotable</span>';
             }
@@ -13679,6 +13705,18 @@ def admin_dashboard():
             }
           }catch(e){}
           b.disabled = false; loadVetting(); return;
+        }
+        if(b && b.getAttribute && b.getAttribute('data-issue-portal')){
+          b.disabled = true;
+          try{
+            var rr = await fetch('/api/admin/provider/issue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({provider_id: parseInt(b.getAttribute('data-issue-portal'),10)})});
+            var dd = await rr.json();
+            if(dd && dd.ok){
+              var full = location.origin + dd.url;
+              prompt('Portal login link for ' + dd.org + ' — copy and send it privately (shown once):', full);
+            } else { alert(dd.error || 'Could not issue a portal login.'); }
+          }catch(e){}
+          b.disabled = false; return;
         }
       });
       loadVetting();
