@@ -18077,6 +18077,282 @@ def admin_vetting_list():
                     "roles": [{"side": s, "role": r, "label": lb}
                               for s, r, lb in _PROVIDER_ROLES]})
 
+PROVIDER_PORTAL_PAGE = r"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InnerLight &mdash; Provider Portal</title>
+<style>
+ *{box-sizing:border-box} body{margin:0;font-family:Georgia,serif;color:#2a1e14;background:linear-gradient(160deg,#0f1a24,#16232f);min-height:100vh;}
+ .wrap{max-width:680px;margin:0 auto;padding:34px 18px 70px;}
+ .top{display:flex;justify-content:space-between;align-items:center;color:#dce8f2;}
+ h1{font-size:22px;margin:0;color:#e8f0f8;} .org{color:#9fb8cc;font-size:14px;}
+ .card{background:#fffdf8;border-radius:16px;padding:22px;margin:16px 0;box-shadow:0 8px 30px rgba(0,0,0,.25);}
+ h2{font-size:15px;color:#1d4e6f;margin:0 0 12px;letter-spacing:.03em;}
+ .toggle{display:flex;align-items:center;gap:14px;}
+ .sw{width:64px;height:34px;border-radius:999px;background:#cbd5dd;position:relative;cursor:pointer;transition:background .2s;}
+ .sw.on{background:#1c9e63;} .sw .dot{position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#fff;transition:left .2s;}
+ .sw.on .dot{left:33px;}
+ .stat{display:inline-block;font-size:15px;} .big{font-size:30px;font-weight:700;color:#1d4e6f;}
+ label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#8a6a4c;margin:12px 0 4px;}
+ input,textarea{width:100%;border:1.5px solid #dcd0c4;border-radius:9px;padding:10px;font-family:inherit;font-size:15px;}
+ textarea{resize:vertical;min-height:60px;}
+ button{background:#1d4e6f;color:#fff;border:0;border-radius:999px;padding:12px 24px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:12px;}
+ .score{font-size:15px;color:#1d4e6f;} .muted{color:#8a6a4c;font-size:13px;}
+ .flag{background:#fff4e6;border:1px solid #e8c99a;border-radius:10px;padding:12px;font-size:12.5px;color:#7a5a2c;margin-top:8px;}
+</style></head><body>
+<div class="wrap">
+  <div class="top"><div><h1>Provider Portal</h1><div class="org">{{ prov['org'] }} &middot; {{ prov['role'].replace('_',' ') }}</div></div></div>
+
+  <div class="card">
+    <h2>Your availability</h2>
+    <div class="toggle">
+      <div class="sw {{ 'on' if online else '' }}" id="sw" onclick="toggleOnline()"><div class="dot"></div></div>
+      <div><b id="sw-label">{{ 'You are ONLINE — reachable now' if online else 'You are offline' }}</b><div class="muted">Turn this on only when you are truly available to receive someone right now.</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Your work</h2>
+    <div style="display:flex;gap:30px;">
+      <div><div class="big">{{ total_people }}</div><div class="muted">people seen</div></div>
+      <div><div class="big">{{ total_sessions }}</div><div class="muted">sessions logged</div></div>
+      <div><div class="big">{{ score if score is not none else '—' }}</div><div class="muted">rating ({{ nrate }})</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Log a session</h2>
+    <label>How many people did you see?</label>
+    <input id="people" type="number" min="1" max="50" value="1">
+    <label>Session note (your reference)</label>
+    <textarea id="note" placeholder="Brief note for your own records"></textarea>
+    <label>Billing notes</label>
+    <textarea id="billing" placeholder="Notes needed for your billing"></textarea>
+    <div class="flag"><b>About billing:</b> InnerLight gives you a place to record billing notes, but the exact codes and terminology required for Medicaid or insurance reimbursement depend on your payer and your credential. Please use the fields your biller requires. We are building structured billing support with a billing specialist and will add guided fields as that work is confirmed.</div>
+    <button onclick="logSession()">Save session</button>
+    <span id="log-ok" style="display:none;color:#1c9e63;margin-left:10px;">Saved.</span>
+  </div>
+
+  <div class="card">
+    <h2>How referrals work</h2>
+    <p class="muted" style="margin:0;">People you help can leave anonymous feedback. Providers with consistently positive feedback receive more referrals. InnerLight never shares who you saw or what was discussed &mdash; only an anonymous rating reaches your score.</p>
+  </div>
+</div>
+<script>
+function toggleOnline(){
+  var sw=document.getElementById('sw'); var goingOn=!sw.classList.contains('on');
+  fetch('/api/provider/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({online:goingOn})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok){ sw.classList.toggle('on',d.online); document.getElementById('sw-label').textContent=d.online?'You are ONLINE — reachable now':'You are offline'; }
+    });
+}
+function logSession(){
+  fetch('/api/provider/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    people_seen:parseInt(document.getElementById('people').value,10)||1,
+    session_note:document.getElementById('note').value, billing_notes:document.getElementById('billing').value
+  })}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){ var ok=document.getElementById('log-ok'); ok.style.display='inline'; setTimeout(function(){ok.style.display='none';},2500);
+      document.getElementById('note').value=''; document.getElementById('billing').value=''; document.getElementById('people').value='1'; }
+  });
+}
+</script></body></html>"""
+
+# ===================== PROVIDER PORTAL (Stage 3) =====================
+# Approved providers get their own room: a private access code, an online/
+# offline toggle, the summaries a person chose to share, a place to log how
+# many people they saw and billing notes, and their own feedback/score. This
+# is entirely separate from the user experience and from the founder Watch.
+def _portal_db():
+    conn = sqlite3.connect(_ONCALL_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS provider_accounts ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id INTEGER, "
+        "code_hash TEXT NOT NULL, online INTEGER NOT NULL DEFAULT 0, "
+        "created_at TEXT NOT NULL)")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS provider_sessions ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id INTEGER, "
+        "seen_at TEXT NOT NULL, people_seen INTEGER DEFAULT 1, "
+        "billing_notes TEXT, session_note TEXT)")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS provider_feedback ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id INTEGER, "
+        "rating INTEGER, comment TEXT, created_at TEXT NOT NULL)")
+    return conn
+
+def _portal_hash(code):
+    key = os.environ.get("ADMIN_KEY", "unset").encode()
+    return hmac.new(key, ("portal::" + code).encode(), hashlib.sha256).hexdigest()
+
+def _provider_score(pid, conn):
+    """A provider's score = average of their anonymous user ratings (1-5).
+    Higher score -> more referrals. No ratings yet -> neutral (None)."""
+    rows = conn.execute("SELECT rating FROM provider_feedback WHERE provider_id=?", (pid,)).fetchall()
+    vals = [r["rating"] for r in rows if r["rating"]]
+    return (round(sum(vals) / len(vals), 2), len(vals)) if vals else (None, 0)
+
+@app.route("/api/admin/provider/issue", methods=["POST"])
+def admin_provider_issue():
+    """Founder issues a portal access code to a VETTED provider so they can log
+    in to their own room."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    pid = int(data.get("provider_id", 0))
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            prov = conn.execute("SELECT id, org, status FROM vetted_providers WHERE id=?", (pid,)).fetchone()
+            if not prov or prov["status"] != "vetted":
+                return jsonify({"error": "provider must be vetted first"}), 400
+            code = secrets.token_urlsafe(14)
+            conn.execute("DELETE FROM provider_accounts WHERE provider_id=?", (pid,))
+            conn.execute("INSERT INTO provider_accounts (provider_id, code_hash, online, created_at) "
+                         "VALUES (?,?,0,?)", (pid, _portal_hash(code), utc_now()))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"ok": True, "code": code, "url": "/provider/" + code, "org": prov["org"]})
+
+def _portal_provider():
+    """Return the logged-in provider row from session, or None."""
+    pid = session.get("provider_pid")
+    if not pid:
+        return None
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            return conn.execute("SELECT * FROM vetted_providers WHERE id=?", (pid,)).fetchone()
+        finally:
+            conn.close()
+
+@app.route("/provider/<code>")
+def provider_login(code):
+    h = _portal_hash(str(code)[:80])
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            acct = conn.execute("SELECT provider_id FROM provider_accounts WHERE code_hash=?", (h,)).fetchone()
+        finally:
+            conn.close()
+    if not acct:
+        return ("<div style='font-family:Georgia,serif;max-width:520px;margin:80px auto;text-align:center;color:#5a3d22;'>"
+                "<h2>This provider link is not valid.</h2><p>Please contact the InnerLight team.</p></div>"), 403
+    session["provider_pid"] = acct["provider_id"]
+    session.permanent = False
+    return redirect("/provider")
+
+@app.route("/provider")
+def provider_portal():
+    prov = _portal_provider()
+    if not prov:
+        return redirect("/join")
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            acct = conn.execute("SELECT online FROM provider_accounts WHERE provider_id=?", (prov["id"],)).fetchone()
+            online = bool(acct["online"]) if acct else False
+            seen = conn.execute("SELECT COALESCE(SUM(people_seen),0) s, COUNT(*) c FROM provider_sessions WHERE provider_id=?", (prov["id"],)).fetchone()
+            score, nrate = _provider_score(prov["id"], conn)
+        finally:
+            conn.close()
+    return render_template_string(PROVIDER_PORTAL_PAGE, prov=prov, online=online,
+                                  total_people=seen["s"], total_sessions=seen["c"],
+                                  score=score, nrate=nrate)
+
+@app.route("/api/provider/toggle", methods=["POST"])
+def provider_toggle():
+    prov = _portal_provider()
+    if not prov:
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    online = 1 if data.get("online") else 0
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            conn.execute("UPDATE provider_accounts SET online=? WHERE provider_id=?", (online, prov["id"]))
+            conn.commit()
+            # reflect into the on-call board so the founder Watch shows it live
+            try:
+                oc = _oncall_db()
+                oc.execute("UPDATE provider_availability SET available=?, updated_at=? WHERE role=?",
+                           (online, utc_now(), prov["role"]))
+                oc.commit(); oc.close()
+            except Exception:
+                pass
+        finally:
+            conn.close()
+    return jsonify({"ok": True, "online": bool(online)})
+
+@app.route("/api/provider/log", methods=["POST"])
+def provider_log():
+    prov = _portal_provider()
+    if not prov:
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    try:
+        people = max(1, min(50, int(data.get("people_seen", 1))))
+    except Exception:
+        people = 1
+    billing = str(data.get("billing_notes", ""))[:800]
+    note = str(data.get("session_note", ""))[:800]
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            conn.execute("INSERT INTO provider_sessions (provider_id, seen_at, people_seen, billing_notes, session_note) "
+                         "VALUES (?,?,?,?,?)", (prov["id"], utc_now(), people, billing, note))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"ok": True})
+
+@app.route("/api/feedback/provider", methods=["POST"])
+def provider_feedback_submit():
+    """A person (anonymous) rates a provider they were connected to. Never
+    tied to any identity; feeds the provider's score which shapes referrals."""
+    if not _rate_ok("provfb", 20, 3600):
+        return jsonify({"error": "rate"}), 429
+    data = request.get_json(silent=True) or {}
+    try:
+        pid = int(data.get("provider_id", 0))
+        rating = max(1, min(5, int(data.get("rating", 0))))
+    except Exception:
+        return jsonify({"error": "bad input"}), 400
+    comment = _partner_scrub(data.get("comment", ""), 300).strip()
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            conn.execute("INSERT INTO provider_feedback (provider_id, rating, comment, created_at) "
+                         "VALUES (?,?,?,?)", (pid, rating, comment, utc_now()))
+            conn.commit()
+        finally:
+            conn.close()
+    return jsonify({"ok": True})
+
+@app.route("/api/admin/provider/scores")
+def admin_provider_scores():
+    """Founder view: every provider's score + volume, to shape referrals."""
+    if not _has_watch_access():
+        return jsonify({"error": "auth"}), 403
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            provs = conn.execute("SELECT id, org, role, side, status FROM vetted_providers WHERE is_sample=0").fetchall()
+            out = []
+            for p in provs:
+                score, nrate = _provider_score(p["id"], conn)
+                seen = conn.execute("SELECT COALESCE(SUM(people_seen),0) s FROM provider_sessions WHERE provider_id=?", (p["id"],)).fetchone()
+                acct = conn.execute("SELECT online FROM provider_accounts WHERE provider_id=?", (p["id"],)).fetchone()
+                out.append({"id": p["id"], "org": p["org"], "role": p["role"], "side": p["side"],
+                            "status": p["status"], "score": score, "ratings": nrate,
+                            "people_seen": seen["s"], "has_portal": bool(acct),
+                            "online": bool(acct["online"]) if acct else False})
+        finally:
+            conn.close()
+    # higher score first (providers with good feedback get surfaced first)
+    out.sort(key=lambda x: (x["score"] if x["score"] is not None else 2.5), reverse=True)
+    return jsonify({"providers": out})
+
 JOIN_PAGE = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Join InnerLight as a Provider</title>
