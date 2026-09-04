@@ -113,6 +113,23 @@ Ordered by his priority. Updated every session. (Aug 24, 2026)
     life — e.g. slow background-hue drift over time, warmer accent variety.
     THE STUDY: drop purple/blue/white; give it a flowery, warm palette.
 
+## PROVIDER PLATFORM (six-stage build) — status
+- Stage 1 DONE (e4a6b49): public /join provider sign-up -> Watch vetting queue
+- Stage 2 DONE (94de730): team access grants (temp+longer, read-only, revocable)
+- Stage 3 DONE (11b38c4): provider portal (online toggle, session log, billing
+  notes w/ honest caveat, anonymous feedback + scoring)
+- Stage 4 DONE (4ac9aaf): provider lists under each on-call role + issue-portal
+- Stage 5 (scoring/feedback): engine + endpoint + founder view + on-call
+  surfacing all DONE. REMAINING: wire the anonymous feedback prompt to the
+  SPECIFIC provider at handoff — BLOCKED on the assignment model (network vs
+  hand-picked), which depends on the 988 partnership design. Do NOT guess.
+- Stage 6 DONE (in Stage 2): team access temporary + longer-term.
+NEXT DECISION NEEDED FROM FOUNDER: how providers get assigned at handoff
+(988-network pool vs. chosen), which unblocks the last feedback wire.
+BILLING: portal has billing-notes fields with an honest flag; exact Medicaid/
+insurance terminology must be confirmed with a billing specialist before
+guided fields are built. Do NOT invent billing codes.
+
 ## PROCESS / DESIGN
 12. Figma-style tools rejected ("very difficult to use") — design happens
     directly in the product, in code, with the founder.
