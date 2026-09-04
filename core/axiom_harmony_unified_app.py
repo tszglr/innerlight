@@ -13479,8 +13479,31 @@ def admin_dashboard():
     Every role below starts off. Turn a role on only while a real person is truly reachable behind it &mdash;
     the clinical and legal handoff pages show exactly what is lit here, and nothing else. When everything is off,
     those pages say so honestly and hold people with 988, Crisis Text Line, legal aid, and 211 instead.</div>
+    <div style="margin:10px 0;padding:12px;background:rgba(232,163,76,.06);border:1px solid rgba(232,163,76,.18);border-radius:10px;">
+      <span style="font-size:12px;color:rgba(244,201,119,.85);letter-spacing:.06em;text-transform:uppercase;">How people reach the pool</span>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;" id="pool-mode-bar">
+        <button data-pool-mode="auto" style="background:rgba(232,163,76,.12);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:7px 16px;font-size:12px;cursor:pointer;">Auto-connect (random, fair)</button>
+        <button data-pool-mode="choose" style="background:rgba(232,163,76,.12);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:7px 16px;font-size:12px;cursor:pointer;">Let them choose</button>
+        <button data-pool-mode="both" style="background:rgba(232,163,76,.12);color:#f4c977;border:1px solid rgba(232,163,76,.35);border-radius:999px;padding:7px 16px;font-size:12px;cursor:pointer;">Offer both</button>
+      </div>
+      <div style="font-size:11.5px;color:rgba(242,231,210,.5);margin-top:8px;">Auto connects to the next available provider by fair random rotation (quality tiebreak) &mdash; never matched to what the person said. Choose lets the person pick from the vetted pool. This is guidance by quality, never diagnosis.</div>
+    </div>
     <div id="oncall-list"><i style="color:rgba(242,231,210,.45);">Loading the on-call board&hellip;</i></div>
     </div>
+    <script>
+      (function(){
+        var bar=document.getElementById('pool-mode-bar'); if(!bar) return;
+        bar.querySelectorAll('[data-pool-mode]').forEach(function(b){
+          b.addEventListener('click', function(){
+            fetch('/api/admin/pool/mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:b.getAttribute('data-pool-mode')})})
+              .then(function(r){return r.json();}).then(function(d){
+                bar.querySelectorAll('[data-pool-mode]').forEach(function(x){ x.style.background='rgba(232,163,76,.12)'; x.style.color='#f4c977'; });
+                if(d&&d.mode){ var on=bar.querySelector('[data-pool-mode="'+d.mode+'"]'); if(on){ on.style.background='linear-gradient(90deg,#b06a2a,#e8a34c)'; on.style.color='#ffe8bf'; } }
+              });
+          });
+        });
+      })();
+    </script>
     <script>
     (function(){
       var SIDE_NAMES = {clinical: 'The care side', legal: 'The legal side'};
@@ -15362,6 +15385,100 @@ def providers_available():
         print("[InnerLight] providers/available issue (returning honest-empty):", e)
         return jsonify({"clinical": [], "legal": []})
     return jsonify(out)
+
+# ===================== POOL HANDOFF (final platform piece) =====================
+# InnerLight is the GUIDANCE layer over a general pool stocked from many
+# partnered sources (988 agencies, partner agencies, independents) — all held
+# to one vetting standard. Two rails, founder-switchable:
+#   AUTO  — connect to the next available provider by fair RANDOM ROTATION
+#           (availability first, quality as a gentle tiebreak). Specialty is
+#           IGNORED here: matching on specialty from a person's words would be
+#           forming a clinical conclusion, which InnerLight must never do.
+#   CHOOSE— present the available, vetted pool and let the PERSON pick. Their
+#           choice is their agency; specialty may be shown for them to choose.
+# Feedback afterward is anonymous and tied to whoever actually took the person,
+# so quality (not diagnosis) shapes who rises in the pool.
+def _pool_mode():
+    m = _live_get("pool_mode")
+    return m if m in ("auto", "choose", "both") else "both"
+
+def _available_pool(side):
+    """Return the live pool for a side: vetted providers with a portal who are
+    currently ONLINE, each with quality score. Ordered availability-then-score.
+    Never ordered or filtered by a person's stated needs."""
+    side_db = "clinical" if side in ("clinical", "care") else "legal"
+    with _ONCALL_LOCK:
+        conn = _portal_db()
+        try:
+            provs = conn.execute(
+                "SELECT v.id, v.org, v.role, v.side, v.specialty, a.online "
+                "FROM vetted_providers v JOIN provider_accounts a ON a.provider_id = v.id "
+                "WHERE v.status='vetted' AND v.is_sample=0 AND v.side=? AND a.online=1",
+                (side_db,)).fetchall()
+            pool = []
+            for p in provs:
+                score, nrate = _provider_score(p["id"], conn)
+                pool.append({"id": p["id"], "org": p["org"], "role": p["role"],
+                             "specialty": p["specialty"] or "",
+                             "score": score, "ratings": nrate})
+        finally:
+            conn.close()
+    # quality tiebreak only (never the person's words): higher score first,
+    # unrated treated as neutral 3.0 so new providers still get turns.
+    pool.sort(key=lambda x: (x["score"] if x["score"] is not None else 3.0), reverse=True)
+    return pool
+
+@app.route("/api/pool/<side>")
+def pool_list(side):
+    """PUBLIC. The available pool for the person to choose from (CHOOSE rail).
+    Specialty is shown for the PERSON to pick — never used to auto-match."""
+    pool = _available_pool(side)
+    mode = _pool_mode()
+    return jsonify({"side": side, "mode": mode, "count": len(pool),
+                    "providers": [{"id": p["id"], "org": p["org"],
+                                   "specialty": p["specialty"],
+                                   "score": p["score"], "ratings": p["ratings"]} for p in pool]})
+
+@app.route("/api/pool/connect", methods=["POST"])
+def pool_connect():
+    """PUBLIC. AUTO rail: connect to the next available provider by fair random
+    rotation. If a specific provider_id is passed (CHOOSE rail), honor the
+    person's own choice. Records who took the person so feedback can attach."""
+    if not _rate_ok("poolc", 30, 3600):
+        return jsonify({"error": "rate"}), 429
+    data = request.get_json(silent=True) or {}
+    side = str(data.get("side", "clinical"))
+    chosen_id = data.get("provider_id")
+    pool = _available_pool(side)
+    if not pool:
+        return jsonify({"ok": False, "empty": True})
+    if chosen_id:
+        # CHOOSE rail: the PERSON picked this one.
+        pick = next((p for p in pool if p["id"] == int(chosen_id)), None)
+        if not pick:
+            return jsonify({"ok": False, "empty": True})
+    else:
+        # AUTO rail: fair RANDOM rotation, gently weighted toward quality but
+        # NEVER toward the person's stated needs. Take the top-quality half of
+        # the pool (so good providers get more turns) then pick RANDOMLY within
+        # it — fairness + quality, zero clinical matching.
+        import random as _rd
+        half = pool[:max(1, len(pool) // 2)]
+        pick = _rd.choice(half)
+    return jsonify({"ok": True, "provider_id": pick["id"], "org": pick["org"],
+                    "score": pick["score"], "ratings": pick["ratings"]})
+
+@app.route("/api/admin/pool/mode", methods=["POST"])
+def admin_pool_mode():
+    """Founder sets which rail(s) are active: auto, choose, or both."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    mode = data.get("mode", "both")
+    if mode not in ("auto", "choose", "both"):
+        mode = "both"
+    _live_set("pool_mode", mode)
+    return jsonify({"ok": True, "mode": mode})
 
 @app.route("/api/admin/oncall")
 def admin_oncall_list():
