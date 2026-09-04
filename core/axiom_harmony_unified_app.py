@@ -11526,7 +11526,7 @@ def bio_ping():
 
 @app.route("/api/admin/bio/live")
 def admin_bio_live():
-    if not session.get("founder_ok"):
+    if not _has_watch_access():
         return jsonify({"error": "auth"}), 403
     if session.get("sim_mode"):
         return jsonify(_sim_mirror_bio())
@@ -12006,9 +12006,9 @@ def _kb_for(reason):
 
 @app.route("/api/admin/security")
 def admin_security():
-    """FOUNDER-ONLY forensic readout: recent security events + quick counts.
+    """Founder + team viewers: recent security events + quick counts.
     Metadata only — never any user content. This is the evidence view."""
-    if not session.get("founder_ok"):
+    if not _has_watch_access():
         return jsonify({"error": "auth"}), 403
     if session.get("sim_mode"):
         return jsonify(_sim_mirror_security())
@@ -12357,6 +12357,138 @@ LOGIN_PAGE = """
 """
 
 @app.route("/admin/login", methods=["POST"])
+# ===================== TEAM ACCESS GRANTS (Stage 2) =====================
+# The founder can grant others time-limited access to the Watch (and,
+# optionally, the Study) without sharing the ADMIN_KEY. Each grant is a random
+# code stored hashed in the ops DB, with an expiry and a scope. Researchers get
+# temporary access; trusted people get longer. No permanent grants are offered
+# yet (max 90 days), matching the founder's rule. The founder can revoke any
+# grant instantly. Grantees get READ access — they can see everything to
+# evaluate the research, but cannot change provider state or settings.
+def _grants_db():
+    conn = sqlite3.connect(_ONCALL_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS access_grants ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, code_hash TEXT NOT NULL, "
+        "label TEXT, scope TEXT NOT NULL DEFAULT 'watch', "
+        "created_at TEXT NOT NULL, expires_at TEXT NOT NULL, "
+        "revoked INTEGER NOT NULL DEFAULT 0)")
+    return conn
+
+def _grant_hash(code):
+    key = os.environ.get("ADMIN_KEY", "unset").encode()
+    return hmac.new(key, ("grant::" + code).encode(), hashlib.sha256).hexdigest()
+
+def _grant_check(code):
+    """Return the grant scope ('watch' or 'watch+study') if the code is a live,
+    unexpired, unrevoked grant; else None."""
+    if not code:
+        return None
+    h = _grant_hash(code)
+    now = utc_now()
+    try:
+        with _ONCALL_LOCK:
+            conn = _grants_db()
+            try:
+                row = conn.execute(
+                    "SELECT scope, expires_at, revoked FROM access_grants "
+                    "WHERE code_hash=?", (h,)).fetchone()
+            finally:
+                conn.close()
+        if not row or row["revoked"]:
+            return None
+        if row["expires_at"] < now:
+            return None
+        return row["scope"]
+    except Exception:
+        return None
+
+def _has_watch_access():
+    """Founder OR a live team grant may view the Watch."""
+    if session.get("founder_ok"):
+        return True
+    return session.get("team_scope") in ("watch", "watch+study")
+
+def _has_study_access():
+    if session.get("founder_ok"):
+        return True
+    return session.get("team_scope") == "watch+study"
+
+@app.route("/team/<code>")
+def team_access(code):
+    """A grantee redeems their access code. Sets a scoped, read-only session."""
+    scope = _grant_check(str(code)[:80])
+    if not scope:
+        return ("<div style='font-family:Georgia,serif;max-width:520px;margin:80px auto;"
+                "text-align:center;color:#5a3d22;'><h2>This access link is not valid.</h2>"
+                "<p>It may have expired or been revoked. Please ask the InnerLight team "
+                "for a new one.</p><p><a href='/' style='color:#b8783a;'>Back to InnerLight</a></p></div>"), 403
+    session["team_scope"] = scope
+    session["team_readonly"] = 1
+    session.permanent = False
+    return redirect("/admin")
+
+@app.route("/api/admin/grants", methods=["GET", "POST"])
+def admin_grants():
+    # Only the FOUNDER can mint or revoke grants — not a team grantee.
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        action = data.get("action", "create")
+        if action == "revoke":
+            gid = int(data.get("id", 0))
+            with _ONCALL_LOCK:
+                conn = _grants_db()
+                try:
+                    conn.execute("UPDATE access_grants SET revoked=1 WHERE id=?", (gid,))
+                    conn.commit()
+                finally:
+                    conn.close()
+            return jsonify({"ok": True})
+        # create
+        label = _partner_scrub(data.get("label", ""), 80).strip() or "team member"
+        scope = data.get("scope", "watch")
+        if scope not in ("watch", "watch+study"):
+            scope = "watch"
+        try:
+            days = int(data.get("days", 7))
+        except Exception:
+            days = 7
+        days = max(1, min(90, days))   # founder's rule: no permanent grants yet (90-day cap)
+        code = secrets.token_urlsafe(18)
+        import datetime as _dt
+        exp = (_dt.datetime.utcnow() + _dt.timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        with _ONCALL_LOCK:
+            conn = _grants_db()
+            try:
+                conn.execute(
+                    "INSERT INTO access_grants (code_hash, label, scope, created_at, expires_at, revoked) "
+                    "VALUES (?,?,?,?,?,0)", (_grant_hash(code), label, scope, utc_now(), exp))
+                conn.commit()
+            finally:
+                conn.close()
+        return jsonify({"ok": True, "code": code, "url": "/team/" + code,
+                        "label": label, "scope": scope, "expires_at": exp, "days": days})
+    # GET: list active grants
+    now = utc_now()
+    with _ONCALL_LOCK:
+        conn = _grants_db()
+        try:
+            rows = conn.execute(
+                "SELECT id, label, scope, created_at, expires_at, revoked FROM access_grants "
+                "ORDER BY id DESC LIMIT 100").fetchall()
+        finally:
+            conn.close()
+    out = []
+    for r in rows:
+        out.append({"id": r["id"], "label": r["label"], "scope": r["scope"],
+                    "created_at": r["created_at"], "expires_at": r["expires_at"],
+                    "revoked": bool(r["revoked"]),
+                    "live": (not r["revoked"] and r["expires_at"] > now)})
+    return jsonify({"grants": out})
+
 def admin_login():
     # DETER: an auth endpoint is a prime brute-force target. Tarpit/lock out
     # clients that have already earned it before doing any work.
@@ -12383,7 +12515,7 @@ def admin_logout():
 
 @app.route("/api/admin/live")
 def admin_live():
-    if not session.get("founder_ok"):
+    if not _has_watch_access():
         return jsonify({"error": "auth"}), 403
     if session.get("sim_mode"):
         return jsonify(_sim_mirror_live())
@@ -12767,6 +12899,10 @@ def _sim_metrics():
 def admin_dashboard():
     """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
     _sim_banner = ""
+    if session.get("team_scope") and not session.get("founder_ok"):
+        _sim_banner = ('<div style="position:sticky;top:0;z-index:9999;background:#2a3d52;color:#cfe0f0;'
+            'text-align:center;font-weight:700;letter-spacing:.1em;padding:8px;font-size:12px;">'
+            'TEAM VIEW &mdash; read-only access granted by the founder. You can see everything; changes are disabled.</div>')
     if session.get("sim_mode") and session.get("founder_ok"):
         _sim_banner = (
             '<div style="position:sticky;top:0;z-index:9999;background:repeating-linear-gradient(45deg,#0d3b2a,#0d3b2a 14px,#0a2e21 14px,#0a2e21 28px);'
@@ -12790,7 +12926,7 @@ def admin_dashboard():
                 "<p style='font-family:Arial;padding:0 40px;'>On Render: Environment &rarr; "
                 "Add Environment Variable &rarr; name <b>ADMIN_KEY</b>, value = a password only "
                 "you know &rarr; Save &amp; redeploy. Then sign in at /admin</p>"), 200
-    if not session.get("founder_ok"):
+    if not (session.get("founder_ok") or _has_watch_access()):
         return render_template_string(LOGIN_PAGE), 200
     if session.get("sim_mode"):
         m = _sim_metrics()          # full synthetic dataset — every panel lights
@@ -13549,6 +13685,59 @@ def admin_dashboard():
     })();
     </script>
 
+    <h2 class="ledger" id="teamaccess" data-sec="sec-team">Team access &mdash; add people to the Watch &amp; Study</h2>
+    <div class="card" data-founder-only="1">
+      <p style="margin-top:0;font-size:13.5px;color:rgba(242,231,210,.72);">Give a researcher or trusted person time-limited access to see everything here &mdash; including the Study &mdash; without sharing your admin password. They get a private link; you can revoke it any second. No permanent access yet (90-day maximum).</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end;margin:12px 0;">
+        <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Who is this for?</label><input id="grant-label" placeholder="e.g. Dr. Rivera, McNair reviewer" style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"></div>
+        <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Access to</label><select id="grant-scope" style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"><option value="watch">The Watch only</option><option value="watch+study">The Watch + the Study</option></select></div>
+        <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Days</label><select id="grant-days" style="background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"><option>1</option><option>3</option><option selected>7</option><option>14</option><option>30</option><option>90</option></select></div>
+        <button id="grant-create" style="background:#1c7a3d;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer;">Create link</button>
+      </div>
+      <div id="grant-new" style="display:none;background:rgba(28,122,61,.12);border:1px solid rgba(90,200,140,.35);border-radius:10px;padding:12px;margin-bottom:12px;"></div>
+      <div id="grant-list" style="font-size:13px;"></div>
+    </div>
+    <script>
+      (function(){
+        var lbl=document.getElementById('grant-label'), sc=document.getElementById('grant-scope'), dy=document.getElementById('grant-days');
+        var cb=document.getElementById('grant-create'), nw=document.getElementById('grant-new'), ls=document.getElementById('grant-list');
+        if(!cb) return;
+        function esc(s){ return String(s||'').replace(/</g,'&lt;'); }
+        function load(){
+          fetch('/api/admin/grants').then(function(r){return r.json();}).then(function(d){
+            var g=d.grants||[];
+            if(!g.length){ ls.innerHTML='<i style="color:rgba(242,231,210,.45);">No access links yet.</i>'; return; }
+            ls.innerHTML=g.map(function(x){
+              var status = x.revoked?'<span style="color:#e8534e;">revoked</span>':(x.live?'<span style="color:#7ee8a0;">live</span>':'<span style="color:rgba(242,231,210,.4);">expired</span>');
+              return '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(232,163,76,.12);padding:8px 0;">'
+                +'<span><b>'+esc(x.label)+'</b> &middot; '+esc(x.scope==='watch+study'?'Watch + Study':'Watch')+' &middot; '+status+'<br><span style="font-size:11px;color:rgba(242,231,210,.45);">expires '+esc(x.expires_at.slice(0,10))+'</span></span>'
+                +(x.live?'<button data-revoke="'+x.id+'" style="background:transparent;border:1px solid rgba(232,83,78,.5);color:#e8988e;border-radius:8px;padding:6px 12px;cursor:pointer;">Revoke</button>':'')
+                +'</div>';
+            }).join('');
+            ls.querySelectorAll('[data-revoke]').forEach(function(b){
+              b.addEventListener('click', function(){
+                fetch('/api/admin/grants',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'revoke',id:parseInt(b.getAttribute('data-revoke'),10)})}).then(load);
+              });
+            });
+          }).catch(function(){});
+        }
+        cb.addEventListener('click', function(){
+          cb.disabled=true; cb.textContent='Creating\u2026';
+          fetch('/api/admin/grants',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',label:lbl.value,scope:sc.value,days:parseInt(dy.value,10)})})
+            .then(function(r){return r.json();}).then(function(d){
+              cb.disabled=false; cb.textContent='Create link';
+              if(d&&d.ok){
+                var full=location.origin+d.url;
+                nw.style.display='block';
+                nw.innerHTML='<b style="color:#7ee8a0;">Access link created for '+esc(d.label)+'</b><br><span style="font-size:12px;color:rgba(242,231,210,.7);">Send them this private link. It works for '+d.days+' days and you can revoke it anytime.</span><br><input readonly value="'+full+'" onclick="this.select()" style="width:100%;margin-top:8px;background:rgba(0,0,0,.35);border:1px solid rgba(90,200,140,.4);border-radius:8px;padding:9px;color:#dff5e8;font-size:12px;">';
+                lbl.value=''; load();
+              } else { alert('Could not create the link.'); }
+            }).catch(function(){ cb.disabled=false; cb.textContent='Create link'; });
+        });
+        load();
+      })();
+    </script>
+
     <h2 class="ledger" id="demo" data-sec="sec-demo">Demonstration mode — show the whole flow, safely</h2>
     <div class="panel">
     <div class="hint">Turn on a <b style="color:#f4c977;">sample</b> network so you can show how InnerLight works start to finish &mdash; even when nobody real is on call. <b>This only affects your own session (or a visitor who opens your demo link).</b> Real people are never touched: while demo is on for you, anyone else opening a handoff page still sees the honest empty state. Every demo page carries a fixed <b style="color:#e8a34c;">SAMPLE &mdash; DEMONSTRATION MODE</b> banner, and a demo send opens no room and pages no one. Turn it off and your session returns to the real, honest product.</div>
@@ -14256,6 +14445,7 @@ def admin_dashboard():
     // 11. scientific method + research basis — bottom, unchanged content
     frag.appendChild(single(box(['sec-scimethod','sec-research-basis'])));
     // demo — very bottom, folded
+    frag.appendChild(single(box(['sec-team'])));
     frag.appendChild(fold('Demo link — share a simulated view (click to open)', ['sec-demo']));
     root.appendChild(frag);
   })();
@@ -15137,7 +15327,7 @@ def providers_available():
 
 @app.route("/api/admin/oncall")
 def admin_oncall_list():
-    if not session.get("founder_ok"):
+    if not _has_watch_access():
         return jsonify({"error": "auth"}), 403
     if session.get("sim_mode"):
         rows = []
@@ -15316,7 +15506,7 @@ def admin_study_history():
 
 @app.route("/admin/study")
 def admin_study_page():
-    if not session.get("founder_ok"):
+    if not (session.get("founder_ok") or _has_study_access()):
         return render_template_string(LOGIN_PAGE), 200
     return render_template_string("""
 <!doctype html><html><head><title>Founder's Study — InnerLight</title>
