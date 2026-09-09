@@ -12765,7 +12765,8 @@ var held={};
 function _now(){ return (window.Tone&&Tone.now)?Tone.now():(nativeCtx?nativeCtx.currentTime:0); }
 function play(note){ if(!ready)return; if(held[note])return; held[note]=1;
   if(useNative){ nativeOn(note); } else if(synth){ try{synth.triggerAttack(note);}catch(e){} }
-  if(rec.on) rec.events.push({note:note,t:_now()-rec.start,type:'on'}); }
+  if(rec.on) rec.events.push({note:note,t:_now()-rec.start,type:'on'});
+  if(learnState) learnJudge(note); }
 function stop(note){ if(!ready)return; if(!held[note])return; delete held[note];
   if(useNative){ nativeOff(note); } else if(synth){ try{synth.triggerRelease(note);}catch(e){} }
   if(rec.on) rec.events.push({note:note,t:_now()-rec.start,type:'off'}); }
@@ -12855,11 +12856,45 @@ function applyKnobs(){ if(!ready)return; if(reverb)reverb.wet.value=+document.ge
 ['k-verb','k-vol','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
 
 // ============ learn a melody ============
-var LESSON=['C4','D4','E4','C4','E4','C4','E4','D4','E4','F4','G4'];
+// A LIBRARY of short calming melodies — a random one each time you start.
+var MELODIES=[
+  {name:'Mary Had a Little Lamb', notes:['E4','D4','C4','D4','E4','E4','E4','D4','D4','D4','E4','G4','G4']},
+  {name:'Twinkle Twinkle', notes:['C4','C4','G4','G4','A4','A4','G4','F4','F4','E4','E4','D4','D4','C4']},
+  {name:'Ode to Joy', notes:['E4','E4','F4','G4','G4','F4','E4','D4','C4','C4','D4','E4','E4','D4','D4']},
+  {name:'Amazing Grace (open)', notes:['G4','C4','E4','C4','E4','D4','C4','A4','G4']},
+  {name:'gentle scale', notes:['C4','D4','E4','F4','G4','A4','B4','C4']},
+  {name:'His Eye Is on the Sparrow (open)', notes:['C4','E4','G4','A4','G4','E4','D4','C4']}
+];
+var learnState=null;
+function highlightKey(note, on, cls){ Object.keys(keymap).forEach(function(kk){ if(keymap[kk].note===note){ if(on) keymap[kk].el.classList.add(cls||'guide'); else keymap[kk].el.classList.remove(cls||'guide'); } }); }
+function learnPrompt(){
+  var s=learnState; if(!s) return;
+  if(s.i>=s.mel.notes.length){
+    document.getElementById('learn-status').innerHTML='<b style="color:#7ee8a0;">You played it! '+s.hits+'/'+s.mel.notes.length+' right.</b> Tap Learn again for a new one.';
+    learnState=null; return;
+  }
+  var note=s.mel.notes[s.i];
+  // play the target note and light ONLY that key, then wait for the user.
+  highlightKey(note,true,'guide'); play(note); setTimeout(function(){ stop(note); },350);
+  document.getElementById('learn-status').innerHTML='<b>'+s.mel.name+'</b> — play the green key: <b style="color:#9f8cff;">'+note.replace(/\d/,'')+'</b> ('+(s.i+1)+'/'+s.mel.notes.length+')';
+}
+// hook: when the user plays a note during a lesson, judge it.
+function learnJudge(note){
+  var s=learnState; if(!s) return;
+  var want=s.mel.notes[s.i];
+  if(note.replace(/\d/,'')===want.replace(/\d/,'')){   // right note (any octave ok)
+    highlightKey(want,false,'guide'); s.hits++; s.i++;
+    document.getElementById('learn-status').innerHTML='<b style="color:#7ee8a0;">Yes! ✓</b>';
+    setTimeout(learnPrompt, 350);
+  } else {
+    document.getElementById('learn-status').innerHTML='<b style="color:#e8988e;">Not that one — try the green key ('+want.replace(/\d/,'')+').</b>';
+  }
+}
 document.getElementById('learn-btn').addEventListener('click', async function(){
-  await unlock(); document.getElementById('learn-status').textContent='follow the green keys...'; var i=0;
-  (function step(){ if(i>=LESSON.length){ document.getElementById('learn-status').textContent='your turn!'; return; }
-    var n=LESSON[i]; Object.keys(keymap).forEach(function(kk){ if(keymap[kk].note===n){ keymap[kk].el.classList.add('guide'); play(n); setTimeout(function(){ stop(n); keymap[kk].el.classList.remove('guide'); },420);} }); i++; setTimeout(step,560); })();
+  await unlock();
+  var mel=MELODIES[Math.floor(Math.random()*MELODIES.length)];
+  learnState={mel:mel, i:0, hits:0};
+  learnPrompt();
 });
 
 // ============ chords & progressions ============
