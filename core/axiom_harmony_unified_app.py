@@ -12677,15 +12677,27 @@ function setInstrument(id){
   synth=makeSynth(id); synth.connect(reverb);
   document.getElementById('inst-status').textContent=INSTNAMES[id]+' ready.';
 }
+function hideGate(){ var g=document.getElementById('startgate'); if(g){ g.style.display='none'; g.style.pointerEvents='none'; } }
 async function unlock(){
+  hideGate();                 // ALWAYS drop the overlay first so clicks pass through
   if(ready) return;
-  await Tone.start();
-  reverb=new Tone.Reverb({decay:3.5,wet:.30}).toDestination();
-  recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest);
-  setInstrument('piano'); applyKnobs(); ready=true;
-  var g=document.getElementById('startgate'); if(g) g.style.display='none';
+  try{
+    if(window.Tone && Tone.start){ await Tone.start(); }
+    reverb=new Tone.Reverb({decay:3.5,wet:.30}).toDestination();
+    recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest);
+    setInstrument('piano'); applyKnobs(); ready=true;
+  }catch(e){
+    // even if audio setup fails, the page must remain usable — gate stays hidden.
+    var st=document.getElementById('inst-status'); if(st) st.textContent='Audio could not start on this device — the studio still works for learning; try reloading if there is no sound.';
+  }
 }
-document.getElementById('startgate').addEventListener('click', unlock);
+// dismiss the gate on the very first pointer/touch/key, no matter what.
+var gate=document.getElementById('startgate');
+gate.addEventListener('click', unlock);
+gate.addEventListener('touchstart', function(e){ e.preventDefault(); unlock(); }, {passive:false});
+gate.addEventListener('pointerdown', unlock);
+// safety net: any key press also unlocks and hides the gate
+window.addEventListener('keydown', function(){ if(!ready) unlock(); }, {once:false});
 
 // instrument chips
 var ie=document.getElementById('insts');
