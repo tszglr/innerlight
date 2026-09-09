@@ -12681,26 +12681,38 @@ function setInstrument(id){
   var st=document.getElementById('inst-status'); if(st) st.textContent=INSTNAMES[id]+' ready.';
 }
 function hideGate(){ var g=document.getElementById('startgate'); if(g){ g.style.display='none'; g.style.pointerEvents='none'; } }
+var useNative=false, nativeCtx=null, nativeVoices={}, nativeWave='triangle';
 async function unlock(){
   hideGate();
   if(ready) return;
   var st=document.getElementById('inst-status');
-  if(!window.Tone){ if(st) st.textContent='Sound engine did not load — check your connection and reload.'; return; }
-  // 1) START + RESUME the audio context (both, for stubborn browsers)
-  try{ await Tone.start(); }catch(e){}
-  try{ if(Tone.getContext && Tone.getContext().resume) await Tone.getContext().resume(); }catch(e){}
-  try{ if(Tone.context && Tone.context.rawContext && Tone.context.rawContext.resume) await Tone.context.rawContext.resume(); }catch(e){}
-  // 2) SOUND FIRST: the instrument goes STRAIGHT to the speakers. This alone
-  //    guarantees you hear notes — reverb/recording are optional extras below.
-  ready=true;
-  try{ setInstrument('piano'); }catch(e){}
-  // 3) reverb is a NICE-TO-HAVE; if it fails, sound still works (dry).
-  try{ reverb=new Tone.Reverb({decay:3.2,wet:.28}).toDestination(); if(synth){ try{synth.disconnect();}catch(_){} synth.connect(reverb); } }catch(e){ reverb=null; }
-  // 4) recorder is optional too.
-  try{ recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest); }catch(e){ recDest=null; }
-  try{ applyKnobs(); }catch(e){}
-  if(st) st.textContent='Piano ready — press a key.';
+  if(window.Tone && Tone.start){
+    // Preferred path: Tone.js is available.
+    try{ await Tone.start(); }catch(e){}
+    try{ if(Tone.getContext && Tone.getContext().resume) await Tone.getContext().resume(); }catch(e){}
+    ready=true;
+    try{ setInstrument('piano'); }catch(e){}
+    try{ reverb=new Tone.Reverb({decay:3.2,wet:.28}).toDestination(); if(synth){ try{synth.disconnect();}catch(_){} synth.connect(reverb); } }catch(e){ reverb=null; }
+    try{ recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest); }catch(e){ recDest=null; }
+    try{ applyKnobs(); }catch(e){}
+    if(st) st.textContent='Piano ready — press a key.';
+    return;
+  }
+  // FALLBACK: Tone.js did not load (blocked network/CDN). Use the browser's
+  // OWN Web Audio — built in, no download, cannot fail to load.
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    nativeCtx=new AC(); await nativeCtx.resume();
+    useNative=true; ready=true;
+    if(st) st.textContent='Piano ready (built-in sound) — press a key.';
+  }catch(e){ if(st) st.textContent='Your browser blocked audio. Try a different browser or unblock sound for this site.'; }
 }
+// native note engine (used only when Tone is unavailable)
+var NFREQ={C:16.35,'C#':17.32,D:18.35,'D#':19.45,E:20.60,F:21.83,'F#':23.12,G:24.50,'G#':25.96,A:27.50,'A#':29.14,B:30.87};
+function noteToFreq(note){ var mm=note.match(/^([A-G]#?)(\d)$/); if(!mm) return 440; return NFREQ[mm[1]]*Math.pow(2, parseInt(mm[2])); }
+function nativeOn(note){ if(!nativeCtx||nativeVoices[note]) return; var o=nativeCtx.createOscillator(),g=nativeCtx.createGain(); o.type=nativeWave; o.frequency.value=noteToFreq(note); g.gain.setValueAtTime(0,nativeCtx.currentTime); g.gain.linearRampToValueAtTime((+document.getElementById('k-vol').value/100)*0.3,nativeCtx.currentTime+0.01); o.connect(g); g.connect(nativeCtx.destination); o.start(); nativeVoices[note]={o:o,g:g}; }
+function nativeOff(note){ var v=nativeVoices[note]; if(!v) return; delete nativeVoices[note]; try{ v.g.gain.linearRampToValueAtTime(0,nativeCtx.currentTime+0.15); v.o.stop(nativeCtx.currentTime+0.2);}catch(e){} }
+var NWAVE={piano:'triangle',guitar:'sawtooth',strings:'sawtooth',pad:'sine',bells:'sine',bass:'square'};
 // Expose unlock so the gate's INLINE onclick (which works even if this script
 // errored earlier) can call it. If the user already tapped before this script
 // finished loading, unlock right now.
@@ -12711,15 +12723,20 @@ if(window.__zenTapped){ unlock(); }
 var ie=document.getElementById('insts');
 Object.keys(INSTNAMES).forEach(function(id){
   var b=document.createElement('div'); b.className='chip'+(id==='piano'?' on':''); b.textContent=INSTNAMES[id];
-  b.addEventListener('click', async function(){ await unlock(); document.querySelectorAll('#insts .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); setInstrument(id); });
+  b.addEventListener('click', async function(){ await unlock(); document.querySelectorAll('#insts .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); nativeWave=NWAVE[id]||'triangle'; if(!useNative){ setInstrument(id); } var st=document.getElementById('inst-status'); if(st) st.textContent=INSTNAMES[id]+' ready.'; });
   ie.appendChild(b);
 });
 
 // ============ NOTES ============
 var NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 var held={};
-function play(note){ if(!ready||!synth) return; if(held[note])return; held[note]=1; try{synth.triggerAttack(note);}catch(e){} if(rec.on) rec.events.push({note:note,t:Tone.now()-rec.start,type:'on'}); }
-function stop(note){ if(!ready||!synth) return; if(!held[note])return; delete held[note]; try{synth.triggerRelease(note);}catch(e){} if(rec.on) rec.events.push({note:note,t:Tone.now()-rec.start,type:'off'}); }
+function _now(){ return (window.Tone&&Tone.now)?Tone.now():(nativeCtx?nativeCtx.currentTime:0); }
+function play(note){ if(!ready)return; if(held[note])return; held[note]=1;
+  if(useNative){ nativeOn(note); } else if(synth){ try{synth.triggerAttack(note);}catch(e){} }
+  if(rec.on) rec.events.push({note:note,t:_now()-rec.start,type:'on'}); }
+function stop(note){ if(!ready)return; if(!held[note])return; delete held[note];
+  if(useNative){ nativeOff(note); } else if(synth){ try{synth.triggerRelease(note);}catch(e){} }
+  if(rec.on) rec.events.push({note:note,t:_now()-rec.start,type:'off'}); }
 
 // ============ KEYBOARD (correct layout) ============
 var octave=4;
@@ -12790,7 +12807,10 @@ var GENRES={
 var curGenre='gospel', chordKey=0;
 function nm(midi){ return NOTES[((midi%12)+12)%12]+(Math.floor(midi/12)-1); }
 function chordNotes(deg,qual){ var root=12*(4+1)+((chordKey+deg)%12); return (QUAL[qual]||QUAL.maj).map(function(iv){return nm(root+iv);}); }
-async function playChord(deg,qual,label){ await unlock(); var ns=chordNotes(deg,qual); try{ synth.triggerAttackRelease(ns,'1n'); }catch(e){} Object.keys(keymap).forEach(function(kk){ if(ns.indexOf(keymap[kk].note)>=0){ keymap[kk].el.classList.add('guide'); setTimeout(function(){keymap[kk].el.classList.remove('guide');},700);} }); document.getElementById('chord-name').textContent=(label||'')+'  —  '+ns.join('  '); }
+async function playChord(deg,qual,label){ await unlock(); var ns=chordNotes(deg,qual);
+  if(useNative){ ns.forEach(function(nn){ nativeOn(nn); setTimeout(function(){ nativeOff(nn); }, 1300); }); }
+  else if(synth){ try{ synth.triggerAttackRelease(ns,'1n'); }catch(e){} }
+  Object.keys(keymap).forEach(function(kk){ if(ns.indexOf(keymap[kk].note)>=0){ keymap[kk].el.classList.add('guide'); setTimeout(function(){keymap[kk].el.classList.remove('guide');},700);} }); document.getElementById('chord-name').textContent=(label||'')+'  —  '+ns.join('  '); }
 function romanRoot(sym){ var base={I:0,II:2,III:4,IV:5,V:7,VI:9,VII:11}; var s=sym.replace(/7|maj7|9|o|sus4|dim7|6/g,''); var r=base[s.replace(/[b#]/,'').toUpperCase().replace(/[^IVX]/g,'')]; if(r==null) r=0; if(/^b/.test(sym))r=(r-1+12)%12; if(/^#/.test(sym))r=(r+1)%12; return r; }
 function buildChords(){
   var gb=document.getElementById('genre-bar'); gb.innerHTML='';
@@ -12810,7 +12830,7 @@ async function teach(pr){ await unlock(); document.getElementById('chord-name').
 // ============ drums ============
 var drums=null, beatLoop=null, curBeat='none';
 function initDrums(){ if(drums)return; drums={kick:new Tone.MembraneSynth().connect(reverb),snare:new Tone.NoiseSynth({envelope:{attack:.001,decay:.16,sustain:0}}).connect(reverb),hat:new Tone.NoiseSynth({envelope:{attack:.001,decay:.04,sustain:0}}).connect(reverb),tom:new Tone.MembraneSynth({octaves:3}).connect(reverb),cymbal:new Tone.MetalSynth({envelope:{attack:.001,decay:1,release:.2}}).connect(reverb)}; drums.kick.volume.value=-6;drums.snare.volume.value=-12;drums.hat.volume.value=-20;drums.tom.volume.value=-10;drums.cymbal.volume.value=-24; }
-function hit(name){ if(!ready)return; initDrums(); var t=Tone.now(); if(name==='kick')drums.kick.triggerAttackRelease('C1','8n',t); else if(name==='snare')drums.snare.triggerAttackRelease('8n',t); else if(name==='hat')drums.hat.triggerAttackRelease('16n',t); else if(name==='tom')drums.tom.triggerAttackRelease('G2','8n',t); else if(name==='cymbal')drums.cymbal.triggerAttackRelease('16n',t); }
+function hit(name){ if(!ready)return; if(useNative||!window.Tone){ return; } initDrums(); var t=Tone.now(); if(name==='kick')drums.kick.triggerAttackRelease('C1','8n',t); else if(name==='snare')drums.snare.triggerAttackRelease('8n',t); else if(name==='hat')drums.hat.triggerAttackRelease('16n',t); else if(name==='tom')drums.tom.triggerAttackRelease('G2','8n',t); else if(name==='cymbal')drums.cymbal.triggerAttackRelease('16n',t); }
 var DP=[['kick','Kick'],['snare','Snare'],['hat','Hi-hat'],['tom','Tom'],['cymbal','Cymbal']];
 var dp=document.getElementById('drumpads'); DP.forEach(function(d){ var b=document.createElement('div'); b.className='chip'; b.textContent=d[1]; b.addEventListener('click', async function(){ await unlock(); hit(d[0]); }); dp.appendChild(b); });
 var BEATS={none:null,soft:{k:[1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],h:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0]},lofi:{k:[1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],h:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]},rock:{k:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],h:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},hiphop:{k:[1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],h:[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1]}};
