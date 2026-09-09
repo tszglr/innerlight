@@ -12541,217 +12541,257 @@ def admin_live():
 ZENISYS_LAB_ROOM = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zenisys Studio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <style>
  *{box-sizing:border-box} body{margin:0;font-family:'Gill Sans','Segoe UI',sans-serif;background:radial-gradient(1200px 700px at 50% -10%,#1a2740,#0a1120 60%,#070a14);color:#dfe6ff;min-height:100vh;}
- .wrap{max-width:820px;margin:0 auto;padding:26px 16px 90px;}
+ .wrap{max-width:900px;margin:0 auto;padding:24px 14px 90px;}
  .back{color:#8a97cf;text-decoration:none;font-size:13px;}
  h1{font-size:24px;letter-spacing:.04em;margin:8px 0 2px;background:linear-gradient(90deg,#9f8cff,#2fc4c9);-webkit-background-clip:text;background-clip:text;color:transparent;}
- .sub{color:#8a97cf;font-size:13px;margin-bottom:20px;}
- .panel{background:rgba(13,22,40,.7);border:1px solid #24314f;border-radius:16px;padding:18px;margin:14px 0;}
- h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#7f8fd8;margin:0 0 14px;}
- .btns{display:flex;flex-wrap:wrap;gap:10px;}
- .inst{background:rgba(109,93,240,.12);border:1px solid #3a4a8a;color:#dfe6ff;border-radius:14px;padding:16px 14px;
-   cursor:pointer;font-size:14px;min-width:96px;text-align:center;transition:all .15s;user-select:none;}
- .inst:hover{background:rgba(109,93,240,.25);transform:translateY(-1px);}
- .inst.on{background:linear-gradient(135deg,#6d5df0,#2fc4c9);border-color:#8f7dff;box-shadow:0 0 18px rgba(109,93,240,.5);color:#fff;}
- .inst .ico{font-size:24px;display:block;margin-bottom:5px;}
- .mood{background:rgba(47,196,201,.1);border:1px solid #2a5a5c;color:#bfeeee;border-radius:999px;padding:9px 18px;cursor:pointer;font-size:13px;transition:all .15s;}
- .mood:hover{background:rgba(47,196,201,.22);} .mood.on{background:linear-gradient(90deg,#2fc4c9,#6d5df0);color:#fff;border-color:#5fe0e0;}
- .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:6px;}
- label{display:block;font-size:11.5px;color:#9ccbe8;margin-bottom:5px;}
- input[type=range]{width:100%;accent-color:#6d5df0;}
- .rec{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
- .rbtn{border:0;border-radius:999px;padding:13px 26px;font-weight:800;font-size:15px;cursor:pointer;}
- .rec-start{background:#e05a5a;color:#fff;} .rec-stop{background:#f0c040;color:#1a1200;} .rec-idle{opacity:.4;pointer-events:none;}
- .dot{width:12px;height:12px;border-radius:50%;background:#555;display:inline-block;}
- .dot.live{background:#ff4a4a;animation:blink 1s infinite;} @keyframes blink{50%{opacity:.3;}}
- .save{color:#9f8cff;text-decoration:none;font-size:14px;font-weight:700;}
- .hint{font-size:12px;color:#8a97cf;line-height:1.6;margin-top:8px;}
+ .sub{color:#8a97cf;font-size:13px;margin-bottom:16px;}
+ .panel{background:rgba(13,22,40,.7);border:1px solid #24314f;border-radius:16px;padding:16px;margin:12px 0;}
+ h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#7f8fd8;margin:0 0 12px;}
+ .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+ .chip{background:rgba(109,93,240,.12);border:1px solid #3a4a8a;color:#dfe6ff;border-radius:999px;padding:8px 16px;cursor:pointer;font-size:13px;transition:all .15s;}
+ .chip:hover{background:rgba(109,93,240,.25);} .chip.on{background:linear-gradient(90deg,#6d5df0,#2fc4c9);color:#fff;border-color:#8f7dff;}
+ /* piano */
+ .piano{position:relative;height:170px;margin:8px 0;user-select:none;display:flex;}
+ .wkey{flex:1;background:linear-gradient(#fff,#f0f0f5);border:1px solid #b8b8c8;border-radius:0 0 7px 7px;position:relative;cursor:pointer;transition:background .05s;}
+ .wkey.press{background:linear-gradient(#c9c4ff,#a99ff0);}
+ .wkey .lbl{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#5a5a7a;font-size:14px;font-weight:700;}
+ .wkey .note{position:absolute;bottom:26px;left:0;right:0;text-align:center;color:#a0a0c0;font-size:10px;}
+ .bkey{position:absolute;top:0;width:60%;height:62%;background:linear-gradient(#333,#111);border:1px solid #000;border-radius:0 0 5px 5px;z-index:2;cursor:pointer;transform:translateX(-50%);}
+ .bkey.press{background:linear-gradient(#6d5df0,#4a3fc0);}
+ .bkey .lbl{position:absolute;bottom:6px;left:0;right:0;text-align:center;color:#ccc;font-size:11px;font-weight:700;}
+ .wkey.guide{background:linear-gradient(#b6e8cf,#7ee8a0);} .bkey.guide{background:linear-gradient(#2fc9a0,#1c9e63);}
+ label{display:block;font-size:11.5px;color:#9ccbe8;margin-bottom:5px;} input[type=range]{width:100%;accent-color:#6d5df0;}
+ .rbtn{border:0;border-radius:999px;padding:12px 24px;font-weight:800;font-size:14px;cursor:pointer;}
+ .rec-start{background:#e05a5a;color:#fff;} .rec-stop{background:#f0c040;color:#1a1200;}
+ .enrich{background:linear-gradient(90deg,#6d5df0,#2fc4c9);color:#fff;} .save{color:#9f8cff;text-decoration:none;font-weight:700;font-size:14px;}
+ .dot{width:11px;height:11px;border-radius:50%;background:#555;display:inline-block;} .dot.live{background:#ff4a4a;animation:blink 1s infinite;} @keyframes blink{50%{opacity:.3;}}
+ .hint{font-size:12px;color:#8a97cf;line-height:1.6;margin-top:8px;} .status{font-size:13px;color:#8a97cf;}
  .doorways a{display:inline-block;margin:6px 10px 0 0;color:#9f8cff;text-decoration:none;border:1px solid #35418a;border-radius:10px;padding:9px 16px;font-size:13px;}
+ .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
 </style></head><body>
 <div class="wrap">
  <a class="back" href="/admin#zenisyslab">&larr; back to The Watch</a>
  <h1>ZENISYS STUDIO</h1>
- <div class="sub">Tap instruments to layer them. Choose a mood to set the key and feel. Record what you make and save it.</div>
+ <div class="sub">Play the piano with your keyboard (letters are on the keys) or by tapping. Record a few notes, then let Zenisys fill them into a fuller song in your key. Save what you make.</div>
 
  <div class="panel">
-   <h2>Mood &mdash; sets the key &amp; feel</h2>
-   <div class="btns" id="moods"></div>
+   <h2>Instrument</h2>
+   <div class="row" id="insts"></div>
+   <div class="hint" id="inst-status">Loading real instrument sounds\u2026</div>
  </div>
 
  <div class="panel">
-   <h2>Instruments &mdash; tap to layer</h2>
-   <div class="btns" id="insts"></div>
-   <div class="hint">Each instrument you turn on plays a soft, calming pattern in the chosen mood. Layer several to build a piece. Tap again to turn one off.</div>
- </div>
-
- <div class="panel">
-   <h2>Shape the sound</h2>
-   <div class="knobs">
-     <div><label>Brightness</label><input id="k-bright" type="range" min="500" max="4000" value="1400"></div>
-     <div><label>Volume</label><input id="k-vol" type="range" min="0" max="100" value="55"></div>
-     <div><label>Warmth</label><input id="k-warm" type="range" min="0" max="20" value="7"></div>
-     <div><label>Tempo (BPM)</label><input id="k-bpm" type="range" min="50" max="110" value="66"></div>
+   <h2>The piano &mdash; your keyboard letters are on the keys</h2>
+   <div class="piano" id="piano"></div>
+   <div class="row" style="margin-top:10px;">
+     <button class="chip" id="octdown">Z \u2193 octave</button>
+     <span class="status" id="oct-label">Octave 4</span>
+     <button class="chip" id="octup">X \u2191 octave</button>
+     <button class="chip" id="learn-btn">\u2728 Learn a melody</button>
+     <span class="status" id="learn-status"></span>
    </div>
  </div>
 
  <div class="panel">
-   <h2>Record &amp; save</h2>
-   <div class="rec">
-     <button id="rec-btn" class="rbtn rec-start">&#9679; Record</button>
+   <h2>Record &middot; enrich &middot; save</h2>
+   <div class="row">
+     <button id="rec-btn" class="rbtn rec-start">\u25CF Record</button>
      <span class="dot" id="rec-dot"></span>
-     <span id="rec-status" style="font-size:13px;color:#8a97cf;">not recording</span>
+     <span class="status" id="rec-status">not recording</span>
+   </div>
+   <div class="row" style="margin-top:12px;">
+     <span style="font-size:12px;color:#9ccbe8;">Fill my notes into a fuller song:</span>
+     <button class="chip enrich-style on" data-style="gentle">Gentle</button>
+     <button class="chip enrich-style" data-style="fuller">Fuller</button>
+     <button class="chip enrich-style" data-style="cinematic">Cinematic</button>
+     <button class="chip enrich-style" data-style="upbeat">Upbeat</button>
+   </div>
+   <div class="row" style="margin-top:12px;">
+     <button id="enrich-btn" class="rbtn enrich">\u2728 Enrich my recording</button>
+     <button id="play-btn" class="chip">\u25B6 Play it back</button>
      <span id="save-wrap"></span>
    </div>
-   <div class="hint">Press Record, play your instruments, then Stop. A download link appears so you can save your creation as an audio file.</div>
+   <div class="hint" id="enrich-status">Record a melody first, then Enrich builds harmony, a chord bed, bass, and a soft pad underneath your notes \u2014 all in your key.</div>
  </div>
 
- <div class="panel doorways">
-   <h2>Doorways</h2>
+ <div class="panel">
+   <h2>Shape</h2>
+   <div class="knobs">
+     <div><label>Reverb (space)</label><input id="k-verb" type="range" min="0" max="100" value="35"></div>
+     <div><label>Volume</label><input id="k-vol" type="range" min="0" max="100" value="70"></div>
+     <div><label>Tempo (BPM)</label><input id="k-bpm" type="range" min="50" max="120" value="72"></div>
+   </div>
+ </div>
+
+ <div class="panel doorways"><h2>Doorways</h2>
    <a href="/zenisys/lab" target="_blank" rel="noopener">The Lab instrument (touch &amp; voice)</a>
    <a href="/zenisys" target="_blank" rel="noopener">Standalone Zenisys</a>
  </div>
 </div>
 <script>
 (function(){
- // ---- musical foundation ----
- var MOODS = {
-   calm:     {root:220.00, scale:[0,3,5,7,10], bpm:66},   // A minor pentatonic, gentle
-   deepcalm: {root:174.61, scale:[0,3,5,7,10], bpm:54},   // lower, slower
-   lifting:  {root:261.63, scale:[0,2,4,7,9],  bpm:78},   // C major pentatonic, brighter
-   anxious:  {root:196.00, scale:[0,3,5,7,10], bpm:70},
-   hopeful:  {root:293.66, scale:[0,2,4,7,9],  bpm:74},
+ // ===== real sampled instruments via Tone.js + the free Salamander/tonejs sample sets =====
+ var INSTRUMENTS = {
+   piano:  {name:'\uD83C\uDFB9 Piano',  url:'https://tonejs.github.io/audio/salamander/', build:function(){ return new Tone.Sampler({urls:{A0:'A0.mp3',C1:'C1.mp3','D#1':'Ds1.mp3','F#1':'Fs1.mp3',A1:'A1.mp3',C2:'C2.mp3','D#2':'Ds2.mp3','F#2':'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3','D#3':'Ds3.mp3','F#3':'Fs3.mp3',A3:'A3.mp3',C4:'C4.mp3','D#4':'Ds4.mp3','F#4':'Fs4.mp3',A4:'A4.mp3',C5:'C5.mp3','D#5':'Ds5.mp3','F#5':'Fs5.mp3',A5:'A5.mp3',C6:'C6.mp3'},baseUrl:'https://tonejs.github.io/audio/salamander/'}); }},
+   guitar: {name:'\uD83C\uDFB8 Guitar', build:function(){ return new Tone.Sampler({urls:{'E2':'E2.mp3','A2':'A2.mp3','D3':'D3.mp3','G3':'G3.mp3','B3':'B3.mp3','E4':'E4.mp3'},baseUrl:'https://tonejs.github.io/audio/berklee/guitar_'}); }},
+   strings:{name:'\uD83C\uDFBB Strings',build:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.4,decay:0.2,sustain:0.8,release:1.4}}); }},
+   pad:    {name:'\u2601\uFE0F Pad',    build:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.8,decay:0.3,sustain:0.9,release:2.2}}); }},
+   bells:  {name:'\uD83D\uDD14 Bells',  build:function(){ return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:0.01,decay:1.2,sustain:0,release:1.5}}); }},
  };
- var mood = 'calm';
- var INSTRUMENTS = [
-   {id:'pad',    name:'Pad',     ico:'\u2601\uFE0F', type:'pad'},
-   {id:'piano',  name:'Piano',   ico:'\uD83C\uDFB9', type:'pluck'},
-   {id:'strings',name:'Strings', ico:'\uD83C\uDFBB', type:'bow'},
-   {id:'bells',  name:'Bells',   ico:'\uD83D\uDD14', type:'bell'},
-   {id:'drone',  name:'Drone',   ico:'\uD83C\uDF0A', type:'drone'},
-   {id:'pulse',  name:'Heartbeat',ico:'\uD83D\uDC93', type:'pulse'},
- ];
- var active = {};   // id -> voice object
- var ctx=null, master=null, filt=null, dest=null, recorder=null, chunks=[];
+ var current='piano', inst=null, reverb=null, vol=null, recDest=null, recorder=null, chunks=[], loaded=false;
+ var recording=false, recStart=0, recorded=[], enriched=null, enrichStyle='gentle';
 
- function ensureCtx(){
-   if(ctx) return;
-   ctx = new (window.AudioContext||window.webkitAudioContext)();
-   master = ctx.createGain(); master.gain.value = 0.55;
-   filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=1400; filt.Q.value=0.6;
-   master.connect(filt);
-   dest = ctx.createMediaStreamDestination();  // for recording
-   filt.connect(ctx.destination);
-   filt.connect(dest);
-   applyKnobs();
+ function initAudio(){
+   if(inst) return;
+   reverb = new Tone.Reverb({decay:4, wet:0.35}).toDestination();
+   recDest = Tone.context.createMediaStreamDestination();
+   Tone.getDestination().connect(recDest);
+   loadInstrument('piano');
  }
- function noteFreq(){
-   var m=MOODS[mood]; var deg=m.scale[Math.floor(Math.random()*m.scale.length)];
-   var oct=[0,12][Math.floor(Math.random()*2)];
-   return m.root*Math.pow(2,(deg+oct)/12);
+ function loadInstrument(id){
+   current=id;
+   document.getElementById('inst-status').textContent='Loading '+INSTRUMENTS[id].name+' sound\u2026';
+   var s=INSTRUMENTS[id].build(); s.connect(reverb);
+   Tone.loaded().then(function(){ inst=s; loaded=true; document.getElementById('inst-status').textContent=INSTRUMENTS[id].name+' ready \u2014 play the keys.'; });
+   inst=s;
  }
- function bpm(){ return parseFloat(document.getElementById('k-bpm').value)||MOODS[mood].bpm; }
+ // instrument chips
+ var ie=document.getElementById('insts');
+ Object.keys(INSTRUMENTS).forEach(function(id){
+   var b=document.createElement('div'); b.className='chip'+(id==='piano'?' on':''); b.innerHTML=INSTRUMENTS[id].name;
+   b.addEventListener('click', function(){ if(!inst){ return; } document.querySelectorAll('#insts .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); loadInstrument(id); });
+   ie.appendChild(b);
+ });
 
- // ---- instrument voices (real Web Audio, calming by design) ----
- function makeVoice(type){
-   var g=ctx.createGain(); g.gain.value=0; g.connect(master);
-   var timer=null, nodes=[];
-   function pluck(freq, dur, wave, peak){
-     var o=ctx.createOscillator(); o.type=wave||'sine'; o.frequency.value=freq;
-     var e=ctx.createGain(); e.gain.value=0; o.connect(e); e.connect(g);
-     var t=ctx.currentTime;
-     e.gain.setValueAtTime(0,t); e.gain.linearRampToValueAtTime(peak||0.3,t+0.02);
-     e.gain.exponentialRampToValueAtTime(0.001,t+dur);
-     o.start(t); o.stop(t+dur+0.05);
-   }
-   function start(){
-     if(type==='drone'){
-       var m=MOODS[mood]; [0,7].forEach(function(iv){
-         var o=ctx.createOscillator(); o.type='sine'; o.frequency.value=m.root*Math.pow(2,iv/12)/2;
-         var og=ctx.createGain(); og.gain.value=0.12; o.connect(og); og.connect(g); o.start(); nodes.push(o);
-       });
-       g.gain.linearRampToValueAtTime(0.5, ctx.currentTime+1.5);
-     } else if(type==='pad'){
-       var m2=MOODS[mood]; [0,3,7].forEach(function(iv){
-         var o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=m2.root*Math.pow(2,iv/12);
-         var og=ctx.createGain(); og.gain.value=0.06; o.connect(og); og.connect(g); o.start(); nodes.push(o);
-       });
-       g.gain.linearRampToValueAtTime(0.5, ctx.currentTime+2);
-     } else {
-       g.gain.value=1;
-       var interval = type==='pulse' ? (60000/bpm()) : (60000/bpm())* (type==='bell'?4:2);
-       function tick(){
-         if(type==='pluck') pluck(noteFreq(),0.6,'triangle',0.25);
-         else if(type==='bow') pluck(noteFreq(),1.4,'sawtooth',0.14);
-         else if(type==='bell') pluck(noteFreq()*2,2.0,'sine',0.2);
-         else if(type==='pulse'){ pluck(MOODS[mood].root/2,0.18,'sine',0.5); }
-         timer=setTimeout(tick, interval*(0.9+Math.random()*0.2));
-       }
-       tick();
-     }
-   }
-   function stop(){
-     if(timer) clearTimeout(timer);
-     g.gain.linearRampToValueAtTime(0, ctx.currentTime+0.4);
-     nodes.forEach(function(o){ try{ o.stop(ctx.currentTime+0.5);}catch(e){} });
-     setTimeout(function(){ try{ g.disconnect(); }catch(e){} }, 700);
-   }
-   return {start:start, stop:stop};
- }
-
- function applyKnobs(){
-   if(!ctx) return;
-   filt.frequency.setTargetAtTime(parseFloat(document.getElementById('k-bright').value), ctx.currentTime, .3);
-   master.gain.setTargetAtTime(parseFloat(document.getElementById('k-vol').value)/100, ctx.currentTime, .3);
- }
- ['k-bright','k-vol','k-warm','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
-
- // ---- build the UI ----
- var moodsEl=document.getElementById('moods');
- Object.keys(MOODS).forEach(function(mk){
-   var b=document.createElement('div'); b.className='mood'+(mk===mood?' on':''); b.textContent=mk;
-   b.addEventListener('click', function(){
-     mood=mk; document.querySelectorAll('.mood').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
-     document.getElementById('k-bpm').value=MOODS[mk].bpm;
-     // restart any active voices in the new mood
-     Object.keys(active).forEach(function(id){ active[id].stop(); var inst=INSTRUMENTS.filter(function(x){return x.id===id;})[0];
-       var v=makeVoice(inst.type); v.start(); active[id]=v; });
+ // ===== keyboard mapping: A S D F G H J K = white; W E T Y U = black =====
+ var octave=4;
+ var WHITE=[{k:'a',n:'C'},{k:'s',n:'D'},{k:'d',n:'E'},{k:'f',n:'F'},{k:'g',n:'G'},{k:'h',n:'A'},{k:'j',n:'B'},{k:'k',n:'C',up:1}];
+ var BLACK=[{k:'w',n:'C#',pos:0},{k:'e',n:'D#',pos:1},{k:'t',n:'F#',pos:3},{k:'y',n:'G#',pos:4},{k:'u',n:'A#',pos:5}];
+ var keyMap={};
+ function buildPiano(){
+   var p=document.getElementById('piano'); p.innerHTML='';
+   keyMap={};
+   WHITE.forEach(function(w,i){
+     var oct=octave+(w.up||0);
+     var d=document.createElement('div'); d.className='wkey'; d.dataset.note=w.n+oct;
+     d.innerHTML='<span class="note">'+w.n+oct+'</span><span class="lbl">'+w.k.toUpperCase()+'</span>';
+     d.addEventListener('mousedown', function(){ playNote(w.n+oct, d); });
+     p.appendChild(d); keyMap[w.k]={note:w.n+oct, el:d};
    });
-   moodsEl.appendChild(b);
- });
- var instsEl=document.getElementById('insts');
- INSTRUMENTS.forEach(function(inst){
-   var b=document.createElement('div'); b.className='inst'; b.innerHTML='<span class="ico">'+inst.ico+'</span>'+inst.name;
-   b.addEventListener('click', function(){
-     ensureCtx(); if(ctx.state==='suspended') ctx.resume();
-     if(active[inst.id]){ active[inst.id].stop(); delete active[inst.id]; b.classList.remove('on'); }
-     else { var v=makeVoice(inst.type); v.start(); active[inst.id]=v; b.classList.add('on'); }
+   // position black keys over the gaps
+   var pw=p.getBoundingClientRect().width || 800; var unit=pw/WHITE.length;
+   BLACK.forEach(function(b){
+     var d=document.createElement('div'); d.className='bkey'; d.dataset.note=b.n+octave;
+     d.style.left=((b.pos+1)*unit)+'px';
+     d.innerHTML='<span class="lbl">'+b.k.toUpperCase()+'</span>';
+     d.addEventListener('mousedown', function(){ playNote(b.n+octave, d); });
+     p.appendChild(d); keyMap[b.k]={note:b.n+octave, el:d};
    });
-   instsEl.appendChild(b);
+ }
+ function playNote(note, el){
+   if(!inst||!loaded) return;
+   try{ inst.triggerAttackRelease(note, '2n'); }catch(e){}
+   if(el){ el.classList.add('press'); setTimeout(function(){ el.classList.remove('press'); }, 180); }
+   if(recording){ recorded.push({note:note, t:(Tone.now()-recStart)}); }
+ }
+ document.addEventListener('keydown', function(e){
+   if(e.repeat) return; var k=e.key.toLowerCase();
+   if(k==='z'){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
+   if(k==='x'){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
+   if(keyMap[k]){ playNote(keyMap[k].note, keyMap[k].el); }
+ });
+ document.getElementById('octdown').addEventListener('click', function(){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
+ document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
+
+ // ===== learn a melody: light the keys in sequence =====
+ var LESSON=['C4','D4','E4','C4','E4','C4','E4','D4','E4','F4','G4'];  // simple calming phrase
+ document.getElementById('learn-btn').addEventListener('click', async function(){
+   await start(); document.getElementById('learn-status').textContent='follow the green keys\u2026';
+   var i=0;
+   (function step(){
+     if(i>=LESSON.length){ document.getElementById('learn-status').textContent='your turn \u2014 play it back!'; return; }
+     var note=LESSON[i];
+     Object.values(keyMap).forEach(function(km){ if(km.note===note){ km.el.classList.add('guide'); playNote(note,null); setTimeout(function(){ km.el.classList.remove('guide'); }, 500); } });
+     i++; setTimeout(step, 650);
+   })();
  });
 
- // ---- record & save ----
- var recBtn=document.getElementById('rec-btn'), recDot=document.getElementById('rec-dot'), recStatus=document.getElementById('rec-status'), saveWrap=document.getElementById('save-wrap');
- recBtn.addEventListener('click', function(){
-   ensureCtx(); if(ctx.state==='suspended') ctx.resume();
-   if(recorder && recorder.state==='recording'){
-     recorder.stop(); return;
-   }
-   chunks=[]; saveWrap.innerHTML='';
-   try { recorder = new MediaRecorder(dest.stream); }
-   catch(e){ recStatus.textContent='Recording is not supported in this browser.'; return; }
-   recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); };
-   recorder.onstop=function(){
-     var blob=new Blob(chunks,{type:'audio/webm'}); var url=URL.createObjectURL(blob);
-     var a=document.createElement('a'); a.href=url; a.download='zenisys-creation.webm'; a.className='save'; a.textContent='\u2b07\uFE0F Save your creation';
-     saveWrap.innerHTML=''; saveWrap.appendChild(a);
-     recBtn.textContent='\u25CF Record'; recBtn.className='rbtn rec-start'; recDot.className='dot'; recStatus.textContent='saved \u2014 ready to record again';
-   };
-   recorder.start();
-   recBtn.textContent='\u25A0 Stop'; recBtn.className='rbtn rec-stop'; recDot.className='dot live'; recStatus.textContent='recording\u2026 play your instruments';
+ // ===== shape knobs =====
+ function applyKnobs(){ if(reverb) reverb.wet.value=parseFloat(document.getElementById('k-verb').value)/100; if(Tone.getDestination()) Tone.getDestination().volume.value=(parseFloat(document.getElementById('k-vol').value)/100)*20-14; if(Tone.Transport) Tone.Transport.bpm.value=parseFloat(document.getElementById('k-bpm').value); }
+ ['k-verb','k-vol','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
+
+ async function start(){ if(Tone.context.state!=='running'){ await Tone.start(); } initAudio(); applyKnobs(); }
+
+ // ===== record =====
+ document.getElementById('piano').addEventListener('mousedown', start, {once:true});
+ document.addEventListener('keydown', function(){ start(); }, {once:true});
+ var recBtn=document.getElementById('rec-btn'), recDot=document.getElementById('rec-dot'), recStatus=document.getElementById('rec-status');
+ recBtn.addEventListener('click', async function(){
+   await start();
+   if(recording){ recording=false; recBtn.textContent='\u25CF Record'; recBtn.className='rbtn rec-start'; recDot.className='dot'; recStatus.textContent=recorded.length+' notes recorded \u2014 now Enrich or Play'; return; }
+   recorded=[]; recording=true; recStart=Tone.now(); recBtn.textContent='\u25A0 Stop'; recBtn.className='rbtn rec-stop'; recDot.className='dot live'; recStatus.textContent='recording\u2026 play your melody';
  });
+
+ // ===== enrichment: the AI-composer builds harmony/chords/bass/pad in your key =====
+ document.querySelectorAll('.enrich-style').forEach(function(b){ b.addEventListener('click', function(){ document.querySelectorAll('.enrich-style').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); enrichStyle=b.dataset.style; }); });
+ var NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+ function midiOf(n){ var m=n.match(/^([A-G]#?)(\d)$/); if(!m) return 60; return NOTES.indexOf(m[1])+12*(parseInt(m[2])+1); }
+ function nameOf(midi){ return NOTES[((midi%12)+12)%12]+(Math.floor(midi/12)-1); }
+ function detectKey(recNotes){
+   // simplest honest key guess: the most common pitch class = tonic
+   var counts={}; recNotes.forEach(function(r){ var pc=midiOf(r.note)%12; counts[pc]=(counts[pc]||0)+1; });
+   var best=0,bc=-1; Object.keys(counts).forEach(function(pc){ if(counts[pc]>bc){bc=counts[pc];best=parseInt(pc);} });
+   return best;
+ }
+ document.getElementById('enrich-btn').addEventListener('click', async function(){
+   await start();
+   if(!recorded.length){ document.getElementById('enrich-status').textContent='Record a melody first (press Record, play some keys, Stop).'; return; }
+   document.getElementById('enrich-status').textContent='Zenisys is building a fuller song around your notes\u2026';
+   var key=detectKey(recorded);
+   // scale intervals per style
+   var scales={gentle:[0,2,4,5,7,9,11],fuller:[0,2,4,5,7,9,11],cinematic:[0,2,3,5,7,8,10],upbeat:[0,2,4,5,7,9,11]};
+   var scale=scales[enrichStyle]||scales.gentle;
+   var bpm={gentle:60,fuller:72,cinematic:66,upbeat:96}[enrichStyle];
+   enriched={key:key, style:enrichStyle, bpm:bpm, scale:scale, melody:recorded.slice()};
+   document.getElementById('enrich-status').textContent='Done \u2014 press Play to hear your fuller song, then Save.';
+   document.getElementById('save-wrap').innerHTML='';
+ });
+
+ // ===== play back the enriched arrangement (and record it to a file for saving) =====
+ async function playEnriched(saveAfter){
+   await start();
+   if(!enriched){ document.getElementById('enrich-status').textContent='Enrich your recording first.'; return; }
+   var key=enriched.key, scale=enriched.scale;
+   var chordRoots=[0,5,7,5]; // I - IV - V - IV feel, gentle
+   var padSy=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); padSy.volume.value=-16;
+   var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-10;
+   if(saveAfter){ chunks=[]; try{ recorder=new MediaRecorder(recDest.stream); recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); }; recorder.onstop=function(){ var blob=new Blob(chunks,{type:'audio/webm'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='\u2b07\uFE0F Save your song'; document.getElementById('save-wrap').innerHTML=''; document.getElementById('save-wrap').appendChild(a); }; recorder.start(); }catch(e){} }
+   var now=Tone.now()+0.1; var beat=60/enriched.bpm;
+   // chord bed + bass under the piece
+   chordRoots.forEach(function(deg,i){
+     var rootMidi=60+key+scale[deg%scale.length];
+     var chord=[0,2,4].map(function(s){ return nameOf(rootMidi+scale[(deg+s)%scale.length]); });
+     padSy.triggerAttackRelease(chord, beat*3.6, now+i*beat*4);
+     bass.triggerAttackRelease(nameOf(rootMidi-12), beat*3.6, now+i*beat*4);
+   });
+   // the player's own melody on top, in time
+   enriched.melody.forEach(function(m){ try{ inst.triggerAttackRelease(m.note,'2n', now+ (m.t||0)); }catch(e){} });
+   // harmony a third under each melody note (in-key), softer
+   enriched.melody.forEach(function(m){ var midi=midiOf(m.note)-3; try{ padSy.triggerAttackRelease(nameOf(midi),'2n', now+(m.t||0)); }catch(e){} });
+   var dur=(enriched.melody.length? Math.max.apply(null,enriched.melody.map(function(m){return m.t||0;})):0)+2;
+   dur=Math.max(dur, chordRoots.length*beat*4);
+   if(saveAfter){ setTimeout(function(){ try{ recorder.stop(); }catch(e){} }, (dur+1)*1000); }
+   document.getElementById('enrich-status').textContent='Playing your fuller song\u2026';
+ }
+ document.getElementById('play-btn').addEventListener('click', function(){ playEnriched(true); });
+
+ buildPiano(); window.addEventListener('resize', buildPiano);
 })();
-</script></body></html>"""
+</script></body></html>
+"""
 
 SIM_ROOM = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
