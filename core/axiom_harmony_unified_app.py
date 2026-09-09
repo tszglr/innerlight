@@ -12564,8 +12564,8 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  .wkey:last-child{border-right:1px solid #b0b0c0;}
  .wkey.press{background:linear-gradient(#c9c4ff,#a99ff0);} .wkey.guide{background:linear-gradient(#b6e8cf,#7ee8a0);}
  .wkey .lbl{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#4a4a6a;font-size:15px;font-weight:800;}
- .wkey .nm{position:absolute;bottom:28px;left:0;right:0;text-align:center;color:#9a9ab8;font-size:10px;}
- .bkey{position:absolute;top:0;width:8%;height:60%;background:linear-gradient(#333,#0a0a0a);border:1px solid #000;border-radius:0 0 5px 5px;z-index:3;cursor:pointer;transform:translateX(-50%);}
+ .wkey .nm{position:absolute;bottom:26px;left:0;right:0;text-align:center;color:#9a9ab8;font-size:8px;}
+ .bkey{position:absolute;top:0;width:2.9%;height:60%;background:linear-gradient(#333,#0a0a0a);border:1px solid #000;border-radius:0 0 4px 4px;z-index:3;cursor:pointer;transform:translateX(-50%);}
  .bkey.press{background:linear-gradient(#6d5df0,#4a3fc0);} .bkey.guide{background:linear-gradient(#2fc9a0,#1c9e63);}
  .bkey .lbl{position:absolute;bottom:6px;left:0;right:0;text-align:center;color:#ddd;font-size:11px;font-weight:800;}
  label{display:block;font-size:11.5px;color:#9ccbe8;margin-bottom:5px;} input[type=range]{width:100%;accent-color:#6d5df0;}
@@ -12710,9 +12710,40 @@ async function unlock(){
 // native note engine (used only when Tone is unavailable)
 var NFREQ={C:16.35,'C#':17.32,D:18.35,'D#':19.45,E:20.60,F:21.83,'F#':23.12,G:24.50,'G#':25.96,A:27.50,'A#':29.14,B:30.87};
 function noteToFreq(note){ var mm=note.match(/^([A-G]#?)(\d)$/); if(!mm) return 440; return NFREQ[mm[1]]*Math.pow(2, parseInt(mm[2])); }
-function nativeOn(note){ if(!nativeCtx||nativeVoices[note]) return; var o=nativeCtx.createOscillator(),g=nativeCtx.createGain(); o.type=nativeWave; o.frequency.value=noteToFreq(note); g.gain.setValueAtTime(0,nativeCtx.currentTime); g.gain.linearRampToValueAtTime((+document.getElementById('k-vol').value/100)*0.3,nativeCtx.currentTime+0.01); o.connect(g); g.connect(nativeCtx.destination); o.start(); nativeVoices[note]={o:o,g:g}; }
-function nativeOff(note){ var v=nativeVoices[note]; if(!v) return; delete nativeVoices[note]; try{ v.g.gain.linearRampToValueAtTime(0,nativeCtx.currentTime+0.15); v.o.stop(nativeCtx.currentTime+0.2);}catch(e){} }
-var NWAVE={piano:'triangle',guitar:'sawtooth',strings:'sawtooth',pad:'sine',bells:'sine',bass:'square'};
+// Instrument tone recipes: layered harmonics (partials) + envelope, so the
+// browser's own audio SOUNDS like a real instrument instead of a beep.
+var VOICES={
+  piano:  {partials:[[1,0.5,'triangle'],[2,0.16,'sine'],[3,0.07,'sine'],[4,0.035,'sine']], atk:0.005, dec:2.6, sus:0.0, rel:0.3},
+  guitar: {partials:[[1,0.45,'sawtooth'],[2,0.12,'triangle'],[3,0.06,'sine']], atk:0.006, dec:1.8, sus:0.0, rel:0.25},
+  strings:{partials:[[1,0.4,'sawtooth'],[2,0.15,'sawtooth'],[3,0.08,'triangle']], atk:0.25, dec:0.4, sus:0.65, rel:0.6},
+  pad:    {partials:[[1,0.4,'sine'],[2,0.2,'triangle'],[3,0.12,'sine'],[0.5,0.15,'sine']], atk:0.6, dec:0.5, sus:0.75, rel:1.4},
+  bells:  {partials:[[1,0.4,'sine'],[2.76,0.2,'sine'],[5.4,0.1,'sine']], atk:0.002, dec:2.2, sus:0.0, rel:0.4},
+  bass:   {partials:[[1,0.6,'triangle'],[2,0.15,'sine']], atk:0.008, dec:0.6, sus:0.5, rel:0.3}
+};
+var nativeInst='piano';
+function nativeOn(note){
+  if(!nativeCtx||nativeVoices[note]) return;
+  var v=VOICES[nativeInst]||VOICES.piano, t=nativeCtx.currentTime;
+  var vol=(+document.getElementById('k-vol').value/100)*0.34;
+  var out=nativeCtx.createGain(); out.gain.value=1; out.connect(nativeCtx.destination);
+  var base=noteToFreq(note); var oscs=[];
+  v.partials.forEach(function(p){
+    var o=nativeCtx.createOscillator(), g=nativeCtx.createGain();
+    o.type=p[2]; o.frequency.value=base*p[0];
+    var peak=vol*p[1];
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak), t+v.atk);
+    if(v.sus>0){ g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak*v.sus), t+v.atk+v.dec); }
+    else { g.gain.exponentialRampToValueAtTime(0.0002, t+v.atk+v.dec); }
+    o.connect(g); g.connect(out); o.start(t); oscs.push({o:o,g:g});
+  });
+  nativeVoices[note]={oscs:oscs, out:out, rel:v.rel, sus:v.sus};
+}
+function nativeOff(note){
+  var vv=nativeVoices[note]; if(!vv) return; delete nativeVoices[note];
+  var t=nativeCtx.currentTime;
+  try{ vv.oscs.forEach(function(x){ x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(Math.max(0.0002,x.g.gain.value),t); x.g.gain.exponentialRampToValueAtTime(0.0002, t+vv.rel); x.o.stop(t+vv.rel+0.05); }); }catch(e){}
+}
 // Expose unlock so the gate's INLINE onclick (which works even if this script
 // errored earlier) can call it. If the user already tapped before this script
 // finished loading, unlock right now.
@@ -12723,7 +12754,7 @@ if(window.__zenTapped){ unlock(); }
 var ie=document.getElementById('insts');
 Object.keys(INSTNAMES).forEach(function(id){
   var b=document.createElement('div'); b.className='chip'+(id==='piano'?' on':''); b.textContent=INSTNAMES[id];
-  b.addEventListener('click', async function(){ await unlock(); document.querySelectorAll('#insts .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); nativeWave=NWAVE[id]||'triangle'; if(!useNative){ setInstrument(id); } var st=document.getElementById('inst-status'); if(st) st.textContent=INSTNAMES[id]+' ready.'; });
+  b.addEventListener('click', async function(){ await unlock(); document.querySelectorAll('#insts .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); nativeInst=id; if(!useNative){ setInstrument(id); } var st=document.getElementById('inst-status'); if(st) st.textContent=INSTNAMES[id]+' ready.'; });
   ie.appendChild(b);
 });
 
@@ -12744,24 +12775,43 @@ var WHITE=[['a','C',0],['s','D',0],['d','E',0],['f','F',0],['g','G',0],['h','A',
 // black key -> [qwerty, name, index of the white key it sits AFTER (0-based)]
 var BLACK=[['w','C#',0],['e','D#',1],['t','F#',3],['y','G#',4],['u','A#',5]];
 var keymap={};
+// FULL keyboard: all 7 white notes per octave across several octaves, with
+// black keys in their true positions. QWERTY letters map to the home octave
+// so you can learn the standard layout, but EVERY key plays (click/tap).
+var LOW_OCT=3, HIGH_OCT=5;  // C3..B5 — 3 full octaves, a real range to learn on
+var WHITE_STEPS=['C','D','E','F','G','A','B'];
+var BLACK_AFTER={0:'C#',1:'D#',3:'F#',4:'G#',5:'A#'};  // which white index has a black to its right
+var QWERTY_WHITE={'a':0,'s':1,'d':2,'f':3,'g':4,'h':5,'j':6,'k':7};  // home-octave white keys
+var QWERTY_BLACK={'w':0,'e':1,'t':3,'y':4,'u':5};
 function buildPiano(){
   keymap={};
   var whites=document.getElementById('whites'); whites.innerHTML='';
   var piano=document.getElementById('piano');
-  // remove old black keys
   piano.querySelectorAll('.bkey').forEach(function(x){x.remove();});
-  WHITE.forEach(function(w){
-    var note=w[1]+(octave+w[2]);
+  var whiteList=[];  // {note, oct, idxInOct}
+  for(var oc=LOW_OCT; oc<=HIGH_OCT; oc++){
+    WHITE_STEPS.forEach(function(nm,i){ whiteList.push({note:nm+oc, oct:oc, i:i}); });
+  }
+  var totalW=whiteList.length, unit=100/totalW;
+  whiteList.forEach(function(w, wi){
     var d=document.createElement('div'); d.className='wkey';
-    d.innerHTML='<span class="nm">'+note+'</span><span class="lbl">'+w[0].toUpperCase()+'</span>';
-    bindKey(d, note); whites.appendChild(d); keymap[w[0]]={note:note, el:d};
+    // label QWERTY only on the home octave
+    var lbl='';
+    if(w.oct===octave){ for(var kk in QWERTY_WHITE){ if(QWERTY_WHITE[kk]===w.i){ lbl=kk.toUpperCase(); keymap[kk]={note:w.note, el:d}; } } }
+    d.innerHTML='<span class="nm">'+w.note+'</span>'+(lbl?'<span class="lbl">'+lbl+'</span>':'');
+    bindKey(d, w.note); whites.appendChild(d);
   });
-  var unit=100/WHITE.length; // width % per white key
-  BLACK.forEach(function(b){
-    var note=b[1]+octave;
-    var d=document.createElement('div'); d.className='bkey'; d.style.left=((b[2]+1)*unit)+'%';
-    d.innerHTML='<span class="lbl">'+b[0].toUpperCase()+'</span>';
-    bindKey(d, note); piano.appendChild(d); keymap[b[0]]={note:note, el:d};
+  // black keys: absolutely placed at the right boundary between whites
+  whiteList.forEach(function(w, wi){
+    if(BLACK_AFTER[w.i]!==undefined && !(w.i===6)){
+      var bn=BLACK_AFTER[w.i]+w.oct;
+      var d=document.createElement('div'); d.className='bkey';
+      d.style.left=((wi+1)*unit)+'%';
+      var lbl='';
+      if(w.oct===octave){ for(var kk in QWERTY_BLACK){ if(QWERTY_BLACK[kk]===w.i){ lbl=kk.toUpperCase(); keymap[kk]={note:bn, el:d}; } } }
+      if(lbl) d.innerHTML='<span class="lbl">'+lbl+'</span>';
+      bindKey(d, bn); piano.appendChild(d);
+    }
   });
 }
 function bindKey(el, note){
