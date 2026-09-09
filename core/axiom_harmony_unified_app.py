@@ -7309,7 +7309,9 @@ async function sendCheckin() {
   // Hide the initial "Tell me your story" area
   const title = document.querySelector('.story-title'); if (title) title.style.display = 'none';
   const sub = document.querySelector('.story-sub'); if (sub) sub.style.display = 'none';
-  const initInput = $('message'); if (initInput) initInput.style.display = 'none';
+  // KEEP #message visible — it is the one permanent composer in the chat
+  // layout. Hiding it (as this used to) made follow-ups impossible.
+  const initInput = $('message'); if (initInput) { initInput.style.display = ''; initInput.value = ''; }
   const initActions = document.querySelector('.story-actions'); if (initActions) initActions.style.display = 'none';
   // Append this exchange to the flat thread
   appendExchange(thread, warmReply, firstQ, safetyBlock);
@@ -7517,7 +7519,7 @@ function showExit(thread, exitMsg, resolution) {
 function restartConversation() {
   window._ilStarted = true;
   const ta = document.getElementById('message');
-  if (ta) { ta.value=''; ta.focus({preventScroll:true}); }
+  if (ta) { ta.value=''; ta.style.display=''; ta.removeAttribute('disabled'); ta.readOnly=false; ta.setAttribute('placeholder','Keep going\u2026 type your reply, or tap the mic'); try{ ta.focus({preventScroll:true}); }catch(e){} }
   ilScrollHistory();
 }
 function appendExchange(thread, reply, question, safetyHtml) {
@@ -7540,7 +7542,7 @@ function appendExchange(thread, reply, question, safetyHtml) {
   // Chat layout: the ONE persistent composer stays; clear + refocus + scroll.
   window._ilStarted = true;
   const ta = document.getElementById('message');
-  if (ta) { ta.value=''; ta.style.height='auto'; ta.focus({preventScroll:true}); }
+  if (ta) { ta.value=''; ta.style.height='auto'; ta.style.display=''; ta.removeAttribute('disabled'); ta.readOnly=false; ta.setAttribute('placeholder','Keep going\u2026 type your reply, or tap the mic'); try{ ta.focus({preventScroll:true}); }catch(e){} }
   ilScrollHistory();
 }
 async function updateMusicForEmotion(data) {
