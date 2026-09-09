@@ -2991,10 +2991,10 @@ PUBLIC_PAGE = """
       </div>
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
       <div id="calm-photo-a" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;background:#eef2f4;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#eef2f4;">
       </div>
       <div id="calm-photo-b" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;background:#eef2f4;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#eef2f4;">
       </div>
       <div id="scene-veil" aria-hidden="true"></div>
       <div id="il-presence" aria-hidden="true"><div class="il-bloom"></div><div class="il-vignette"></div></div>
@@ -6095,9 +6095,12 @@ async function startAmbientMusic(attempt) {
 // gatekeepers. This steers the real-track lanes AND the generative Creator.
 function _modeToLane(mode){
   var m = String(mode || '').toLowerCase();
-  if (/deep|agitat|anger|angry|panic|fear|anxi|rage|overwhelm|crisis/.test(m)) return 'deepcalm';
-  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely/.test(m)) return 'lifting';
-  if (/calm|greet|steady|settl|neutral|hope/.test(m)) return 'calm';
+  // DISTRESS states + the AI's soothing responses to them -> deep calm
+  if (/deep|agitat|anger|angry|panic|fear|anxi|rage|overwhelm|crisis|calming|soothing|grounding|ground|reassur|steady-?ing|de-?escalat|slow/.test(m)) return 'deepcalm';
+  // LOW / heavy states + lifting responses -> lifting
+  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely|encourage|encouragement|uplift|hope-?building|motivat/.test(m)) return 'lifting';
+  // settled / positive / greeting -> calm
+  if (/calm|greet|steady|settl|neutral|hope|content|peace|gratitude|warm|gentle|validation|affirm/.test(m)) return 'calm';
   return null;
 }
 function steerLaneFromMode(mode){
