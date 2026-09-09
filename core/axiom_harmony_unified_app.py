@@ -12580,7 +12580,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  <div class="panel">
    <h2>Instrument</h2>
    <div class="row" id="insts"></div>
-   <div class="hint" id="inst-status">Loading real instrument sounds…</div>
+   <div class="hint" id="inst-status">🎹 Piano ready — press a key (A S D F G H J K) to play.</div>
  </div>
 
  <div class="panel">
@@ -12756,13 +12756,18 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  // keys and they SOUND TOGETHER like a real instrument. _held tracks which
  // notes are down so we release the right one and never double-trigger.
  var _held={};
- function noteOn(note, el){
-   if(!inst||!loaded) return;
-   if(_held[note]) return;               // already sounding — don't retrigger
+ function _fire(note, el){
+   if(_held[note]) return;
    _held[note]=1;
    try{ if(inst.triggerAttack) inst.triggerAttack(note); else inst.triggerAttackRelease(note,'2n'); }catch(e){}
    if(el){ el.classList.add('press'); }
    if(recording){ recorded.push({note:note, t:(Tone.now()-recStart), on:1}); }
+ }
+ function noteOn(note, el){
+   // Always ensure audio is live FIRST (browsers block sound until a gesture),
+   // then play. If start() is still finishing, play the moment it's ready.
+   if(inst && loaded && _audioStarted){ _fire(note, el); return; }
+   start().then(function(){ if(inst && loaded) _fire(note, el); });
  }
  function noteOff(note, el){
    if(!inst||!loaded) return;
@@ -12804,11 +12809,18 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  function applyKnobs(){ if(reverb) reverb.wet.value=parseFloat(document.getElementById('k-verb').value)/100; if(Tone.getDestination()) Tone.getDestination().volume.value=(parseFloat(document.getElementById('k-vol').value)/100)*20-14; if(Tone.Transport) Tone.Transport.bpm.value=parseFloat(document.getElementById('k-bpm').value); }
  ['k-verb','k-vol','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
 
- async function start(){ if(Tone.context.state!=='running'){ await Tone.start(); } initAudio(); applyKnobs(); }
+ var _audioStarted=false;
+ async function start(){
+   initAudio();               // build reverb + instrument synth NOW (idempotent)
+   if(!_audioStarted){
+     try{ await Tone.start(); _audioStarted=true; }catch(e){}
+   }
+   if(Tone.context && Tone.context.state!=='running'){ try{ await Tone.context.resume(); }catch(e){} }
+   applyKnobs();
+ }
 
  // ===== record =====
- document.getElementById('piano').addEventListener('mousedown', start, {once:true});
- document.addEventListener('keydown', function(){ start(); }, {once:true});
+ // (audio starts automatically on the first note via noteOn -> start())
  var recBtn=document.getElementById('rec-btn'), recDot=document.getElementById('rec-dot'), recStatus=document.getElementById('rec-status');
  recBtn.addEventListener('click', async function(){
    await start();
@@ -13020,6 +13032,9 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  function stopBeat(){ if(beatLoop){ beatLoop.stop(); beatLoop.dispose(); beatLoop=null; } }
  window._startBeat=startBeat; window._stopBeat=stopBeat; window._curBeat=function(){return drumBeat;};
 
+ // Prepare audio graph + instrument at load so the first press has sound
+ // ready (Tone.start still needs the gesture, which noteOn handles).
+ try{ initAudio(); }catch(e){}
  buildPiano(); window.addEventListener('resize', buildPiano);
 })();
 </script></body></html>
