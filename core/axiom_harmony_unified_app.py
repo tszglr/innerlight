@@ -639,7 +639,9 @@ PUBLIC_PAGE = """
       background:transparent; }
     .story-screen > * { position:relative; z-index:1; }
     #scene-veil { position:fixed; inset:0; z-index:0; pointer-events:none;
-      background:linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35)); }
+      /* a light, NEUTRAL wash for text legibility — no brown, keeps the
+         photo's true colors showing through. */
+      background:linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.20)); }
     /* THE PRESENCE — a soft light that openly breathes and moves with the read,
        in real time. It sits above the photo but below all content, so text stays
        perfectly readable. Everything about it is driven live in JS. */
@@ -2930,8 +2932,22 @@ PUBLIC_PAGE = """
         if (!gate) return;
         var slot = gateSlot();
         window._gateSlot = slot;
+        // RANDOM intro: a curated set of the founder's brightest, most colorful
+        // photographs, shuffled each visit so the opening image changes — no
+        // more the same photo every time.
+        var INTRO_POOL = {
+          morning:   ['/scenes/photo_5_sunflower.jpg','/scenes/photo_6_golden_horizon.jpg','/scenes/photo_1_rosemary.jpg','/scenes/photo_21_peaches.jpg','/scenes/photo_12_sunflowers.jpg'],
+          afternoon: ['/scenes/photo_5_sunflower.jpg','/scenes/photo_19_bougainvillea.jpg','/scenes/photo_22_chilis.jpg','/scenes/photo_10_pepper.jpg','/scenes/photo_12_sunflowers.jpg','/scenes/photo_16_canopy_sky.jpg'],
+          evening:   ['/scenes/photo_2_sunset_trees.jpg','/scenes/photo_6_golden_horizon.jpg','/scenes/photo_24_lavender_drops.jpg','/scenes/photo_23_rosemary_mist.jpg'],
+          night:     ['/scenes/photo_3_moon_night.jpg','/scenes/photo_13_pine_stars.jpg','/scenes/photo_14_moon_haze.jpg','/scenes/photo_7_moon_leaves.jpg']
+        };
         var sc = GATE_SCENES[slot];
-        window._gateSceneKey = sc.key;   // startExperience opens the story on this same photo
+        try {
+          var pool = INTRO_POOL[slot] || INTRO_POOL.afternoon;
+          var pickedSrc = pool[Math.floor(Math.random()*pool.length)];
+          sc = {key: sc.key, src: pickedSrc, pos: sc.pos, p: sc.p};
+        } catch(e){}
+        window._gateSceneKey = sc.key;
         gate.setAttribute('data-time', slot);
         gate.style.setProperty('--g-pos', sc.pos);
         gate.style.setProperty('--gp-x', sc.p.x);
@@ -2940,6 +2956,7 @@ PUBLIC_PAGE = """
         gate.style.setProperty('--gp-alpha', sc.p.a);
         var ph = document.getElementById('gate-photo');
         if (ph) ph.src = sc.src;
+        window._gatePickedSrc = sc.src;   // carry the exact photo into the story
         // a few slow motes of light, drifting upward
         var motes = document.getElementById('gate-motes');
         if (motes) {
@@ -2974,10 +2991,10 @@ PUBLIC_PAGE = """
       </div>
       <!-- REALISM LEADS: real video background plays first. Animated canvas is fallback only. -->
       <div id="calm-photo-a" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#1a1410;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;background:#eef2f4;">
       </div>
       <div id="calm-photo-b" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;transition:opacity 3s ease;overflow:hidden;">
-        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#1a1410;">
+        <img class="scene-full" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;background:#eef2f4;">
       </div>
       <div id="scene-veil" aria-hidden="true"></div>
       <div id="il-presence" aria-hidden="true"><div class="il-bloom"></div><div class="il-vignette"></div></div>
