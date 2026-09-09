@@ -12542,234 +12542,216 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zenisys Studio</title>
 <style>
- *{box-sizing:border-box} body{margin:0;font-family:'Gill Sans','Segoe UI',sans-serif;background:#0a0f1e;color:#e8eefc;min-height:100vh;}
- .aurora{position:fixed;inset:-20vh -20vw;z-index:0;pointer-events:none;
-   background:radial-gradient(55vw 40vh at 25% 20%,rgba(109,93,240,.20),transparent 60%),
-              radial-gradient(50vw 36vh at 80% 30%,rgba(47,196,201,.14),transparent 60%),
-              radial-gradient(60vw 45vh at 50% 95%,rgba(196,77,255,.10),transparent 65%);
-   animation:drift 30s ease-in-out infinite alternate;filter:blur(3px);}
- @keyframes drift{0%{transform:translate3d(-2%,-1%,0)}100%{transform:translate3d(2%,2%,0)}}
- .wrap{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:26px 16px 90px;}
- a.back{color:#8a97cf;text-decoration:none;font-size:13px;}
- h1{font-size:24px;letter-spacing:.06em;margin:8px 0 2px;
-   background:linear-gradient(90deg,#9f8cff,#2fc4c9);-webkit-background-clip:text;background-clip:text;color:transparent;}
+ *{box-sizing:border-box} body{margin:0;font-family:'Gill Sans','Segoe UI',sans-serif;background:radial-gradient(1200px 700px at 50% -10%,#1a2740,#0a1120 60%,#070a14);color:#dfe6ff;min-height:100vh;}
+ .wrap{max-width:820px;margin:0 auto;padding:26px 16px 90px;}
+ .back{color:#8a97cf;text-decoration:none;font-size:13px;}
+ h1{font-size:24px;letter-spacing:.04em;margin:8px 0 2px;background:linear-gradient(90deg,#9f8cff,#2fc4c9);-webkit-background-clip:text;background-clip:text;color:transparent;}
  .sub{color:#8a97cf;font-size:13px;margin-bottom:20px;}
- .panel{background:rgba(16,22,44,.72);border:1px solid #263257;border-radius:16px;padding:18px;margin:14px 0;backdrop-filter:blur(6px);}
+ .panel{background:rgba(13,22,40,.7);border:1px solid #24314f;border-radius:16px;padding:18px;margin:14px 0;}
  h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#7f8fd8;margin:0 0 14px;}
- .moods{display:flex;flex-wrap:wrap;gap:8px;}
- .mood{background:rgba(109,93,240,.10);border:1px solid #35418a;color:#cfd6ff;border-radius:999px;padding:9px 18px;cursor:pointer;font-size:13.5px;transition:all .2s;}
- .mood:hover,.mood.on{background:linear-gradient(90deg,rgba(109,93,240,.4),rgba(47,196,201,.32));border-color:#6d5df0;box-shadow:0 0 16px rgba(109,93,240,.35);}
- .insts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;}
- .inst{position:relative;background:rgba(22,30,58,.9);border:1.5px solid #2c3a68;border-radius:14px;padding:18px 12px;text-align:center;cursor:pointer;user-select:none;transition:transform .08s,box-shadow .2s,border-color .2s;}
- .inst:hover{border-color:#4a5aa8;}
- .inst.playing{border-color:#2fc4c9;box-shadow:0 0 20px rgba(47,196,201,.4);transform:translateY(-2px);}
- .inst .ico{font-size:30px;display:block;margin-bottom:6px;}
- .inst .nm{font-size:13px;color:#dfe6ff;}
- .inst .lvl{margin-top:9px;width:100%;accent-color:#6d5df0;}
- .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px;}
- .go{background:linear-gradient(90deg,#1d9e63,#2fc98c);border:0;color:#04150c;border-radius:12px;padding:12px 26px;font-weight:800;cursor:pointer;font-size:15px;}
- .rec{background:linear-gradient(90deg,#c0392b,#e05a5a);border:0;color:#fff;border-radius:12px;padding:12px 26px;font-weight:800;cursor:pointer;font-size:15px;}
- .rec.recording{animation:pulse 1.1s infinite;}
- @keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(224,90,90,0)}50%{box-shadow:0 0 22px rgba(224,90,90,.8)}}
- .stopbtn{background:transparent;border:1px solid #35418a;color:#aab6e8;border-radius:12px;padding:12px 22px;cursor:pointer;font-weight:700;}
- .stat{color:#8a97cf;font-size:13px;}
- .saves{display:flex;flex-direction:column;gap:8px;}
- .save-item{display:flex;align-items:center;gap:10px;background:rgba(22,30,58,.7);border:1px solid #2c3a68;border-radius:10px;padding:8px 12px;}
- .save-item audio{height:32px;flex:1;}
- .save-item a{color:#8ff0bd;text-decoration:none;font-size:13px;font-weight:700;}
- label.small{font-size:11px;color:#8a97cf;}
- input[type=range].big{width:180px;accent-color:#2fc4c9;}
- .hint{font-size:12px;color:#7f8fd8;line-height:1.6;margin-top:10px;}
- .doors a{display:inline-block;margin:6px 10px 0 0;color:#9f8cff;text-decoration:none;border:1px solid #35418a;border-radius:10px;padding:9px 18px;font-size:13px;}
+ .btns{display:flex;flex-wrap:wrap;gap:10px;}
+ .inst{background:rgba(109,93,240,.12);border:1px solid #3a4a8a;color:#dfe6ff;border-radius:14px;padding:16px 14px;
+   cursor:pointer;font-size:14px;min-width:96px;text-align:center;transition:all .15s;user-select:none;}
+ .inst:hover{background:rgba(109,93,240,.25);transform:translateY(-1px);}
+ .inst.on{background:linear-gradient(135deg,#6d5df0,#2fc4c9);border-color:#8f7dff;box-shadow:0 0 18px rgba(109,93,240,.5);color:#fff;}
+ .inst .ico{font-size:24px;display:block;margin-bottom:5px;}
+ .mood{background:rgba(47,196,201,.1);border:1px solid #2a5a5c;color:#bfeeee;border-radius:999px;padding:9px 18px;cursor:pointer;font-size:13px;transition:all .15s;}
+ .mood:hover{background:rgba(47,196,201,.22);} .mood.on{background:linear-gradient(90deg,#2fc4c9,#6d5df0);color:#fff;border-color:#5fe0e0;}
+ .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:6px;}
+ label{display:block;font-size:11.5px;color:#9ccbe8;margin-bottom:5px;}
+ input[type=range]{width:100%;accent-color:#6d5df0;}
+ .rec{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+ .rbtn{border:0;border-radius:999px;padding:13px 26px;font-weight:800;font-size:15px;cursor:pointer;}
+ .rec-start{background:#e05a5a;color:#fff;} .rec-stop{background:#f0c040;color:#1a1200;} .rec-idle{opacity:.4;pointer-events:none;}
+ .dot{width:12px;height:12px;border-radius:50%;background:#555;display:inline-block;}
+ .dot.live{background:#ff4a4a;animation:blink 1s infinite;} @keyframes blink{50%{opacity:.3;}}
+ .save{color:#9f8cff;text-decoration:none;font-size:14px;font-weight:700;}
+ .hint{font-size:12px;color:#8a97cf;line-height:1.6;margin-top:8px;}
+ .doorways a{display:inline-block;margin:6px 10px 0 0;color:#9f8cff;text-decoration:none;border:1px solid #35418a;border-radius:10px;padding:9px 16px;font-size:13px;}
 </style></head><body>
-<div class="aurora"></div>
 <div class="wrap">
-  <a class="back" href="/admin#zenisyslab">&larr; back to The Watch</a>
-  <h1>ZENISYS STUDIO</h1>
-  <div class="sub">Tap instruments to play and layer them. Pick a mood to set the calm. Record what you make and save it.</div>
+ <a class="back" href="/admin#zenisyslab">&larr; back to The Watch</a>
+ <h1>ZENISYS STUDIO</h1>
+ <div class="sub">Tap instruments to layer them. Choose a mood to set the key and feel. Record what you make and save it.</div>
 
-  <div class="panel">
-    <h2>1 &middot; Pick a mood (sets the key &amp; calm)</h2>
-    <div class="moods" id="moods"></div>
-  </div>
+ <div class="panel">
+   <h2>Mood &mdash; sets the key &amp; feel</h2>
+   <div class="btns" id="moods"></div>
+ </div>
 
-  <div class="panel">
-    <h2>2 &middot; Play &amp; layer the instruments</h2>
-    <div class="insts" id="insts"></div>
-    <div class="hint">Tap and hold an instrument to sustain it, or tap to pluck. Use each slider to set how loud that instrument sits in the mix. Turn on <b>Auto-drift</b> to let the pad breathe on its own while you play over it.</div>
-    <div class="row" style="margin-top:12px;">
-      <label class="small"><input type="checkbox" id="autodrift"> Auto-drift pad</label>
-      <label class="small">Tempo <input type="range" id="tempo" class="big" min="50" max="120" value="70"></label>
-      <label class="small">Reverb <input type="range" id="reverb" class="big" min="0" max="100" value="55"></label>
-    </div>
-  </div>
+ <div class="panel">
+   <h2>Instruments &mdash; tap to layer</h2>
+   <div class="btns" id="insts"></div>
+   <div class="hint">Each instrument you turn on plays a soft, calming pattern in the chosen mood. Layer several to build a piece. Tap again to turn one off.</div>
+ </div>
 
-  <div class="panel">
-    <h2>3 &middot; Record &amp; save</h2>
-    <div class="row">
-      <button class="rec" id="recBtn">&#9679; Record</button>
-      <button class="stopbtn" id="panicBtn">Stop all sound</button>
-      <span class="stat" id="recStat">not recording</span>
-    </div>
-    <div class="hint">Press Record, play your instruments, then press it again to stop. Your take appears below to play back and download as an audio file.</div>
-    <div class="saves" id="saves" style="margin-top:14px;"></div>
-  </div>
+ <div class="panel">
+   <h2>Shape the sound</h2>
+   <div class="knobs">
+     <div><label>Brightness</label><input id="k-bright" type="range" min="500" max="4000" value="1400"></div>
+     <div><label>Volume</label><input id="k-vol" type="range" min="0" max="100" value="55"></div>
+     <div><label>Warmth</label><input id="k-warm" type="range" min="0" max="20" value="7"></div>
+     <div><label>Tempo (BPM)</label><input id="k-bpm" type="range" min="50" max="110" value="66"></div>
+   </div>
+ </div>
 
-  <div class="panel doors">
-    <h2>Doorways</h2>
-    <a href="/zenisys/lab" target="_blank" rel="noopener">The Lab instrument (touch &amp; voice)</a>
-    <a href="/zenisys" target="_blank" rel="noopener">Standalone Zenisys</a>
-  </div>
+ <div class="panel">
+   <h2>Record &amp; save</h2>
+   <div class="rec">
+     <button id="rec-btn" class="rbtn rec-start">&#9679; Record</button>
+     <span class="dot" id="rec-dot"></span>
+     <span id="rec-status" style="font-size:13px;color:#8a97cf;">not recording</span>
+     <span id="save-wrap"></span>
+   </div>
+   <div class="hint">Press Record, play your instruments, then Stop. A download link appears so you can save your creation as an audio file.</div>
+ </div>
+
+ <div class="panel doorways">
+   <h2>Doorways</h2>
+   <a href="/zenisys/lab" target="_blank" rel="noopener">The Lab instrument (touch &amp; voice)</a>
+   <a href="/zenisys" target="_blank" rel="noopener">Standalone Zenisys</a>
+ </div>
 </div>
 <script>
 (function(){
-  var AC = window.AudioContext || window.webkitAudioContext;
-  var ctx=null, master=null, reverbNode=null, dryGain=null, wetGain=null, recDest=null, recorder=null, recChunks=[];
-  // MOODS set root note + scale + tempo feel
-  var MOODS = {
-    calm:     {root:220.00, scale:[0,2,4,7,9], tempo:70,  name:'calm'},       // A major pentatonic, warm
-    deepcalm: {root:174.61, scale:[0,3,5,7,10],tempo:58,  name:'deep calm'},  // F minor pentatonic, low
-    lifting:  {root:261.63, scale:[0,2,4,5,7,9,11],tempo:84,name:'lifting'},  // C major, brighter
-    anxious:  {root:196.00, scale:[0,2,3,5,7],tempo:66, name:'settle'},       // G, gentle minor lean
-    hopeful:  {root:293.66, scale:[0,2,4,7,9],tempo:78, name:'hopeful'}       // D major pentatonic
-  };
-  var mood = MOODS.calm;
-  // INSTRUMENTS: each is a small synth voice built in Web Audio (real sound)
-  var INSTS = [
-    {id:'piano', ico:'\uD83C\uDFB9', nm:'Piano',   type:'triangle', attack:0.005, release:1.2, level:0.6},
-    {id:'pad',   ico:'\u2601\uFE0F', nm:'Warm pad', type:'sine',     attack:0.6,  release:2.5, level:0.5, sustain:true},
-    {id:'strings',ico:'\uD83C\uDFBB',nm:'Strings',  type:'sawtooth', attack:0.4,  release:1.8, level:0.35, lp:1200},
-    {id:'bells', ico:'\uD83D\uDD14', nm:'Bells',    type:'sine',     attack:0.002,release:2.2, level:0.4, fm:true},
-    {id:'drone', ico:'\u3030\uFE0F', nm:'Drone',    type:'sine',     attack:1.2,  release:3.0, level:0.4, sustain:true, sub:true},
-    {id:'perc',  ico:'\uD83E\uDD41', nm:'Soft perc', type:'sine',    attack:0.001,release:0.35,level:0.4, perc:true}
-  ];
-  function ensure(){
-    if(ctx) return;
-    ctx = new AC();
-    master = ctx.createGain(); master.gain.value=0.9;
-    // simple reverb via feedback delay network (light, calm)
-    dryGain = ctx.createGain(); wetGain = ctx.createGain();
-    var delay = ctx.createDelay(); delay.delayTime.value=0.14;
-    var fb = ctx.createGain(); fb.gain.value=0.45;
-    var damp = ctx.createBiquadFilter(); damp.type='lowpass'; damp.frequency.value=2600;
-    delay.connect(damp); damp.connect(fb); fb.connect(delay);
-    reverbNode = delay;
-    setReverb(parseFloat(document.getElementById('reverb').value)/100);
-    master.connect(dryGain); dryGain.connect(ctx.destination);
-    master.connect(reverbNode); reverbNode.connect(wetGain); wetGain.connect(ctx.destination);
-    // recording destination captures dry+wet
-    recDest = ctx.createMediaStreamDestination();
-    dryGain.connect(recDest); wetGain.connect(recDest);
-  }
-  function setReverb(x){ if(!wetGain) return; wetGain.gain.value = x*0.5; dryGain.gain.value = 1 - x*0.35; }
-  function noteFreq(i){
-    var s = mood.scale; var oct = Math.floor(i / s.length); var deg = s[i % s.length];
-    return mood.root * Math.pow(2, (deg + 12*oct)/12);
-  }
-  var levels = {};
-  INSTS.forEach(function(x){ levels[x.id]=x.level; });
-  var held = {};   // sustained voices by inst id
-  function playInst(inst, step, sustain){
-    ensure();
-    if(ctx.state==='suspended') ctx.resume();
-    var f = noteFreq(step==null ? (Math.floor(Math.random()*8)) : step);
-    var now = ctx.currentTime;
-    var o = ctx.createOscillator(); o.type = inst.type;
-    var g = ctx.createGain(); g.gain.value=0;
-    var out = g;
-    if(inst.lp){ var lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=inst.lp; g.connect(lp); out=lp; }
-    if(inst.sub){ o.frequency.value = f/2; } else { o.frequency.value = f; }
-    var lvl = levels[inst.id] * 0.5;
-    o.connect(g); out.connect(master);
-    var atk = inst.attack, rel = inst.release;
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(lvl, now+atk);
-    // FM shimmer for bells
-    if(inst.fm){ var m=ctx.createOscillator(); var mg=ctx.createGain(); m.frequency.value=f*2.01; mg.gain.value=f*0.6; m.connect(mg); mg.connect(o.frequency); m.start(now); m.stop(now+rel+0.1); }
-    o.start(now);
-    if(sustain && inst.sustain){
-      held[inst.id] = {o:o, g:g, rel:rel};
-      return;
-    }
-    g.gain.setTargetAtTime(0, now+atk+ (inst.perc?0.02:0.15), rel/3);
-    o.stop(now + atk + rel + 0.2);
-  }
-  function releaseInst(inst){
-    var h = held[inst.id]; if(!h) return;
-    var now = ctx.currentTime;
-    h.g.gain.setTargetAtTime(0, now, h.rel/3);
-    h.o.stop(now + h.rel + 0.2);
-    held[inst.id]=null;
-  }
-  // build mood buttons
-  var mb = document.getElementById('moods');
-  Object.keys(MOODS).forEach(function(k,i){
-    var b=document.createElement('button'); b.className='mood'+(k==='calm'?' on':''); b.textContent=MOODS[k].name;
-    b.addEventListener('click', function(){
-      mood = MOODS[k];
-      document.getElementById('tempo').value = mood.tempo;
-      mb.querySelectorAll('.mood').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
-    });
-    mb.appendChild(b);
-  });
-  // build instrument pads
-  var ib = document.getElementById('insts');
-  INSTS.forEach(function(inst){
-    var d=document.createElement('div'); d.className='inst';
-    d.innerHTML='<span class="ico">'+inst.ico+'</span><span class="nm">'+inst.nm+'</span>'
-      +'<input class="lvl" type="range" min="0" max="100" value="'+Math.round(inst.level*100)+'">';
-    var slider = d.querySelector('.lvl');
-    slider.addEventListener('input', function(e){ e.stopPropagation(); levels[inst.id]=parseFloat(slider.value)/100; });
-    slider.addEventListener('click', function(e){ e.stopPropagation(); });
-    var down=function(e){ if(e.target===slider) return; d.classList.add('playing'); playInst(inst, null, true); };
-    var up=function(){ d.classList.remove('playing'); releaseInst(inst); if(!inst.sustain){} };
-    d.addEventListener('mousedown', down); d.addEventListener('mouseup', up); d.addEventListener('mouseleave', up);
-    d.addEventListener('touchstart', function(e){ if(e.target!==slider){ e.preventDefault(); down(e);} }, {passive:false});
-    d.addEventListener('touchend', function(e){ e.preventDefault(); up(); }, {passive:false});
-    ib.appendChild(d);
-  });
-  // reverb + auto-drift
-  document.getElementById('reverb').addEventListener('input', function(e){ ensure(); setReverb(parseFloat(e.target.value)/100); });
-  var driftTimer=null;
-  document.getElementById('autodrift').addEventListener('change', function(e){
-    if(e.target.checked){ ensure(); driftTimer=setInterval(function(){
-      var padInst = INSTS.find(function(x){return x.id==='pad';});
-      playInst(padInst, Math.floor(Math.random()*6), false);
-    }, 2600); } else { clearInterval(driftTimer); driftTimer=null; }
-  });
-  // panic / stop all
-  document.getElementById('panicBtn').addEventListener('click', function(){
-    INSTS.forEach(releaseInst);
-    if(driftTimer){ clearInterval(driftTimer); driftTimer=null; document.getElementById('autodrift').checked=false; }
-  });
-  // RECORD + SAVE
-  var recBtn=document.getElementById('recBtn'), recStat=document.getElementById('recStat'), saves=document.getElementById('saves');
-  recBtn.addEventListener('click', function(){
-    ensure();
-    if(recorder && recorder.state==='recording'){ recorder.stop(); return; }
-    recChunks=[];
-    try {
-      recorder = new MediaRecorder(recDest.stream);
-    } catch(err){ recStat.textContent='recording not supported in this browser'; return; }
-    recorder.ondataavailable=function(ev){ if(ev.data.size>0) recChunks.push(ev.data); };
-    recorder.onstop=function(){
-      var blob=new Blob(recChunks, {type: recorder.mimeType || 'audio/webm'});
-      var url=URL.createObjectURL(blob);
-      var item=document.createElement('div'); item.className='save-item';
-      var when=new Date().toLocaleTimeString();
-      var a=document.createElement('audio'); a.controls=true; a.src=url;
-      var dl=document.createElement('a'); dl.href=url; dl.download='zenisys-'+Date.now()+'.webm'; dl.textContent='Download';
-      var lbl=document.createElement('span'); lbl.style.cssText='font-size:12px;color:#8a97cf;min-width:70px;'; lbl.textContent=when;
-      item.appendChild(lbl); item.appendChild(a); item.appendChild(dl);
-      saves.insertBefore(item, saves.firstChild);
-      recBtn.classList.remove('recording'); recBtn.innerHTML='&#9679; Record'; recStat.textContent='saved your take below';
-    };
-    recorder.start();
-    recBtn.classList.add('recording'); recBtn.innerHTML='&#9632; Stop &amp; save'; recStat.textContent='recording\u2026 play your instruments';
-  });
+ // ---- musical foundation ----
+ var MOODS = {
+   calm:     {root:220.00, scale:[0,3,5,7,10], bpm:66},   // A minor pentatonic, gentle
+   deepcalm: {root:174.61, scale:[0,3,5,7,10], bpm:54},   // lower, slower
+   lifting:  {root:261.63, scale:[0,2,4,7,9],  bpm:78},   // C major pentatonic, brighter
+   anxious:  {root:196.00, scale:[0,3,5,7,10], bpm:70},
+   hopeful:  {root:293.66, scale:[0,2,4,7,9],  bpm:74},
+ };
+ var mood = 'calm';
+ var INSTRUMENTS = [
+   {id:'pad',    name:'Pad',     ico:'\u2601\uFE0F', type:'pad'},
+   {id:'piano',  name:'Piano',   ico:'\uD83C\uDFB9', type:'pluck'},
+   {id:'strings',name:'Strings', ico:'\uD83C\uDFBB', type:'bow'},
+   {id:'bells',  name:'Bells',   ico:'\uD83D\uDD14', type:'bell'},
+   {id:'drone',  name:'Drone',   ico:'\uD83C\uDF0A', type:'drone'},
+   {id:'pulse',  name:'Heartbeat',ico:'\uD83D\uDC93', type:'pulse'},
+ ];
+ var active = {};   // id -> voice object
+ var ctx=null, master=null, filt=null, dest=null, recorder=null, chunks=[];
+
+ function ensureCtx(){
+   if(ctx) return;
+   ctx = new (window.AudioContext||window.webkitAudioContext)();
+   master = ctx.createGain(); master.gain.value = 0.55;
+   filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=1400; filt.Q.value=0.6;
+   master.connect(filt);
+   dest = ctx.createMediaStreamDestination();  // for recording
+   filt.connect(ctx.destination);
+   filt.connect(dest);
+   applyKnobs();
+ }
+ function noteFreq(){
+   var m=MOODS[mood]; var deg=m.scale[Math.floor(Math.random()*m.scale.length)];
+   var oct=[0,12][Math.floor(Math.random()*2)];
+   return m.root*Math.pow(2,(deg+oct)/12);
+ }
+ function bpm(){ return parseFloat(document.getElementById('k-bpm').value)||MOODS[mood].bpm; }
+
+ // ---- instrument voices (real Web Audio, calming by design) ----
+ function makeVoice(type){
+   var g=ctx.createGain(); g.gain.value=0; g.connect(master);
+   var timer=null, nodes=[];
+   function pluck(freq, dur, wave, peak){
+     var o=ctx.createOscillator(); o.type=wave||'sine'; o.frequency.value=freq;
+     var e=ctx.createGain(); e.gain.value=0; o.connect(e); e.connect(g);
+     var t=ctx.currentTime;
+     e.gain.setValueAtTime(0,t); e.gain.linearRampToValueAtTime(peak||0.3,t+0.02);
+     e.gain.exponentialRampToValueAtTime(0.001,t+dur);
+     o.start(t); o.stop(t+dur+0.05);
+   }
+   function start(){
+     if(type==='drone'){
+       var m=MOODS[mood]; [0,7].forEach(function(iv){
+         var o=ctx.createOscillator(); o.type='sine'; o.frequency.value=m.root*Math.pow(2,iv/12)/2;
+         var og=ctx.createGain(); og.gain.value=0.12; o.connect(og); og.connect(g); o.start(); nodes.push(o);
+       });
+       g.gain.linearRampToValueAtTime(0.5, ctx.currentTime+1.5);
+     } else if(type==='pad'){
+       var m2=MOODS[mood]; [0,3,7].forEach(function(iv){
+         var o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=m2.root*Math.pow(2,iv/12);
+         var og=ctx.createGain(); og.gain.value=0.06; o.connect(og); og.connect(g); o.start(); nodes.push(o);
+       });
+       g.gain.linearRampToValueAtTime(0.5, ctx.currentTime+2);
+     } else {
+       g.gain.value=1;
+       var interval = type==='pulse' ? (60000/bpm()) : (60000/bpm())* (type==='bell'?4:2);
+       function tick(){
+         if(type==='pluck') pluck(noteFreq(),0.6,'triangle',0.25);
+         else if(type==='bow') pluck(noteFreq(),1.4,'sawtooth',0.14);
+         else if(type==='bell') pluck(noteFreq()*2,2.0,'sine',0.2);
+         else if(type==='pulse'){ pluck(MOODS[mood].root/2,0.18,'sine',0.5); }
+         timer=setTimeout(tick, interval*(0.9+Math.random()*0.2));
+       }
+       tick();
+     }
+   }
+   function stop(){
+     if(timer) clearTimeout(timer);
+     g.gain.linearRampToValueAtTime(0, ctx.currentTime+0.4);
+     nodes.forEach(function(o){ try{ o.stop(ctx.currentTime+0.5);}catch(e){} });
+     setTimeout(function(){ try{ g.disconnect(); }catch(e){} }, 700);
+   }
+   return {start:start, stop:stop};
+ }
+
+ function applyKnobs(){
+   if(!ctx) return;
+   filt.frequency.setTargetAtTime(parseFloat(document.getElementById('k-bright').value), ctx.currentTime, .3);
+   master.gain.setTargetAtTime(parseFloat(document.getElementById('k-vol').value)/100, ctx.currentTime, .3);
+ }
+ ['k-bright','k-vol','k-warm','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
+
+ // ---- build the UI ----
+ var moodsEl=document.getElementById('moods');
+ Object.keys(MOODS).forEach(function(mk){
+   var b=document.createElement('div'); b.className='mood'+(mk===mood?' on':''); b.textContent=mk;
+   b.addEventListener('click', function(){
+     mood=mk; document.querySelectorAll('.mood').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
+     document.getElementById('k-bpm').value=MOODS[mk].bpm;
+     // restart any active voices in the new mood
+     Object.keys(active).forEach(function(id){ active[id].stop(); var inst=INSTRUMENTS.filter(function(x){return x.id===id;})[0];
+       var v=makeVoice(inst.type); v.start(); active[id]=v; });
+   });
+   moodsEl.appendChild(b);
+ });
+ var instsEl=document.getElementById('insts');
+ INSTRUMENTS.forEach(function(inst){
+   var b=document.createElement('div'); b.className='inst'; b.innerHTML='<span class="ico">'+inst.ico+'</span>'+inst.name;
+   b.addEventListener('click', function(){
+     ensureCtx(); if(ctx.state==='suspended') ctx.resume();
+     if(active[inst.id]){ active[inst.id].stop(); delete active[inst.id]; b.classList.remove('on'); }
+     else { var v=makeVoice(inst.type); v.start(); active[inst.id]=v; b.classList.add('on'); }
+   });
+   instsEl.appendChild(b);
+ });
+
+ // ---- record & save ----
+ var recBtn=document.getElementById('rec-btn'), recDot=document.getElementById('rec-dot'), recStatus=document.getElementById('rec-status'), saveWrap=document.getElementById('save-wrap');
+ recBtn.addEventListener('click', function(){
+   ensureCtx(); if(ctx.state==='suspended') ctx.resume();
+   if(recorder && recorder.state==='recording'){
+     recorder.stop(); return;
+   }
+   chunks=[]; saveWrap.innerHTML='';
+   try { recorder = new MediaRecorder(dest.stream); }
+   catch(e){ recStatus.textContent='Recording is not supported in this browser.'; return; }
+   recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); };
+   recorder.onstop=function(){
+     var blob=new Blob(chunks,{type:'audio/webm'}); var url=URL.createObjectURL(blob);
+     var a=document.createElement('a'); a.href=url; a.download='zenisys-creation.webm'; a.className='save'; a.textContent='\u2b07\uFE0F Save your creation';
+     saveWrap.innerHTML=''; saveWrap.appendChild(a);
+     recBtn.textContent='\u25CF Record'; recBtn.className='rbtn rec-start'; recDot.className='dot'; recStatus.textContent='saved \u2014 ready to record again';
+   };
+   recorder.start();
+   recBtn.textContent='\u25A0 Stop'; recBtn.className='rbtn rec-stop'; recDot.className='dot live'; recStatus.textContent='recording\u2026 play your instruments';
+ });
 })();
-</script></body></html>
-"""
+</script></body></html>"""
 
 SIM_ROOM = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
