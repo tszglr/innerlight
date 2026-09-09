@@ -12577,10 +12577,10 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  .doorways a{display:inline-block;margin:6px 10px 0 0;color:#9f8cff;text-decoration:none;border:1px solid #35418a;border-radius:10px;padding:9px 16px;font-size:13px;}
  .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
 </style></head><body>
-<div id="startgate">
+<div id="startgate" onclick="this.style.display='none';this.style.pointerEvents='none';window.__zenTapped=true;if(window.__zenUnlock)window.__zenUnlock();">
   <h2>Zenisys Studio</h2>
   <p>Tap anywhere to turn the sound on. Browsers require one tap before any instrument can play.</p>
-  <button class="go">Tap to start playing</button>
+  <button class="go" onclick="event.stopPropagation();document.getElementById('startgate').style.display='none';document.getElementById('startgate').style.pointerEvents='none';window.__zenTapped=true;if(window.__zenUnlock)window.__zenUnlock();">Tap to start playing</button>
 </div>
 <div class="wrap">
  <a class="back" href="/admin#zenisyslab">&larr; back to The Watch</a>
@@ -12679,7 +12679,7 @@ function setInstrument(id){
 }
 function hideGate(){ var g=document.getElementById('startgate'); if(g){ g.style.display='none'; g.style.pointerEvents='none'; } }
 async function unlock(){
-  hideGate();                 // ALWAYS drop the overlay first so clicks pass through
+  hideGate();
   if(ready) return;
   try{
     if(window.Tone && Tone.start){ await Tone.start(); }
@@ -12687,17 +12687,14 @@ async function unlock(){
     recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest);
     setInstrument('piano'); applyKnobs(); ready=true;
   }catch(e){
-    // even if audio setup fails, the page must remain usable — gate stays hidden.
-    var st=document.getElementById('inst-status'); if(st) st.textContent='Audio could not start on this device — the studio still works for learning; try reloading if there is no sound.';
+    var st=document.getElementById('inst-status'); if(st) st.textContent='Audio did not start on this device — try reloading the page.';
   }
 }
-// dismiss the gate on the very first pointer/touch/key, no matter what.
-var gate=document.getElementById('startgate');
-gate.addEventListener('click', unlock);
-gate.addEventListener('touchstart', function(e){ e.preventDefault(); unlock(); }, {passive:false});
-gate.addEventListener('pointerdown', unlock);
-// safety net: any key press also unlocks and hides the gate
-window.addEventListener('keydown', function(){ if(!ready) unlock(); }, {once:false});
+// Expose unlock so the gate's INLINE onclick (which works even if this script
+// errored earlier) can call it. If the user already tapped before this script
+// finished loading, unlock right now.
+window.__zenUnlock = unlock;
+if(window.__zenTapped){ unlock(); }
 
 // instrument chips
 var ie=document.getElementById('insts');
