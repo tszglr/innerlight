@@ -12540,153 +12540,236 @@ def admin_live():
 
 ZENISYS_LAB_ROOM = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zenisys Lab &mdash; the night studio</title>
+<title>Zenisys Studio</title>
 <style>
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:Arial, sans-serif; background:#070a14; color:#dfe6ff; min-height:100vh; overflow-x:hidden; }
-  .aurora { position:fixed; inset:-20vh -20vw; z-index:0; pointer-events:none;
-    background:
-      radial-gradient(60vw 40vh at 20% 20%, rgba(109,93,240,.22), transparent 60%),
-      radial-gradient(50vw 36vh at 80% 30%, rgba(47,196,201,.16), transparent 60%),
-      radial-gradient(70vw 50vh at 50% 90%, rgba(196,77,255,.12), transparent 65%);
-    animation: drift 26s ease-in-out infinite alternate; filter: blur(2px); }
-  @keyframes drift { 0% { transform: translate3d(-2%, -1%, 0) scale(1); } 100% { transform: translate3d(2%, 2%, 0) scale(1.06); } }
-  .wrap { position:relative; z-index:1; max-width:880px; margin:0 auto; padding:34px 18px 80px; }
-  h1 { font-size:26px; margin:0 0 4px; letter-spacing:.06em;
-       background:linear-gradient(90deg,#9f8cff,#2fc4c9,#c44dff); -webkit-background-clip:text; background-clip:text; color:transparent;
-       animation: glowshift 9s ease-in-out infinite alternate; }
-  @keyframes glowshift { from { filter: drop-shadow(0 0 10px rgba(109,93,240,.45)); } to { filter: drop-shadow(0 0 18px rgba(47,196,201,.5)); } }
-  .sub { color:#8a97cf; font-size:13px; margin-bottom:26px; }
-  .back { color:#8a97cf; text-decoration:none; font-size:13px; }
-  .room { background:rgba(13,18,38,.72); border:1px solid #232f5e; border-radius:18px; padding:20px; margin:18px 0;
-          box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 0 60px rgba(109,93,240,.05); backdrop-filter: blur(6px); }
-  h2 { font-size:14px; letter-spacing:.18em; text-transform:uppercase; color:#7f8fd8; margin:0 0 14px; }
-  .states { display:flex; flex-wrap:wrap; gap:8px; }
-  .state { background:rgba(109,93,240,.10); border:1px solid #35418a; color:#cfd6ff; border-radius:999px; padding:9px 18px;
-           cursor:pointer; font-size:13.5px; transition: all .25s; }
-  .state:hover, .state.on { background:linear-gradient(90deg,rgba(109,93,240,.35),rgba(47,196,201,.3)); border-color:#6d5df0;
-           box-shadow:0 0 18px rgba(109,93,240,.35); transform: translateY(-1px); }
-  pre { background:#0a0f22; border:1px solid #1e2a55; border-radius:12px; padding:14px; font-size:12px; color:#9fe8e8;
-        max-height:240px; overflow:auto; text-shadow:0 0 6px rgba(47,196,201,.35); }
-  .knobs { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; font-size:12.5px; color:#aab6e8; }
-  input[type=range] { width:100%; accent-color:#6d5df0; }
-  .row { display:flex; align-items:center; gap:12px; margin-top:16px; flex-wrap:wrap; }
-  .go { background:linear-gradient(90deg,#6d5df0,#2fc4c9); border:0; color:#fff; border-radius:12px; padding:11px 26px;
-        font-weight:800; cursor:pointer; box-shadow:0 6px 22px rgba(109,93,240,.4); }
-  .stop { background:transparent; border:1px solid #35418a; color:#aab6e8; border-radius:12px; padding:11px 22px; cursor:pointer; }
-  .pulse { width:14px; height:14px; border-radius:50%; background:#2fc4c9; opacity:.25; }
-  .pulse.live { animation: breathe 4s ease-in-out infinite; }
-  @keyframes breathe { 0%,100% { opacity:.25; transform:scale(.85); box-shadow:0 0 0 rgba(47,196,201,0);} 50% { opacity:1; transform:scale(1.25); box-shadow:0 0 22px rgba(47,196,201,.8);} }
-  .dna-head, .dna-row { display:grid; grid-template-columns:1.5fr repeat(5,1fr); gap:8px; padding:8px 12px; font-size:12px; }
-  .dna-head { color:#7f8fd8; letter-spacing:.1em; text-transform:uppercase; font-size:10.5px; }
-  .dna-row { border-top:1px solid #1a2450; color:#c6cff5; }
-  .dna-row b { color:#dfe6ff; } .calm { color:#2fc4c9; font-weight:800; text-shadow:0 0 8px rgba(47,196,201,.5); }
-  .doors a { display:inline-block; margin:6px 10px 0 0; color:#9f8cff; text-decoration:none; border:1px solid #35418a;
-             border-radius:10px; padding:9px 18px; font-size:13px; }
-  .doors a:hover { border-color:#6d5df0; box-shadow:0 0 14px rgba(109,93,240,.35); }
+ *{box-sizing:border-box} body{margin:0;font-family:'Gill Sans','Segoe UI',sans-serif;background:#0a0f1e;color:#e8eefc;min-height:100vh;}
+ .aurora{position:fixed;inset:-20vh -20vw;z-index:0;pointer-events:none;
+   background:radial-gradient(55vw 40vh at 25% 20%,rgba(109,93,240,.20),transparent 60%),
+              radial-gradient(50vw 36vh at 80% 30%,rgba(47,196,201,.14),transparent 60%),
+              radial-gradient(60vw 45vh at 50% 95%,rgba(196,77,255,.10),transparent 65%);
+   animation:drift 30s ease-in-out infinite alternate;filter:blur(3px);}
+ @keyframes drift{0%{transform:translate3d(-2%,-1%,0)}100%{transform:translate3d(2%,2%,0)}}
+ .wrap{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:26px 16px 90px;}
+ a.back{color:#8a97cf;text-decoration:none;font-size:13px;}
+ h1{font-size:24px;letter-spacing:.06em;margin:8px 0 2px;
+   background:linear-gradient(90deg,#9f8cff,#2fc4c9);-webkit-background-clip:text;background-clip:text;color:transparent;}
+ .sub{color:#8a97cf;font-size:13px;margin-bottom:20px;}
+ .panel{background:rgba(16,22,44,.72);border:1px solid #263257;border-radius:16px;padding:18px;margin:14px 0;backdrop-filter:blur(6px);}
+ h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#7f8fd8;margin:0 0 14px;}
+ .moods{display:flex;flex-wrap:wrap;gap:8px;}
+ .mood{background:rgba(109,93,240,.10);border:1px solid #35418a;color:#cfd6ff;border-radius:999px;padding:9px 18px;cursor:pointer;font-size:13.5px;transition:all .2s;}
+ .mood:hover,.mood.on{background:linear-gradient(90deg,rgba(109,93,240,.4),rgba(47,196,201,.32));border-color:#6d5df0;box-shadow:0 0 16px rgba(109,93,240,.35);}
+ .insts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;}
+ .inst{position:relative;background:rgba(22,30,58,.9);border:1.5px solid #2c3a68;border-radius:14px;padding:18px 12px;text-align:center;cursor:pointer;user-select:none;transition:transform .08s,box-shadow .2s,border-color .2s;}
+ .inst:hover{border-color:#4a5aa8;}
+ .inst.playing{border-color:#2fc4c9;box-shadow:0 0 20px rgba(47,196,201,.4);transform:translateY(-2px);}
+ .inst .ico{font-size:30px;display:block;margin-bottom:6px;}
+ .inst .nm{font-size:13px;color:#dfe6ff;}
+ .inst .lvl{margin-top:9px;width:100%;accent-color:#6d5df0;}
+ .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px;}
+ .go{background:linear-gradient(90deg,#1d9e63,#2fc98c);border:0;color:#04150c;border-radius:12px;padding:12px 26px;font-weight:800;cursor:pointer;font-size:15px;}
+ .rec{background:linear-gradient(90deg,#c0392b,#e05a5a);border:0;color:#fff;border-radius:12px;padding:12px 26px;font-weight:800;cursor:pointer;font-size:15px;}
+ .rec.recording{animation:pulse 1.1s infinite;}
+ @keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(224,90,90,0)}50%{box-shadow:0 0 22px rgba(224,90,90,.8)}}
+ .stopbtn{background:transparent;border:1px solid #35418a;color:#aab6e8;border-radius:12px;padding:12px 22px;cursor:pointer;font-weight:700;}
+ .stat{color:#8a97cf;font-size:13px;}
+ .saves{display:flex;flex-direction:column;gap:8px;}
+ .save-item{display:flex;align-items:center;gap:10px;background:rgba(22,30,58,.7);border:1px solid #2c3a68;border-radius:10px;padding:8px 12px;}
+ .save-item audio{height:32px;flex:1;}
+ .save-item a{color:#8ff0bd;text-decoration:none;font-size:13px;font-weight:700;}
+ label.small{font-size:11px;color:#8a97cf;}
+ input[type=range].big{width:180px;accent-color:#2fc4c9;}
+ .hint{font-size:12px;color:#7f8fd8;line-height:1.6;margin-top:10px;}
+ .doors a{display:inline-block;margin:6px 10px 0 0;color:#9f8cff;text-decoration:none;border:1px solid #35418a;border-radius:10px;padding:9px 18px;font-size:13px;}
 </style></head><body>
 <div class="aurora"></div>
 <div class="wrap">
   <a class="back" href="/admin#zenisyslab">&larr; back to The Watch</a>
-  <h1>ZENISYS LAB</h1>
-  <div class="sub">The night studio. Zenisys composes the state; you shape the sound.</div>
+  <h1>ZENISYS STUDIO</h1>
+  <div class="sub">Tap instruments to play and layer them. Pick a mood to set the calm. Record what you make and save it.</div>
 
-  <div class="room"><h2>The states &mdash; what the Creator composes</h2>
-    <div class="states" id="states"></div>
-    <pre id="plan">touch a state to see its soundscape plan</pre>
+  <div class="panel">
+    <h2>1 &middot; Pick a mood (sets the key &amp; calm)</h2>
+    <div class="moods" id="moods"></div>
   </div>
 
-  <div class="room"><h2>The console &mdash; live sound in this room</h2>
-    <div class="knobs">
-      <label>Brightness <input id="k-bright" type="range" min="600" max="3800" value="1200"></label>
-      <label>Volume <input id="k-vol" type="range" min="0" max="100" value="18"></label>
-      <label>Warmth <input id="k-warm" type="range" min="0" max="18" value="6"></label>
-      <label>Breath / min <input id="k-breath" type="range" min="4" max="12" value="6"></label>
+  <div class="panel">
+    <h2>2 &middot; Play &amp; layer the instruments</h2>
+    <div class="insts" id="insts"></div>
+    <div class="hint">Tap and hold an instrument to sustain it, or tap to pluck. Use each slider to set how loud that instrument sits in the mix. Turn on <b>Auto-drift</b> to let the pad breathe on its own while you play over it.</div>
+    <div class="row" style="margin-top:12px;">
+      <label class="small"><input type="checkbox" id="autodrift"> Auto-drift pad</label>
+      <label class="small">Tempo <input type="range" id="tempo" class="big" min="50" max="120" value="70"></label>
+      <label class="small">Reverb <input type="range" id="reverb" class="big" min="0" max="100" value="55"></label>
     </div>
+  </div>
+
+  <div class="panel">
+    <h2>3 &middot; Record &amp; save</h2>
     <div class="row">
-      <button class="go" id="go">Start sound</button>
-      <button class="stop" id="stop">Stop</button>
-      <div class="pulse" id="pulse"></div>
-      <span id="stat" style="color:#8a97cf;font-size:12.5px;">quiet</span>
+      <button class="rec" id="recBtn">&#9679; Record</button>
+      <button class="stopbtn" id="panicBtn">Stop all sound</button>
+      <span class="stat" id="recStat">not recording</span>
     </div>
+    <div class="hint">Press Record, play your instruments, then press it again to stop. Your take appears below to play back and download as an audio file.</div>
+    <div class="saves" id="saves" style="margin-top:14px;"></div>
   </div>
 
-  <div class="room"><h2>The calm DNA &mdash; every track&rsquo;s fingerprint</h2>
-    <div class="dna-head"><span>track</span><span>tempo</span><span>key</span><span>energy</span><span>bright</span><span>calm</span></div>
-    <div id="dna"></div>
-  </div>
-
-  <div class="room doors"><h2>Doorways</h2>
+  <div class="panel doors">
+    <h2>Doorways</h2>
     <a href="/zenisys/lab" target="_blank" rel="noopener">The Lab instrument (touch &amp; voice)</a>
     <a href="/zenisys" target="_blank" rel="noopener">Standalone Zenisys</a>
   </div>
 </div>
 <script>
 (function(){
-  var EMOS=['calm','anxious','panic','angry','sad','grief','numb','hopeful','greeting'];
-  var st=document.getElementById('states');
-  EMOS.forEach(function(e){
-    var b=document.createElement('button'); b.className='state'; b.textContent=e;
-    b.addEventListener('click', function(){
-      document.querySelectorAll('.state').forEach(function(x){ x.classList.remove('on'); });
-      b.classList.add('on');
-      fetch('/api/zenisys/plan?emotion='+encodeURIComponent(e)+'&binaural=1').then(function(r){return r.json();}).then(function(p){
-        document.getElementById('plan').textContent=JSON.stringify(p,null,2);
-        try {
-          if (p.brightness!=null) document.getElementById('k-bright').value=Math.round(600+p.brightness*3200);
-          if (p.volume!=null) document.getElementById('k-vol').value=Math.round(Math.min(1,p.volume)*100);
-        } catch(err){}
-        apply();
-      }).catch(function(){});
-    });
-    st.appendChild(b);
-  });
-  var ctx=null,o1=null,o2=null,filt=null,gain=null,lfo=null,lfoG=null;
-  function apply(){
-    if(!ctx) return;
-    var br=+document.getElementById('k-bright').value, vol=+document.getElementById('k-vol').value/100;
-    var warm=+document.getElementById('k-warm').value, bpm=+document.getElementById('k-breath').value;
-    filt.frequency.setTargetAtTime(br, ctx.currentTime, .4);
-    gain.gain.setTargetAtTime(vol, ctx.currentTime, .4);
-    o2.detune.setTargetAtTime(warm, ctx.currentTime, .4);
-    lfo.frequency.setTargetAtTime(bpm/60, ctx.currentTime, .4);
-    lfoG.gain.setTargetAtTime(vol*.35, ctx.currentTime, .4);
-    document.getElementById('stat').textContent='playing \u2014 '+Math.round(br)+' Hz, breath '+bpm+'/min';
-    document.getElementById('pulse').style.animationDuration=(60/bpm)+'s';
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var ctx=null, master=null, reverbNode=null, dryGain=null, wetGain=null, recDest=null, recorder=null, recChunks=[];
+  // MOODS set root note + scale + tempo feel
+  var MOODS = {
+    calm:     {root:220.00, scale:[0,2,4,7,9], tempo:70,  name:'calm'},       // A major pentatonic, warm
+    deepcalm: {root:174.61, scale:[0,3,5,7,10],tempo:58,  name:'deep calm'},  // F minor pentatonic, low
+    lifting:  {root:261.63, scale:[0,2,4,5,7,9,11],tempo:84,name:'lifting'},  // C major, brighter
+    anxious:  {root:196.00, scale:[0,2,3,5,7],tempo:66, name:'settle'},       // G, gentle minor lean
+    hopeful:  {root:293.66, scale:[0,2,4,7,9],tempo:78, name:'hopeful'}       // D major pentatonic
+  };
+  var mood = MOODS.calm;
+  // INSTRUMENTS: each is a small synth voice built in Web Audio (real sound)
+  var INSTS = [
+    {id:'piano', ico:'\uD83C\uDFB9', nm:'Piano',   type:'triangle', attack:0.005, release:1.2, level:0.6},
+    {id:'pad',   ico:'\u2601\uFE0F', nm:'Warm pad', type:'sine',     attack:0.6,  release:2.5, level:0.5, sustain:true},
+    {id:'strings',ico:'\uD83C\uDFBB',nm:'Strings',  type:'sawtooth', attack:0.4,  release:1.8, level:0.35, lp:1200},
+    {id:'bells', ico:'\uD83D\uDD14', nm:'Bells',    type:'sine',     attack:0.002,release:2.2, level:0.4, fm:true},
+    {id:'drone', ico:'\u3030\uFE0F', nm:'Drone',    type:'sine',     attack:1.2,  release:3.0, level:0.4, sustain:true, sub:true},
+    {id:'perc',  ico:'\uD83E\uDD41', nm:'Soft perc', type:'sine',    attack:0.001,release:0.35,level:0.4, perc:true}
+  ];
+  function ensure(){
+    if(ctx) return;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value=0.9;
+    // simple reverb via feedback delay network (light, calm)
+    dryGain = ctx.createGain(); wetGain = ctx.createGain();
+    var delay = ctx.createDelay(); delay.delayTime.value=0.14;
+    var fb = ctx.createGain(); fb.gain.value=0.45;
+    var damp = ctx.createBiquadFilter(); damp.type='lowpass'; damp.frequency.value=2600;
+    delay.connect(damp); damp.connect(fb); fb.connect(delay);
+    reverbNode = delay;
+    setReverb(parseFloat(document.getElementById('reverb').value)/100);
+    master.connect(dryGain); dryGain.connect(ctx.destination);
+    master.connect(reverbNode); reverbNode.connect(wetGain); wetGain.connect(ctx.destination);
+    // recording destination captures dry+wet
+    recDest = ctx.createMediaStreamDestination();
+    dryGain.connect(recDest); wetGain.connect(recDest);
   }
-  document.getElementById('go').addEventListener('click', function(){
-    if(ctx){ apply(); return; }
-    ctx=new (window.AudioContext||window.webkitAudioContext)();
-    o1=ctx.createOscillator(); o2=ctx.createOscillator();
-    o1.type='sine'; o2.type='sine'; o1.frequency.value=216; o2.frequency.value=216;
-    filt=ctx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=.7;
-    gain=ctx.createGain(); gain.gain.value=0;
-    lfo=ctx.createOscillator(); lfoG=ctx.createGain(); lfo.frequency.value=.1; lfoG.gain.value=.05;
-    lfo.connect(lfoG); lfoG.connect(gain.gain);
-    o1.connect(filt); o2.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
-    o1.start(); o2.start(); lfo.start();
-    document.getElementById('pulse').classList.add('live');
-    apply();
+  function setReverb(x){ if(!wetGain) return; wetGain.gain.value = x*0.5; dryGain.gain.value = 1 - x*0.35; }
+  function noteFreq(i){
+    var s = mood.scale; var oct = Math.floor(i / s.length); var deg = s[i % s.length];
+    return mood.root * Math.pow(2, (deg + 12*oct)/12);
+  }
+  var levels = {};
+  INSTS.forEach(function(x){ levels[x.id]=x.level; });
+  var held = {};   // sustained voices by inst id
+  function playInst(inst, step, sustain){
+    ensure();
+    if(ctx.state==='suspended') ctx.resume();
+    var f = noteFreq(step==null ? (Math.floor(Math.random()*8)) : step);
+    var now = ctx.currentTime;
+    var o = ctx.createOscillator(); o.type = inst.type;
+    var g = ctx.createGain(); g.gain.value=0;
+    var out = g;
+    if(inst.lp){ var lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=inst.lp; g.connect(lp); out=lp; }
+    if(inst.sub){ o.frequency.value = f/2; } else { o.frequency.value = f; }
+    var lvl = levels[inst.id] * 0.5;
+    o.connect(g); out.connect(master);
+    var atk = inst.attack, rel = inst.release;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(lvl, now+atk);
+    // FM shimmer for bells
+    if(inst.fm){ var m=ctx.createOscillator(); var mg=ctx.createGain(); m.frequency.value=f*2.01; mg.gain.value=f*0.6; m.connect(mg); mg.connect(o.frequency); m.start(now); m.stop(now+rel+0.1); }
+    o.start(now);
+    if(sustain && inst.sustain){
+      held[inst.id] = {o:o, g:g, rel:rel};
+      return;
+    }
+    g.gain.setTargetAtTime(0, now+atk+ (inst.perc?0.02:0.15), rel/3);
+    o.stop(now + atk + rel + 0.2);
+  }
+  function releaseInst(inst){
+    var h = held[inst.id]; if(!h) return;
+    var now = ctx.currentTime;
+    h.g.gain.setTargetAtTime(0, now, h.rel/3);
+    h.o.stop(now + h.rel + 0.2);
+    held[inst.id]=null;
+  }
+  // build mood buttons
+  var mb = document.getElementById('moods');
+  Object.keys(MOODS).forEach(function(k,i){
+    var b=document.createElement('button'); b.className='mood'+(k==='calm'?' on':''); b.textContent=MOODS[k].name;
+    b.addEventListener('click', function(){
+      mood = MOODS[k];
+      document.getElementById('tempo').value = mood.tempo;
+      mb.querySelectorAll('.mood').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
+    });
+    mb.appendChild(b);
   });
-  ['k-bright','k-vol','k-warm','k-breath'].forEach(function(id){
-    document.getElementById(id).addEventListener('input', apply);
+  // build instrument pads
+  var ib = document.getElementById('insts');
+  INSTS.forEach(function(inst){
+    var d=document.createElement('div'); d.className='inst';
+    d.innerHTML='<span class="ico">'+inst.ico+'</span><span class="nm">'+inst.nm+'</span>'
+      +'<input class="lvl" type="range" min="0" max="100" value="'+Math.round(inst.level*100)+'">';
+    var slider = d.querySelector('.lvl');
+    slider.addEventListener('input', function(e){ e.stopPropagation(); levels[inst.id]=parseFloat(slider.value)/100; });
+    slider.addEventListener('click', function(e){ e.stopPropagation(); });
+    var down=function(e){ if(e.target===slider) return; d.classList.add('playing'); playInst(inst, null, true); };
+    var up=function(){ d.classList.remove('playing'); releaseInst(inst); if(!inst.sustain){} };
+    d.addEventListener('mousedown', down); d.addEventListener('mouseup', up); d.addEventListener('mouseleave', up);
+    d.addEventListener('touchstart', function(e){ if(e.target!==slider){ e.preventDefault(); down(e);} }, {passive:false});
+    d.addEventListener('touchend', function(e){ e.preventDefault(); up(); }, {passive:false});
+    ib.appendChild(d);
   });
-  document.getElementById('stop').addEventListener('click', function(){
-    if(!ctx) return;
-    try{ gain.gain.setTargetAtTime(0, ctx.currentTime, .3); }catch(e){}
-    setTimeout(function(){ try{ctx.close();}catch(e){} ctx=null;
-      document.getElementById('pulse').classList.remove('live');
-      document.getElementById('stat').textContent='quiet'; }, 900);
+  // reverb + auto-drift
+  document.getElementById('reverb').addEventListener('input', function(e){ ensure(); setReverb(parseFloat(e.target.value)/100); });
+  var driftTimer=null;
+  document.getElementById('autodrift').addEventListener('change', function(e){
+    if(e.target.checked){ ensure(); driftTimer=setInterval(function(){
+      var padInst = INSTS.find(function(x){return x.id==='pad';});
+      playInst(padInst, Math.floor(Math.random()*6), false);
+    }, 2600); } else { clearInterval(driftTimer); driftTimer=null; }
   });
-  fetch('/api/admin/zenisys/dna').then(function(r){return r.json();}).then(function(d){
-    var dna=d.dna||{}; var el=document.getElementById('dna');
-    el.innerHTML=Object.keys(dna).sort().map(function(f){ var t=dna[f];
-      return '<div class="dna-row"><b>'+f+'</b><span>'+t.bpm+'</span><span>'+t.key+'</span><span>'+t.energy+'</span><span>'+t.brightness+'</span><span class="calm">'+t.calm_score+'</span></div>';
-    }).join('');
-  }).catch(function(){});
+  // panic / stop all
+  document.getElementById('panicBtn').addEventListener('click', function(){
+    INSTS.forEach(releaseInst);
+    if(driftTimer){ clearInterval(driftTimer); driftTimer=null; document.getElementById('autodrift').checked=false; }
+  });
+  // RECORD + SAVE
+  var recBtn=document.getElementById('recBtn'), recStat=document.getElementById('recStat'), saves=document.getElementById('saves');
+  recBtn.addEventListener('click', function(){
+    ensure();
+    if(recorder && recorder.state==='recording'){ recorder.stop(); return; }
+    recChunks=[];
+    try {
+      recorder = new MediaRecorder(recDest.stream);
+    } catch(err){ recStat.textContent='recording not supported in this browser'; return; }
+    recorder.ondataavailable=function(ev){ if(ev.data.size>0) recChunks.push(ev.data); };
+    recorder.onstop=function(){
+      var blob=new Blob(recChunks, {type: recorder.mimeType || 'audio/webm'});
+      var url=URL.createObjectURL(blob);
+      var item=document.createElement('div'); item.className='save-item';
+      var when=new Date().toLocaleTimeString();
+      var a=document.createElement('audio'); a.controls=true; a.src=url;
+      var dl=document.createElement('a'); dl.href=url; dl.download='zenisys-'+Date.now()+'.webm'; dl.textContent='Download';
+      var lbl=document.createElement('span'); lbl.style.cssText='font-size:12px;color:#8a97cf;min-width:70px;'; lbl.textContent=when;
+      item.appendChild(lbl); item.appendChild(a); item.appendChild(dl);
+      saves.insertBefore(item, saves.firstChild);
+      recBtn.classList.remove('recording'); recBtn.innerHTML='&#9679; Record'; recStat.textContent='saved your take below';
+    };
+    recorder.start();
+    recBtn.classList.add('recording'); recBtn.innerHTML='&#9632; Stop &amp; save'; recStat.textContent='recording\u2026 play your instruments';
+  });
 })();
-</script>
-</body></html>"""
+</script></body></html>
+"""
 
 SIM_ROOM = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
