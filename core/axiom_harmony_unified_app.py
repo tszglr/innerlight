@@ -12705,7 +12705,12 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
      var oct=octave+(w.up||0);
      var d=document.createElement('div'); d.className='wkey'; d.dataset.note=w.n+oct;
      d.innerHTML='<span class="note">'+w.n+oct+'</span><span class="lbl">'+w.k.toUpperCase()+'</span>';
-     d.addEventListener('mousedown', function(){ playNote(w.n+oct, d); });
+     (function(note,el){ el.addEventListener('mousedown', function(){ noteOn(note,el); });
+        el.addEventListener('mouseup', function(){ noteOff(note,el); });
+        el.addEventListener('mouseleave', function(){ noteOff(note,el); });
+        el.addEventListener('touchstart', function(ev){ ev.preventDefault(); noteOn(note,el); }, {passive:false});
+        el.addEventListener('touchend', function(ev){ ev.preventDefault(); noteOff(note,el); }, {passive:false});
+     })(w.n+oct, d);
      p.appendChild(d); keyMap[w.k]={note:w.n+oct, el:d};
    });
    // position black keys over the gaps
@@ -12714,21 +12719,46 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
      var d=document.createElement('div'); d.className='bkey'; d.dataset.note=b.n+octave;
      d.style.left=((b.pos+1)*unit)+'px';
      d.innerHTML='<span class="lbl">'+b.k.toUpperCase()+'</span>';
-     d.addEventListener('mousedown', function(){ playNote(b.n+octave, d); });
+     (function(note,el){ el.addEventListener('mousedown', function(){ noteOn(note,el); });
+        el.addEventListener('mouseup', function(){ noteOff(note,el); });
+        el.addEventListener('mouseleave', function(){ noteOff(note,el); });
+        el.addEventListener('touchstart', function(ev){ ev.preventDefault(); noteOn(note,el); }, {passive:false});
+        el.addEventListener('touchend', function(ev){ ev.preventDefault(); noteOff(note,el); }, {passive:false});
+     })(b.n+octave, d);
      p.appendChild(d); keyMap[b.k]={note:b.n+octave, el:d};
    });
  }
- function playNote(note, el){
+ // POLYPHONY: press = note ON (sustains), release = note OFF. Hold several
+ // keys and they SOUND TOGETHER like a real instrument. _held tracks which
+ // notes are down so we release the right one and never double-trigger.
+ var _held={};
+ function noteOn(note, el){
    if(!inst||!loaded) return;
-   try{ inst.triggerAttackRelease(note, '2n'); }catch(e){}
-   if(el){ el.classList.add('press'); setTimeout(function(){ el.classList.remove('press'); }, 180); }
-   if(recording){ recorded.push({note:note, t:(Tone.now()-recStart)}); }
+   if(_held[note]) return;               // already sounding — don't retrigger
+   _held[note]=1;
+   try{ if(inst.triggerAttack) inst.triggerAttack(note); else inst.triggerAttackRelease(note,'2n'); }catch(e){}
+   if(el){ el.classList.add('press'); }
+   if(recording){ recorded.push({note:note, t:(Tone.now()-recStart), on:1}); }
  }
+ function noteOff(note, el){
+   if(!inst||!loaded) return;
+   if(!_held[note]) return;
+   delete _held[note];
+   try{ if(inst.triggerRelease) inst.triggerRelease(note); }catch(e){}
+   if(el){ el.classList.remove('press'); }
+   if(recording){ recorded.push({note:note, t:(Tone.now()-recStart), off:1}); }
+ }
+ // tapping a key with the mouse: quick on then off
+ function playNote(note, el){ noteOn(note, el); setTimeout(function(){ noteOff(note, el); }, 400); }
  document.addEventListener('keydown', function(e){
    if(e.repeat) return; var k=e.key.toLowerCase();
-   if(k==='z'){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
-   if(k==='x'){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
-   if(keyMap[k]){ playNote(keyMap[k].note, keyMap[k].el); }
+   if(k==='z'){ try{ if(inst&&inst.releaseAll) inst.releaseAll(); }catch(e){} _held={}; octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
+   if(k==='x'){ try{ if(inst&&inst.releaseAll) inst.releaseAll(); }catch(e){} _held={}; octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
+   if(keyMap[k]){ noteOn(keyMap[k].note, keyMap[k].el); }   // ON while held
+ });
+ document.addEventListener('keyup', function(e){
+   var k=e.key.toLowerCase();
+   if(keyMap[k]){ noteOff(keyMap[k].note, keyMap[k].el); }  // OFF on release
  });
  document.getElementById('octdown').addEventListener('click', function(){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
  document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
