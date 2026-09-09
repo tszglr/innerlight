@@ -12563,8 +12563,8 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  .wkey{flex:1;background:linear-gradient(#fff,#eee);border:1px solid #b0b0c0;border-right:none;border-radius:0 0 6px 6px;position:relative;cursor:pointer;}
  .wkey:last-child{border-right:1px solid #b0b0c0;}
  .wkey.press{background:linear-gradient(#c9c4ff,#a99ff0);} .wkey.guide{background:linear-gradient(#b6e8cf,#7ee8a0);}
- .wkey .lbl{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#4a4a6a;font-size:15px;font-weight:800;}
- .wkey .nm{position:absolute;bottom:26px;left:0;right:0;text-align:center;color:#9a9ab8;font-size:8px;}
+ .wkey .lbl{position:absolute;bottom:7px;left:0;right:0;text-align:center;color:#3a3a5a;font-size:11px;font-weight:800;}
+ .wkey .nm{position:absolute;bottom:24px;left:0;right:0;text-align:center;color:#6d5df0;font-size:11px;}
  .bkey{position:absolute;top:0;width:2.9%;height:60%;background:linear-gradient(#333,#0a0a0a);border:1px solid #000;border-radius:0 0 4px 4px;z-index:3;cursor:pointer;transform:translateX(-50%);}
  .bkey.press{background:linear-gradient(#6d5df0,#4a3fc0);} .bkey.guide{background:linear-gradient(#2fc9a0,#1c9e63);}
  .bkey .lbl{position:absolute;bottom:6px;left:0;right:0;text-align:center;color:#ddd;font-size:11px;font-weight:800;}
@@ -12595,12 +12595,13 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  <div class="panel"><h2>The piano &mdash; your keyboard letters are on the keys</h2>
    <div class="piano" id="piano"><div class="whites" id="whites"></div></div>
    <div class="row" style="margin-top:10px;">
-     <button class="chip" id="octdown">Z &darr; octave</button>
-     <span class="status" id="oct-label">Octave 4</span>
-     <button class="chip" id="octup">X &uarr; octave</button>
+     <button class="chip" id="octdown">&minus; octave down</button>
+     <span class="status" id="oct-label">Octaves 4-5</span>
+     <button class="chip" id="octup">+ octave up</button>
      <button class="chip" id="learn-btn">&#10024; Learn a melody</button>
      <span class="status" id="learn-status"></span>
    </div>
+   <div class="hint">Your keyboard plays TWO octaves. Lower row <b>Z X C V B N M</b> = C D E F G A B, with <b>S D G H J</b> the black keys above them. Upper row <b>Q W E R T Y U</b> = the next octave up, with <b>2 3 5 6 7</b> its black keys. Every key shows its note name; use &minus;/+ to shift octaves. Click or tap any key on the full keyboard too.</div>
  </div>
 
  <div class="panel"><h2>Chords &amp; progressions &mdash; learn by genre</h2>
@@ -12778,39 +12779,55 @@ var keymap={};
 // FULL keyboard: all 7 white notes per octave across several octaves, with
 // black keys in their true positions. QWERTY letters map to the home octave
 // so you can learn the standard layout, but EVERY key plays (click/tap).
-var LOW_OCT=3, HIGH_OCT=5;  // C3..B5 — 3 full octaves, a real range to learn on
+var LOW_OCT=3, HIGH_OCT=5;  // C3..B5 drawn (3 octaves visible)
 var WHITE_STEPS=['C','D','E','F','G','A','B'];
-var BLACK_AFTER={0:'C#',1:'D#',3:'F#',4:'G#',5:'A#'};  // which white index has a black to its right
-var QWERTY_WHITE={'a':0,'s':1,'d':2,'f':3,'g':4,'h':5,'j':6,'k':7};  // home-octave white keys
-var QWERTY_BLACK={'w':0,'e':1,'t':3,'y':4,'u':5};
+var BLACK_AFTER={0:'C#',1:'D#',3:'F#',4:'G#',5:'A#'};
+// FULL keyboard mapping. Two rows of QWERTY = two octaves you can TYPE.
+// base octave (starts at 4) = lower row; base+1 = upper row.
+// White keys, lower octave: Z X C V B N M  -> C D E F G A B
+// Black keys, lower octave: S D   G H J     -> C# D#   F# G# A#
+// White keys, upper octave: Q W E R T Y U   -> C D E F G A B
+// Black keys, upper octave: 2 3   5 6 7      -> C# D#   F# G# A#
+// (plus I, K etc. extend the top) — computed at build time from these rows.
+var ROW_LOW_W ='zxcvbnm';        // 7 white notes, lower octave
+var ROW_LOW_B ={ 's':'C#','d':'D#','g':'F#','h':'G#','j':'A#' };
+var ROW_HIGH_W='qwertyu';        // 7 white notes, upper octave
+var ROW_HIGH_B={ '2':'C#','3':'D#','5':'F#','6':'G#','7':'A#' };
 function buildPiano(){
   keymap={};
   var whites=document.getElementById('whites'); whites.innerHTML='';
   var piano=document.getElementById('piano');
   piano.querySelectorAll('.bkey').forEach(function(x){x.remove();});
-  var whiteList=[];  // {note, oct, idxInOct}
+  var whiteList=[];
   for(var oc=LOW_OCT; oc<=HIGH_OCT; oc++){
     WHITE_STEPS.forEach(function(nm,i){ whiteList.push({note:nm+oc, oct:oc, i:i}); });
   }
   var totalW=whiteList.length, unit=100/totalW;
+  // build the qwerty->note map for the CURRENT base octave
+  var qmap={};  // qwertyKey -> pianoNote
+  ROW_LOW_W.split('').forEach(function(k,i){ qmap[k]=WHITE_STEPS[i]+octave; });
+  Object.keys(ROW_LOW_B).forEach(function(k){ qmap[k]=ROW_LOW_B[k]+octave; });
+  ROW_HIGH_W.split('').forEach(function(k,i){ qmap[k]=WHITE_STEPS[i]+(octave+1); });
+  Object.keys(ROW_HIGH_B).forEach(function(k){ qmap[k]=ROW_HIGH_B[k]+(octave+1); });
+  // reverse: note -> qwerty tag, for labeling the keys
+  var noteTag={}; Object.keys(qmap).forEach(function(k){ noteTag[qmap[k]]=k.toUpperCase(); });
   whiteList.forEach(function(w, wi){
     var d=document.createElement('div'); d.className='wkey';
-    // label QWERTY only on the home octave
-    var lbl='';
-    if(w.oct===octave){ for(var kk in QWERTY_WHITE){ if(QWERTY_WHITE[kk]===w.i){ lbl=kk.toUpperCase(); keymap[kk]={note:w.note, el:d}; } } }
-    d.innerHTML='<span class="nm">'+w.note+'</span>'+(lbl?'<span class="lbl">'+lbl+'</span>':'');
+    var tag=noteTag[w.note]||'';
+    // NOTE NAME is the big label so you always know what you're playing.
+    d.innerHTML='<span class="nm">'+(tag?('<b>'+tag+'</b>'):'')+'</span><span class="lbl">'+w.note+'</span>';
     bindKey(d, w.note); whites.appendChild(d);
+    if(qmap && noteTag[w.note]){ for(var kk in qmap){ if(qmap[kk]===w.note){ keymap[kk]={note:w.note, el:d}; } } }
   });
-  // black keys: absolutely placed at the right boundary between whites
   whiteList.forEach(function(w, wi){
-    if(BLACK_AFTER[w.i]!==undefined && !(w.i===6)){
+    if(BLACK_AFTER[w.i]!==undefined && w.i!==6){
       var bn=BLACK_AFTER[w.i]+w.oct;
       var d=document.createElement('div'); d.className='bkey';
       d.style.left=((wi+1)*unit)+'%';
-      var lbl='';
-      if(w.oct===octave){ for(var kk in QWERTY_BLACK){ if(QWERTY_BLACK[kk]===w.i){ lbl=kk.toUpperCase(); keymap[kk]={note:bn, el:d}; } } }
-      if(lbl) d.innerHTML='<span class="lbl">'+lbl+'</span>';
+      var tag=noteTag[bn]||'';
+      d.innerHTML='<span class="lbl">'+bn.replace(/\d/,'')+(tag?('<br>'+tag):'')+'</span>';
       bindKey(d, bn); piano.appendChild(d);
+      if(noteTag[bn]){ for(var kk in qmap){ if(qmap[kk]===bn){ keymap[kk]={note:bn, el:d}; } } }
     }
   });
 }
@@ -12823,15 +12840,15 @@ function bindKey(el, note){
 }
 document.addEventListener('keydown', function(e){
   if(e.repeat) return; var k=e.key.toLowerCase();
-  if(k==='z'){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
-  if(k==='x'){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
+  if(k==='-'||k==='_'){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave+'-'+(octave+1); return; }
+  if(k==='='||k==='+'){ octave=Math.min(5,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave+'-'+(octave+1); return; }
   var km=keymap[k]; if(km){ unlock().then(function(){ play(km.note); km.el.classList.add('press'); }); }
 });
 document.addEventListener('keyup', function(e){
   var km=keymap[e.key.toLowerCase()]; if(km){ stop(km.note); km.el.classList.remove('press'); }
 });
-document.getElementById('octdown').addEventListener('click', function(){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
-document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
+document.getElementById('octdown').addEventListener('click', function(){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octaves '+octave+'-'+(octave+1); });
+document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(5,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octaves '+octave+'-'+(octave+1); });
 
 // ============ knobs ============
 function applyKnobs(){ if(!ready)return; if(reverb)reverb.wet.value=+document.getElementById('k-verb').value/100; Tone.getDestination().volume.value=(+document.getElementById('k-vol').value/100)*24-16; Tone.Transport.bpm.value=+document.getElementById('k-bpm').value; }
