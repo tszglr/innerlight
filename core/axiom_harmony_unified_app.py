@@ -12580,17 +12580,17 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  <div class="panel">
    <h2>Instrument</h2>
    <div class="row" id="insts"></div>
-   <div class="hint" id="inst-status">Loading real instrument sounds\u2026</div>
+   <div class="hint" id="inst-status">Loading real instrument sounds…</div>
  </div>
 
  <div class="panel">
    <h2>The piano &mdash; your keyboard letters are on the keys</h2>
    <div class="piano" id="piano"></div>
    <div class="row" style="margin-top:10px;">
-     <button class="chip" id="octdown">Z \u2193 octave</button>
+     <button class="chip" id="octdown">Z ↓ octave</button>
      <span class="status" id="oct-label">Octave 4</span>
-     <button class="chip" id="octup">X \u2191 octave</button>
-     <button class="chip" id="learn-btn">\u2728 Learn a melody</button>
+     <button class="chip" id="octup">X ↑ octave</button>
+     <button class="chip" id="learn-btn">✨ Learn a melody</button>
      <span class="status" id="learn-status"></span>
    </div>
  </div>
@@ -12615,8 +12615,8 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
      <button class="chip beat-preset" data-beat="lofi">Lo-fi</button>
      <button class="chip beat-preset" data-beat="rock">Rock</button>
      <button class="chip beat-preset" data-beat="hiphop">Hip-hop</button>
-     <button class="chip" id="beat-play">\u25B6 Play beat</button>
-     <button class="chip" id="beat-stop">\u25A0 Stop beat</button>
+     <button class="chip" id="beat-play">▶ Play beat</button>
+     <button class="chip" id="beat-stop">■ Stop beat</button>
    </div>
    <div class="hint">Tap a drum pad to hear it, or pick a beat and press Play. The beat follows the Tempo knob below and plays under your song when you Enrich.</div>
  </div>
@@ -12624,7 +12624,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  <div class="panel">
    <h2>Record &middot; enrich &middot; save</h2>
    <div class="row">
-     <button id="rec-btn" class="rbtn rec-start">\u25CF Record</button>
+     <button id="rec-btn" class="rbtn rec-start">● Record</button>
      <span class="dot" id="rec-dot"></span>
      <span class="status" id="rec-status">not recording</span>
    </div>
@@ -12636,11 +12636,11 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
      <button class="chip enrich-style" data-style="upbeat">Upbeat</button>
    </div>
    <div class="row" style="margin-top:12px;">
-     <button id="enrich-btn" class="rbtn enrich">\u2728 Enrich my recording</button>
-     <button id="play-btn" class="chip">\u25B6 Play it back</button>
+     <button id="enrich-btn" class="rbtn enrich">✨ Enrich my recording</button>
+     <button id="play-btn" class="chip">▶ Play it back</button>
      <span id="save-wrap"></span>
    </div>
-   <div class="hint" id="enrich-status">Record a melody first, then Enrich builds harmony, a chord bed, bass, and a soft pad underneath your notes \u2014 all in your key.</div>
+   <div class="hint" id="enrich-status">Record a melody first, then Enrich builds harmony, a chord bed, bass, and a soft pad underneath your notes — all in your key.</div>
  </div>
 
  <div class="panel">
@@ -12665,13 +12665,13 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  // top and swaps in when ready; if it ever fails or is slow, the synth voice
  // stays and you still hear something. Nothing waits forever.
  var INSTRUMENTS = {
-   piano:  {name:'\uD83C\uDFB9 Piano',  synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.01,decay:1.4,sustain:0.2,release:1.2}}); },
+   piano:  {name:'🎹 Piano',  synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.01,decay:1.4,sustain:0.2,release:1.2}}); },
      sampler:function(){ return new Tone.Sampler({urls:{A1:'A1.mp3',C2:'C2.mp3','D#2':'Ds2.mp3','F#2':'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3','D#3':'Ds3.mp3','F#3':'Fs3.mp3',A3:'A3.mp3',C4:'C4.mp3','D#4':'Ds4.mp3','F#4':'Fs4.mp3',A4:'A4.mp3',C5:'C5.mp3','D#5':'Ds5.mp3','F#5':'Fs5.mp3',A5:'A5.mp3',C6:'C6.mp3'},baseUrl:'https://tonejs.github.io/audio/salamander/'}); }},
-   guitar: {name:'\uD83C\uDFB8 Guitar', synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.008,decay:0.9,sustain:0.15,release:0.9}}); }},
-   strings:{name:'\uD83C\uDFBB Strings',synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.4,decay:0.2,sustain:0.8,release:1.4}}); }},
-   pad:    {name:'\u2601\uFE0F Pad',    synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.8,decay:0.3,sustain:0.9,release:2.2}}); }},
-   bells:  {name:'\uD83D\uDD14 Bells',  synth:function(){ return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:0.01,decay:1.2,sustain:0,release:1.5}}); }},
-   bass:   {name:'\uD83C\uDFB8 Bass',   synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'square'},envelope:{attack:0.01,decay:0.3,sustain:0.6,release:0.8}}); }},
+   guitar: {name:'🎸 Guitar', synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.008,decay:0.9,sustain:0.15,release:0.9}}); }},
+   strings:{name:'🎻 Strings',synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.4,decay:0.2,sustain:0.8,release:1.4}}); }},
+   pad:    {name:'☁️ Pad',    synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.8,decay:0.3,sustain:0.9,release:2.2}}); }},
+   bells:  {name:'🔔 Bells',  synth:function(){ return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:0.01,decay:1.2,sustain:0,release:1.5}}); }},
+   bass:   {name:'🎸 Bass',   synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'square'},envelope:{attack:0.01,decay:0.3,sustain:0.6,release:0.8}}); }},
  };
  var current='piano', inst=null, reverb=null, vol=null, recDest=null, recorder=null, chunks=[], loaded=false;
  var recording=false, recStart=0, recorded=[], enriched=null, enrichStyle='gentle';
@@ -12689,12 +12689,12 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    // 1) instant synth voice — playable RIGHT NOW, no waiting, no freeze.
    var voice=INSTRUMENTS[id].synth(); voice.connect(reverb);
    inst=voice; loaded=true;
-   status.textContent=INSTRUMENTS[id].name+' ready \u2014 play the keys.';
+   status.textContent=INSTRUMENTS[id].name+' ready — play the keys.';
    // 2) if this instrument has a richer sampled version, load it in the
    //    background and swap in ONLY if it finishes; a 6s timeout means a slow
    //    or missing sample never leaves you stuck — the synth just stays.
    if(INSTRUMENTS[id].sampler){
-     status.textContent=INSTRUMENTS[id].name+' ready \u2014 loading the richer sound\u2026';
+     status.textContent=INSTRUMENTS[id].name+' ready — loading the richer sound…';
      var loadedSampler=false;
      try{
        var samp=INSTRUMENTS[id].sampler();
@@ -12703,7 +12703,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
          if(current!==id) return;            // user switched away
          loadedSampler=true; inst=voice._disposed?voice:samp;  // prefer sampler
          inst=samp;
-         status.textContent=INSTRUMENTS[id].name+' \u2014 full sound ready.';
+         status.textContent=INSTRUMENTS[id].name+' — full sound ready.';
        }).catch(function(){ status.textContent=INSTRUMENTS[id].name+' ready.'; });
        setTimeout(function(){ if(!loadedSampler && current===id){ status.textContent=INSTRUMENTS[id].name+' ready.'; } }, 6000);
      }catch(e){ status.textContent=INSTRUMENTS[id].name+' ready.'; }
@@ -12738,10 +12738,10 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
      p.appendChild(d); keyMap[w.k]={note:w.n+oct, el:d};
    });
    // position black keys over the gaps
-   var pw=p.getBoundingClientRect().width || 800; var unit=pw/WHITE.length;
+   var unitPct=100/WHITE.length;  // 12.5% per white key — layout-independent
    BLACK.forEach(function(b){
      var d=document.createElement('div'); d.className='bkey'; d.dataset.note=b.n+octave;
-     d.style.left=((b.pos+1)*unit)+'px';
+     d.style.left=((b.pos+1)*unitPct)+'%';
      d.innerHTML='<span class="lbl">'+b.k.toUpperCase()+'</span>';
      (function(note,el){ el.addEventListener('mousedown', function(){ noteOn(note,el); });
         el.addEventListener('mouseup', function(){ noteOff(note,el); });
@@ -12790,10 +12790,10 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  // ===== learn a melody: light the keys in sequence =====
  var LESSON=['C4','D4','E4','C4','E4','C4','E4','D4','E4','F4','G4'];  // simple calming phrase
  document.getElementById('learn-btn').addEventListener('click', async function(){
-   await start(); document.getElementById('learn-status').textContent='follow the green keys\u2026';
+   await start(); document.getElementById('learn-status').textContent='follow the green keys…';
    var i=0;
    (function step(){
-     if(i>=LESSON.length){ document.getElementById('learn-status').textContent='your turn \u2014 play it back!'; return; }
+     if(i>=LESSON.length){ document.getElementById('learn-status').textContent='your turn — play it back!'; return; }
      var note=LESSON[i];
      Object.values(keyMap).forEach(function(km){ if(km.note===note){ km.el.classList.add('guide'); playNote(note,null); setTimeout(function(){ km.el.classList.remove('guide'); }, 500); } });
      i++; setTimeout(step, 650);
@@ -12812,8 +12812,8 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  var recBtn=document.getElementById('rec-btn'), recDot=document.getElementById('rec-dot'), recStatus=document.getElementById('rec-status');
  recBtn.addEventListener('click', async function(){
    await start();
-   if(recording){ recording=false; recBtn.textContent='\u25CF Record'; recBtn.className='rbtn rec-start'; recDot.className='dot'; recStatus.textContent=recorded.length+' notes recorded \u2014 now Enrich or Play'; return; }
-   recorded=[]; recording=true; recStart=Tone.now(); recBtn.textContent='\u25A0 Stop'; recBtn.className='rbtn rec-stop'; recDot.className='dot live'; recStatus.textContent='recording\u2026 play your melody';
+   if(recording){ recording=false; recBtn.textContent='● Record'; recBtn.className='rbtn rec-start'; recDot.className='dot'; recStatus.textContent=recorded.length+' notes recorded — now Enrich or Play'; return; }
+   recorded=[]; recording=true; recStart=Tone.now(); recBtn.textContent='■ Stop'; recBtn.className='rbtn rec-stop'; recDot.className='dot live'; recStatus.textContent='recording… play your melody';
  });
 
  // ===== enrichment: the AI-composer builds harmony/chords/bass/pad in your key =====
@@ -12830,14 +12830,14 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  document.getElementById('enrich-btn').addEventListener('click', async function(){
    await start();
    if(!recorded.length){ document.getElementById('enrich-status').textContent='Record a melody first (press Record, play some keys, Stop).'; return; }
-   document.getElementById('enrich-status').textContent='Zenisys is building a fuller song around your notes\u2026';
+   document.getElementById('enrich-status').textContent='Zenisys is building a fuller song around your notes…';
    var key=detectKey(recorded);
    // scale intervals per style
    var scales={gentle:[0,2,4,5,7,9,11],fuller:[0,2,4,5,7,9,11],cinematic:[0,2,3,5,7,8,10],upbeat:[0,2,4,5,7,9,11]};
    var scale=scales[enrichStyle]||scales.gentle;
    var bpm={gentle:60,fuller:72,cinematic:66,upbeat:96}[enrichStyle];
    enriched={key:key, style:enrichStyle, bpm:bpm, scale:scale, melody:recorded.slice()};
-   document.getElementById('enrich-status').textContent='Done \u2014 press Play to hear your fuller song, then Save.';
+   document.getElementById('enrich-status').textContent='Done — press Play to hear your fuller song, then Save.';
    document.getElementById('save-wrap').innerHTML='';
  });
 
@@ -12849,7 +12849,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    var chordRoots=[0,5,7,5]; // I - IV - V - IV feel, gentle
    var padSy=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); padSy.volume.value=-16;
    var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-10;
-   if(saveAfter){ chunks=[]; try{ recorder=new MediaRecorder(recDest.stream); recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); }; recorder.onstop=function(){ var blob=new Blob(chunks,{type:'audio/webm'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='\u2b07\uFE0F Save your song'; document.getElementById('save-wrap').innerHTML=''; document.getElementById('save-wrap').appendChild(a); }; recorder.start(); }catch(e){} }
+   if(saveAfter){ chunks=[]; try{ recorder=new MediaRecorder(recDest.stream); recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); }; recorder.onstop=function(){ var blob=new Blob(chunks,{type:'audio/webm'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='⬇️ Save your song'; document.getElementById('save-wrap').innerHTML=''; document.getElementById('save-wrap').appendChild(a); }; recorder.start(); }catch(e){} }
    var now=Tone.now()+0.1; var beat=60/enriched.bpm;
    // chord bed + bass under the piece
    chordRoots.forEach(function(deg,i){
@@ -12871,7 +12871,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    var dur=(enriched.melody.length? Math.max.apply(null,enriched.melody.map(function(m){return m.t||0;})):0)+2;
    dur=Math.max(dur, chordRoots.length*beat*4);
    if(saveAfter){ setTimeout(function(){ try{ recorder.stop(); }catch(e){} }, (dur+1)*1000); }
-   document.getElementById('enrich-status').textContent='Playing your fuller song\u2026';
+   document.getElementById('enrich-status').textContent='Playing your fuller song…';
  }
  document.getElementById('play-btn').addEventListener('click', function(){ playEnriched(true); });
 
@@ -12890,7 +12890,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  // GENRES: each is a set of named chords to learn + signature progressions.
  // Progressions are lists of [degreeSemitone, quality] relative to the key.
  var GENRES={
-   gospel:{ label:'\u2726 Gospel', chords:[['I','maj'],['I7','7'],['IV','maj'],['IV7','7'],['ii7','min7'],['iii7','min7'],['vi7','min7'],['V7','7'],['bVII','7'],['#IVdim7','dim7'],['bIII','maj']],
+   gospel:{ label:'✦ Gospel', chords:[['I','maj'],['I7','7'],['IV','maj'],['IV7','7'],['ii7','min7'],['iii7','min7'],['vi7','min7'],['V7','7'],['bVII','7'],['#IVdim7','dim7'],['bIII','maj']],
      progs:[
        {name:'2-5-1 (the gospel turnaround)', steps:[[2,'min7'],[7,'7'],[0,'maj7']]},
        {name:'6-2-5-1', steps:[[9,'min7'],[2,'min7'],[7,'7'],[0,'maj7']]},
@@ -12898,28 +12898,28 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
        {name:'gospel walk-up 1-3-4', steps:[[0,'maj'],[4,'min7'],[5,'maj'],[7,'7']]},
        {name:'praise ending 4-5-1', steps:[[5,'maj'],[7,'7'],[0,'maj7']]}
      ]},
-   jazz:{ label:'\uD83C\uDFB7 Jazz', chords:[['Imaj7','maj7'],['ii7','min7'],['V7','7'],['vi7','min7'],['iiø','min7b5'],['I6','6'],['III7','7']],
+   jazz:{ label:'🎷 Jazz', chords:[['Imaj7','maj7'],['ii7','min7'],['V7','7'],['vi7','min7'],['iiø','min7b5'],['I6','6'],['III7','7']],
      progs:[
        {name:'ii-V-I', steps:[[2,'min7'],[7,'7'],[0,'maj7']]},
        {name:'minor ii-V-i', steps:[[2,'min7b5'],[7,'7'],[0,'min7']]},
        {name:'rhythm changes A', steps:[[0,'maj7'],[9,'min7'],[2,'min7'],[7,'7']]},
        {name:'turnaround 1-6-2-5', steps:[[0,'maj7'],[9,'7'],[2,'min7'],[7,'7']]}
      ]},
-   rnb:{ label:'\uD83D\uDC9C R&B', chords:[['Imaj7','maj7'],['ii9','min9'],['iii7','min7'],['IVmaj7','maj7'],['vi7','min7'],['V7','7']],
+   rnb:{ label:'💜 R&B', chords:[['Imaj7','maj7'],['ii9','min9'],['iii7','min7'],['IVmaj7','maj7'],['vi7','min7'],['V7','7']],
      progs:[
        {name:'neo-soul 1-4', steps:[[0,'maj9'],[5,'maj9']]},
        {name:'6-4-1-5', steps:[[9,'min7'],[5,'maj7'],[0,'maj7'],[7,'7']]},
        {name:'2-5-1 smooth', steps:[[2,'min9'],[7,'13'],[0,'maj9']]},
        {name:'quiet-storm 1-3-6-4', steps:[[0,'maj7'],[4,'min7'],[9,'min7'],[5,'maj7']]}
      ]},
-   rock:{ label:'\uD83C\uDFB8 Rock', chords:[['I','maj'],['IV','maj'],['V','maj'],['vi','min'],['bVII','maj'],['iii','min']],
+   rock:{ label:'🎸 Rock', chords:[['I','maj'],['IV','maj'],['V','maj'],['vi','min'],['bVII','maj'],['iii','min']],
      progs:[
        {name:'I-IV-V', steps:[[0,'maj'],[5,'maj'],[7,'maj']]},
        {name:'I-V-vi-IV (the anthem four)', steps:[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]},
        {name:'vi-IV-I-V', steps:[[9,'min'],[5,'maj'],[0,'maj'],[7,'maj']]},
        {name:'I-bVII-IV', steps:[[0,'maj'],[10,'maj'],[5,'maj']]}
      ]},
-   anthem:{ label:'\uD83D\uDD4A Anthem', chords:[['I','maj'],['V','maj'],['vi','min'],['IV','maj'],['Isus4','sus4'],['V7','7']],
+   anthem:{ label:'🕊 Anthem', chords:[['I','maj'],['V','maj'],['vi','min'],['IV','maj'],['Isus4','sus4'],['V7','7']],
      progs:[
        {name:'stadium I-V-vi-IV', steps:[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]},
        {name:'lift 1-4-1-5', steps:[[0,'maj'],[5,'maj'],[0,'maj'],[7,'maj']]},
@@ -12941,7 +12941,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    await start(); var notes=chordNotes(rootSemi,qual);
    try{ inst.triggerAttackRelease(notes,'1n'); }catch(e){}
    lightChord(notes);
-   document.getElementById('chord-name').textContent=(label||'')+'  \u2014  '+notes.join('  ');
+   document.getElementById('chord-name').textContent=(label||'')+'  —  '+notes.join('  ');
  }
  function romanRoot(sym){ return {I:0,II:2,III:4,IV:5,V:7,VI:9,VII:11}[sym.replace(/[b#].*/,'').replace(/[0-9].*/,'').toUpperCase()]||0; }
  function buildChordUI(){
@@ -12962,12 +12962,12 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
      var b=document.createElement('div'); b.className='chip'; b.textContent=sym; b.style.padding='7px 13px';
      b.addEventListener('click', function(){ playChord(rootSemi,qual,sym); }); cb.appendChild(b); });
    var pb=document.getElementById('prog-bar'); pb.innerHTML='<span style="font-size:12px;color:#9ccbe8;margin-right:4px;">Progressions:</span>';
-   g.progs.forEach(function(pr){ var b=document.createElement('div'); b.className='chip'; b.innerHTML='\u25B6 '+pr.name; b.style.background='rgba(47,196,201,.1)';
+   g.progs.forEach(function(pr){ var b=document.createElement('div'); b.className='chip'; b.innerHTML='▶ '+pr.name; b.style.background='rgba(47,196,201,.1)';
      b.addEventListener('click', function(){ teachProg(pr); }); pb.appendChild(b); });
  }
  async function teachProg(pr){
-   await start(); document.getElementById('chord-name').textContent='Teaching: '+pr.name+'  \u2014  follow the green keys';
-   var i=0; (function step(){ if(i>=pr.steps.length){ document.getElementById('chord-name').textContent=pr.name+'  \u2014  now play it yourself!'; return; }
+   await start(); document.getElementById('chord-name').textContent='Teaching: '+pr.name+'  —  follow the green keys';
+   var i=0; (function step(){ if(i>=pr.steps.length){ document.getElementById('chord-name').textContent=pr.name+'  —  now play it yourself!'; return; }
      var s=pr.steps[i]; playChord(s[0],s[1], ''); i++; setTimeout(step, 1400); })();
  }
  buildChordUI();
@@ -12993,7 +12993,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    else if(name==='tom') drums.tom.triggerAttackRelease('G2','8n',t);
    else if(name==='cymbal') drums.cymbal.triggerAttackRelease('16n',t);
  }
- var DRUMPADS=[['kick','\uD83E\uDD41 Kick'],['snare','\uD83E\uDD41 Snare'],['hat','\u2022 Hi-hat'],['tom','\uD83E\uDD41 Tom'],['cymbal','\uD83D\uDD4A Cymbal']];
+ var DRUMPADS=[['kick','🥁 Kick'],['snare','🥁 Snare'],['hat','• Hi-hat'],['tom','🥁 Tom'],['cymbal','🕊 Cymbal']];
  var dp=document.getElementById('drumpads');
  DRUMPADS.forEach(function(d){ var b=document.createElement('div'); b.className='chip'; b.textContent=d[1];
    b.addEventListener('click', async function(){ await start(); hit(d[0]); b.classList.add('on'); setTimeout(function(){b.classList.remove('on');},120); }); dp.appendChild(b); });
