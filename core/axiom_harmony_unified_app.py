@@ -12596,6 +12596,16 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  </div>
 
  <div class="panel">
+   <h2>Chords &amp; progressions &mdash; learn by genre</h2>
+   <div class="row" id="genre-bar" style="margin-bottom:10px;"></div>
+   <div class="row" style="margin-bottom:8px;"><span style="font-size:12px;color:#9ccbe8;">Key:</span><span class="row" id="key-bar"></span></div>
+   <div class="row" id="chord-bar" style="margin-bottom:12px;"></div>
+   <div style="font-size:12px;color:#8a97cf;margin-bottom:10px;" id="chord-name">Pick a genre, then tap a chord &mdash; the keys light up and play. Then tap a progression to walk your fingers through it.</div>
+   <div class="row" id="prog-bar"></div>
+   <div class="hint">These are chords and progressions &mdash; the alphabet of music, free to learn. Gospel, jazz, R&amp;B, rock, and anthem each have their own signature moves. Tap a progression and your keys light in sequence so your hands learn it. Then Record and Enrich to make a full song from it.</div>
+ </div>
+
+ <div class="panel">
    <h2>Drums &amp; beat</h2>
    <div class="row" id="drumpads"></div>
    <div class="row" style="margin-top:12px;">
@@ -12810,6 +12820,103 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    document.getElementById('enrich-status').textContent='Playing your fuller song\u2026';
  }
  document.getElementById('play-btn').addEventListener('click', function(){ playEnriched(true); });
+
+ // ===== CHORD LIBRARY & PROGRESSION TEACHER (theory-computed, any key, legal) =====
+ var NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+ var chordKey=0; // C
+ // chord "quality" -> semitone intervals from the root
+ var QUAL={
+   'maj':[0,4,7], 'min':[0,3,7], '7':[0,4,7,10], 'maj7':[0,4,7,11], 'min7':[0,3,7,10],
+   'dim':[0,3,6], 'aug':[0,4,8], 'sus4':[0,5,7], 'sus2':[0,2,7], '6':[0,4,7,9], 'min6':[0,3,7,9],
+   '9':[0,4,7,10,14], 'maj9':[0,4,7,11,14], 'min9':[0,3,7,10,14], 'add9':[0,4,7,14],
+   '13':[0,4,7,10,14,21], 'min7b5':[0,3,6,10], 'dim7':[0,3,6,9], '7sus4':[0,5,7,10]
+ };
+ // a scale-degree label -> [semitone from key root, quality]
+ function chd(rootSemi, qual){ return {root:rootSemi, qual:qual}; }
+ // GENRES: each is a set of named chords to learn + signature progressions.
+ // Progressions are lists of [degreeSemitone, quality] relative to the key.
+ var GENRES={
+   gospel:{ label:'\u2726 Gospel', chords:[['I','maj'],['I7','7'],['IV','maj'],['IV7','7'],['ii7','min7'],['iii7','min7'],['vi7','min7'],['V7','7'],['bVII','7'],['#IVdim7','dim7'],['bIII','maj']],
+     progs:[
+       {name:'2-5-1 (the gospel turnaround)', steps:[[2,'min7'],[7,'7'],[0,'maj7']]},
+       {name:'6-2-5-1', steps:[[9,'min7'],[2,'min7'],[7,'7'],[0,'maj7']]},
+       {name:'1-4 with passing dim (Kirk-style)', steps:[[0,'maj'],[6,'dim7'],[7,'min6'],[5,'maj']]},
+       {name:'gospel walk-up 1-3-4', steps:[[0,'maj'],[4,'min7'],[5,'maj'],[7,'7']]},
+       {name:'praise ending 4-5-1', steps:[[5,'maj'],[7,'7'],[0,'maj7']]}
+     ]},
+   jazz:{ label:'\uD83C\uDFB7 Jazz', chords:[['Imaj7','maj7'],['ii7','min7'],['V7','7'],['vi7','min7'],['iiø','min7b5'],['I6','6'],['III7','7']],
+     progs:[
+       {name:'ii-V-I', steps:[[2,'min7'],[7,'7'],[0,'maj7']]},
+       {name:'minor ii-V-i', steps:[[2,'min7b5'],[7,'7'],[0,'min7']]},
+       {name:'rhythm changes A', steps:[[0,'maj7'],[9,'min7'],[2,'min7'],[7,'7']]},
+       {name:'turnaround 1-6-2-5', steps:[[0,'maj7'],[9,'7'],[2,'min7'],[7,'7']]}
+     ]},
+   rnb:{ label:'\uD83D\uDC9C R&B', chords:[['Imaj7','maj7'],['ii9','min9'],['iii7','min7'],['IVmaj7','maj7'],['vi7','min7'],['V7','7']],
+     progs:[
+       {name:'neo-soul 1-4', steps:[[0,'maj9'],[5,'maj9']]},
+       {name:'6-4-1-5', steps:[[9,'min7'],[5,'maj7'],[0,'maj7'],[7,'7']]},
+       {name:'2-5-1 smooth', steps:[[2,'min9'],[7,'13'],[0,'maj9']]},
+       {name:'quiet-storm 1-3-6-4', steps:[[0,'maj7'],[4,'min7'],[9,'min7'],[5,'maj7']]}
+     ]},
+   rock:{ label:'\uD83C\uDFB8 Rock', chords:[['I','maj'],['IV','maj'],['V','maj'],['vi','min'],['bVII','maj'],['iii','min']],
+     progs:[
+       {name:'I-IV-V', steps:[[0,'maj'],[5,'maj'],[7,'maj']]},
+       {name:'I-V-vi-IV (the anthem four)', steps:[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]},
+       {name:'vi-IV-I-V', steps:[[9,'min'],[5,'maj'],[0,'maj'],[7,'maj']]},
+       {name:'I-bVII-IV', steps:[[0,'maj'],[10,'maj'],[5,'maj']]}
+     ]},
+   anthem:{ label:'\uD83D\uDD4A Anthem', chords:[['I','maj'],['V','maj'],['vi','min'],['IV','maj'],['Isus4','sus4'],['V7','7']],
+     progs:[
+       {name:'stadium I-V-vi-IV', steps:[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]},
+       {name:'lift 1-4-1-5', steps:[[0,'maj'],[5,'maj'],[0,'maj'],[7,'maj']]},
+       {name:'sus resolve 1sus4-1-5', steps:[[0,'sus4'],[0,'maj'],[7,'7']]},
+       {name:'build vi-IV-I-V', steps:[[9,'min'],[5,'maj'],[0,'maj'],[7,'maj']]}
+     ]}
+ };
+ var curGenre='gospel';
+ function chordNotes(rootSemi, qual, baseOct){
+   baseOct=baseOct||4; var root=12*(baseOct+1)+((chordKey+rootSemi)%12);
+   return (QUAL[qual]||QUAL.maj).map(function(iv){ return midiName(root+iv); });
+ }
+ function midiName(midi){ return NOTE_NAMES[((midi%12)+12)%12]+(Math.floor(midi/12)-1); }
+ function lightChord(notes){
+   // light any of these notes that exist on the visible keyboard
+   Object.values(keyMap).forEach(function(km){ if(notes.indexOf(km.note)>=0){ km.el.classList.add('guide'); setTimeout(function(){km.el.classList.remove('guide');},700);} });
+ }
+ async function playChord(rootSemi, qual, label){
+   await start(); var notes=chordNotes(rootSemi,qual);
+   try{ inst.triggerAttackRelease(notes,'1n'); }catch(e){}
+   lightChord(notes);
+   document.getElementById('chord-name').textContent=(label||'')+'  \u2014  '+notes.join('  ');
+ }
+ function romanRoot(sym){ return {I:0,II:2,III:4,IV:5,V:7,VI:9,VII:11}[sym.replace(/[b#].*/,'').replace(/[0-9].*/,'').toUpperCase()]||0; }
+ function buildChordUI(){
+   // genres
+   var gb=document.getElementById('genre-bar'); gb.innerHTML='';
+   Object.keys(GENRES).forEach(function(g){ var b=document.createElement('div'); b.className='chip'+(g===curGenre?' on':''); b.innerHTML=GENRES[g].label;
+     b.addEventListener('click', function(){ curGenre=g; document.querySelectorAll('#genre-bar .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); renderChords(); }); gb.appendChild(b); });
+   // key selector
+   var kb=document.getElementById('key-bar'); kb.innerHTML='';
+   ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'].forEach(function(kn,ki){ var b=document.createElement('div'); b.className='chip'+(ki===chordKey?' on':''); b.textContent=kn; b.style.padding='6px 12px';
+     b.addEventListener('click', function(){ chordKey=ki; document.querySelectorAll('#key-bar .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); }); kb.appendChild(b); });
+   renderChords();
+ }
+ function renderChords(){
+   var g=GENRES[curGenre];
+   var cb=document.getElementById('chord-bar'); cb.innerHTML='';
+   g.chords.forEach(function(ch){ var sym=ch[0], qual=ch[1]; var rootSemi=romanRoot(sym); if(/^b/.test(sym)) rootSemi=(rootSemi-1+12)%12; if(/^#/.test(sym)) rootSemi=(rootSemi+1)%12;
+     var b=document.createElement('div'); b.className='chip'; b.textContent=sym; b.style.padding='7px 13px';
+     b.addEventListener('click', function(){ playChord(rootSemi,qual,sym); }); cb.appendChild(b); });
+   var pb=document.getElementById('prog-bar'); pb.innerHTML='<span style="font-size:12px;color:#9ccbe8;margin-right:4px;">Progressions:</span>';
+   g.progs.forEach(function(pr){ var b=document.createElement('div'); b.className='chip'; b.innerHTML='\u25B6 '+pr.name; b.style.background='rgba(47,196,201,.1)';
+     b.addEventListener('click', function(){ teachProg(pr); }); pb.appendChild(b); });
+ }
+ async function teachProg(pr){
+   await start(); document.getElementById('chord-name').textContent='Teaching: '+pr.name+'  \u2014  follow the green keys';
+   var i=0; (function step(){ if(i>=pr.steps.length){ document.getElementById('chord-name').textContent=pr.name+'  \u2014  now play it yourself!'; return; }
+     var s=pr.steps[i]; playChord(s[0],s[1], ''); i++; setTimeout(step, 1400); })();
+ }
+ buildChordUI();
 
  // ===== DRUM MACHINE: real kit + selectable beats =====
  var drums=null, drumBeat='none', beatLoop=null;
