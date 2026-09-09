@@ -12596,6 +12596,22 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  </div>
 
  <div class="panel">
+   <h2>Drums &amp; beat</h2>
+   <div class="row" id="drumpads"></div>
+   <div class="row" style="margin-top:12px;">
+     <span style="font-size:12px;color:#9ccbe8;">Beat:</span>
+     <button class="chip beat-preset on" data-beat="none">Off</button>
+     <button class="chip beat-preset" data-beat="soft">Soft</button>
+     <button class="chip beat-preset" data-beat="lofi">Lo-fi</button>
+     <button class="chip beat-preset" data-beat="rock">Rock</button>
+     <button class="chip beat-preset" data-beat="hiphop">Hip-hop</button>
+     <button class="chip" id="beat-play">\u25B6 Play beat</button>
+     <button class="chip" id="beat-stop">\u25A0 Stop beat</button>
+   </div>
+   <div class="hint">Tap a drum pad to hear it, or pick a beat and press Play. The beat follows the Tempo knob below and plays under your song when you Enrich.</div>
+ </div>
+
+ <div class="panel">
    <h2>Record &middot; enrich &middot; save</h2>
    <div class="row">
      <button id="rec-btn" class="rbtn rec-start">\u25CF Record</button>
@@ -12640,6 +12656,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    strings:{name:'\uD83C\uDFBB Strings',build:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.4,decay:0.2,sustain:0.8,release:1.4}}); }},
    pad:    {name:'\u2601\uFE0F Pad',    build:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.8,decay:0.3,sustain:0.9,release:2.2}}); }},
    bells:  {name:'\uD83D\uDD14 Bells',  build:function(){ return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:0.01,decay:1.2,sustain:0,release:1.5}}); }},
+   bass:   {name:'\uD83C\uDFB8 Bass guitar', build:function(){ return new Tone.Sampler({urls:{'E1':'E1.mp3','A1':'A1.mp3','D2':'D2.mp3','G2':'G2.mp3'},baseUrl:'https://tonejs.github.io/audio/berklee/bass_'}); }},
  };
  var current='piano', inst=null, reverb=null, vol=null, recDest=null, recorder=null, chunks=[], loaded=false;
  var recording=false, recStart=0, recorded=[], enriched=null, enrichStyle='gentle';
@@ -12781,12 +12798,66 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    enriched.melody.forEach(function(m){ try{ inst.triggerAttackRelease(m.note,'2n', now+ (m.t||0)); }catch(e){} });
    // harmony a third under each melody note (in-key), softer
    enriched.melody.forEach(function(m){ var midi=midiOf(m.note)-3; try{ padSy.triggerAttackRelease(nameOf(midi),'2n', now+(m.t||0)); }catch(e){} });
+   // real bass guitar line on the chord roots (in key)
+   var bassG=new Tone.Sampler({urls:{'E1':'E1.mp3','A1':'A1.mp3','D2':'D2.mp3','G2':'G2.mp3'},baseUrl:'https://tonejs.github.io/audio/berklee/bass_'}).connect(reverb); bassG.volume.value=-8;
+   chordRoots.forEach(function(deg,i){ var rm=36+key+scale[deg%scale.length]; try{ bassG.triggerAttackRelease(nameOf(rm), '2n', now+i*beat*4); }catch(e){} });
+   // drums under the enriched song, per the chosen (or style-matched) beat
+   var eb = (window._curBeat && window._curBeat()!=='none') ? window._curBeat() : ({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]||'soft');
+   if(BEATS[eb]){ initDrums(); var pat=BEATS[eb]; var totalSteps=chordRoots.length*16; for(var s=0;s<totalSteps;s++){ var st=s%16; var tt=now+s*(beat/4); if(pat.kick[st]) drums.kick.triggerAttackRelease('C1','8n',tt); if(pat.snare[st]) drums.snare.triggerAttackRelease('8n',tt); if(pat.hat[st]) drums.hat.triggerAttackRelease('16n',tt); } }
    var dur=(enriched.melody.length? Math.max.apply(null,enriched.melody.map(function(m){return m.t||0;})):0)+2;
    dur=Math.max(dur, chordRoots.length*beat*4);
    if(saveAfter){ setTimeout(function(){ try{ recorder.stop(); }catch(e){} }, (dur+1)*1000); }
    document.getElementById('enrich-status').textContent='Playing your fuller song\u2026';
  }
  document.getElementById('play-btn').addEventListener('click', function(){ playEnriched(true); });
+
+ // ===== DRUM MACHINE: real kit + selectable beats =====
+ var drums=null, drumBeat='none', beatLoop=null;
+ function initDrums(){
+   if(drums) return;
+   drums={
+     kick:  new Tone.MembraneSynth({octaves:5,pitchDecay:.05}).connect(reverb),
+     snare: new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.16,sustain:0}}).connect(reverb),
+     hat:   new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.04,sustain:0}}).connect(reverb),
+     tom:   new Tone.MembraneSynth({octaves:3,pitchDecay:.02}).connect(reverb),
+     cymbal:new Tone.MetalSynth({frequency:300,envelope:{attack:.001,decay:1.2,release:.2},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).connect(reverb)
+   };
+   drums.kick.volume.value=-6; drums.snare.volume.value=-12; drums.hat.volume.value=-20; drums.tom.volume.value=-10; drums.cymbal.volume.value=-24;
+ }
+ function hit(name){
+   initDrums(); var t=Tone.now();
+   if(name==='kick') drums.kick.triggerAttackRelease('C1','8n',t);
+   else if(name==='snare') drums.snare.triggerAttackRelease('8n',t);
+   else if(name==='hat') drums.hat.triggerAttackRelease('16n',t);
+   else if(name==='tom') drums.tom.triggerAttackRelease('G2','8n',t);
+   else if(name==='cymbal') drums.cymbal.triggerAttackRelease('16n',t);
+ }
+ var DRUMPADS=[['kick','\uD83E\uDD41 Kick'],['snare','\uD83E\uDD41 Snare'],['hat','\u2022 Hi-hat'],['tom','\uD83E\uDD41 Tom'],['cymbal','\uD83D\uDD4A Cymbal']];
+ var dp=document.getElementById('drumpads');
+ DRUMPADS.forEach(function(d){ var b=document.createElement('div'); b.className='chip'; b.textContent=d[1];
+   b.addEventListener('click', async function(){ await start(); hit(d[0]); b.classList.add('on'); setTimeout(function(){b.classList.remove('on');},120); }); dp.appendChild(b); });
+ // 16-step patterns: 1=hit
+ var BEATS={
+   none:  null,
+   soft:  {kick:[1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0]},
+   lofi:  {kick:[1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1], hat:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]},
+   rock:  {kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},
+   hiphop:{kick:[1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat:[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1]}
+ };
+ document.querySelectorAll('.beat-preset').forEach(function(b){ b.addEventListener('click', function(){ document.querySelectorAll('.beat-preset').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); drumBeat=b.dataset.beat; }); });
+ document.getElementById('beat-play').addEventListener('click', async function(){ await start(); startBeat(); });
+ document.getElementById('beat-stop').addEventListener('click', function(){ stopBeat(); });
+ function startBeat(){
+   stopBeat(); if(drumBeat==='none'||!BEATS[drumBeat]) return; initDrums();
+   var pat=BEATS[drumBeat]; var step=0;
+   Tone.Transport.bpm.value=parseFloat(document.getElementById('k-bpm').value);
+   beatLoop=new Tone.Loop(function(time){
+     ['kick','snare','hat'].forEach(function(k){ if(pat[k] && pat[k][step]){ if(k==='kick') drums.kick.triggerAttackRelease('C1','8n',time); if(k==='snare') drums.snare.triggerAttackRelease('8n',time); if(k==='hat') drums.hat.triggerAttackRelease('16n',time); } });
+     step=(step+1)%16;
+   }, '16n'); beatLoop.start(0); Tone.Transport.start();
+ }
+ function stopBeat(){ if(beatLoop){ beatLoop.stop(); beatLoop.dispose(); beatLoop=null; } }
+ window._startBeat=startBeat; window._stopBeat=stopBeat; window._curBeat=function(){return drumBeat;};
 
  buildPiano(); window.addEventListener('resize', buildPiano);
 })();
