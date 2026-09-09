@@ -12553,16 +12553,21 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
  .chip{background:rgba(109,93,240,.12);border:1px solid #3a4a8a;color:#dfe6ff;border-radius:999px;padding:8px 16px;cursor:pointer;font-size:13px;transition:all .15s;}
  .chip:hover{background:rgba(109,93,240,.25);} .chip.on{background:linear-gradient(90deg,#6d5df0,#2fc4c9);color:#fff;border-color:#8f7dff;}
- /* piano */
- .piano{position:relative;height:170px;margin:8px 0;user-select:none;display:flex;}
- .wkey{flex:1;background:linear-gradient(#fff,#f0f0f5);border:1px solid #b8b8c8;border-radius:0 0 7px 7px;position:relative;cursor:pointer;transition:background .05s;}
- .wkey.press{background:linear-gradient(#c9c4ff,#a99ff0);}
- .wkey .lbl{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#5a5a7a;font-size:14px;font-weight:700;}
- .wkey .note{position:absolute;bottom:26px;left:0;right:0;text-align:center;color:#a0a0c0;font-size:10px;}
- .bkey{position:absolute;top:0;width:60%;height:62%;background:linear-gradient(#333,#111);border:1px solid #000;border-radius:0 0 5px 5px;z-index:2;cursor:pointer;transform:translateX(-50%);}
- .bkey.press{background:linear-gradient(#6d5df0,#4a3fc0);}
- .bkey .lbl{position:absolute;bottom:6px;left:0;right:0;text-align:center;color:#ccc;font-size:11px;font-weight:700;}
- .wkey.guide{background:linear-gradient(#b6e8cf,#7ee8a0);} .bkey.guide{background:linear-gradient(#2fc9a0,#1c9e63);}
+ /* start overlay */
+ #startgate{position:fixed;inset:0;background:rgba(5,10,20,.94);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;text-align:center;padding:24px;}
+ #startgate h2{font-size:26px;color:#9f8cff;letter-spacing:.02em;} #startgate p{color:#aab6e8;font-size:15px;max-width:420px;}
+ #startgate .go{margin-top:20px;background:linear-gradient(90deg,#6d5df0,#2fc4c9);color:#fff;border:0;border-radius:999px;padding:18px 44px;font-size:18px;font-weight:800;cursor:pointer;}
+ /* piano — grid of white keys with black keys absolutely placed */
+ .piano{position:relative;height:180px;margin:10px 0;user-select:none;-webkit-user-select:none;touch-action:none;}
+ .whites{display:flex;height:100%;}
+ .wkey{flex:1;background:linear-gradient(#fff,#eee);border:1px solid #b0b0c0;border-right:none;border-radius:0 0 6px 6px;position:relative;cursor:pointer;}
+ .wkey:last-child{border-right:1px solid #b0b0c0;}
+ .wkey.press{background:linear-gradient(#c9c4ff,#a99ff0);} .wkey.guide{background:linear-gradient(#b6e8cf,#7ee8a0);}
+ .wkey .lbl{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#4a4a6a;font-size:15px;font-weight:800;}
+ .wkey .nm{position:absolute;bottom:28px;left:0;right:0;text-align:center;color:#9a9ab8;font-size:10px;}
+ .bkey{position:absolute;top:0;width:8%;height:60%;background:linear-gradient(#333,#0a0a0a);border:1px solid #000;border-radius:0 0 5px 5px;z-index:3;cursor:pointer;transform:translateX(-50%);}
+ .bkey.press{background:linear-gradient(#6d5df0,#4a3fc0);} .bkey.guide{background:linear-gradient(#2fc9a0,#1c9e63);}
+ .bkey .lbl{position:absolute;bottom:6px;left:0;right:0;text-align:center;color:#ddd;font-size:11px;font-weight:800;}
  label{display:block;font-size:11.5px;color:#9ccbe8;margin-bottom:5px;} input[type=range]{width:100%;accent-color:#6d5df0;}
  .rbtn{border:0;border-radius:999px;padding:12px 24px;font-weight:800;font-size:14px;cursor:pointer;}
  .rec-start{background:#e05a5a;color:#fff;} .rec-stop{background:#f0c040;color:#1a1200;}
@@ -12572,471 +12577,252 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  .doorways a{display:inline-block;margin:6px 10px 0 0;color:#9f8cff;text-decoration:none;border:1px solid #35418a;border-radius:10px;padding:9px 16px;font-size:13px;}
  .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
 </style></head><body>
+<div id="startgate">
+  <h2>Zenisys Studio</h2>
+  <p>Tap anywhere to turn the sound on. Browsers require one tap before any instrument can play.</p>
+  <button class="go">Tap to start playing</button>
+</div>
 <div class="wrap">
  <a class="back" href="/admin#zenisyslab">&larr; back to The Watch</a>
  <h1>ZENISYS STUDIO</h1>
- <div class="sub">Play the piano with your keyboard (letters are on the keys) or by tapping. Record a few notes, then let Zenisys fill them into a fuller song in your key. Save what you make.</div>
+ <div class="sub">Play with your keyboard (letters are on the keys) or by tapping. Record, then let Zenisys fill your notes into a fuller song. Save what you make.</div>
 
- <div class="panel">
-   <h2>Instrument</h2>
+ <div class="panel"><h2>Instrument</h2>
    <div class="row" id="insts"></div>
-   <div class="hint" id="inst-status">🎹 Piano ready — press a key (A S D F G H J K) to play.</div>
+   <div class="status" id="inst-status" style="margin-top:8px;">Piano ready.</div>
  </div>
 
- <div class="panel">
-   <h2>The piano &mdash; your keyboard letters are on the keys</h2>
-   <div class="piano" id="piano"></div>
+ <div class="panel"><h2>The piano &mdash; your keyboard letters are on the keys</h2>
+   <div class="piano" id="piano"><div class="whites" id="whites"></div></div>
    <div class="row" style="margin-top:10px;">
-     <button class="chip" id="octdown">Z ↓ octave</button>
+     <button class="chip" id="octdown">Z &darr; octave</button>
      <span class="status" id="oct-label">Octave 4</span>
-     <button class="chip" id="octup">X ↑ octave</button>
-     <button class="chip" id="learn-btn">✨ Learn a melody</button>
+     <button class="chip" id="octup">X &uarr; octave</button>
+     <button class="chip" id="learn-btn">&#10024; Learn a melody</button>
      <span class="status" id="learn-status"></span>
    </div>
  </div>
 
- <div class="panel">
-   <h2>Chords &amp; progressions &mdash; learn by genre</h2>
+ <div class="panel"><h2>Chords &amp; progressions &mdash; learn by genre</h2>
    <div class="row" id="genre-bar" style="margin-bottom:10px;"></div>
    <div class="row" style="margin-bottom:8px;"><span style="font-size:12px;color:#9ccbe8;">Key:</span><span class="row" id="key-bar"></span></div>
    <div class="row" id="chord-bar" style="margin-bottom:12px;"></div>
-   <div style="font-size:12px;color:#8a97cf;margin-bottom:10px;" id="chord-name">Pick a genre, then tap a chord &mdash; the keys light up and play. Then tap a progression to walk your fingers through it.</div>
+   <div style="font-size:12px;color:#8a97cf;margin-bottom:10px;" id="chord-name">Pick a genre, then tap a chord &mdash; the keys light and play. Tap a progression to walk your fingers through it.</div>
    <div class="row" id="prog-bar"></div>
-   <div class="hint">These are chords and progressions &mdash; the alphabet of music, free to learn. Gospel, jazz, R&amp;B, rock, and anthem each have their own signature moves. Tap a progression and your keys light in sequence so your hands learn it. Then Record and Enrich to make a full song from it.</div>
  </div>
 
- <div class="panel">
-   <h2>Drums &amp; beat</h2>
+ <div class="panel"><h2>Drums &amp; beat</h2>
    <div class="row" id="drumpads"></div>
-   <div class="row" style="margin-top:12px;">
-     <span style="font-size:12px;color:#9ccbe8;">Beat:</span>
+   <div class="row" style="margin-top:12px;"><span style="font-size:12px;color:#9ccbe8;">Beat:</span>
      <button class="chip beat-preset on" data-beat="none">Off</button>
      <button class="chip beat-preset" data-beat="soft">Soft</button>
      <button class="chip beat-preset" data-beat="lofi">Lo-fi</button>
      <button class="chip beat-preset" data-beat="rock">Rock</button>
      <button class="chip beat-preset" data-beat="hiphop">Hip-hop</button>
-     <button class="chip" id="beat-play">▶ Play beat</button>
-     <button class="chip" id="beat-stop">■ Stop beat</button>
+     <button class="chip" id="beat-play">&#9654; Play beat</button>
+     <button class="chip" id="beat-stop">&#9632; Stop</button>
    </div>
-   <div class="hint">Tap a drum pad to hear it, or pick a beat and press Play. The beat follows the Tempo knob below and plays under your song when you Enrich.</div>
  </div>
 
- <div class="panel">
-   <h2>Record &middot; enrich &middot; save</h2>
+ <div class="panel"><h2>Record &middot; enrich &middot; save</h2>
    <div class="row">
-     <button id="rec-btn" class="rbtn rec-start">● Record</button>
-     <span class="dot" id="rec-dot"></span>
-     <span class="status" id="rec-status">not recording</span>
+     <button id="rec-btn" class="rbtn rec-start">&#9679; Record</button>
+     <span class="dot" id="rec-dot"></span><span class="status" id="rec-status">not recording</span>
+   </div>
+   <div class="row" style="margin-top:12px;"><span style="font-size:12px;color:#9ccbe8;">Fill into a fuller song:</span>
+     <button class="chip estyle on" data-style="gentle">Gentle</button>
+     <button class="chip estyle" data-style="fuller">Fuller</button>
+     <button class="chip estyle" data-style="cinematic">Cinematic</button>
+     <button class="chip estyle" data-style="upbeat">Upbeat</button>
    </div>
    <div class="row" style="margin-top:12px;">
-     <span style="font-size:12px;color:#9ccbe8;">Fill my notes into a fuller song:</span>
-     <button class="chip enrich-style on" data-style="gentle">Gentle</button>
-     <button class="chip enrich-style" data-style="fuller">Fuller</button>
-     <button class="chip enrich-style" data-style="cinematic">Cinematic</button>
-     <button class="chip enrich-style" data-style="upbeat">Upbeat</button>
-   </div>
-   <div class="row" style="margin-top:12px;">
-     <button id="enrich-btn" class="rbtn enrich">✨ Enrich my recording</button>
-     <button id="play-btn" class="chip">▶ Play it back</button>
+     <button id="enrich-btn" class="rbtn enrich">&#10024; Enrich</button>
+     <button id="play-btn" class="chip">&#9654; Play it back</button>
      <span id="save-wrap"></span>
    </div>
-   <div class="hint" id="enrich-status">Record a melody first, then Enrich builds harmony, a chord bed, bass, and a soft pad underneath your notes — all in your key.</div>
+   <div class="hint" id="enrich-status">Record a melody, then Enrich adds chords, bass, drums and a pad in your key.</div>
  </div>
 
- <div class="panel">
-   <h2>Shape</h2>
+ <div class="panel"><h2>Shape</h2>
    <div class="knobs">
-     <div><label>Reverb (space)</label><input id="k-verb" type="range" min="0" max="100" value="35"></div>
-     <div><label>Volume</label><input id="k-vol" type="range" min="0" max="100" value="70"></div>
+     <div><label>Reverb</label><input id="k-verb" type="range" min="0" max="100" value="30"></div>
+     <div><label>Volume</label><input id="k-vol" type="range" min="0" max="100" value="75"></div>
      <div><label>Tempo (BPM)</label><input id="k-bpm" type="range" min="50" max="120" value="72"></div>
    </div>
  </div>
 
  <div class="panel doorways"><h2>Doorways</h2>
-   <a href="/zenisys/lab" target="_blank" rel="noopener">The Lab instrument (touch &amp; voice)</a>
+   <a href="/zenisys/lab" target="_blank" rel="noopener">The Lab instrument</a>
    <a href="/zenisys" target="_blank" rel="noopener">Standalone Zenisys</a>
  </div>
 </div>
 <script>
-(function(){
- // ===== real sampled instruments via Tone.js + the free Salamander/tonejs sample sets =====
- // Every instrument has an INSTANT synth voice so sound is guaranteed even if
- // no sample loads. The real sampled PIANO (reliable Salamander set) loads on
- // top and swaps in when ready; if it ever fails or is slow, the synth voice
- // stays and you still hear something. Nothing waits forever.
- var INSTRUMENTS = {
-   piano:  {name:'🎹 Piano',  synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.01,decay:1.4,sustain:0.2,release:1.2}}); },
-     sampler:function(){ return new Tone.Sampler({urls:{A1:'A1.mp3',C2:'C2.mp3','D#2':'Ds2.mp3','F#2':'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3','D#3':'Ds3.mp3','F#3':'Fs3.mp3',A3:'A3.mp3',C4:'C4.mp3','D#4':'Ds4.mp3','F#4':'Fs4.mp3',A4:'A4.mp3',C5:'C5.mp3','D#5':'Ds5.mp3','F#5':'Fs5.mp3',A5:'A5.mp3',C6:'C6.mp3'},baseUrl:'https://tonejs.github.io/audio/salamander/'}); }},
-   guitar: {name:'🎸 Guitar', synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.008,decay:0.9,sustain:0.15,release:0.9}}); }},
-   strings:{name:'🎻 Strings',synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.4,decay:0.2,sustain:0.8,release:1.4}}); }},
-   pad:    {name:'☁️ Pad',    synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.8,decay:0.3,sustain:0.9,release:2.2}}); }},
-   bells:  {name:'🔔 Bells',  synth:function(){ return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:0.01,decay:1.2,sustain:0,release:1.5}}); }},
-   bass:   {name:'🎸 Bass',   synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'square'},envelope:{attack:0.01,decay:0.3,sustain:0.6,release:0.8}}); }},
- };
- var current='piano', inst=null, reverb=null, vol=null, recDest=null, recorder=null, chunks=[], loaded=false;
- var recording=false, recStart=0, recorded=[], enriched=null, enrichStyle='gentle';
+"use strict";
+// ============ AUDIO: one gesture unlocks it, then everything plays ============
+var synth=null, reverb=null, recDest=null, ready=false;
+var INSTNAMES={piano:'Piano',guitar:'Guitar',strings:'Strings',pad:'Pad',bells:'Bells',bass:'Bass'};
+function makeSynth(id){
+  var opt;
+  if(id==='piano')   opt={oscillator:{type:'triangle'},envelope:{attack:.01,decay:1.4,sustain:.25,release:1.2}};
+  else if(id==='guitar') opt={oscillator:{type:'sawtooth'},envelope:{attack:.008,decay:.9,sustain:.2,release:.9}};
+  else if(id==='strings')opt={oscillator:{type:'sawtooth'},envelope:{attack:.4,decay:.2,sustain:.85,release:1.6}};
+  else if(id==='pad')    opt={oscillator:{type:'triangle'},envelope:{attack:.9,decay:.3,sustain:.9,release:2.4}};
+  else if(id==='bass')   opt={oscillator:{type:'square'},envelope:{attack:.01,decay:.3,sustain:.6,release:.8}};
+  else opt={oscillator:{type:'sine'},envelope:{attack:.01,decay:1.2,sustain:0,release:1.4}};
+  if(id==='bells') return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:.01,decay:1.2,sustain:0,release:1.5}});
+  return new Tone.PolySynth(Tone.Synth, opt);
+}
+function setInstrument(id){
+  if(synth){ try{ synth.releaseAll&&synth.releaseAll(); synth.dispose(); }catch(e){} }
+  synth=makeSynth(id); synth.connect(reverb);
+  document.getElementById('inst-status').textContent=INSTNAMES[id]+' ready.';
+}
+async function unlock(){
+  if(ready) return;
+  await Tone.start();
+  reverb=new Tone.Reverb({decay:3.5,wet:.30}).toDestination();
+  recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest);
+  setInstrument('piano'); applyKnobs(); ready=true;
+  var g=document.getElementById('startgate'); if(g) g.style.display='none';
+}
+document.getElementById('startgate').addEventListener('click', unlock);
 
- function initAudio(){
-   if(inst) return;
-   reverb = new Tone.Reverb({decay:4, wet:0.35}).toDestination();
-   recDest = Tone.context.createMediaStreamDestination();
-   Tone.getDestination().connect(recDest);
-   loadInstrument('piano');
- }
- function loadInstrument(id){
-   current=id;
-   var status=document.getElementById('inst-status');
-   // 1) instant synth voice — playable RIGHT NOW, no waiting, no freeze.
-   var voice=INSTRUMENTS[id].synth(); voice.connect(reverb);
-   inst=voice; loaded=true;
-   status.textContent=INSTRUMENTS[id].name+' ready — play the keys.';
-   // 2) if this instrument has a richer sampled version, load it in the
-   //    background and swap in ONLY if it finishes; a 6s timeout means a slow
-   //    or missing sample never leaves you stuck — the synth just stays.
-   if(INSTRUMENTS[id].sampler){
-     status.textContent=INSTRUMENTS[id].name+' ready — loading the richer sound…';
-     var loadedSampler=false;
-     try{
-       var samp=INSTRUMENTS[id].sampler();
-       samp.connect(reverb);
-       Tone.loaded().then(function(){
-         if(current!==id) return;            // user switched away
-         loadedSampler=true; inst=voice._disposed?voice:samp;  // prefer sampler
-         inst=samp;
-         status.textContent=INSTRUMENTS[id].name+' — full sound ready.';
-       }).catch(function(){ status.textContent=INSTRUMENTS[id].name+' ready.'; });
-       setTimeout(function(){ if(!loadedSampler && current===id){ status.textContent=INSTRUMENTS[id].name+' ready.'; } }, 6000);
-     }catch(e){ status.textContent=INSTRUMENTS[id].name+' ready.'; }
-   }
- }
- // instrument chips
- var ie=document.getElementById('insts');
- Object.keys(INSTRUMENTS).forEach(function(id){
-   var b=document.createElement('div'); b.className='chip'+(id==='piano'?' on':''); b.innerHTML=INSTRUMENTS[id].name;
-   b.addEventListener('click', function(){ if(!inst){ return; } document.querySelectorAll('#insts .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); loadInstrument(id); });
-   ie.appendChild(b);
- });
+// instrument chips
+var ie=document.getElementById('insts');
+Object.keys(INSTNAMES).forEach(function(id){
+  var b=document.createElement('div'); b.className='chip'+(id==='piano'?' on':''); b.textContent=INSTNAMES[id];
+  b.addEventListener('click', async function(){ await unlock(); document.querySelectorAll('#insts .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); setInstrument(id); });
+  ie.appendChild(b);
+});
 
- // ===== keyboard mapping: A S D F G H J K = white; W E T Y U = black =====
- var octave=4;
- var WHITE=[{k:'a',n:'C'},{k:'s',n:'D'},{k:'d',n:'E'},{k:'f',n:'F'},{k:'g',n:'G'},{k:'h',n:'A'},{k:'j',n:'B'},{k:'k',n:'C',up:1}];
- var BLACK=[{k:'w',n:'C#',pos:0},{k:'e',n:'D#',pos:1},{k:'t',n:'F#',pos:3},{k:'y',n:'G#',pos:4},{k:'u',n:'A#',pos:5}];
- var keyMap={};
- function buildPiano(){
-   var p=document.getElementById('piano'); p.innerHTML='';
-   keyMap={};
-   WHITE.forEach(function(w,i){
-     var oct=octave+(w.up||0);
-     var d=document.createElement('div'); d.className='wkey'; d.dataset.note=w.n+oct;
-     d.innerHTML='<span class="note">'+w.n+oct+'</span><span class="lbl">'+w.k.toUpperCase()+'</span>';
-     (function(note,el){ el.addEventListener('mousedown', function(){ noteOn(note,el); });
-        el.addEventListener('mouseup', function(){ noteOff(note,el); });
-        el.addEventListener('mouseleave', function(){ noteOff(note,el); });
-        el.addEventListener('touchstart', function(ev){ ev.preventDefault(); noteOn(note,el); }, {passive:false});
-        el.addEventListener('touchend', function(ev){ ev.preventDefault(); noteOff(note,el); }, {passive:false});
-     })(w.n+oct, d);
-     p.appendChild(d); keyMap[w.k]={note:w.n+oct, el:d};
-   });
-   // position black keys over the gaps
-   var unitPct=100/WHITE.length;  // 12.5% per white key — layout-independent
-   BLACK.forEach(function(b){
-     var d=document.createElement('div'); d.className='bkey'; d.dataset.note=b.n+octave;
-     d.style.left=((b.pos+1)*unitPct)+'%';
-     d.innerHTML='<span class="lbl">'+b.k.toUpperCase()+'</span>';
-     (function(note,el){ el.addEventListener('mousedown', function(){ noteOn(note,el); });
-        el.addEventListener('mouseup', function(){ noteOff(note,el); });
-        el.addEventListener('mouseleave', function(){ noteOff(note,el); });
-        el.addEventListener('touchstart', function(ev){ ev.preventDefault(); noteOn(note,el); }, {passive:false});
-        el.addEventListener('touchend', function(ev){ ev.preventDefault(); noteOff(note,el); }, {passive:false});
-     })(b.n+octave, d);
-     p.appendChild(d); keyMap[b.k]={note:b.n+octave, el:d};
-   });
- }
- // POLYPHONY: press = note ON (sustains), release = note OFF. Hold several
- // keys and they SOUND TOGETHER like a real instrument. _held tracks which
- // notes are down so we release the right one and never double-trigger.
- var _held={};
- function _fire(note, el){
-   if(_held[note]) return;
-   _held[note]=1;
-   try{ if(inst.triggerAttack) inst.triggerAttack(note); else inst.triggerAttackRelease(note,'2n'); }catch(e){}
-   if(el){ el.classList.add('press'); }
-   if(recording){ recorded.push({note:note, t:(Tone.now()-recStart), on:1}); }
- }
- function noteOn(note, el){
-   // Always ensure audio is live FIRST (browsers block sound until a gesture),
-   // then play. If start() is still finishing, play the moment it's ready.
-   if(inst && loaded && _audioStarted){ _fire(note, el); return; }
-   start().then(function(){ if(inst && loaded) _fire(note, el); });
- }
- function noteOff(note, el){
-   if(!inst||!loaded) return;
-   if(!_held[note]) return;
-   delete _held[note];
-   try{ if(inst.triggerRelease) inst.triggerRelease(note); }catch(e){}
-   if(el){ el.classList.remove('press'); }
-   if(recording){ recorded.push({note:note, t:(Tone.now()-recStart), off:1}); }
- }
- // tapping a key with the mouse: quick on then off
- function playNote(note, el){ noteOn(note, el); setTimeout(function(){ noteOff(note, el); }, 400); }
- document.addEventListener('keydown', function(e){
-   if(e.repeat) return; var k=e.key.toLowerCase();
-   if(k==='z'){ try{ if(inst&&inst.releaseAll) inst.releaseAll(); }catch(e){} _held={}; octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
-   if(k==='x'){ try{ if(inst&&inst.releaseAll) inst.releaseAll(); }catch(e){} _held={}; octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
-   if(keyMap[k]){ noteOn(keyMap[k].note, keyMap[k].el); }   // ON while held
- });
- document.addEventListener('keyup', function(e){
-   var k=e.key.toLowerCase();
-   if(keyMap[k]){ noteOff(keyMap[k].note, keyMap[k].el); }  // OFF on release
- });
- document.getElementById('octdown').addEventListener('click', function(){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
- document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
+// ============ NOTES ============
+var NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+var held={};
+function play(note){ if(!ready||!synth) return; if(held[note])return; held[note]=1; try{synth.triggerAttack(note);}catch(e){} if(rec.on) rec.events.push({note:note,t:Tone.now()-rec.start,type:'on'}); }
+function stop(note){ if(!ready||!synth) return; if(!held[note])return; delete held[note]; try{synth.triggerRelease(note);}catch(e){} if(rec.on) rec.events.push({note:note,t:Tone.now()-rec.start,type:'off'}); }
 
- // ===== learn a melody: light the keys in sequence =====
- var LESSON=['C4','D4','E4','C4','E4','C4','E4','D4','E4','F4','G4'];  // simple calming phrase
- document.getElementById('learn-btn').addEventListener('click', async function(){
-   await start(); document.getElementById('learn-status').textContent='follow the green keys…';
-   var i=0;
-   (function step(){
-     if(i>=LESSON.length){ document.getElementById('learn-status').textContent='your turn — play it back!'; return; }
-     var note=LESSON[i];
-     Object.values(keyMap).forEach(function(km){ if(km.note===note){ km.el.classList.add('guide'); playNote(note,null); setTimeout(function(){ km.el.classList.remove('guide'); }, 500); } });
-     i++; setTimeout(step, 650);
-   })();
- });
+// ============ KEYBOARD (correct layout) ============
+var octave=4;
+var WHITE=[['a','C',0],['s','D',0],['d','E',0],['f','F',0],['g','G',0],['h','A',0],['j','B',0],['k','C',1]];
+// black key -> [qwerty, name, index of the white key it sits AFTER (0-based)]
+var BLACK=[['w','C#',0],['e','D#',1],['t','F#',3],['y','G#',4],['u','A#',5]];
+var keymap={};
+function buildPiano(){
+  keymap={};
+  var whites=document.getElementById('whites'); whites.innerHTML='';
+  var piano=document.getElementById('piano');
+  // remove old black keys
+  piano.querySelectorAll('.bkey').forEach(function(x){x.remove();});
+  WHITE.forEach(function(w){
+    var note=w[1]+(octave+w[2]);
+    var d=document.createElement('div'); d.className='wkey';
+    d.innerHTML='<span class="nm">'+note+'</span><span class="lbl">'+w[0].toUpperCase()+'</span>';
+    bindKey(d, note); whites.appendChild(d); keymap[w[0]]={note:note, el:d};
+  });
+  var unit=100/WHITE.length; // width % per white key
+  BLACK.forEach(function(b){
+    var note=b[1]+octave;
+    var d=document.createElement('div'); d.className='bkey'; d.style.left=((b[2]+1)*unit)+'%';
+    d.innerHTML='<span class="lbl">'+b[0].toUpperCase()+'</span>';
+    bindKey(d, note); piano.appendChild(d); keymap[b[0]]={note:note, el:d};
+  });
+}
+function bindKey(el, note){
+  el.addEventListener('mousedown', function(e){ e.preventDefault(); unlock().then(function(){ play(note); el.classList.add('press'); }); });
+  el.addEventListener('mouseup', function(){ stop(note); el.classList.remove('press'); });
+  el.addEventListener('mouseleave', function(){ if(held[note]){ stop(note); el.classList.remove('press'); } });
+  el.addEventListener('touchstart', function(e){ e.preventDefault(); unlock().then(function(){ play(note); el.classList.add('press'); }); }, {passive:false});
+  el.addEventListener('touchend', function(e){ e.preventDefault(); stop(note); el.classList.remove('press'); }, {passive:false});
+}
+document.addEventListener('keydown', function(e){
+  if(e.repeat) return; var k=e.key.toLowerCase();
+  if(k==='z'){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
+  if(k==='x'){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; return; }
+  var km=keymap[k]; if(km){ unlock().then(function(){ play(km.note); km.el.classList.add('press'); }); }
+});
+document.addEventListener('keyup', function(e){
+  var km=keymap[e.key.toLowerCase()]; if(km){ stop(km.note); km.el.classList.remove('press'); }
+});
+document.getElementById('octdown').addEventListener('click', function(){ octave=Math.max(1,octave-1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
+document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(6,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octave '+octave; });
 
- // ===== shape knobs =====
- function applyKnobs(){ if(reverb) reverb.wet.value=parseFloat(document.getElementById('k-verb').value)/100; if(Tone.getDestination()) Tone.getDestination().volume.value=(parseFloat(document.getElementById('k-vol').value)/100)*20-14; if(Tone.Transport) Tone.Transport.bpm.value=parseFloat(document.getElementById('k-bpm').value); }
- ['k-verb','k-vol','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
+// ============ knobs ============
+function applyKnobs(){ if(!ready)return; if(reverb)reverb.wet.value=+document.getElementById('k-verb').value/100; Tone.getDestination().volume.value=(+document.getElementById('k-vol').value/100)*24-16; Tone.Transport.bpm.value=+document.getElementById('k-bpm').value; }
+['k-verb','k-vol','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
 
- var _audioStarted=false;
- async function start(){
-   initAudio();               // build reverb + instrument synth NOW (idempotent)
-   if(!_audioStarted){
-     try{ await Tone.start(); _audioStarted=true; }catch(e){}
-   }
-   if(Tone.context && Tone.context.state!=='running'){ try{ await Tone.context.resume(); }catch(e){} }
-   applyKnobs();
- }
+// ============ learn a melody ============
+var LESSON=['C4','D4','E4','C4','E4','C4','E4','D4','E4','F4','G4'];
+document.getElementById('learn-btn').addEventListener('click', async function(){
+  await unlock(); document.getElementById('learn-status').textContent='follow the green keys...'; var i=0;
+  (function step(){ if(i>=LESSON.length){ document.getElementById('learn-status').textContent='your turn!'; return; }
+    var n=LESSON[i]; Object.keys(keymap).forEach(function(kk){ if(keymap[kk].note===n){ keymap[kk].el.classList.add('guide'); play(n); setTimeout(function(){ stop(n); keymap[kk].el.classList.remove('guide'); },420);} }); i++; setTimeout(step,560); })();
+});
 
- // ===== record =====
- // (audio starts automatically on the first note via noteOn -> start())
- var recBtn=document.getElementById('rec-btn'), recDot=document.getElementById('rec-dot'), recStatus=document.getElementById('rec-status');
- recBtn.addEventListener('click', async function(){
-   await start();
-   if(recording){ recording=false; recBtn.textContent='● Record'; recBtn.className='rbtn rec-start'; recDot.className='dot'; recStatus.textContent=recorded.length+' notes recorded — now Enrich or Play'; return; }
-   recorded=[]; recording=true; recStart=Tone.now(); recBtn.textContent='■ Stop'; recBtn.className='rbtn rec-stop'; recDot.className='dot live'; recStatus.textContent='recording… play your melody';
- });
+// ============ chords & progressions ============
+var QUAL={maj:[0,4,7],min:[0,3,7],'7':[0,4,7,10],maj7:[0,4,7,11],min7:[0,3,7,10],dim:[0,3,6],dim7:[0,3,6,9],sus4:[0,5,7],'6':[0,4,7,9],min6:[0,3,7,9],'9':[0,4,7,10,14],maj9:[0,4,7,11,14],min9:[0,3,7,10,14],'13':[0,4,7,10,14,21],min7b5:[0,3,6,10]};
+var GENRES={
+ gospel:{label:'Gospel',chords:[['I','maj'],['I7','7'],['IV','maj'],['IV7','7'],['ii7','min7'],['iii7','min7'],['vi7','min7'],['V7','7'],['bVII','7'],['#IVdim7','dim7'],['bIII','maj']],progs:[['2-5-1 (gospel turnaround)',[[2,'min7'],[7,'7'],[0,'maj7']]],['6-2-5-1',[[9,'min7'],[2,'min7'],[7,'7'],[0,'maj7']]],['1-4 passing dim (Kirk-style)',[[0,'maj'],[6,'dim7'],[7,'min6'],[5,'maj']]],['gospel walk-up 1-3-4',[[0,'maj'],[4,'min7'],[5,'maj'],[7,'7']]],['praise ending 4-5-1',[[5,'maj'],[7,'7'],[0,'maj7']]]]},
+ jazz:{label:'Jazz',chords:[['Imaj7','maj7'],['ii7','min7'],['V7','7'],['vi7','min7'],['iio','min7b5'],['I6','6']],progs:[['ii-V-I',[[2,'min7'],[7,'7'],[0,'maj7']]],['minor ii-V-i',[[2,'min7b5'],[7,'7'],[0,'min7']]],['1-6-2-5',[[0,'maj7'],[9,'7'],[2,'min7'],[7,'7']]]]},
+ rnb:{label:'R&B',chords:[['Imaj7','maj7'],['ii9','min9'],['iii7','min7'],['IVmaj7','maj7'],['vi7','min7'],['V7','7']],progs:[['neo-soul 1-4',[[0,'maj9'],[5,'maj9']]],['6-4-1-5',[[9,'min7'],[5,'maj7'],[0,'maj7'],[7,'7']]],['2-5-1 smooth',[[2,'min9'],[7,'13'],[0,'maj9']]]]},
+ rock:{label:'Rock',chords:[['I','maj'],['IV','maj'],['V','maj'],['vi','min'],['bVII','maj']],progs:[['I-IV-V',[[0,'maj'],[5,'maj'],[7,'maj']]],['I-V-vi-IV (anthem four)',[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]],['vi-IV-I-V',[[9,'min'],[5,'maj'],[0,'maj'],[7,'maj']]]]},
+ anthem:{label:'Anthem',chords:[['I','maj'],['V','maj'],['vi','min'],['IV','maj'],['Isus4','sus4']],progs:[['stadium I-V-vi-IV',[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]],['lift 1-4-1-5',[[0,'maj'],[5,'maj'],[0,'maj'],[7,'maj']]]]}
+};
+var curGenre='gospel', chordKey=0;
+function nm(midi){ return NOTES[((midi%12)+12)%12]+(Math.floor(midi/12)-1); }
+function chordNotes(deg,qual){ var root=12*(4+1)+((chordKey+deg)%12); return (QUAL[qual]||QUAL.maj).map(function(iv){return nm(root+iv);}); }
+async function playChord(deg,qual,label){ await unlock(); var ns=chordNotes(deg,qual); try{ synth.triggerAttackRelease(ns,'1n'); }catch(e){} Object.keys(keymap).forEach(function(kk){ if(ns.indexOf(keymap[kk].note)>=0){ keymap[kk].el.classList.add('guide'); setTimeout(function(){keymap[kk].el.classList.remove('guide');},700);} }); document.getElementById('chord-name').textContent=(label||'')+'  —  '+ns.join('  '); }
+function romanRoot(sym){ var base={I:0,II:2,III:4,IV:5,V:7,VI:9,VII:11}; var s=sym.replace(/7|maj7|9|o|sus4|dim7|6/g,''); var r=base[s.replace(/[b#]/,'').toUpperCase().replace(/[^IVX]/g,'')]; if(r==null) r=0; if(/^b/.test(sym))r=(r-1+12)%12; if(/^#/.test(sym))r=(r+1)%12; return r; }
+function buildChords(){
+  var gb=document.getElementById('genre-bar'); gb.innerHTML='';
+  Object.keys(GENRES).forEach(function(g){ var b=document.createElement('div'); b.className='chip'+(g===curGenre?' on':''); b.textContent=GENRES[g].label; b.addEventListener('click',function(){curGenre=g;document.querySelectorAll('#genre-bar .chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');renderChords();}); gb.appendChild(b); });
+  var kb=document.getElementById('key-bar'); kb.innerHTML='';
+  NOTES.forEach(function(kn,ki){ var b=document.createElement('div'); b.className='chip'+(ki===0?' on':''); b.textContent=kn; b.style.padding='6px 11px'; b.addEventListener('click',function(){chordKey=ki;document.querySelectorAll('#key-bar .chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');}); kb.appendChild(b); });
+  renderChords();
+}
+function renderChords(){
+  var g=GENRES[curGenre], cb=document.getElementById('chord-bar'); cb.innerHTML='';
+  g.chords.forEach(function(ch){ var b=document.createElement('div'); b.className='chip'; b.textContent=ch[0]; b.style.padding='7px 12px'; b.addEventListener('click',function(){ playChord(romanRoot(ch[0]),ch[1],ch[0]); }); cb.appendChild(b); });
+  var pb=document.getElementById('prog-bar'); pb.innerHTML='<span style="font-size:12px;color:#9ccbe8;margin-right:4px;">Progressions:</span>';
+  g.progs.forEach(function(pr){ var b=document.createElement('div'); b.className='chip'; b.textContent='\u25B6 '+pr[0]; b.style.background='rgba(47,196,201,.1)'; b.addEventListener('click',function(){ teach(pr); }); pb.appendChild(b); });
+}
+async function teach(pr){ await unlock(); document.getElementById('chord-name').textContent='Teaching: '+pr[0]+' — follow the green keys'; var i=0; (function step(){ if(i>=pr[1].length){document.getElementById('chord-name').textContent=pr[0]+' — now play it!';return;} var s=pr[1][i]; playChord(s[0],s[1],''); i++; setTimeout(step,1400); })(); }
 
- // ===== enrichment: the AI-composer builds harmony/chords/bass/pad in your key =====
- document.querySelectorAll('.enrich-style').forEach(function(b){ b.addEventListener('click', function(){ document.querySelectorAll('.enrich-style').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); enrichStyle=b.dataset.style; }); });
- var NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
- function midiOf(n){ var m=n.match(/^([A-G]#?)(\d)$/); if(!m) return 60; return NOTES.indexOf(m[1])+12*(parseInt(m[2])+1); }
- function nameOf(midi){ return NOTES[((midi%12)+12)%12]+(Math.floor(midi/12)-1); }
- function detectKey(recNotes){
-   // simplest honest key guess: the most common pitch class = tonic
-   var counts={}; recNotes.forEach(function(r){ var pc=midiOf(r.note)%12; counts[pc]=(counts[pc]||0)+1; });
-   var best=0,bc=-1; Object.keys(counts).forEach(function(pc){ if(counts[pc]>bc){bc=counts[pc];best=parseInt(pc);} });
-   return best;
- }
- document.getElementById('enrich-btn').addEventListener('click', async function(){
-   await start();
-   if(!recorded.length){ document.getElementById('enrich-status').textContent='Record a melody first (press Record, play some keys, Stop).'; return; }
-   document.getElementById('enrich-status').textContent='Zenisys is building a fuller song around your notes…';
-   var key=detectKey(recorded);
-   // scale intervals per style
-   var scales={gentle:[0,2,4,5,7,9,11],fuller:[0,2,4,5,7,9,11],cinematic:[0,2,3,5,7,8,10],upbeat:[0,2,4,5,7,9,11]};
-   var scale=scales[enrichStyle]||scales.gentle;
-   var bpm={gentle:60,fuller:72,cinematic:66,upbeat:96}[enrichStyle];
-   enriched={key:key, style:enrichStyle, bpm:bpm, scale:scale, melody:recorded.slice()};
-   document.getElementById('enrich-status').textContent='Done — press Play to hear your fuller song, then Save.';
-   document.getElementById('save-wrap').innerHTML='';
- });
+// ============ drums ============
+var drums=null, beatLoop=null, curBeat='none';
+function initDrums(){ if(drums)return; drums={kick:new Tone.MembraneSynth().connect(reverb),snare:new Tone.NoiseSynth({envelope:{attack:.001,decay:.16,sustain:0}}).connect(reverb),hat:new Tone.NoiseSynth({envelope:{attack:.001,decay:.04,sustain:0}}).connect(reverb),tom:new Tone.MembraneSynth({octaves:3}).connect(reverb),cymbal:new Tone.MetalSynth({envelope:{attack:.001,decay:1,release:.2}}).connect(reverb)}; drums.kick.volume.value=-6;drums.snare.volume.value=-12;drums.hat.volume.value=-20;drums.tom.volume.value=-10;drums.cymbal.volume.value=-24; }
+function hit(name){ if(!ready)return; initDrums(); var t=Tone.now(); if(name==='kick')drums.kick.triggerAttackRelease('C1','8n',t); else if(name==='snare')drums.snare.triggerAttackRelease('8n',t); else if(name==='hat')drums.hat.triggerAttackRelease('16n',t); else if(name==='tom')drums.tom.triggerAttackRelease('G2','8n',t); else if(name==='cymbal')drums.cymbal.triggerAttackRelease('16n',t); }
+var DP=[['kick','Kick'],['snare','Snare'],['hat','Hi-hat'],['tom','Tom'],['cymbal','Cymbal']];
+var dp=document.getElementById('drumpads'); DP.forEach(function(d){ var b=document.createElement('div'); b.className='chip'; b.textContent=d[1]; b.addEventListener('click', async function(){ await unlock(); hit(d[0]); }); dp.appendChild(b); });
+var BEATS={none:null,soft:{k:[1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],h:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0]},lofi:{k:[1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],h:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]},rock:{k:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],h:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},hiphop:{k:[1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0],s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],h:[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1]}};
+document.querySelectorAll('.beat-preset').forEach(function(b){ b.addEventListener('click',function(){document.querySelectorAll('.beat-preset').forEach(function(x){x.classList.remove('on');});b.classList.add('on');curBeat=b.dataset.beat;}); });
+document.getElementById('beat-play').addEventListener('click', async function(){ await unlock(); if(beatLoop){beatLoop.stop();beatLoop.dispose();beatLoop=null;} if(curBeat==='none'||!BEATS[curBeat])return; initDrums(); var pat=BEATS[curBeat],step=0; Tone.Transport.bpm.value=+document.getElementById('k-bpm').value; beatLoop=new Tone.Loop(function(time){ if(pat.k[step])drums.kick.triggerAttackRelease('C1','8n',time); if(pat.s[step])drums.snare.triggerAttackRelease('8n',time); if(pat.h[step])drums.hat.triggerAttackRelease('16n',time); step=(step+1)%16; },'16n'); beatLoop.start(0); Tone.Transport.start(); });
+document.getElementById('beat-stop').addEventListener('click', function(){ if(beatLoop){beatLoop.stop();beatLoop.dispose();beatLoop=null;} });
 
- // ===== play back the enriched arrangement (and record it to a file for saving) =====
- async function playEnriched(saveAfter){
-   await start();
-   if(!enriched){ document.getElementById('enrich-status').textContent='Enrich your recording first.'; return; }
-   var key=enriched.key, scale=enriched.scale;
-   var chordRoots=[0,5,7,5]; // I - IV - V - IV feel, gentle
-   var padSy=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); padSy.volume.value=-16;
-   var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-10;
-   if(saveAfter){ chunks=[]; try{ recorder=new MediaRecorder(recDest.stream); recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); }; recorder.onstop=function(){ var blob=new Blob(chunks,{type:'audio/webm'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='⬇️ Save your song'; document.getElementById('save-wrap').innerHTML=''; document.getElementById('save-wrap').appendChild(a); }; recorder.start(); }catch(e){} }
-   var now=Tone.now()+0.1; var beat=60/enriched.bpm;
-   // chord bed + bass under the piece
-   chordRoots.forEach(function(deg,i){
-     var rootMidi=60+key+scale[deg%scale.length];
-     var chord=[0,2,4].map(function(s){ return nameOf(rootMidi+scale[(deg+s)%scale.length]); });
-     padSy.triggerAttackRelease(chord, beat*3.6, now+i*beat*4);
-     bass.triggerAttackRelease(nameOf(rootMidi-12), beat*3.6, now+i*beat*4);
-   });
-   // the player's own melody on top, in time
-   enriched.melody.forEach(function(m){ try{ inst.triggerAttackRelease(m.note,'2n', now+ (m.t||0)); }catch(e){} });
-   // harmony a third under each melody note (in-key), softer
-   enriched.melody.forEach(function(m){ var midi=midiOf(m.note)-3; try{ padSy.triggerAttackRelease(nameOf(midi),'2n', now+(m.t||0)); }catch(e){} });
-   // real bass guitar line on the chord roots (in key)
-   var bassG=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'square'},envelope:{attack:0.01,decay:0.3,sustain:0.6,release:0.8}}).connect(reverb); bassG.volume.value=-8;
-   chordRoots.forEach(function(deg,i){ var rm=36+key+scale[deg%scale.length]; try{ bassG.triggerAttackRelease(nameOf(rm), '2n', now+i*beat*4); }catch(e){} });
-   // drums under the enriched song, per the chosen (or style-matched) beat
-   var eb = (window._curBeat && window._curBeat()!=='none') ? window._curBeat() : ({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]||'soft');
-   if(BEATS[eb]){ initDrums(); var pat=BEATS[eb]; var totalSteps=chordRoots.length*16; for(var s=0;s<totalSteps;s++){ var st=s%16; var tt=now+s*(beat/4); if(pat.kick[st]) drums.kick.triggerAttackRelease('C1','8n',tt); if(pat.snare[st]) drums.snare.triggerAttackRelease('8n',tt); if(pat.hat[st]) drums.hat.triggerAttackRelease('16n',tt); } }
-   var dur=(enriched.melody.length? Math.max.apply(null,enriched.melody.map(function(m){return m.t||0;})):0)+2;
-   dur=Math.max(dur, chordRoots.length*beat*4);
-   if(saveAfter){ setTimeout(function(){ try{ recorder.stop(); }catch(e){} }, (dur+1)*1000); }
-   document.getElementById('enrich-status').textContent='Playing your fuller song…';
- }
- document.getElementById('play-btn').addEventListener('click', function(){ playEnriched(true); });
+// ============ record / enrich / save ============
+var rec={on:false,events:[],start:0}, enriched=null, estyle='gentle', recorder=null, chunks=[];
+document.querySelectorAll('.estyle').forEach(function(b){ b.addEventListener('click',function(){document.querySelectorAll('.estyle').forEach(function(x){x.classList.remove('on');});b.classList.add('on');estyle=b.dataset.style;}); });
+document.getElementById('rec-btn').addEventListener('click', async function(){ await unlock(); var btn=this;
+  if(rec.on){ rec.on=false; btn.textContent='\u25CF Record'; btn.className='rbtn rec-start'; document.getElementById('rec-dot').className='dot'; document.getElementById('rec-status').textContent=rec.events.filter(function(e){return e.type==='on';}).length+' notes recorded'; return; }
+  rec={on:true,events:[],start:Tone.now()}; btn.textContent='\u25A0 Stop'; btn.className='rbtn rec-stop'; document.getElementById('rec-dot').className='dot live'; document.getElementById('rec-status').textContent='recording... play your melody';
+});
+document.getElementById('enrich-btn').addEventListener('click', async function(){ await unlock(); var ons=rec.events.filter(function(e){return e.type==='on';}); if(!ons.length){ document.getElementById('enrich-status').textContent='Record a melody first.'; return; } var counts={}; ons.forEach(function(e){var pc=NOTES.indexOf(e.note.replace(/\d/,''))%12; counts[pc]=(counts[pc]||0)+1;}); var key=0,bc=-1; Object.keys(counts).forEach(function(pc){if(counts[pc]>bc){bc=counts[pc];key=+pc;}}); enriched={key:key,style:estyle,melody:ons}; document.getElementById('enrich-status').textContent='Done — press Play to hear your fuller song, then Save.'; });
+document.getElementById('play-btn').addEventListener('click', async function(){ await unlock(); if(!enriched){document.getElementById('enrich-status').textContent='Enrich first.';return;}
+  var key=enriched.key, bpm={gentle:60,fuller:74,cinematic:66,upbeat:96}[enriched.style], beat=60/bpm, now=Tone.now()+0.1;
+  var pad=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); pad.volume.value=-16;
+  var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-8;
+  chunks=[]; try{ recorder=new MediaRecorder(recDest.stream); recorder.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);}; recorder.onstop=function(){ var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'})); var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='\u2b07 Save your song'; var sw=document.getElementById('save-wrap'); sw.innerHTML=''; sw.appendChild(a); }; recorder.start(); }catch(e){}
+  var roots=[0,5,7,5]; var sc=[0,2,4,5,7,9,11];
+  roots.forEach(function(deg,i){ var rootMidi=60+key+sc[deg%7]; var chord=[0,2,4].map(function(s){return nm(rootMidi+sc[(deg+s)%7]);}); pad.triggerAttackRelease(chord,beat*3.6,now+i*beat*4); bass.triggerAttackRelease(nm(rootMidi-12),beat*3.6,now+i*beat*4); });
+  enriched.melody.forEach(function(m){ try{synth.triggerAttackRelease(m.note,'2n',now+(m.t||0));}catch(e){} });
+  var eb=(curBeat!=='none')?curBeat:({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]); if(BEATS[eb]){ initDrums(); var pat=BEATS[eb]; for(var s=0;s<roots.length*16;s++){ var st=s%16,tt=now+s*(beat/4); if(pat.k[st])drums.kick.triggerAttackRelease('C1','8n',tt); if(pat.s[st])drums.snare.triggerAttackRelease('8n',tt); if(pat.h[st])drums.hat.triggerAttackRelease('16n',tt);} }
+  var dur=Math.max(roots.length*beat*4, (enriched.melody.length?Math.max.apply(null,enriched.melody.map(function(m){return m.t||0;})):0)+2);
+  setTimeout(function(){ try{recorder.stop();}catch(e){} }, (dur+1)*1000);
+  document.getElementById('enrich-status').textContent='Playing your song...';
+});
 
- // ===== CHORD LIBRARY & PROGRESSION TEACHER (theory-computed, any key, legal) =====
- var NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
- var chordKey=0; // C
- // chord "quality" -> semitone intervals from the root
- var QUAL={
-   'maj':[0,4,7], 'min':[0,3,7], '7':[0,4,7,10], 'maj7':[0,4,7,11], 'min7':[0,3,7,10],
-   'dim':[0,3,6], 'aug':[0,4,8], 'sus4':[0,5,7], 'sus2':[0,2,7], '6':[0,4,7,9], 'min6':[0,3,7,9],
-   '9':[0,4,7,10,14], 'maj9':[0,4,7,11,14], 'min9':[0,3,7,10,14], 'add9':[0,4,7,14],
-   '13':[0,4,7,10,14,21], 'min7b5':[0,3,6,10], 'dim7':[0,3,6,9], '7sus4':[0,5,7,10]
- };
- // a scale-degree label -> [semitone from key root, quality]
- function chd(rootSemi, qual){ return {root:rootSemi, qual:qual}; }
- // GENRES: each is a set of named chords to learn + signature progressions.
- // Progressions are lists of [degreeSemitone, quality] relative to the key.
- var GENRES={
-   gospel:{ label:'✦ Gospel', chords:[['I','maj'],['I7','7'],['IV','maj'],['IV7','7'],['ii7','min7'],['iii7','min7'],['vi7','min7'],['V7','7'],['bVII','7'],['#IVdim7','dim7'],['bIII','maj']],
-     progs:[
-       {name:'2-5-1 (the gospel turnaround)', steps:[[2,'min7'],[7,'7'],[0,'maj7']]},
-       {name:'6-2-5-1', steps:[[9,'min7'],[2,'min7'],[7,'7'],[0,'maj7']]},
-       {name:'1-4 with passing dim (Kirk-style)', steps:[[0,'maj'],[6,'dim7'],[7,'min6'],[5,'maj']]},
-       {name:'gospel walk-up 1-3-4', steps:[[0,'maj'],[4,'min7'],[5,'maj'],[7,'7']]},
-       {name:'praise ending 4-5-1', steps:[[5,'maj'],[7,'7'],[0,'maj7']]}
-     ]},
-   jazz:{ label:'🎷 Jazz', chords:[['Imaj7','maj7'],['ii7','min7'],['V7','7'],['vi7','min7'],['iiø','min7b5'],['I6','6'],['III7','7']],
-     progs:[
-       {name:'ii-V-I', steps:[[2,'min7'],[7,'7'],[0,'maj7']]},
-       {name:'minor ii-V-i', steps:[[2,'min7b5'],[7,'7'],[0,'min7']]},
-       {name:'rhythm changes A', steps:[[0,'maj7'],[9,'min7'],[2,'min7'],[7,'7']]},
-       {name:'turnaround 1-6-2-5', steps:[[0,'maj7'],[9,'7'],[2,'min7'],[7,'7']]}
-     ]},
-   rnb:{ label:'💜 R&B', chords:[['Imaj7','maj7'],['ii9','min9'],['iii7','min7'],['IVmaj7','maj7'],['vi7','min7'],['V7','7']],
-     progs:[
-       {name:'neo-soul 1-4', steps:[[0,'maj9'],[5,'maj9']]},
-       {name:'6-4-1-5', steps:[[9,'min7'],[5,'maj7'],[0,'maj7'],[7,'7']]},
-       {name:'2-5-1 smooth', steps:[[2,'min9'],[7,'13'],[0,'maj9']]},
-       {name:'quiet-storm 1-3-6-4', steps:[[0,'maj7'],[4,'min7'],[9,'min7'],[5,'maj7']]}
-     ]},
-   rock:{ label:'🎸 Rock', chords:[['I','maj'],['IV','maj'],['V','maj'],['vi','min'],['bVII','maj'],['iii','min']],
-     progs:[
-       {name:'I-IV-V', steps:[[0,'maj'],[5,'maj'],[7,'maj']]},
-       {name:'I-V-vi-IV (the anthem four)', steps:[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]},
-       {name:'vi-IV-I-V', steps:[[9,'min'],[5,'maj'],[0,'maj'],[7,'maj']]},
-       {name:'I-bVII-IV', steps:[[0,'maj'],[10,'maj'],[5,'maj']]}
-     ]},
-   anthem:{ label:'🕊 Anthem', chords:[['I','maj'],['V','maj'],['vi','min'],['IV','maj'],['Isus4','sus4'],['V7','7']],
-     progs:[
-       {name:'stadium I-V-vi-IV', steps:[[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']]},
-       {name:'lift 1-4-1-5', steps:[[0,'maj'],[5,'maj'],[0,'maj'],[7,'maj']]},
-       {name:'sus resolve 1sus4-1-5', steps:[[0,'sus4'],[0,'maj'],[7,'7']]},
-       {name:'build vi-IV-I-V', steps:[[9,'min'],[5,'maj'],[0,'maj'],[7,'maj']]}
-     ]}
- };
- var curGenre='gospel';
- function chordNotes(rootSemi, qual, baseOct){
-   baseOct=baseOct||4; var root=12*(baseOct+1)+((chordKey+rootSemi)%12);
-   return (QUAL[qual]||QUAL.maj).map(function(iv){ return midiName(root+iv); });
- }
- function midiName(midi){ return NOTE_NAMES[((midi%12)+12)%12]+(Math.floor(midi/12)-1); }
- function lightChord(notes){
-   // light any of these notes that exist on the visible keyboard
-   Object.values(keyMap).forEach(function(km){ if(notes.indexOf(km.note)>=0){ km.el.classList.add('guide'); setTimeout(function(){km.el.classList.remove('guide');},700);} });
- }
- async function playChord(rootSemi, qual, label){
-   await start(); var notes=chordNotes(rootSemi,qual);
-   try{ inst.triggerAttackRelease(notes,'1n'); }catch(e){}
-   lightChord(notes);
-   document.getElementById('chord-name').textContent=(label||'')+'  —  '+notes.join('  ');
- }
- function romanRoot(sym){ return {I:0,II:2,III:4,IV:5,V:7,VI:9,VII:11}[sym.replace(/[b#].*/,'').replace(/[0-9].*/,'').toUpperCase()]||0; }
- function buildChordUI(){
-   // genres
-   var gb=document.getElementById('genre-bar'); gb.innerHTML='';
-   Object.keys(GENRES).forEach(function(g){ var b=document.createElement('div'); b.className='chip'+(g===curGenre?' on':''); b.innerHTML=GENRES[g].label;
-     b.addEventListener('click', function(){ curGenre=g; document.querySelectorAll('#genre-bar .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); renderChords(); }); gb.appendChild(b); });
-   // key selector
-   var kb=document.getElementById('key-bar'); kb.innerHTML='';
-   ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'].forEach(function(kn,ki){ var b=document.createElement('div'); b.className='chip'+(ki===chordKey?' on':''); b.textContent=kn; b.style.padding='6px 12px';
-     b.addEventListener('click', function(){ chordKey=ki; document.querySelectorAll('#key-bar .chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); }); kb.appendChild(b); });
-   renderChords();
- }
- function renderChords(){
-   var g=GENRES[curGenre];
-   var cb=document.getElementById('chord-bar'); cb.innerHTML='';
-   g.chords.forEach(function(ch){ var sym=ch[0], qual=ch[1]; var rootSemi=romanRoot(sym); if(/^b/.test(sym)) rootSemi=(rootSemi-1+12)%12; if(/^#/.test(sym)) rootSemi=(rootSemi+1)%12;
-     var b=document.createElement('div'); b.className='chip'; b.textContent=sym; b.style.padding='7px 13px';
-     b.addEventListener('click', function(){ playChord(rootSemi,qual,sym); }); cb.appendChild(b); });
-   var pb=document.getElementById('prog-bar'); pb.innerHTML='<span style="font-size:12px;color:#9ccbe8;margin-right:4px;">Progressions:</span>';
-   g.progs.forEach(function(pr){ var b=document.createElement('div'); b.className='chip'; b.innerHTML='▶ '+pr.name; b.style.background='rgba(47,196,201,.1)';
-     b.addEventListener('click', function(){ teachProg(pr); }); pb.appendChild(b); });
- }
- async function teachProg(pr){
-   await start(); document.getElementById('chord-name').textContent='Teaching: '+pr.name+'  —  follow the green keys';
-   var i=0; (function step(){ if(i>=pr.steps.length){ document.getElementById('chord-name').textContent=pr.name+'  —  now play it yourself!'; return; }
-     var s=pr.steps[i]; playChord(s[0],s[1], ''); i++; setTimeout(step, 1400); })();
- }
- buildChordUI();
-
- // ===== DRUM MACHINE: real kit + selectable beats =====
- var drums=null, drumBeat='none', beatLoop=null;
- function initDrums(){
-   if(drums) return;
-   drums={
-     kick:  new Tone.MembraneSynth({octaves:5,pitchDecay:.05}).connect(reverb),
-     snare: new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.16,sustain:0}}).connect(reverb),
-     hat:   new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.04,sustain:0}}).connect(reverb),
-     tom:   new Tone.MembraneSynth({octaves:3,pitchDecay:.02}).connect(reverb),
-     cymbal:new Tone.MetalSynth({frequency:300,envelope:{attack:.001,decay:1.2,release:.2},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).connect(reverb)
-   };
-   drums.kick.volume.value=-6; drums.snare.volume.value=-12; drums.hat.volume.value=-20; drums.tom.volume.value=-10; drums.cymbal.volume.value=-24;
- }
- function hit(name){
-   initDrums(); var t=Tone.now();
-   if(name==='kick') drums.kick.triggerAttackRelease('C1','8n',t);
-   else if(name==='snare') drums.snare.triggerAttackRelease('8n',t);
-   else if(name==='hat') drums.hat.triggerAttackRelease('16n',t);
-   else if(name==='tom') drums.tom.triggerAttackRelease('G2','8n',t);
-   else if(name==='cymbal') drums.cymbal.triggerAttackRelease('16n',t);
- }
- var DRUMPADS=[['kick','🥁 Kick'],['snare','🥁 Snare'],['hat','• Hi-hat'],['tom','🥁 Tom'],['cymbal','🕊 Cymbal']];
- var dp=document.getElementById('drumpads');
- DRUMPADS.forEach(function(d){ var b=document.createElement('div'); b.className='chip'; b.textContent=d[1];
-   b.addEventListener('click', async function(){ await start(); hit(d[0]); b.classList.add('on'); setTimeout(function(){b.classList.remove('on');},120); }); dp.appendChild(b); });
- // 16-step patterns: 1=hit
- var BEATS={
-   none:  null,
-   soft:  {kick:[1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0]},
-   lofi:  {kick:[1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1], hat:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]},
-   rock:  {kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},
-   hiphop:{kick:[1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0], snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat:[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1]}
- };
- document.querySelectorAll('.beat-preset').forEach(function(b){ b.addEventListener('click', function(){ document.querySelectorAll('.beat-preset').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); drumBeat=b.dataset.beat; }); });
- document.getElementById('beat-play').addEventListener('click', async function(){ await start(); startBeat(); });
- document.getElementById('beat-stop').addEventListener('click', function(){ stopBeat(); });
- function startBeat(){
-   stopBeat(); if(drumBeat==='none'||!BEATS[drumBeat]) return; initDrums();
-   var pat=BEATS[drumBeat]; var step=0;
-   Tone.Transport.bpm.value=parseFloat(document.getElementById('k-bpm').value);
-   beatLoop=new Tone.Loop(function(time){
-     ['kick','snare','hat'].forEach(function(k){ if(pat[k] && pat[k][step]){ if(k==='kick') drums.kick.triggerAttackRelease('C1','8n',time); if(k==='snare') drums.snare.triggerAttackRelease('8n',time); if(k==='hat') drums.hat.triggerAttackRelease('16n',time); } });
-     step=(step+1)%16;
-   }, '16n'); beatLoop.start(0); Tone.Transport.start();
- }
- function stopBeat(){ if(beatLoop){ beatLoop.stop(); beatLoop.dispose(); beatLoop=null; } }
- window._startBeat=startBeat; window._stopBeat=stopBeat; window._curBeat=function(){return drumBeat;};
-
- // Prepare audio graph + instrument at load so the first press has sound
- // ready (Tone.start still needs the gesture, which noteOn handles).
- try{ initAudio(); }catch(e){}
- buildPiano(); window.addEventListener('resize', buildPiano);
-})();
+// ============ init ============
+buildPiano(); buildChords();
+window.addEventListener('resize', buildPiano);
 </script></body></html>
 """
 
