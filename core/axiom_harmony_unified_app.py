@@ -6095,10 +6095,14 @@ async function startAmbientMusic(attempt) {
 // gatekeepers. This steers the real-track lanes AND the generative Creator.
 function _modeToLane(mode){
   var m = String(mode || '').toLowerCase();
-  // DISTRESS states + the AI's soothing responses to them -> deep calm
-  if (/deep|agitat|anger|angry|panic|fear|anxi|rage|overwhelm|crisis|calming|soothing|grounding|ground|reassur|steady-?ing|de-?escalat|slow/.test(m)) return 'deepcalm';
-  // LOW / heavy states + lifting responses -> lifting
-  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely|encourage|encouragement|uplift|hope-?building|motivat/.test(m)) return 'lifting';
+  // LIFTING first (encourage/uplift/motivate) — checked before distress so
+  // 'encouRAGEment' is never miscaught by the 'rage' distress word.
+  if (/encourage|uplift|motivat|hope-?build/.test(m)) return 'lifting';
+  // DISTRESS + soothing responses -> deep calm. 'rage' is word-bounded so it
+  // only matches the standalone word, not inside other words.
+  if (/deep|agitat|anger|angry|panic|fear|anxi|\brage\b|overwhelm|crisis|calming|soothing|grounding|ground|reassur|de-?escalat/.test(m)) return 'deepcalm';
+  // other low/heavy states -> lifting
+  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely/.test(m)) return 'lifting';
   // settled / positive / greeting -> calm
   if (/calm|greet|steady|settl|neutral|hope|content|peace|gratitude|warm|gentle|validation|affirm/.test(m)) return 'calm';
   return null;
