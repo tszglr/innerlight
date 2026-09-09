@@ -12674,21 +12674,32 @@ function makeSynth(id){
 }
 function setInstrument(id){
   if(synth){ try{ synth.releaseAll&&synth.releaseAll(); synth.dispose(); }catch(e){} }
-  synth=makeSynth(id); synth.connect(reverb);
-  document.getElementById('inst-status').textContent=INSTNAMES[id]+' ready.';
+  synth=makeSynth(id);
+  // connect to reverb if it exists, otherwise STRAIGHT to the speakers so
+  // sound always comes out.
+  try{ if(reverb){ synth.connect(reverb); } else { synth.toDestination(); } }catch(e){ try{ synth.toDestination(); }catch(_){} }
+  var st=document.getElementById('inst-status'); if(st) st.textContent=INSTNAMES[id]+' ready.';
 }
 function hideGate(){ var g=document.getElementById('startgate'); if(g){ g.style.display='none'; g.style.pointerEvents='none'; } }
 async function unlock(){
   hideGate();
   if(ready) return;
-  try{
-    if(window.Tone && Tone.start){ await Tone.start(); }
-    reverb=new Tone.Reverb({decay:3.5,wet:.30}).toDestination();
-    recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest);
-    setInstrument('piano'); applyKnobs(); ready=true;
-  }catch(e){
-    var st=document.getElementById('inst-status'); if(st) st.textContent='Audio did not start on this device — try reloading the page.';
-  }
+  var st=document.getElementById('inst-status');
+  if(!window.Tone){ if(st) st.textContent='Sound engine did not load — check your connection and reload.'; return; }
+  // 1) START + RESUME the audio context (both, for stubborn browsers)
+  try{ await Tone.start(); }catch(e){}
+  try{ if(Tone.getContext && Tone.getContext().resume) await Tone.getContext().resume(); }catch(e){}
+  try{ if(Tone.context && Tone.context.rawContext && Tone.context.rawContext.resume) await Tone.context.rawContext.resume(); }catch(e){}
+  // 2) SOUND FIRST: the instrument goes STRAIGHT to the speakers. This alone
+  //    guarantees you hear notes — reverb/recording are optional extras below.
+  ready=true;
+  try{ setInstrument('piano'); }catch(e){}
+  // 3) reverb is a NICE-TO-HAVE; if it fails, sound still works (dry).
+  try{ reverb=new Tone.Reverb({decay:3.2,wet:.28}).toDestination(); if(synth){ try{synth.disconnect();}catch(_){} synth.connect(reverb); } }catch(e){ reverb=null; }
+  // 4) recorder is optional too.
+  try{ recDest=Tone.context.createMediaStreamDestination(); Tone.getDestination().connect(recDest); }catch(e){ recDest=null; }
+  try{ applyKnobs(); }catch(e){}
+  if(st) st.textContent='Piano ready — press a key.';
 }
 // Expose unlock so the gate's INLINE onclick (which works even if this script
 // errored earlier) can call it. If the user already tapped before this script
