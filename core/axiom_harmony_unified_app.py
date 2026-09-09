@@ -12660,13 +12660,18 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
 <script>
 (function(){
  // ===== real sampled instruments via Tone.js + the free Salamander/tonejs sample sets =====
+ // Every instrument has an INSTANT synth voice so sound is guaranteed even if
+ // no sample loads. The real sampled PIANO (reliable Salamander set) loads on
+ // top and swaps in when ready; if it ever fails or is slow, the synth voice
+ // stays and you still hear something. Nothing waits forever.
  var INSTRUMENTS = {
-   piano:  {name:'\uD83C\uDFB9 Piano',  url:'https://tonejs.github.io/audio/salamander/', build:function(){ return new Tone.Sampler({urls:{A0:'A0.mp3',C1:'C1.mp3','D#1':'Ds1.mp3','F#1':'Fs1.mp3',A1:'A1.mp3',C2:'C2.mp3','D#2':'Ds2.mp3','F#2':'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3','D#3':'Ds3.mp3','F#3':'Fs3.mp3',A3:'A3.mp3',C4:'C4.mp3','D#4':'Ds4.mp3','F#4':'Fs4.mp3',A4:'A4.mp3',C5:'C5.mp3','D#5':'Ds5.mp3','F#5':'Fs5.mp3',A5:'A5.mp3',C6:'C6.mp3'},baseUrl:'https://tonejs.github.io/audio/salamander/'}); }},
-   guitar: {name:'\uD83C\uDFB8 Guitar', build:function(){ return new Tone.Sampler({urls:{'E2':'E2.mp3','A2':'A2.mp3','D3':'D3.mp3','G3':'G3.mp3','B3':'B3.mp3','E4':'E4.mp3'},baseUrl:'https://tonejs.github.io/audio/berklee/guitar_'}); }},
-   strings:{name:'\uD83C\uDFBB Strings',build:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.4,decay:0.2,sustain:0.8,release:1.4}}); }},
-   pad:    {name:'\u2601\uFE0F Pad',    build:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.8,decay:0.3,sustain:0.9,release:2.2}}); }},
-   bells:  {name:'\uD83D\uDD14 Bells',  build:function(){ return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:0.01,decay:1.2,sustain:0,release:1.5}}); }},
-   bass:   {name:'\uD83C\uDFB8 Bass guitar', build:function(){ return new Tone.Sampler({urls:{'E1':'E1.mp3','A1':'A1.mp3','D2':'D2.mp3','G2':'G2.mp3'},baseUrl:'https://tonejs.github.io/audio/berklee/bass_'}); }},
+   piano:  {name:'\uD83C\uDFB9 Piano',  synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.01,decay:1.4,sustain:0.2,release:1.2}}); },
+     sampler:function(){ return new Tone.Sampler({urls:{A1:'A1.mp3',C2:'C2.mp3','D#2':'Ds2.mp3','F#2':'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3','D#3':'Ds3.mp3','F#3':'Fs3.mp3',A3:'A3.mp3',C4:'C4.mp3','D#4':'Ds4.mp3','F#4':'Fs4.mp3',A4:'A4.mp3',C5:'C5.mp3','D#5':'Ds5.mp3','F#5':'Fs5.mp3',A5:'A5.mp3',C6:'C6.mp3'},baseUrl:'https://tonejs.github.io/audio/salamander/'}); }},
+   guitar: {name:'\uD83C\uDFB8 Guitar', synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.008,decay:0.9,sustain:0.15,release:0.9}}); }},
+   strings:{name:'\uD83C\uDFBB Strings',synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'},envelope:{attack:0.4,decay:0.2,sustain:0.8,release:1.4}}); }},
+   pad:    {name:'\u2601\uFE0F Pad',    synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.8,decay:0.3,sustain:0.9,release:2.2}}); }},
+   bells:  {name:'\uD83D\uDD14 Bells',  synth:function(){ return new Tone.PolySynth(Tone.FMSynth,{harmonicity:3,modulationIndex:6,envelope:{attack:0.01,decay:1.2,sustain:0,release:1.5}}); }},
+   bass:   {name:'\uD83C\uDFB8 Bass',   synth:function(){ return new Tone.PolySynth(Tone.Synth,{oscillator:{type:'square'},envelope:{attack:0.01,decay:0.3,sustain:0.6,release:0.8}}); }},
  };
  var current='piano', inst=null, reverb=null, vol=null, recDest=null, recorder=null, chunks=[], loaded=false;
  var recording=false, recStart=0, recorded=[], enriched=null, enrichStyle='gentle';
@@ -12680,10 +12685,29 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
  }
  function loadInstrument(id){
    current=id;
-   document.getElementById('inst-status').textContent='Loading '+INSTRUMENTS[id].name+' sound\u2026';
-   var s=INSTRUMENTS[id].build(); s.connect(reverb);
-   Tone.loaded().then(function(){ inst=s; loaded=true; document.getElementById('inst-status').textContent=INSTRUMENTS[id].name+' ready \u2014 play the keys.'; });
-   inst=s;
+   var status=document.getElementById('inst-status');
+   // 1) instant synth voice — playable RIGHT NOW, no waiting, no freeze.
+   var voice=INSTRUMENTS[id].synth(); voice.connect(reverb);
+   inst=voice; loaded=true;
+   status.textContent=INSTRUMENTS[id].name+' ready \u2014 play the keys.';
+   // 2) if this instrument has a richer sampled version, load it in the
+   //    background and swap in ONLY if it finishes; a 6s timeout means a slow
+   //    or missing sample never leaves you stuck — the synth just stays.
+   if(INSTRUMENTS[id].sampler){
+     status.textContent=INSTRUMENTS[id].name+' ready \u2014 loading the richer sound\u2026';
+     var loadedSampler=false;
+     try{
+       var samp=INSTRUMENTS[id].sampler();
+       samp.connect(reverb);
+       Tone.loaded().then(function(){
+         if(current!==id) return;            // user switched away
+         loadedSampler=true; inst=voice._disposed?voice:samp;  // prefer sampler
+         inst=samp;
+         status.textContent=INSTRUMENTS[id].name+' \u2014 full sound ready.';
+       }).catch(function(){ status.textContent=INSTRUMENTS[id].name+' ready.'; });
+       setTimeout(function(){ if(!loadedSampler && current===id){ status.textContent=INSTRUMENTS[id].name+' ready.'; } }, 6000);
+     }catch(e){ status.textContent=INSTRUMENTS[id].name+' ready.'; }
+   }
  }
  // instrument chips
  var ie=document.getElementById('insts');
@@ -12839,7 +12863,7 @@ ZENISYS_LAB_ROOM = r"""<!doctype html>
    // harmony a third under each melody note (in-key), softer
    enriched.melody.forEach(function(m){ var midi=midiOf(m.note)-3; try{ padSy.triggerAttackRelease(nameOf(midi),'2n', now+(m.t||0)); }catch(e){} });
    // real bass guitar line on the chord roots (in key)
-   var bassG=new Tone.Sampler({urls:{'E1':'E1.mp3','A1':'A1.mp3','D2':'D2.mp3','G2':'G2.mp3'},baseUrl:'https://tonejs.github.io/audio/berklee/bass_'}).connect(reverb); bassG.volume.value=-8;
+   var bassG=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'square'},envelope:{attack:0.01,decay:0.3,sustain:0.6,release:0.8}}).connect(reverb); bassG.volume.value=-8;
    chordRoots.forEach(function(deg,i){ var rm=36+key+scale[deg%scale.length]; try{ bassG.triggerAttackRelease(nameOf(rm), '2n', now+i*beat*4); }catch(e){} });
    // drums under the enriched song, per the chosen (or style-matched) beat
    var eb = (window._curBeat && window._curBeat()!=='none') ? window._curBeat() : ({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]||'soft');
