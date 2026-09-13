@@ -12382,7 +12382,6 @@ LOGIN_PAGE = """
 </form></body></html>
 """
 
-@app.route("/admin/login", methods=["GET", "POST"])
 # ===================== TEAM ACCESS GRANTS (Stage 2) =====================
 # The founder can grant others time-limited access to the Watch (and,
 # optionally, the Study) without sharing the ADMIN_KEY. Each grant is a random
@@ -12515,6 +12514,7 @@ def admin_grants():
                     "live": (not r["revoked"] and r["expires_at"] > now)})
     return jsonify({"grants": out})
 
+@app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "GET":
         return redirect("/admin")
