@@ -15,6 +15,8 @@ else
 fi
 echo "== language parity: every dictionary, every language =="
 python tools/check_lang_parity.py
+echo "== crisis-safety guard: loved-one holding + no dead doors (FATAL laws) =="
+python tools/check_crisis_safety.py
 echo "== live smoke test =="
 python - <<'PY'
 import sys

@@ -16656,16 +16656,52 @@ def _clinical_on_call():
 
 def _route_handoff(handoff, text):
     """The founder's two fatal laws, enforced at the moment a card is built:
-    1) HOLD THE GRIEVING FIRST — a loved-one crisis suppresses the telehealth
-       card entirely; the AI holds, the static 988/911 rail remains.
-    2) NO DEAD DOORS — a telehealth card may exist only when a clinical
-       provider is actually on call, checked right now, server-side."""
+
+    1) HOLD THE GRIEVING FIRST (worklist #1). When the crisis belongs to
+       someone they love and they are the one holding it — grieving, not in
+       danger — the first exchanges are PURE HOLDING. NO pushed handoff card
+       of ANY type (crisis counselor, telehealth, community, legal) is
+       returned. The AI holds; offers come later only as gentle accompaniment.
+       This suppresses the whole pushed card, NOT the permanent 988/911 rail
+       and NOT the always-present human_help fixture — those are not handoff
+       cards, they are the fixed public doors and they always remain.
+
+    2) NO DEAD DOORS (worklist #2, #35). A provider/human action button may be
+       emitted ONLY when a real person is verified on call right now,
+       server-side, at request time. If nobody is on call:
+         - a telehealth/counselor card is dropped entirely (never shown-then-
+           failing, never "no providers available, call 988");
+         - a crisis card KEEPS its always-free public doors (988 call, 988
+           chat, 911) but has its "alert a live InnerLight monitor" button
+           (a human that could dead-end) stripped out.
+       The always-free public doors are permanent fixtures and are never
+       gated away by availability."""
     try:
-        if handoff.get("type") == "telehealth":
-            if _witness_grief(text):
-                return {"type": "none", "urgency": "none", "witness_grief": True}
+        htype = handoff.get("type")
+
+        # LAW 1 — loved-one holding: suppress EVERY pushed card in the holding
+        # window, regardless of type. Holding first; the static rail remains.
+        if _witness_grief(text):
+            return {"type": "none", "urgency": "none", "witness_grief": True}
+
+        # LAW 2 — telehealth (a clinical human) is a dead door with nobody on
+        # call: drop the whole card. 988/911 still live via the static rail.
+        if htype == "telehealth":
             if not _clinical_on_call():
                 return {"type": "none", "urgency": "none", "no_provider": True}
+
+        # LAW 2 — the crisis card's public doors (988 call / 988 chat / 911)
+        # are permanent and stay untouched, but the "alert a live InnerLight
+        # monitor" button is a human that can dead-end. Only emit it when a
+        # real person is on call; otherwise strip it and keep the free doors.
+        if htype == "crisis" and not _clinical_on_call():
+            bridge = handoff.get("bridge")
+            if isinstance(bridge, dict) and "tertiary" in bridge:
+                trimmed = dict(handoff)
+                trimmed_bridge = {k: v for k, v in bridge.items() if k != "tertiary"}
+                trimmed["bridge"] = trimmed_bridge
+                trimmed["no_monitor"] = True
+                return trimmed
     except Exception:
         pass
     return handoff
