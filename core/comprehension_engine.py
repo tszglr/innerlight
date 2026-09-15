@@ -28,6 +28,21 @@ from typing import Any, Dict, List, Optional
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 MODEL = os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6")
 
+# --- Fallback reason reporting (non-breaking; respond() still returns dict-or-None).
+# When respond() returns None, it records WHY here so the caller can classify the
+# fallback for telemetry. One of: 'no_key' | 'empty' | 'api_error' | 'over_line' | ''.
+# NOTE: this never stores or logs the API key or any request/response content —
+# only a short reason string. Not thread-tagged; callers read it immediately after
+# their own respond() call on the same request path.
+_LAST_FALLBACK_REASON = ""
+
+
+def last_fallback_reason() -> str:
+    """Return the reason the most recent respond() call fell back (returned None),
+    or '' if the last call succeeded. Values: 'no_key', 'empty', 'api_error',
+    'over_line', ''. Never contains the key or any message content."""
+    return _LAST_FALLBACK_REASON
+
 # Words/phrases that would put us OVER the line if they slipped into a reply.
 # If the model ever returns diagnostic/prescriptive language, we soften it.
 _DIAGNOSTIC_PATTERNS = [
@@ -169,9 +184,17 @@ def respond(
     client_time: str = "",
 ) -> Optional[Dict[str, Any]]:
     """Return {'response': str, 'question': ''} using real comprehension, or
-    None if the model isn't configured or the call fails (caller falls back)."""
+    None if the model isn't configured or the call fails (caller falls back).
+    On a None return, last_fallback_reason() reports why (no key / empty / api
+    error / over the line) so the caller can classify the fallback for the Watch."""
+    global _LAST_FALLBACK_REASON
+    _LAST_FALLBACK_REASON = ""
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
-    if not key or not user_text or not user_text.strip():
+    if not key:
+        _LAST_FALLBACK_REASON = "no_key"
+        return None
+    if not user_text or not user_text.strip():
+        _LAST_FALLBACK_REASON = "empty"
         return None
 
     # Build the message list from recent conversation so follow-ups have context.
@@ -236,6 +259,7 @@ def respond(
     try:
         text = _call(messages)
         if not text:
+            _LAST_FALLBACK_REASON = "empty"
             return None
         if _over_the_line(text):
             # Never ship diagnostic wording, and never substitute a canned
@@ -250,9 +274,11 @@ def respond(
             ]
             text = _call(retry)
             if not text or _over_the_line(text):
+                _LAST_FALLBACK_REASON = "over_line"
                 return None
         return {"response": text, "question": ""}
     except Exception as e:
+        _LAST_FALLBACK_REASON = "api_error"
         print(f"[comprehension] falling back (model call failed): {str(e)[:120]}")
         return None
 

@@ -10813,7 +10813,15 @@ def _localized_legal_guidance(lg, ui_lang):
 
 @app.route("/api/checkin", methods=["POST"])
 def api_checkin():
-    if not _rate_ok("checkin", 40, 3600) or not _budget_ok("claude"):
+    # Per-IP abuse limit stays (cost-collapse defense). But the daily Claude
+    # budget is NO LONGER charged here at the top: doing so charged the counter
+    # on EVERY message (even ones the live voice never handled, and even with no
+    # key), drained the cap far too fast, and — worst of all — returned a "busy"
+    # 429 that turned a person in crisis away (a dead end, forbidden by
+    # Principle 1). The Claude budget is now charged only around the REAL model
+    # call below, and when the cap is reached the request proceeds to the warm
+    # built-in fallback instead of a 429.
+    if not _rate_ok("checkin", 40, 3600):
         return _gentle_429()
     init_db()
     data = request.get_json(force=True) or {}
@@ -10900,17 +10908,38 @@ def api_checkin():
     substitution_signal = bool(_sig and _sig.get("substitution"))
     if _sig and _sig.get("crisis") and risk in ("low", "moderate"):
         risk = "high"
-    smart = comprehension_engine.respond(
-        user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
-        client_time=str(data.get("client_time", ""))[:80],
-    )
+    # HYBRID: the live voice (AI = the live Anthropic Claude model) is PRIMARY;
+    # the built-in lines are only a fallback. We charge the daily Claude budget
+    # ONLY when we actually make a live call (a key is configured AND there is
+    # budget room). No key -> no spend, no budget charge. Cap reached -> we do
+    # NOT turn the person away; we fall through to the warm built-in fallback
+    # and mark the reason so The Watch can see it.
+    smart = None
+    _live_on = comprehension_engine.available()
+    _budget_blocked = False
+    if _live_on:
+        if _budget_room("claude"):
+            _budget_ok("claude")  # charge one real live-voice call
+            smart = comprehension_engine.respond(
+                user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
+                client_time=str(data.get("client_time", ""))[:80],
+            )
+        else:
+            _budget_blocked = True
     if smart:
+        _mark_ai_source("live")
         initial_conv = {"response": smart["response"], "question": smart.get("question", "")}
     elif ui_lang != "en":
         # The language promise holds even on failure: an honest in-language
         # line instead of the English-only local engine.
+        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "noneng")
+        _mark_ai_source(_bucket, _reason)
+        print(f"[checkin] fallback: built-in words (non-English), reason={_reason}")
         initial_conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
+        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "en")
+        _mark_ai_source(_bucket, _reason)
+        print(f"[checkin] fallback: built-in words, reason={_reason}")
         initial_conv = get_conversation_engine().respond(
             user_text=message, face_emotion=face_emo, risk=risk,
         )
@@ -11208,15 +11237,34 @@ def api_innerlight_learn():
     if _sig_l and _sig_l.get("crisis") and learn_risk in ("low", "moderate"):
         learn_risk = "high"
         learned["risk"] = "high"
-    smart_l = comprehension_engine.respond(
-        user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
-        client_time=str(data.get("client_time", ""))[:80],
-    )
+    # HYBRID (same as /api/checkin): live voice is PRIMARY, built-in lines are
+    # only the fallback. Charge the daily Claude budget ONLY for a real live
+    # call (key present AND budget room). Cap reached -> proceed to the warm
+    # built-in fallback, never a dead end.
+    smart_l = None
+    _live_on_l = comprehension_engine.available()
+    _budget_blocked_l = False
+    if _live_on_l:
+        if _budget_room("claude"):
+            _budget_ok("claude")
+            smart_l = comprehension_engine.respond(
+                user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
+                client_time=str(data.get("client_time", ""))[:80],
+            )
+        else:
+            _budget_blocked_l = True
     if smart_l:
+        _mark_ai_source("live")
         conv = {"response": smart_l["response"], "question": smart_l.get("question", "")}
     elif ui_lang != "en":
+        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "noneng")
+        _mark_ai_source(_bucket_l, _reason_l)
+        print(f"[learn] fallback: built-in words (non-English), reason={_reason_l}")
         conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
+        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "en")
+        _mark_ai_source(_bucket_l, _reason_l)
+        print(f"[learn] fallback: built-in words, reason={_reason_l}")
         conv = get_conversation_engine().respond(
             user_text=answer,
             face_emotion=face_emotion,
@@ -11575,6 +11623,12 @@ _BUDGET_CAPS = {
     "connect":  int(os.environ.get("CAP_CONNECT_PER_DAY",  "60")),
     "memory":   int(os.environ.get("CAP_MEMORY_PER_DAY",   "300")),
 }
+# Soft-warn threshold (percent of cap) so The Watch can show "near the daily
+# limit" before the live voice actually runs out. Default 80 percent.
+try:
+    _CAP_CLAUDE_WARN_AT = max(1, min(100, int(os.environ.get("CAP_CLAUDE_WARN_AT", "80"))))
+except Exception:
+    _CAP_CLAUDE_WARN_AT = 80
 
 def _budget_ok(kind):
     """Global daily spend ceiling per costly service."""
@@ -11588,6 +11642,89 @@ def _budget_ok(kind):
             return False
         _BUDGET["counts"][kind] = c + 1
     return True
+
+def _budget_room(kind):
+    """True if there is still daily budget room for `kind` WITHOUT consuming it.
+    Used to decide whether to attempt a real Claude call; the spend itself is
+    charged separately by _budget_ok only when the call is actually made."""
+    day = time.strftime("%Y-%m-%d")
+    with _BUDGET_LOCK:
+        if _BUDGET["day"] != day:
+            _BUDGET["day"] = day; _BUDGET["counts"] = {}
+        c = _BUDGET["counts"].get(kind, 0)
+    return c < _BUDGET_CAPS.get(kind, 10**9)
+
+# ---------------------------------------------------------------------------
+# LIVE VOICE vs. BUILT-IN WORDS — daily telemetry (Principle 15: honest on
+# failure, observable). Counts ONLY: how many replies came from the live AI
+# ("live") vs. the built-in fallback lines, and a short reason for each
+# fallback. It NEVER stores or logs the API key, a message, or any reply
+# content — counts and a one-word reason string only.
+# ---------------------------------------------------------------------------
+_AI_SOURCE = {
+    "day": "",
+    "counts": {
+        "live": 0,
+        "fallback_no_key": 0,
+        "fallback_api_error": 0,
+        "fallback_over_line": 0,
+        "fallback_budget": 0,
+        "fallback_noneng": 0,
+        "fallback_other": 0,
+    },
+    "last_fallback_reason": "",
+    "last_fallback_at": "",
+}
+_AI_SOURCE_LOCK = threading.Lock()
+
+def _mark_ai_source(kind, reason=""):
+    """Record one reply's source for the day. `kind` is 'live' or one of the
+    fallback_* buckets. `reason` is a short human-readable string for the Watch
+    (never a message, never the key)."""
+    day = time.strftime("%Y-%m-%d")
+    with _AI_SOURCE_LOCK:
+        if _AI_SOURCE["day"] != day:
+            _AI_SOURCE["day"] = day
+            _AI_SOURCE["counts"] = {k: 0 for k in _AI_SOURCE["counts"]}
+            _AI_SOURCE["last_fallback_reason"] = ""
+            _AI_SOURCE["last_fallback_at"] = ""
+        if kind not in _AI_SOURCE["counts"]:
+            kind = "fallback_other"
+        _AI_SOURCE["counts"][kind] += 1
+        if kind != "live":
+            _AI_SOURCE["last_fallback_reason"] = str(reason or kind)[:80]
+            _AI_SOURCE["last_fallback_at"] = time.strftime("%H:%M UTC")
+
+# Map comprehension_engine.last_fallback_reason() -> our fallback bucket.
+_AI_FALLBACK_BUCKET = {
+    "no_key": "fallback_no_key",
+    "api_error": "fallback_api_error",
+    "over_line": "fallback_over_line",
+    "empty": "fallback_api_error",
+    "": "fallback_other",
+}
+
+def _classify_ai_fallback(live_on, budget_blocked, lane="en"):
+    """Decide which fallback bucket a reply belongs to and a short reason
+    string, given the request's live-voice state. Returns (bucket, reason).
+    Order matters: no key first (no live call was made and no spend occurred),
+    then a reached daily budget, then the language lane, then whatever the
+    live engine reported for a real attempt that failed."""
+    if not live_on:
+        # The live voice was never switched on for this deploy (no key set).
+        return "fallback_no_key", "no_key"
+    if budget_blocked:
+        return "fallback_budget", "daily live-voice limit reached"
+    # A real live attempt was made and returned None (or non-English lane).
+    try:
+        reason = comprehension_engine.last_fallback_reason()
+    except Exception:
+        reason = ""
+    if lane == "noneng":
+        # Non-English uses the honest in-language backup line regardless of the
+        # specific engine reason; still record the underlying reason for detail.
+        return "fallback_noneng", (reason or "non-English backup")
+    return _AI_FALLBACK_BUCKET.get(reason, "fallback_other"), (reason or "unknown")
 
 def _abuse_mark():
     day = time.strftime("%Y-%m-%d")
@@ -11603,10 +11740,25 @@ def _gentle_429():
 def admin_abuse():
     if not session.get("founder_ok"):
         return jsonify({"error": "auth"}), 403
+    today = time.strftime("%Y-%m-%d")
     with _BUDGET_LOCK:
         counts = dict(_BUDGET.get("counts", {}))
-    return jsonify({"blocked_today": _ABUSE.get("blocked", 0) if _ABUSE.get("day")==time.strftime("%Y-%m-%d") else 0,
-                    "budget_used": counts, "budget_caps": _BUDGET_CAPS})
+    claude_used = int(counts.get("claude", 0))
+    claude_cap = int(_BUDGET_CAPS.get("claude", 0)) or 1
+    claude_pct = round(100.0 * claude_used / claude_cap, 1)
+    near_cap = claude_pct >= _CAP_CLAUDE_WARN_AT
+    with _AI_SOURCE_LOCK:
+        ai_counts = dict(_AI_SOURCE.get("counts", {})) if _AI_SOURCE.get("day") == today else {k: 0 for k in _AI_SOURCE.get("counts", {})}
+        last_reason = _AI_SOURCE.get("last_fallback_reason", "") if _AI_SOURCE.get("day") == today else ""
+        last_at = _AI_SOURCE.get("last_fallback_at", "") if _AI_SOURCE.get("day") == today else ""
+    return jsonify({"blocked_today": _ABUSE.get("blocked", 0) if _ABUSE.get("day")==today else 0,
+                    "budget_used": counts, "budget_caps": _BUDGET_CAPS,
+                    "ai_source": ai_counts,
+                    "last_fallback_reason": last_reason,
+                    "last_fallback_at": last_at,
+                    "claude_pct_of_cap": claude_pct,
+                    "claude_warn_at": _CAP_CLAUDE_WARN_AT,
+                    "near_cap": near_cap})
 
 
 # ===========================================================================
@@ -14166,6 +14318,75 @@ def admin_dashboard():
         }
         el.innerHTML = html;
       }catch(e){}
+    })();
+    </script>
+
+    <h2 class="ledger" data-sec="sec-voice">Live voice vs. built-in words &mdash; who is answering today</h2>
+    <div class="panel">
+    <div class="hint">Every reply comes from one of two places: the <b style="color:#f4c977;">live voice</b> (the AI &mdash; the live Anthropic model that writes a fresh reply for each person) or the <b style="color:#f4c977;">built-in words</b> (InnerLight&rsquo;s own written lines, kept only as a backup so a person is never left without an answer). The live voice should be answering almost everyone; the built-in words are the safety net. This shows today&rsquo;s tally, counts only &mdash; never anyone&rsquo;s words. If the built-in words start answering a lot, the reason is named below so you know why.</div>
+    <div id="voice-readout"><i style="color:rgba(242,231,210,.45);">Loading&hellip;</i></div>
+    </div>
+    <script>
+    (function(){
+      function esc4(s){ return String(s == null ? '' : s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function vtile(v, lbl, warm){
+        var col = warm ? '#e8534e' : '#f4c977';
+        return '<div style="flex:1;min-width:120px;background:rgba(232,163,76,.07);border:1px solid rgba(232,163,76,.18);border-radius:12px;padding:14px;text-align:center;">'
+          + '<b style="font-size:24px;color:' + col + ';font-variant-numeric:tabular-nums;">' + v + '</b>'
+          + '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,201,119,.6);margin-top:6px;">' + lbl + '</div></div>';
+      }
+      // Plain-language names for each reason the built-in words had to step in.
+      var REASONS = {
+        fallback_no_key: 'The live voice was not switched on (no key set)',
+        fallback_api_error: 'The live voice could not be reached just then',
+        fallback_over_line: 'The live voice&rsquo;s reply was held back for safety and rewritten',
+        fallback_budget: 'The daily limit for the live voice was reached',
+        fallback_noneng: 'A non-English reply used the honest backup line',
+        fallback_other: 'Backup line used'
+      };
+      async function loadVoice(){
+        try{
+          var r = await fetch('/api/admin/abuse'); if(!r.ok) return;
+          var d = await r.json();
+          var el = document.getElementById('voice-readout'); if(!el) return;
+          var s = d.ai_source || {};
+          var live = s.live || 0;
+          var fb = (s.fallback_no_key||0)+(s.fallback_api_error||0)+(s.fallback_over_line||0)
+                 +(s.fallback_budget||0)+(s.fallback_noneng||0)+(s.fallback_other||0);
+          var total = live + fb;
+          var pct = total ? Math.round(100*live/total) : 0;
+          var html = '';
+          if(d.near_cap){
+            html += '<div style="background:rgba(232,83,78,.12);border:1px solid rgba(232,83,78,.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;color:#f2d7c9;font-size:13.5px;line-height:1.5;">'
+              + '<b style="color:#e8534e;">Near the daily limit.</b> The live voice has used '
+              + esc4(d.claude_pct_of_cap) + '% of what it is allowed today (the warning line is at '
+              + esc4(d.claude_warn_at) + '%). If it reaches 100%, people are still answered &mdash; the built-in words take over &mdash; but the replies stop being freshly written until tomorrow.</div>';
+          }
+          html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;">'
+            + vtile(live, 'live-voice replies', false)
+            + vtile(fb, 'built-in-word replies', fb>0)
+            + vtile(pct + '%', 'from the live voice', false)
+            + '</div>';
+          if(total===0){
+            html += '<div style="color:rgba(242,231,210,.45);font-style:italic;margin-top:6px;">No replies yet today. The tally starts at midnight (UTC).</div>';
+          }
+          if(fb>0){
+            html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:14px 0 4px;">Why the built-in words stepped in</div>';
+            var keys = ['fallback_no_key','fallback_api_error','fallback_over_line','fallback_budget','fallback_noneng','fallback_other'];
+            html += keys.filter(function(k){ return (s[k]||0)>0; }).map(function(k){
+              return '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(232,163,76,.12);">'
+                + '<span style="color:rgba(242,231,210,.78);">' + REASONS[k] + '</span>'
+                + '<b style="color:#e8a34c;">' + (s[k]||0) + '</b></div>';
+            }).join('');
+            if(d.last_fallback_reason){
+              html += '<div style="font-size:12px;color:rgba(242,231,210,.5);margin-top:8px;">Most recent backup at '
+                + esc4(d.last_fallback_at || '') + ' &middot; ' + esc4(d.last_fallback_reason) + '</div>';
+            }
+          }
+          el.innerHTML = html;
+        }catch(e){}
+      }
+      loadVoice();
     })();
     </script>
 
