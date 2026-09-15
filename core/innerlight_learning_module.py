@@ -264,9 +264,9 @@ class InnerLightLearningModule:
         emotion = str(emotion_profile.get("primary_emotion", "")).replace("_", " ")
         emotion_line = f" I may be reading {emotion}; if that is wrong, correct me and I will adjust." if emotion else ""
         if risk == "critical":
-            return "You are loved. You are important. Stay with me and answer one small question at a time. We are building the safest next step together." + emotion_line
+            return "I'm here. Stay with me — one small thing at a time, that's all. We'll get through the next few minutes together." + emotion_line
         if risk == "high":
-            return "I hear you. Let us keep this gentle and specific. Your answers are helping InnerLight understand what kind of support fits." + emotion_line
+            return "I'm listening. We'll go gentle and slow — no wrong answers here." + emotion_line
         if risk == "moderate":
             return "Thank you. I am learning what is happening so the support can become more accurate and less generic." + emotion_line
         return "Thank you. I am learning your preferences, needs, and next best support path." + emotion_line
