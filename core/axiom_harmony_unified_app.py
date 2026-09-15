@@ -733,7 +733,17 @@ PUBLIC_PAGE = """
     .il-arrow:active { transform:translateY(1px); }
     .il-more { background:#f0e6dc; color:#8a5a30; }
     .il-more:hover { background:#e6d8ca; }
-    #more-menu { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 4px; }
+    /* Always-visible crisis fixtures + the single "Talk to someone" opener.
+       988 and 911 are permanent (Principle 1) and never collapse. */
+    .il-crisis-bar { display:flex; gap:8px; justify-content:center; align-items:center;
+      flex-wrap:wrap; margin:10px 0 2px; }
+    .il-crisis-bar .rail-988 { background:#e8534e; color:#fff; border:0; }
+    .il-crisis-bar .rail-911 { background:#b5352f; color:#fff; border:0; }
+    .il-crisis-bar .rail-talk { background:#2e6e8e; color:#fff; border:0; }
+    .il-crisis-bar .rail-btn { padding:10px 16px; border-radius:12px; font-size:14px; font-weight:700;
+      cursor:pointer; text-decoration:none; text-align:center; line-height:1; display:inline-flex;
+      align-items:center; justify-content:center; }
+    #more-menu { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:8px 0 4px; }
     /* the old separate mic transcript panel is retired in chat layout */
     #live-transcript { display:none !important; }
     .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
@@ -753,38 +763,42 @@ PUBLIC_PAGE = """
       #help-rail .rail-btn { flex:1 1 0; min-width:0; margin:0; padding:0 3px; height:46px; font-size:11px;
         line-height:1.15; white-space:nowrap; display:flex; align-items:center; justify-content:center;
         border-radius:11px; box-shadow:none; }
-      /* PHONE CORNER MAP — every floating piece has its own home, nothing stacks:
-         top-left: focus pill · top-right: camera circle · bottom-left: heart chip
-         bottom-right: scene strip (one swipeable row) · above those: soft word/tips
-         bottom-center prompts sit just above the help bar and gently fade the
-         corner pieces while they are open, so only one thing speaks at a time. */
-      .scene-picker { bottom:70px !important; right:10px !important; z-index:40 !important;
+      /* PHONE CORNER MAP — every floating piece has its own home, nothing stacks.
+         The bottom of the screen belongs to the FIXED composer + the permanent
+         988/911 crisis bar (see ITEM #3/#4 below), which together occupy the
+         lowest ~160px. So every bottom-anchored floater sits ABOVE that band and
+         can never cover the typing box. Top-left: focus pill (clear of the
+         header). Top-right: camera circle. The corner pieces gently fade while a
+         center prompt is open, so only one thing speaks at a time. */
+      .scene-picker { bottom:170px !important; right:10px !important; z-index:40 !important;
         background:rgba(255,255,255,0.85); border-radius:16px; padding:5px 8px;
         max-width:56vw; flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start;
         scrollbar-width:none; }
       .scene-picker::-webkit-scrollbar { display:none; }
-      #heart-chip { bottom:74px !important; left:10px !important;
+      #heart-chip { bottom:174px !important; left:10px !important;
         padding:8px 14px !important; font-size:15px !important; }
       #heart-chip #heart-beat { font-size:16px !important; }
       #heart-chip #heart-num { font-size:18px !important; }
       #heart-chip .hr-label { font-size:11px !important; }
-      /* Focus pill mirrors the camera circle in the opposite top corner */
-      #il-anchor-pill { top:70px !important; bottom:auto !important; left:12px !important;
-        right:auto !important; padding:7px 11px !important; font-size:11.5px !important; }
+      /* ITEM #7 — Focus pill: top-left, pushed clearly BELOW the header row so it
+         can never overlap the "Private & Encrypted" wording, and confined to the
+         left side so it never reaches the top-right camera circle. */
+      #il-anchor-pill { top:112px !important; bottom:auto !important; left:12px !important;
+        right:auto !important; max-width:60vw !important; padding:7px 11px !important;
+        font-size:11.5px !important; }
       /* The soft presence word hugs its own text and floats in a clear band */
-      #il-presence-word { left:50%; right:auto; bottom:158px; width:max-content;
+      #il-presence-word { left:50%; right:auto; bottom:236px; width:max-content;
         max-width:78vw; transform:translateX(-50%); }
       /* Camera tips: small, one per side, in the band above the corner pieces */
-      #hr-distance-tip { bottom:160px !important; right:12px !important; max-width:165px !important; }
-      #il-light-tip { bottom:160px !important; left:12px !important; right:auto !important;
+      #hr-distance-tip { bottom:238px !important; right:12px !important; max-width:165px !important; }
+      #il-light-tip { bottom:238px !important; left:12px !important; right:auto !important;
         transform:none !important; max-width:160px !important; }
-      /* Feeling card + gentle prompts: bottom-center, always ABOVE the help bar */
-      #sam-card { top:auto !important; bottom:78px !important; left:50% !important;
-        right:auto !important; transform:translateX(-50%) !important;
-        max-width:min(320px, calc(100vw - 24px)) !important; }
-      #il-checkin, #gentle-bridge, #fb-card, #save-offer { bottom:78px !important; }
+      /* Gentle prompts (reach-a-person, feedback, save): bottom-center, always
+         ABOVE the fixed composer + crisis bar. The feeling-check popups were
+         removed entirely. */
+      #gentle-bridge, #fb-card, #save-offer { bottom:170px !important; }
       /* While a prompt is open, the corner pieces rest — one voice at a time */
-      body:has(#il-checkin, #sam-card, #gentle-bridge, #fb-card, #save-offer) :is(.scene-picker, #heart-chip, #il-anchor-pill, #il-presence-word, #hr-distance-tip, #il-light-tip) {
+      body:has(#gentle-bridge, #fb-card, #save-offer) :is(.scene-picker, #heart-chip, #il-anchor-pill, #il-presence-word, #hr-distance-tip, #il-light-tip) {
         opacity:0 !important; pointer-events:none !important; transition:opacity .8s ease; }
       body:has(#hr-distance-tip, #il-light-tip) #il-presence-word { opacity:0 !important; }
       /* Give the whole page room so nothing hides behind the fixed help bar,
@@ -803,18 +817,33 @@ PUBLIC_PAGE = """
       #vol-slider { width:68px !important; }
       .music-change { padding:6px 12px; font-size:12px; }
       body { padding-bottom:70px; }
+      /* ITEM #3/#4 — MINIMAL, NON-SCROLLING FIRST SCREEN. On a phone the typing
+         box is FIXED to the bottom and always visible; directly beneath it sit
+         the permanent 988 + 911 fixtures and the single "Talk to someone"
+         opener. Nothing else competes for that first viewport, and the camera
+         preview (pinned top-right) can never come down over the composer. */
+      .il-composer { position:fixed !important; left:10px; right:10px; bottom:60px; z-index:120;
+        margin:0; box-shadow:0 -2px 16px rgba(120,80,40,.16); }
+      .il-input { min-height:26px; }
+      .il-crisis-bar { position:fixed !important; left:0; right:0; bottom:0; z-index:121; margin:0;
+        gap:6px; padding:7px 8px calc(7px + env(safe-area-inset-bottom, 0px));
+        background:#ffffff; box-shadow:0 -3px 14px rgba(20,40,60,0.16); }
+      .il-crisis-bar .rail-btn { flex:1 1 0; min-width:0; padding:11px 4px; font-size:13px; border-radius:11px; }
+      /* The opened help set floats just above the fixed composer, never over it. */
+      #more-menu { position:fixed !important; left:10px; right:10px; bottom:118px; z-index:119;
+        margin:0; background:rgba(255,255,255,0.97); border-radius:16px; padding:10px;
+        box-shadow:0 6px 22px rgba(20,40,60,0.22); }
+      #more-menu .rail-btn { flex:1 1 40%; }
+      /* Give the page room so the fixed composer + crisis bar never hide content. */
+      .story-screen { padding-bottom:210px; }
+      body { padding-bottom:0; }
     }
     /* Only one bottom-center prompt speaks at a time, at every screen size.
-       Priority: reach-a-person invite, then feedback, then save, then check-in,
-       then the feeling faces. Lower ones wait, faded out, and return when the
-       higher one closes. */
-    body:has(#gentle-bridge) :is(#fb-card, #save-offer, #il-checkin, #sam-card) {
+       Priority: reach-a-person invite, then feedback, then save. Lower ones
+       wait, faded out, and return when the higher one closes. */
+    body:has(#gentle-bridge) :is(#fb-card, #save-offer) {
       opacity:0 !important; pointer-events:none !important; }
-    body:has(#fb-card) :is(#save-offer, #il-checkin, #sam-card) {
-      opacity:0 !important; pointer-events:none !important; }
-    body:has(#save-offer) :is(#il-checkin, #sam-card) {
-      opacity:0 !important; pointer-events:none !important; }
-    body:has(#il-checkin) #sam-card {
+    body:has(#fb-card) #save-offer {
       opacity:0 !important; pointer-events:none !important; }
     /* While the one-time readiness notice is open at the top, the top-corner
        floaters rest so nothing sits on the notice (they return on dismiss). */
@@ -954,6 +983,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Actividades",
         "rail.save": "&#128278; Guardar",
         "rail.testmic": "Probar micr&oacute;fono",
+        "rail.talk": "Hablar con alguien",
         "glink.about": "Acerca de",
         "glink.how": "C&oacute;mo funciona",
         "glink.stories": "C&oacute;mo es una visita",
@@ -991,6 +1021,7 @@ PUBLIC_PAGE = """
         "rail.activities": "活动",
         "rail.save": "&#128278; 保存",
         "rail.testmic": "测试麦克风",
+        "rail.talk": "找人倾诉",
         "glink.about": "关于我们",
         "glink.how": "运作方式",
         "glink.stories": "一次访问是怎样的",
@@ -1028,6 +1059,7 @@ PUBLIC_PAGE = """
         "rail.activities": "गतिविधियाँ",
         "rail.save": "&#128278; सहेजें",
         "rail.testmic": "माइक जाँचें",
+        "rail.talk": "किसी से बात करें",
         "glink.about": "हमारे बारे में",
         "glink.how": "यह कैसे काम करता है",
         "glink.stories": "एक मुलाक़ात कैसी होती है",
@@ -1065,6 +1097,7 @@ PUBLIC_PAGE = """
         "rail.activities": "ਸਰਗਰਮੀਆਂ",
         "rail.save": "&#128278; ਸਾਂਭੋ",
         "rail.testmic": "ਮਾਈਕ ਪਰਖੋ",
+        "rail.talk": "ਕਿਸੇ ਨਾਲ ਗੱਲ ਕਰੋ",
         "glink.about": "ਸਾਡੇ ਬਾਰੇ",
         "glink.how": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ",
         "glink.stories": "ਇੱਕ ਮੁਲਾਕਾਤ ਕਿਹੋ ਜਿਹੀ ਹੁੰਦੀ ਹੈ",
@@ -1102,6 +1135,7 @@ PUBLIC_PAGE = """
         "rail.activities": "কার্যকলাপ",
         "rail.save": "&#128278; সংরক্ষণ",
         "rail.testmic": "মাইক পরীক্ষা",
+        "rail.talk": "কারও সঙ্গে কথা বলুন",
         "glink.about": "আমাদের সম্পর্কে",
         "glink.how": "এটি কীভাবে কাজ করে",
         "glink.stories": "একটি সাক্ষাৎ কেমন হয়",
@@ -1139,6 +1173,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Mga gawain",
         "rail.save": "&#128278; I-save",
         "rail.testmic": "Subukan ang mic",
+        "rail.talk": "Makipag-usap sa isang tao",
         "glink.about": "Tungkol sa amin",
         "glink.how": "Paano ito gumagana",
         "glink.stories": "Paano ang isang pagbisita",
@@ -1176,6 +1211,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Ngaahi ngāue",
         "rail.save": "&#128278; Tauhi",
         "rail.testmic": "ʻAhiʻahiʻi e maikolofoni",
+        "rail.talk": "Talanoa mo ha taha",
         "glink.about": "Ko kimautolu",
         "glink.how": "Founga ʻene ngāue",
         "glink.stories": "Ko e anga ʻo ha ʻaʻahi",
@@ -1213,6 +1249,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Shughuli",
         "rail.save": "&#128278; Hifadhi",
         "rail.testmic": "Jaribu maiki",
+        "rail.talk": "Zungumza na mtu",
         "glink.about": "Kuhusu",
         "glink.how": "Jinsi inavyofanya kazi",
         "glink.stories": "Jinsi ziara inavyokwenda",
@@ -1250,6 +1287,7 @@ PUBLIC_PAGE = """
         "rail.activities": "እንቅስቃሴዎች",
         "rail.save": "&#128278; አስቀምጥ",
         "rail.testmic": "ማይክ ይሞክሩ",
+        "rail.talk": "ከአንድ ሰው ጋር ይነጋገሩ",
         "glink.about": "ስለ እኛ",
         "glink.how": "እንዴት እንደሚሰራ",
         "glink.stories": "ጉብኝት እንዴት እንደሚሄድ",
@@ -1287,6 +1325,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Ayyuka",
         "rail.save": "&#128278; Ajiye",
         "rail.testmic": "Gwada makirufo",
+        "rail.talk": "Yi magana da wani",
         "glink.about": "Game da mu",
         "glink.how": "Yadda yake aiki",
         "glink.stories": "Yadda ziyara take",
@@ -1324,6 +1363,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Занятия",
         "rail.save": "&#128278; Сохранить",
         "rail.testmic": "Проверить микрофон",
+        "rail.talk": "Поговорить с человеком",
         "glink.about": "О нас",
         "glink.how": "Как это работает",
         "glink.stories": "Как проходит визит",
@@ -1394,10 +1434,8 @@ PUBLIC_PAGE = """
         try { if (typeof initVoices === 'function') initVoices(); } catch(e){}
         try { if (typeof populateVoicePicker === 'function') populateVoicePicker(); } catch(e){}
         try { var _sp=document.getElementById('scene-picker'); if (_sp && typeof _ilux==='function') _sp.setAttribute('aria-label', _ilux('scn.aria')); } catch(e){}
-        // A feeling prompt already on screen must follow the person into
-        // their new language, not linger in the old one.
-        try { var _ci=document.getElementById('il-checkin'); if (_ci && _ci.querySelector('button')) { _ci.remove(); if (typeof showCheckin==='function') showCheckin(); } } catch(e){}
-        try { var _sc=document.getElementById('sam-card'); if (_sc) { _sc.remove(); if (typeof showCalmScale==='function') showCalmScale(window._lastSamPhase||''); } } catch(e){}
+        // (The feeling-check popups were removed entirely, so there is nothing
+        // to re-render on a language switch — Principle 11.)
         // The Focus pill and the anchor overlay were created once and kept
         // their birth language — they now follow every switch, live.
         try { var _ap=document.getElementById('il-anchor-pill'); if (_ap && typeof _ilan==='function') _ap.textContent='\u25ce '+_ilan('pill'); } catch(e){}
@@ -1904,12 +1942,6 @@ PUBLIC_PAGE = """
 
     var _IL_UX = {
       en: {
-        "sam.q": "How are you feeling right now? (tap one, or ignore me)",
-        "sam.s1": "Very distressed",
-        "sam.s2": "Uneasy",
-        "sam.s3": "In between",
-        "sam.s4": "Okay",
-        "sam.s5": "Calm",
         "fb.ask": "If you have a moment: did this help? Your answer is anonymous and helps us help others.",
         "fb.yes": "It helped",
         "fb.some": "Somewhat",
@@ -1979,12 +2011,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911"
       },
       es: {
-        "sam.q": "¿Cómo te sientes ahora mismo? (toca una carita, o ignórame)",
-        "sam.s1": "Muy angustiado/a",
-        "sam.s2": "Inquieto/a",
-        "sam.s3": "Entre medio",
-        "sam.s4": "Bien",
-        "sam.s5": "En calma",
         "fb.ask": "Si tienes un momento: ¿te ayudó esto? Tu respuesta es anónima y nos ayuda a ayudar a otros.",
         "fb.yes": "Me ayudó",
         "fb.some": "Algo",
@@ -2054,12 +2080,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911"
       },
       zh: {
-        "sam.q": "你现在感觉怎么样？（点一个，或忽略我）",
-        "sam.s1": "非常难受",
-        "sam.s2": "有些不安",
-        "sam.s3": "中间",
-        "sam.s4": "还好",
-        "sam.s5": "平静",
         "fb.ask": "如果你有片刻时间：这对你有帮助吗？你的回答是匿名的，能帮助我们去帮助更多人。",
         "fb.yes": "有帮助",
         "fb.some": "有一点",
@@ -2129,12 +2149,6 @@ PUBLIC_PAGE = """
         "uh.911n": "拨打 911"
       },
       hi: {
-        "sam.q": "आप इस समय कैसा महसूस कर रहे हैं? (एक चुनें, या मुझे अनदेखा करें)",
-        "sam.s1": "बहुत परेशान",
-        "sam.s2": "बेचैन",
-        "sam.s3": "बीच में",
-        "sam.s4": "ठीक",
-        "sam.s5": "शांत",
         "fb.ask": "यदि आपके पास एक पल है: क्या इससे मदद मिली? आपका जवाब गुमनाम है और इससे हम दूसरों की मदद कर पाते हैं।",
         "fb.yes": "मदद मिली",
         "fb.some": "कुछ हद तक",
@@ -2204,12 +2218,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911 पर कॉल करें"
       },
       pa: {
-        "sam.q": "ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ? (ਇੱਕ ਚੁਣੋ, ਜਾਂ ਮੈਨੂੰ ਅਣਡਿੱਠ ਕਰੋ)",
-        "sam.s1": "ਬਹੁਤ ਪਰੇਸ਼ਾਨ",
-        "sam.s2": "ਬੇਚੈਨ",
-        "sam.s3": "ਵਿਚਕਾਰ",
-        "sam.s4": "ਠੀਕ",
-        "sam.s5": "ਸ਼ਾਂਤ",
         "fb.ask": "ਜੇ ਤੁਹਾਡੇ ਕੋਲ ਇੱਕ ਪਲ ਹੈ: ਕੀ ਇਸ ਨਾਲ ਮਦਦ ਮਿਲੀ? ਤੁਹਾਡਾ ਜਵਾਬ ਗੁਮਨਾਮ ਹੈ ਅਤੇ ਇਸ ਨਾਲ ਅਸੀਂ ਦੂਜਿਆਂ ਦੀ ਮਦਦ ਕਰ ਪਾਉਂਦੇ ਹਾਂ।",
         "fb.yes": "ਮਦਦ ਮਿਲੀ",
         "fb.some": "ਕੁਝ ਹੱਦ ਤੱਕ",
@@ -2279,12 +2287,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911 ਉੱਤੇ ਕਾਲ ਕਰੋ"
       },
       bn: {
-        "sam.q": "আপনি এই মুহূর্তে কেমন বোধ করছেন? (একটি বেছে নিন, বা আমাকে উপেক্ষা করুন)",
-        "sam.s1": "খুব কষ্টে",
-        "sam.s2": "অস্থির",
-        "sam.s3": "মাঝামাঝি",
-        "sam.s4": "ঠিক আছি",
-        "sam.s5": "শান্ত",
         "fb.ask": "যদি এক মুহূর্ত সময় থাকে: এটি কি সাহায্য করেছে? আপনার উত্তর বেনামি, আর তা আমাদের অন্যদের সাহায্য করতে সাহায্য করে।",
         "fb.yes": "সাহায্য করেছে",
         "fb.some": "কিছুটা",
@@ -2354,12 +2356,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911 নম্বরে কল করুন"
       },
       tl: {
-        "sam.q": "Ano ang nararamdaman mo ngayon? (mag-tap ng isa, o balewalain ako)",
-        "sam.s1": "Lubhang naguguluhan",
-        "sam.s2": "Balisa",
-        "sam.s3": "Nasa gitna",
-        "sam.s4": "Ayos lang",
-        "sam.s5": "Panatag",
         "fb.ask": "Kung may sandali ka: nakatulong ba ito? Anonymous ang sagot mo at nakakatulong ito para matulungan namin ang iba.",
         "fb.yes": "Nakatulong",
         "fb.some": "Medyo",
@@ -2429,12 +2425,6 @@ PUBLIC_PAGE = """
         "uh.911n": "Tumawag sa 911"
       },
       to: {
-        "sam.q": "ʻOkú ke ongoʻi fēfē he taimí ni? (lomiʻi ha taha, pe tukunoaʻi au)",
-        "sam.s1": "Faingataʻaʻia lahi",
-        "sam.s2": "Hohaʻa",
-        "sam.s3": "Vahaʻa",
-        "sam.s4": "Sai pē",
-        "sam.s5": "Nonga",
         "fb.ask": "Kapau ʻoku ʻi ai haʻo kiʻi taimi: naʻe tokoni eni? ʻOku taʻehingoa hoʻo talí pea ʻoku tokoni ia ke mau tokoniʻi ʻa e niʻihi kehe.",
         "fb.yes": "Naʻe tokoni",
         "fb.some": "Siʻisiʻi pē",
@@ -2504,12 +2494,6 @@ PUBLIC_PAGE = """
         "uh.911n": "Telefoni ki he 911"
       },
       sw: {
-        "sam.q": "Unajisikiaje sasa hivi? (gusa moja, au unipuuze)",
-        "sam.s1": "Nimezidiwa sana",
-        "sam.s2": "Sina utulivu",
-        "sam.s3": "Katikati",
-        "sam.s4": "Niko sawa",
-        "sam.s5": "Nimetulia",
         "fb.ask": "Ukiwa na dakika: je, hii ilisaidia? Jibu lako halijulikani nani na linatusaidia kuwasaidia wengine.",
         "fb.yes": "Ilisaidia",
         "fb.some": "Kiasi",
@@ -2579,12 +2563,6 @@ PUBLIC_PAGE = """
         "take.ph": "Chukua muda wako... au gusa Sema (bonyeza Enter kutuma)"
       },
       am: {
-        "sam.q": "አሁን ምን ይሰማዎታል? (አንዱን ይንኩ፣ ወይም ችላ ይበሉኝ)",
-        "sam.s1": "በጣም ተጨንቄያለሁ",
-        "sam.s2": "አልረጋጋሁም",
-        "sam.s3": "መካከል",
-        "sam.s4": "ደህና ነኝ",
-        "sam.s5": "ተረጋግቻለሁ",
         "fb.ask": "ደቂቃ ካለዎት: ይህ ረድቷል? መልስዎ ስም-አልባ ነው፤ ሌሎችን እንድንረዳ ይረዳናል።",
         "fb.yes": "ረድቷል",
         "fb.some": "በመጠኑ",
@@ -2654,12 +2632,6 @@ PUBLIC_PAGE = """
         "take.ph": "ጊዜዎን ይውሰዱ... ወይም ይናገሩ ይንኩ (ለመላክ Enter ይጫኑ)"
       },
       ha: {
-        "sam.q": "Yaya kake ji a yanzu? (taɓa ɗaya, ko ka ƙyale ni)",
-        "sam.s1": "Na damu sosai",
-        "sam.s2": "Ban natsu ba",
-        "sam.s3": "Tsakiya",
-        "sam.s4": "Ina lafiya",
-        "sam.s5": "Na natsu",
         "fb.ask": "Idan kana da minti ɗaya: shin wannan ya taimaka? Amsarka ba a san mai bayarwa ba, kuma tana taimaka mana mu taimaki wasu.",
         "fb.yes": "Ya taimaka",
         "fb.some": "Kaɗan",
@@ -2729,12 +2701,6 @@ PUBLIC_PAGE = """
         "take.ph": "Ɗauki lokacinka... ko taɓa Yi magana (danna Enter don aikawa)"
       },
       ru: {
-        "sam.q": "Как вы себя чувствуете прямо сейчас? (коснитесь одного — или просто пропустите)",
-        "sam.s1": "Очень тяжело",
-        "sam.s2": "Тревожно",
-        "sam.s3": "Посередине",
-        "sam.s4": "Нормально",
-        "sam.s5": "Спокойно",
         "fb.ask": "Если есть минутка: это помогло? Ваш ответ анонимен и помогает нам помогать другим.",
         "fb.yes": "Помогло",
         "fb.some": "Отчасти",
@@ -3039,10 +3005,16 @@ PUBLIC_PAGE = """
           <textarea id="message" class="story-input il-input" data-i18n-ph="story.placeholder" aria-label="Type or tap the mic to talk (press Enter to send)" placeholder="Start wherever you would like\u2026 type or tap the mic" rows="1" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();ilSend();}"></textarea>
           <button class="il-mic" type="button" onclick="startVoiceCapture()" title="Tap to talk" aria-label="Tap to talk">&#127908;</button>
           <button class="il-arrow" type="button" onclick="ilSend()" title="Send" aria-label="Send">&#8593;</button>
-          <button class="il-more" type="button" onclick="toggleMore()" title="More help options" aria-label="More">&#8943;</button>
+        </div>
+        <!-- ALWAYS-VISIBLE CRISIS FIXTURES (Immutable Principle 1, THE NO-DEAD-END
+             LAW): 988 and 911 are permanent, never collapsed. Beside them, ONE
+             gentle "Talk to someone" button opens every other help option. -->
+        <div class="il-crisis-bar">
+          <a href="tel:988" class="rail-btn rail-988" aria-label="Call or text 988">&#128222; 988</a>
+          <a href="tel:911" class="rail-btn rail-911" aria-label="Call 911">&#128222; 911</a>
+          <button class="rail-btn rail-talk" type="button" onclick="toggleMore()" aria-expanded="false" aria-controls="more-menu" data-i18n="rail.talk">Talk to someone</button>
         </div>
         <div id="more-menu" style="display:none;">
-          <a href="tel:988" class="rail-btn rail-988">&#128222; 988</a>
           <button type="button" class="rail-btn" onclick="openHelp('telehealth')" data-i18n="rail.provider">Provider</button>
           <button type="button" class="rail-btn" onclick="openHelp('attorney')" data-i18n="rail.legal">Legal</button>
           <button type="button" class="rail-btn" onclick="openFacilities()" data-i18n="rail.nearby">Nearby help</button>
@@ -4587,7 +4559,6 @@ var _IL_FAC = {
 };
 function _ilfac(k){ var lg=(window._ilLang||"en"); return (_IL_FAC[lg]||_IL_FAC.en)[k]; }
 function openFacilities(){
-  try { var _ci=document.getElementById('il-checkin'); if (_ci) _ci.remove(); } catch(e){}
   let ov = document.getElementById('facilities-overlay');
   if (ov){ ov.style.display='flex'; return; }
   ov = document.createElement('div');
@@ -4907,81 +4878,11 @@ var ATT = (function(){
 })();
 window.ATT = ATT;
 
-// ---- The wordless one-tap CHECK-IN — the person's own truth, and what teaches
-// the personal read which of their signals to trust. Gentle, optional, dismissible.
-var _ilCheckinLast = 0, _ilSessionStart = Date.now();
-var _IL_CT = {
-  en:{q:'How are you feeling right now?', a:'Settled', b:'Overwhelmed', thanks:'Thank you.', skip:'Not now',
-      scale:['Settled','Mostly settled','In between','Mostly overwhelmed','Overwhelmed']},
-  es:{q:'¿Cómo te sientes ahora mismo?', a:'En calma', b:'Abrumado/a', thanks:'Gracias.', skip:'Ahora no',
-      scale:['En calma','Bastante en calma','Entre medio','Bastante abrumado','Abrumado']},
-  zh:{q:'你现在感觉怎么样？', a:'平静', b:'不知所措', thanks:'谢谢你。', skip:'暂不',
-      scale:['平静','比较平静','中间','比较不知所措','不知所措']},
-  hi:{q:'आप इस समय कैसा महसूस कर रहे हैं?', a:'शांत', b:'बहुत बोझिल', thanks:'धन्यवाद।', skip:'अभी नहीं',
-      scale:['शांत','काफ़ी शांत','बीच में','काफ़ी बोझिल','बहुत बोझिल']},
-  pa:{q:'ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ?', a:'ਸ਼ਾਂਤ', b:'ਬਹੁਤ ਬੋਝ ਹੇਠ', thanks:'ਧੰਨਵਾਦ।', skip:'ਹੁਣ ਨਹੀਂ',
-      scale:['ਸ਼ਾਂਤ','ਕਾਫ਼ੀ ਸ਼ਾਂਤ','ਵਿਚਕਾਰ','ਕਾਫ਼ੀ ਬੋਝ ਹੇਠ','ਬਹੁਤ ਬੋਝ ਹੇਠ']},
-  sw:{q:'Unajisikiaje sasa hivi?', a:'Nimetulia', b:'Nimezidiwa', thanks:'Asante.', skip:'Si sasa',
-      scale:['Nimetulia','Nimetulia kiasi','Katikati','Nimezidiwa kiasi','Nimezidiwa']},
-  am:{q:'አሁን ምን ይሰማዎታል?', a:'ተረጋግቻለሁ', b:'ተጨንቄያለሁ', thanks:'አመሰግናለሁ።', skip:'አሁን አይደለም',
-      scale:['ተረጋግቻለሁ','በአብዛኛው ተረጋግቻለሁ','መካከል','በአብዛኛው ተጨንቄያለሁ','ተጨንቄያለሁ']},
-  ha:{q:'Yaya kake ji a yanzu?', a:'Na natsu', b:'Na cika da damuwa', thanks:'Na gode.', skip:'Ba yanzu ba',
-      scale:['Na natsu','Na natsu sosai-sosai','Tsakiya','Damuwa kaɗan-kaɗan','Na cika da damuwa']},
-      ru: {q:'Как вы себя чувствуете прямо сейчас?', a:'Спокойно', b:'Невыносимо', thanks:'Спасибо.', skip:'Не сейчас',
-      scale:['Спокойно','В основном спокойно','Посередине','Почти невыносимо','Невыносимо']},
-  bn:{q:'আপনি এই মুহূর্তে কেমন বোধ করছেন?', a:'শান্ত', b:'ভীষণ চাপে', thanks:'ধন্যবাদ।', skip:'এখন নয়',
-      scale:['শান্ত','মোটামুটি শান্ত','মাঝামাঝি','বেশ চাপে','ভীষণ চাপে']},
-  tl:{q:'Ano ang nararamdaman mo ngayon?', a:'Panatag', b:'Lubhang nalulula', thanks:'Salamat.', skip:'Hindi muna',
-      scale:['Panatag','Medyo panatag','Nasa gitna','Medyo nalulula','Lubhang nalulula']},
-  to:{q:'ʻOkú ke ongoʻi fēfē he taimí ni?', a:'Nonga', b:'Māfasia', thanks:'Mālō.', skip:'ʻIkai he taimí ni',
-      scale:['Nonga','Meimei nonga','Vahaʻa','Meimei māfasia','Māfasia']}
-};
-function _ilct(k){ var lg=(window._ilLang||'en'); return (_IL_CT[lg]||_IL_CT.en)[k]; }
-function showCheckin(){ if(document.getElementById('il-checkin')) return;
-  // Never stamp a feelings prompt over something the person is actively
-  // reading or using: nearby help, activities, the anchor, or any overlay.
-  try {
-    var _busy = ['facilities-overlay','activities-overlay','il-anchor','legal-overlay','provider-overlay'].some(function(id){
-      var el=document.getElementById(id); return el && el.style.display!=='none' && el.offsetParent!==null; });
-    if (_busy) return;
-  } catch(e){}
-  var wrap=document.createElement('div'); wrap.id='il-checkin';
-  wrap.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:92vw;'
-    +'background:#faf5ec;border:1px solid #e7dccc;border-radius:18px;box-shadow:0 12px 40px rgba(42,30,20,0.22);'
-    +'padding:16px 18px 14px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
-  var dots=''; var i; var scale=_ilct('scale')||[];
-  for(i=0;i<5;i++){ var sz=14+i*3; var col=['#5f8bb6','#7f97b0','#b9a58f','#cf8a5e','#c56a2c'][i];
-    dots+='<button aria-label="'+(scale[i]||i)+'" onclick="ilCheckinPick('+(i/4)+')" style="border:0;background:'+col+';'
-      +'width:'+sz+'px;height:'+sz+'px;border-radius:50%;margin:0 9px;cursor:pointer;padding:0;vertical-align:middle;opacity:.92;"></button>'; }
-  wrap.innerHTML='<div style="font-size:15px;color:#2b2620;margin-bottom:12px;">'+_ilct('q')+'</div>'
-    +'<div style="display:flex;align-items:center;justify-content:center;">'
-    +'<span style="font-size:12px;color:#6b5f4e;margin-right:6px;">'+_ilct('a')+'</span>'+dots
-    +'<span style="font-size:12px;color:#6b5f4e;margin-left:6px;">'+_ilct('b')+'</span></div>'
-    +'<div style="margin-top:8px;"><a href="#" onclick="closeCheckin();return false;" style="font-size:12px;color:#6b5f4e;text-decoration:none;">'+_ilct('skip')+'</a></div>';
-  document.body.appendChild(wrap); _ilCheckinLast=Date.now();
-}
-function ilCheckinPick(v){ try{ if(window.ATT) ATT.report(v); }catch(e){}
-  var w=document.getElementById('il-checkin'); if(w){ w.innerHTML='<div style="font-size:15px;color:#2b2620;padding:6px 4px;">'+_ilct('thanks')+'</div>';
-    setTimeout(function(){ try{ w.remove(); }catch(e){} }, 1100); } _ilCheckinLast=Date.now(); }
-function closeCheckin(){ var w=document.getElementById('il-checkin'); if(w){ try{ w.remove(); }catch(e){} } _ilCheckinLast=Date.now(); }
-window.ilCheckinPick=ilCheckinPick; window.closeCheckin=closeCheckin; window.showCheckin=showCheckin;
-function ilMaybeInvite(){ try{
-  var ss=document.getElementById('story-screen'); if(!ss || ss.style.display==='none') return;
-  if(document.getElementById('il-checkin')) return;
-  // PRINCIPLE 14 — NEVER MORE THAN THEY CAN BEAR. An interruption is an ask.
-  // Never interrupt a person who is writing or speaking — their outpouring is
-  // sacred. And ask far less often: the program reads; the person is carried.
-  var typedRecently = (window._lastTypedAt && (performance.now() - window._lastTypedAt) < 45000);
-  var writingNow = (document.activeElement && document.activeElement.id === 'message' && (document.getElementById('message')||{}).value);
-  var speakingNow = (typeof voiceListening !== 'undefined' && voiceListening);
-  if (typedRecently || writingNow || speakingNow) return;
-  var now=Date.now(); var since=now-_ilCheckinLast;
-  var conf=(window.ATT?ATT.confidence():1);
-  var firstDue=(_ilCheckinLast===0 && (now-_ilSessionStart)>240000);
-  var lowConf=(conf<0.45 && since>360000);
-  var periodic=(_ilCheckinLast>0 && since>480000);
-  if(firstDue||lowConf||periodic) showCheckin();
-}catch(e){} }
+// ---- The wordless one-tap CHECK-IN feeling popup was removed entirely
+// (FOUNDER_WORKLIST #6 / Principle 11 NEVER MORE THAN THEY CAN BEAR): a
+// feeling-check prompt is an interruption, and interruptions are asks. The
+// personal read (ATT) keeps working from passive signals; nothing is ever
+// popped up to ask the person how they feel.
 
 // ===========================================================================
 // THE RHYTHM ANCHOR — a steady pulsing light that rises up to HOLD a person who
@@ -5117,7 +5018,7 @@ function readArousalSignal() {
     try { ATT.start(); } catch(e){}
     try { document.addEventListener('keydown', ilNoteInteract, true); document.addEventListener('pointerdown', ilNoteInteract, true); } catch(e){}
     try { ilAddAnchorPill(); } catch(e){}
-    try { setInterval(function(){ ilMaybeInvite(); ilMaybeAnchor(); }, 12000); } catch(e){}
+    try { setInterval(function(){ ilMaybeAnchor(); }, 12000); } catch(e){}
   }
   var a = ATT.update();
   window._adaptiveDown = ATT.state.down;
@@ -5916,30 +5817,9 @@ function politeScrollIntoView(el){
   if (nearBottom(document.body)) politeScrollIntoView(el);
 }
 
-// ---- LENS THREE: wordless calm scale (tap a face, or ignore it) ----
-function showCalmScale(phase){
-  window._lastSamPhase = phase;
-  if (document.getElementById('sam-card')) return;
-  const card = document.createElement('div');
-  card.id = 'sam-card';
-  card.style.cssText = 'position:fixed;top:206px;right:18px;z-index:60;max-width:200px;'
-    + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 16px;'
-    + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
-  var samNames = [_ilux('sam.s1'),_ilux('sam.s2'),_ilux('sam.s3'),_ilux('sam.s4'),_ilux('sam.s5')];
-  card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">'+_ilux('sam.q')+'</div>'
-    + '<div style="font-size:30px;letter-spacing:14px;">'
-    + ['&#128551;','&#128533;','&#128528;','&#128578;','&#128522;'].map(function(f,i){
-        return '<button type="button" data-v="'+(i+1)+'" aria-label="'+samNames[i]+'" style="cursor:pointer;background:none;border:0;padding:0;font-size:inherit;letter-spacing:inherit;">'+f+'</button>';
-      }).join('')
-    + '</div>';
-  card.addEventListener('click', function(ev){
-    const v = ev.target && ev.target.dataset && ev.target.dataset.v;
-    if (v) metric('selfreport', phase + '|' + v);
-    card.style.opacity = '0'; setTimeout(()=>card.remove(), 1000);
-  });
-  document.body.appendChild(card);
-  setTimeout(()=>{ if (card.parentNode){ card.style.opacity='0'; setTimeout(()=>card.remove(),1000);} }, 25000);
-}
+// The wordless calm-scale feeling card was removed entirely
+// (FOUNDER_WORKLIST #6 / Principle 11 NEVER MORE THAN THEY CAN BEAR): a
+// feeling-check prompt is an ask, and asks are removed here.
 
 let TAP_MS = Date.now();
 // PRELOAD: fetch the calm lane and warm up the first track before the tap,
@@ -5973,8 +5853,8 @@ async function startExperience() {
   // Warm the sound engine at the tap so the sound box answers instantly later.
   try { if (typeof ensureZenisysContext === 'function') ensureZenisysContext(); } catch(e){}
   try { const ac = new (window.AudioContext||window.webkitAudioContext)(); if (ac.state==='suspended') ac.resume(); window._warmCtx = ac; } catch(e){}
-  setTimeout(()=>showCalmScale('arrival'), 9000);      // after the music has risen
-  setTimeout(()=>showCalmScale('later'), 4*60*1000);   // the change measurement
+  // (The calm-scale feeling prompts were removed — no feeling-check popup is
+  // ever scheduled; Principle 11.)
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else).
   // The arrival gate dissolves slowly over the story screen instead of blinking
   // away — one continuous place, not two pages.
@@ -6164,7 +6044,10 @@ function ilMicSendDone(){
 }
 function toggleMore(){
   var m = document.getElementById('more-menu');
-  if (m) m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
+  if (!m) return;
+  var open = (m.style.display === 'none' || !m.style.display);
+  m.style.display = open ? 'flex' : 'none';
+  try { var t = document.querySelector('.rail-talk'); if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false'); } catch(e){}
 }
 function togglePreview(){
   var v=document.getElementById('visual-preview'), x=document.getElementById('preview-hide'), s=document.getElementById('preview-seen');
@@ -6864,7 +6747,71 @@ document.addEventListener('keydown', function(){ window._lastTypedAt = performan
   // always watch their own face, but the small live preview stays put so they
   // know we can see them. (They can still hide it with the corner button.)
   const bar = document.querySelector('.story-video-bar');
-  if (bar) bar.classList.add('pinned');
+  if (!bar) return;
+  bar.classList.add('pinned');
+
+  // ITEM #5 — the app never moves the preview on its own; but the PERSON may
+  // drag it, and where THEY put it is where it stays for the session. We store
+  // the dragged spot in sessionStorage and re-apply it, so a scroll, a reply,
+  // or a state change can never shove it back over the typing box.
+  function applyStoredPos(){
+    try {
+      var raw = sessionStorage.getItem('il_preview_pos');
+      if (!raw) return;
+      var p = JSON.parse(raw);
+      if (p && typeof p.left === 'number' && typeof p.top === 'number') {
+        bar.style.left = p.left + 'px';
+        bar.style.top = p.top + 'px';
+        bar.style.right = 'auto';
+      }
+    } catch(e){}
+  }
+  applyStoredPos();
+
+  var dragging = false, startX = 0, startY = 0, baseLeft = 0, baseTop = 0, moved = false;
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+  function onDown(e){
+    // The little hide (x) button keeps its own job — never start a drag on it.
+    if (e.target && e.target.id === 'preview-hide') return;
+    var pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
+    var r = bar.getBoundingClientRect();
+    dragging = true; moved = false;
+    startX = pt.clientX; startY = pt.clientY;
+    baseLeft = r.left; baseTop = r.top;
+    bar.style.transition = 'none';
+    try { e.preventDefault(); } catch(_){}
+  }
+  function onMove(e){
+    if (!dragging) return;
+    var pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
+    var dx = pt.clientX - startX, dy = pt.clientY - startY;
+    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+    var w = bar.offsetWidth, h = bar.offsetHeight;
+    var left = clamp(baseLeft + dx, 4, window.innerWidth - w - 4);
+    var top = clamp(baseTop + dy, 4, window.innerHeight - h - 4);
+    bar.style.left = left + 'px';
+    bar.style.top = top + 'px';
+    bar.style.right = 'auto';
+    try { e.preventDefault(); } catch(_){}
+  }
+  function onUp(){
+    if (!dragging) return;
+    dragging = false;
+    if (moved) {
+      var r = bar.getBoundingClientRect();
+      try { sessionStorage.setItem('il_preview_pos', JSON.stringify({left: Math.round(r.left), top: Math.round(r.top)})); } catch(e){}
+      window._previewPos = {left: Math.round(r.left), top: Math.round(r.top)};
+    }
+  }
+  try {
+    bar.style.cursor = 'grab';
+    bar.addEventListener('mousedown', onDown);
+    bar.addEventListener('touchstart', onDown, {passive:false});
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+  } catch(e){}
 })();
 
 // ===================== SPEECH QUEUE — ONE VOICE AT A TIME =====================

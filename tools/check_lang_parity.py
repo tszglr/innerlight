@@ -16,7 +16,6 @@ LANGS = ["es", "zh", "hi", "pa", "bn", "tl", "to", "sw", "am", "ha", "ru"]
 DICTS = [
     ("var I18N = {", False),          # en lives as inline HTML defaults
     ("var GATE_GREETINGS = {", True),
-    ("var _IL_CT = {", True),
     ("var _IL_AN = {", True),
     ("var _IL_UX = {", True),
     ("var _IL_HO = {", False),        # en passes through untranslated
