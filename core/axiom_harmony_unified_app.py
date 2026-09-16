@@ -431,7 +431,7 @@ PUBLIC_PAGE = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="creator" content="Toshay S. Zeigler">
   <meta name="company" content="God's Love for Us LLC">
-  <meta name="theme-color" content="#2a1e14">
+  <meta name="theme-color" content="#1f2a28">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="/scenes/app_icon_192.png">
   <link rel="apple-touch-icon" href="/scenes/app_icon_192.png">
@@ -449,7 +449,7 @@ PUBLIC_PAGE = """
   <!-- Creator imprint: God's Love for Us LLC, Axiom Harmony Protocol, InnerLight, VEIL, EDEN, and the Zenisys Sound System are created by Toshay S. Zeigler. -->
   <style>
   @keyframes listenpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
-    :root { --page:#faf5ec; --ink:#2a1e14; --muted:#74624d; --panel:#ffffff; --line:#ece0d0; --teal:#2f9077; --leaf:#2e6e8e; --coral:#d97a5f; --gold:#b7791f; }
+    :root { --page:#eef3f2; --ink:#1f2a28; --muted:#52655e; --panel:#ffffff; --line:#d9e4e0; --teal:#2f9077; --leaf:#2e6e8e; --coral:#d97a5f; --gold:#b7791f; }
     /* ---- COORDINATED WARM PALETTE (FEAT-005) ----------------------------------
        One place for the warm scheme so it is not one flat brown and never a stray
        hex. Used by the calming-activities overlay (and reusable anywhere on the
@@ -504,7 +504,7 @@ PUBLIC_PAGE = """
     * { box-sizing:border-box; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--page); color:var(--ink); line-height:1.5; }
     a { color:var(--teal); text-decoration:none; }
-    header { position:sticky; top:0; z-index:5; background:rgba(250,245,236,.96); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
+    header { position:sticky; top:0; z-index:5; background:rgba(238,243,242,.96); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
     .brand { font-weight:700; color:var(--ink); }
     .brand small { display:block; color:var(--muted); font-weight:400; }
     nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; }
@@ -4476,8 +4476,8 @@ function applyProviderSuggestion(){
       if (thread && !document.getElementById('legal-nudge')){
         const div = document.createElement('div');
         div.id = 'legal-nudge';
-        div.style.cssText = 'background:#f8f5f2;border:1px solid #dcc0a9;border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#754f30;line-height:1.55;';
-        div.innerHTML = s.why + '<br><button onclick="openLegalHelp()" style="margin-top:10px;background:#d4782d;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;">See legal help options</button>';
+        div.style.cssText = 'background:#eef4f2;border:1px solid #cfe2dc;border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#3a4a46;line-height:1.55;';
+        div.innerHTML = s.why + '<br><button onclick="openLegalHelp()" style="margin-top:10px;background:#2f9077;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;">See legal help options</button>';
         thread.appendChild(div);
         try { metric('legal_surfaced', s.category || ''); } catch(e){}
       }
@@ -4534,7 +4534,7 @@ function handleHelpRequestIfAny(text){
       const div = document.createElement('div');
       div.id = 'route-now';
       div.style.cssText = 'background:rgba(46,110,142,0.12);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#234;line-height:1.55;';
-      const legalBtn = '<button onclick="openLegalHelp()" style="background:#d4782d;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me to legal help</button>';
+      const legalBtn = '<button onclick="openLegalHelp()" style="background:#2f9077;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me to legal help</button>';
       const provBtn = '<button onclick="routeProvider()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Talk to a counselor</button>';
       const nearBtn = '<button onclick="openFacilities()" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Find nearby help</button>';
       let lead, buttons;
@@ -7254,30 +7254,30 @@ async function sendCheckin() {
 function appendLegalGuidance(thread, lg) {
   if (!lg || !lg.issue_detected) return;
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:left;background:#f8f5f2;border:1px solid #e6d8cc;border-radius:14px;padding:18px;margin:14px 0;';
+  el.style.cssText = 'text-align:left;background:#eef4f2;border:1px solid #cfe2dc;border-radius:14px;padding:18px;margin:14px 0;';
   const rights = (lg.your_rights || []).slice(0,3).map(r => '<li style="margin:4px 0;">' + escapeHtml(r) + '</li>').join('');
   const askAtty = (lg.questions_for_attorney || []).slice(0,3).map(q => '<li style="margin:4px 0;">' + escapeHtml(q) + '</li>').join('');
   const freeHelp = (lg.free_legal_help || []).slice(0,3).map(h => '<li style="margin:4px 0;">' + escapeHtml(h) + '</li>').join('');
   const steps = (lg.steps_you_can_take_now || []).slice(0,3).map(s => '<li style="margin:4px 0;">' + escapeHtml(s) + '</li>').join('');
   el.innerHTML = `
-    <p style="font-size:15px;color:#6a402c;font-weight:600;margin:0 0 8px;">${_ilux('lg.based').replace('{issue}', escapeHtml(lg.issue_detected))}</p>
+    <p style="font-size:15px;color:#256f5c;font-weight:600;margin:0 0 8px;">${_ilux('lg.based').replace('{issue}', escapeHtml(lg.issue_detected))}</p>
     <details style="margin:8px 0;" open>
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.rights')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${rights}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.rights')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${rights}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.ask')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${askAtty}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.ask')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${askAtty}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.free')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${freeHelp}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.free')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${freeHelp}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.steps')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${steps}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.steps')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${steps}</ul>
     </details>
-    <p style="font-size:11px;color:#bb8559;margin:10px 0 0;line-height:1.5;">${escapeHtml(lg.disclaimer || '')}</p>
+    <p style="font-size:11px;color:#4a5b55;margin:10px 0 0;line-height:1.5;">${escapeHtml(lg.disclaimer || '')}</p>
   `;
   thread.appendChild(el);
 }
@@ -7296,7 +7296,7 @@ function appendHandoff(thread, handoff, data) {
   el.className = 'handoff-card';
   const colors = {
     crisis: {bg:'#eef4f2', border:'#2f9077', accent:'#256f5c'},
-    legal: {bg:'#f8f5f2', border:'#dcc0a9', accent:'#d4782d'},
+    legal: {bg:'#eef4f2', border:'#2f9077', accent:'#256f5c'},
     telehealth: {bg:'#eff6ff', border:'#60a5fa', accent:'#1d4ed8'},
     community: {bg:'#fef9ec', border:'#f0c14b', accent:'#a16207'}
   };
@@ -7953,17 +7953,17 @@ CLINICAL_HANDOFF_PAGE = r"""
   <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to a Care Professional</title>
   <style>
-    :root { --ink:#2a1e14; --muted:#99673e; --line:#e8dcc8; --soft:#f5eddc; --cream:#faf5ec; --card:#fffdf8;
+    :root { --ink:#1f2a28; --muted:#52655e; --line:#d9e4e0; --soft:#e6efec; --cream:#eef3f2; --card:#fbfdfc;
             --urgent:#b84a44; --amber:#c56a2c; --dusk:#33567c;
             --green:#c56a2c; --blue:#33567c; --legal:#c56a2c; --legal2:#c56a2c; }
     * { box-sizing:border-box; }
-    html { background:#faf5ec; }
+    html { background:#eef3f2; }
     body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:var(--cream); position:relative; }
     /* FOUNDER DESIGN: his photograph as a faint warm glow behind the opening,
        fading to solid cream before the working sections, so reading is easy. */
     .glow { position:absolute; top:0; left:0; right:0; height:min(92vh, 860px); overflow:hidden; z-index:0; pointer-events:none; }
     .glow .ph { position:absolute; top:0; left:0; right:0; bottom:0; background:url('/scenes/photo_2_sunset_trees.jpg') center top / cover no-repeat; opacity:0.25; }
-    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(250,245,236,0) 0%, rgba(250,245,236,0.2) 45%, rgba(250,245,236,0.7) 72%, rgba(250,245,236,1) 94%); }
+    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(238,243,242,0) 0%, rgba(238,243,242,0.2) 45%, rgba(238,243,242,0.7) 72%, rgba(238,243,242,1) 94%); }
     header, main { position:relative; z-index:1; }
     main { padding:10px 6vw 30px; max-width:820px; margin:0 auto; }
     h1, h2, .whisper { font-family:Georgia, 'Times New Roman', serif; font-weight:400; }
@@ -8037,7 +8037,7 @@ CLINICAL_HANDOFF_PAGE = r"""
     <h1 class="promise" id="chooser-title">Reaching a real person for your care</h1>
     <p class="intro-sub" id="chooser-sub">Before anything is shared, here is exactly who you may reach and what is protected. Nothing leaves this page until you read it and choose to send it.</p>
     <div id="pro-choices">
-        <div id="pro-suggestion" style="display:none;background:#f8f5f2;border:1px solid #e6d6c8;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#6a402c;margin-bottom:12px;"></div>
+        <div id="pro-suggestion" style="display:none;background:#eef4f2;border:1px solid #cfe2dc;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#3a4a46;margin-bottom:12px;"></div>
         <button type="button" class="pro-btn" data-role="crisis_counselor" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
         <button type="button" class="pro-btn" data-role="therapist" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
         <button type="button" class="pro-btn" data-role="psychiatrist" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
@@ -8238,17 +8238,17 @@ LEGAL_HANDOFF_PAGE = r"""
   <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to Legal Help</title>
   <style>
-    :root { --ink:#2a1e14; --muted:#99673e; --line:#e8dcc8; --soft:#f5eddc; --cream:#faf5ec; --card:#fffdf8;
+    :root { --ink:#1f2a28; --muted:#52655e; --line:#d9e4e0; --soft:#e6efec; --cream:#eef3f2; --card:#fbfdfc;
             --urgent:#b84a44; --amber:#c56a2c; --dusk:#33567c;
             --green:#c56a2c; --blue:#33567c; --legal:#c56a2c; --legal2:#c56a2c; }
     * { box-sizing:border-box; }
-    html { background:#faf5ec; }
+    html { background:#eef3f2; }
     body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:var(--cream); position:relative; }
     /* FOUNDER DESIGN: his photograph as a faint warm glow behind the opening,
        fading to solid cream before the working sections, so reading is easy. */
     .glow { position:absolute; top:0; left:0; right:0; height:min(92vh, 860px); overflow:hidden; z-index:0; pointer-events:none; }
     .glow .ph { position:absolute; top:0; left:0; right:0; bottom:0; background:url('/scenes/photo_6_golden_horizon.jpg') center top / cover no-repeat; opacity:0.25; }
-    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(250,245,236,0) 0%, rgba(250,245,236,0.2) 45%, rgba(250,245,236,0.7) 72%, rgba(250,245,236,1) 94%); }
+    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(238,243,242,0) 0%, rgba(238,243,242,0.2) 45%, rgba(238,243,242,0.7) 72%, rgba(238,243,242,1) 94%); }
     header, main { position:relative; z-index:1; }
     main { padding:10px 6vw 30px; max-width:820px; margin:0 auto; }
     h1, h2, .whisper { font-family:Georgia, 'Times New Roman', serif; font-weight:400; }
@@ -8408,7 +8408,7 @@ LEGAL_HANDOFF_PAGE = r"""
     .res { display:block; text-decoration:none; border:1px solid #e3d2ba; border-radius:14px; padding:13px 15px;
            background:#fffdf8; color:#33567c; transition:border-color 0.2s ease, box-shadow 0.2s ease; }
     .res:hover { border-color:#c56a2c; box-shadow:0 4px 14px rgba(197,106,44,0.14); }
-    .res span { display:block; font-size:12.5px; color:#99673e; margin-top:4px; }
+    .res span { display:block; font-size:12.5px; color:#52655e; margin-top:4px; }
     @media (prefers-reduced-motion: reduce){ .res { transition:none; } }
   </style>
   <script>
