@@ -450,6 +450,28 @@ PUBLIC_PAGE = """
   <style>
   @keyframes listenpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
     :root { --page:#faf5ec; --ink:#2a1e14; --muted:#74624d; --panel:#ffffff; --line:#ece0d0; --teal:#b24a2a; --leaf:#c56a2c; --coral:#c85c54; --gold:#b7791f; }
+    /* ---- COORDINATED WARM PALETTE (FEAT-005) ----------------------------------
+       One place for the warm scheme so it is not one flat brown and never a stray
+       hex. Used by the calming-activities overlay (and reusable anywhere on the
+       companion page). The cool accent REUSES FEAT-004's shared biometric accent
+       value (--il-bio-accent:#5fc9a8, calm teal) so the whole product stays on one
+       coordinated accent rather than competing greens/teals. No purple/blue/white:
+       the founder rejected that palette for the warm surfaces. */
+    :root {
+      --il-warm-ink:#302018;        /* warm dark ink — legible on the cream overlay (fixes white-on-white) */
+      --il-warm-sub:#6a4a34;        /* warm secondary text, still AA on cream */
+      --il-warm-faint:#8a6a4c;      /* warm hint text */
+      --il-warm-card:#fffaf2;       /* soft warm card face */
+      --il-warm-card-2:rgba(255,255,255,0.72);
+      --il-warm-line:#ecc9a0;       /* warm hairline / card border */
+      --il-warm-amber:#e89a3c;      /* primary warm accent (buttons, active states) */
+      --il-warm-amber-d:#b8783a;    /* deeper amber for button fills */
+      --il-warm-honey:#e7b45a;      /* honey accent — section variety */
+      --il-warm-rose:#c8705a;       /* warm rose accent — variety beyond brown */
+      --il-warm-clay:#a9531f;       /* deep clay accent */
+      --il-warm-accent:#5fc9a8;     /* shared calm accent — SAME value as --il-bio-accent (FEAT-004) */
+      --il-warm-accent-soft:rgba(95,201,168,0.42); /* soft calm-accent wash for "correct/found" states */
+    }
     /* Screen-reader-only text: visually hidden, fully announced */
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
       clip:rect(0 0 0 0); white-space:nowrap; border:0; }
@@ -3288,16 +3310,37 @@ function openActivities(){
   actOpenedAt = Date.now(); actReengaged=false;
   actOverlay = document.createElement('div');
   actOverlay.id='activities-overlay';
-  actOverlay.style.cssText='position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,#fff7ea 0%,#ffe9cf 55%,#ffdcb8 100%);overflow-y:auto;padding:22px 16px 90px;';
+  actOverlay.style.cssText='position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,#fff7ea 0%,#ffeeda 55%,#ffe3c4 100%);overflow-y:auto;padding:22px 16px 90px;';
+  // Scoped, modern styling for the activities — soft rounded cards, calm
+  // spacing, and text that is always dark ink on the cream overlay (fixes the
+  // white-on-white readability bug). Colors come from the shared warm palette
+  // variables, so nothing is a stray hex and the scheme stays coordinated.
   actOverlay.innerHTML = `
-   <div style="max-width:640px;margin:0 auto;font-family:Arial;color:#4a362c;">
+   <style>
+   #activities-overlay .act-head-title{margin:0;font-size:20px;color:var(--il-warm-ink);font-weight:700;letter-spacing:.01em;}
+   #activities-overlay .act-intro{font-size:12.5px;color:var(--il-warm-faint);margin-bottom:16px;}
+   #activities-overlay .act-card{text-align:left;background:var(--il-warm-card);border:1px solid var(--il-warm-line);
+     border-radius:18px;padding:15px 16px;cursor:pointer;color:var(--il-warm-ink);
+     box-shadow:0 6px 18px -8px rgba(150,95,45,0.28);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
+   #activities-overlay .act-card:hover{transform:translateY(-2px);box-shadow:0 12px 26px -10px rgba(150,95,45,0.34);border-color:var(--il-warm-amber);}
+   #activities-overlay .act-card b{font-size:15px;color:var(--il-warm-ink);}
+   #activities-overlay .act-card span{display:block;font-size:11.5px;color:var(--il-warm-faint);margin-top:4px;line-height:1.45;}
+   #activities-overlay .act-title{font-size:22px;color:var(--il-warm-ink);font-weight:700;}
+   #activities-overlay .act-sub{font-size:14px;color:var(--il-warm-sub);}
+   #activities-overlay .act-hint{font-size:12.5px;color:var(--il-warm-faint);}
+   #activities-overlay .act-btn{background:var(--il-warm-amber-d);color:#fff;border:0;border-radius:999px;
+     padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px -6px rgba(150,95,45,0.5);}
+   #activities-overlay .act-btn.ghost{background:var(--il-warm-card);color:var(--il-warm-sub);border:1px solid var(--il-warm-line);box-shadow:none;font-weight:600;}
+   #activities-overlay .act-field{border-radius:16px;background:radial-gradient(circle at 50% 38%, #3a2417, #241207);}
+   </style>
+   <div style="max-width:640px;margin:0 auto;font-family:Arial;color:var(--il-warm-ink);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <h2 style="margin:0;font-size:20px;color:#5a3d22;">Calming activities</h2>
-      <button onclick="closeActivities()" style="background:#fff;color:#7a5230;border:1px solid #e0b98a;border-radius:999px;padding:8px 18px;font-size:14px;cursor:pointer;">Back</button>
+      <h2 class="act-head-title">Calming activities</h2>
+      <button onclick="closeActivities()" class="act-btn ghost" style="padding:8px 18px;font-size:14px;">Back</button>
     </div>
-    <div style="font-size:12.5px;color:#8a6a4c;margin-bottom:14px;">Small things that help a racing mind. Your music keeps playing. Pick anything.</div>
-    <div id="act-menu" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;"></div>
-    <div id="act-stage" style="margin-top:16px;"></div>
+    <div class="act-intro">Small things that help a racing mind. Your music keeps playing. Pick anything.</div>
+    <div id="act-menu" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
+    <div id="act-stage" style="margin-top:18px;"></div>
    </div>`;
   document.body.appendChild(actOverlay);
   gardenBar();
@@ -3319,18 +3362,18 @@ function openActivities(){
     ['ritual','The Calm Ritual','A ritual that works because you do it on purpose'],
   ];
   const menu = actOverlay.querySelector('#act-menu');
-  menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.75);border:1px solid #ecc9a0;border-radius:14px;padding:13px;cursor:pointer;color:#4a362c;box-shadow:0 2px 10px rgba(180,120,60,0.10);">
-     <b style="font-size:14.5px;">${a[1]}</b><span style="display:block;font-size:11.5px;color:#8a6a4c;margin-top:3px;">${a[2]}</span></button>`).join('');
+  menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" class="act-card">
+     <b>${a[1]}</b><span>${a[2]}</span></button>`).join('');
   // gentle re-engagement after 10 minutes of play
   actTimers.push(setInterval(()=>{
     if (!actOverlay || actOverlay.style.display==='none' || actReengaged) return;
     if (Date.now()-actOpenedAt > 10*60*1000){
       actReengaged = true; metric('reengage_prompt');
       const bar = document.createElement('div');
-      bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:#fff1dc;color:#4a362c;border:1px solid #ecc9a0;border-radius:14px;padding:14px 16px;font-size:14px;text-align:center;box-shadow:0 -2px 12px rgba(180,120,60,0.12);';
+      bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:var(--il-warm-card);color:var(--il-warm-ink);border:1px solid var(--il-warm-line);border-radius:16px;padding:14px 16px;font-size:14px;text-align:center;box-shadow:0 -6px 18px -8px rgba(150,95,45,0.28);';
       bar.innerHTML = (gardenBlooms>0 ? 'Look at what you grew \u2014 '+gardenBlooms+' blooms. ' : '') + `I'm still right here with you. Want to talk for a moment?
-        <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" style="background:#b8783a;color:#fff;border:0;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Let's talk</button>
-        <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" style="background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Keep playing</button></div>`;
+        <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" class="act-btn" style="padding:9px 20px;margin:0 6px;">Let's talk</button>
+        <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" class="act-btn ghost" style="padding:9px 20px;margin:0 6px;">Keep playing</button></div>`;
       actOverlay.firstElementChild.appendChild(bar);
     }
   },20000));
@@ -3343,16 +3386,16 @@ function startAct(name){
   const st = actStage();
   if (name==='breathe'){
     st.innerHTML = `<div style="text-align:center;padding:6px;">
-      <div id="br-word" style="font-size:26px;color:#fff;font-weight:700;min-height:34px;">Breathe in&hellip;</div>
-      <div id="br-count" style="font-size:44px;color:#d3a47d;font-weight:700;min-height:52px;">5</div>
+      <div id="br-word" class="act-title" style="font-size:26px;min-height:34px;">Breathe in&hellip;</div>
+      <div id="br-count" style="font-size:44px;color:var(--il-warm-clay);font-weight:700;min-height:52px;">5</div>
       <div style="position:relative;width:150px;height:150px;margin:6px auto 10px;overflow:visible;">
-        <div id="br-aura" style="position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(207,233,255,0.35);"></div>
-        <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 4.6s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+        <div id="br-aura" style="position:absolute;inset:-12px;border-radius:50%;border:2px solid var(--il-warm-accent-soft);"></div>
+        <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#f4c977,#c56a2c);transition:transform 4.6s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:0 8px 26px -8px rgba(150,95,45,0.5);">
           <b id="br-bpm" style="font-size:26px;color:#fff;">&nbsp;</b>
-          <span id="br-bpm-lbl" style="font-size:10px;color:#cfe9ff;"></span>
+          <span id="br-bpm-lbl" style="font-size:10px;color:#fff3e0;"></span>
         </div>
       </div>
-      <div id="br-msg" style="font-size:13px;color:#9db8cf;min-height:20px;">In 5 &middot; hold 5 &middot; out 5. The number counts you through.</div></div>`;
+      <div id="br-msg" class="act-hint" style="font-size:13px;min-height:20px;">In 5 &middot; hold 5 &middot; out 5. The number counts you through.</div></div>`;
     const c=st.querySelector('#br-circle'), w=st.querySelector('#br-word'), cd=st.querySelector('#br-count');
     let phase=0, tick=5, cycles=0;
     const PHASES=[['Breathe in\u2026',1.35],['Hold\u2026',null],['Let it out\u2026',1.0]];
@@ -3383,7 +3426,7 @@ function startAct(name){
         const msg = st.querySelector('#br-msg');
         if (msg && brStartBpm - bpm >= 5){
           msg.textContent = brStartBpm + ' \u2192 ' + bpm + ' \u2014 your heart is listening. Keep going.';
-          msg.style.color = '#d3a47d';
+          msg.style.color = 'var(--il-warm-clay)';
         }
       }
     }, 1500));
@@ -3630,24 +3673,24 @@ function startAct(name){
     let puzzle=wsBuild(), found=[], selA=null;
     function wsRender(){
       st.innerHTML='<div style="text-align:center;">'
-        +'<div id="ws-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Find the hidden calm words. Tap the FIRST letter, then the LAST letter of a word.</div>'
+        +'<div id="ws-p" class="act-hint" style="font-size:13px;margin-bottom:8px;">Find the hidden calm words. Tap the FIRST letter, then the LAST letter of a word.</div>'
         +'<div id="ws-words" style="font-size:13px;margin-bottom:10px;"></div>'
-        +'<div id="ws-grid" style="display:inline-grid;grid-template-columns:repeat('+N+',1fr);gap:3px;"></div></div>';
+        +'<div id="ws-grid" style="display:inline-grid;grid-template-columns:repeat('+N+',1fr);gap:4px;padding:12px;border-radius:16px;background:radial-gradient(circle at 50% 30%, #3a2417, #241207);"></div></div>';
       st.querySelector('#ws-words').innerHTML=puzzle.words.map(function(w){
         const done=found.indexOf(w)>=0;
-        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:#d3a47d;text-decoration:line-through;':'color:#e6f1fa;')+'">'+w+'</span>';
+        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:var(--il-warm-clay);text-decoration:line-through;':'color:var(--il-warm-sub);font-weight:600;')+'">'+w+'</span>';
       }).join('');
       let html='';
       for(let r=0;r<N;r++){ for(let c=0;c<N;c++){
         const lit=found.some(function(w){ const p=puzzle.placed.find(function(x){return x.word===w;}); return p&&p.cells.some(function(cell){return cell[0]===r&&cell[1]===c;}); });
-        html+='<button data-r="'+r+'" data-c="'+c+'" style="width:30px;height:30px;font-size:14px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;'
-          +(lit?'background:rgba(125,211,168,0.45);color:#0c1322;font-weight:700;':'background:rgba(255,255,255,0.06);color:#e6f1fa;')+'">'+puzzle.grid[r][c]+'</button>';
+        html+='<button data-r="'+r+'" data-c="'+c+'" style="width:30px;height:30px;font-size:14px;border-radius:7px;border:1px solid rgba(244,201,119,0.18);cursor:pointer;'
+          +(lit?'background:var(--il-warm-accent-soft);color:#241207;font-weight:700;':'background:rgba(244,201,119,0.10);color:#fbe6c8;')+'">'+puzzle.grid[r][c]+'</button>';
       } }
       const g=st.querySelector('#ws-grid'); g.innerHTML=html;
       g.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ wsClick(+b.dataset.r,+b.dataset.c,b); }); });
     }
     function wsClick(r,c,b){
-      if(!selA){ selA=[r,c]; b.style.outline='2px solid #cfe9ff'; return; }
+      if(!selA){ selA=[r,c]; b.style.outline='2px solid var(--il-warm-honey)'; return; }
       const r0=selA[0], c0=selA[1]; selA=null;
       st.querySelectorAll('#ws-grid button').forEach(function(x){ x.style.outline=''; });
       const dr=r-r0, dc=c-c0, adr=Math.abs(dr), adc=Math.abs(dc);
@@ -3660,7 +3703,7 @@ function startAct(name){
       if(match){
         found.push(match); metric('wordplay'); if(typeof bloom==='function') bloom();
         if(found.length>=puzzle.words.length){
-          wsRender(); const p=st.querySelector('#ws-p'); if(p){ p.textContent='All found — beautifully done. A fresh grid…'; p.style.color='#d3a47d'; }
+          wsRender(); const p=st.querySelector('#ws-p'); if(p){ p.textContent='All found — beautifully done. A fresh grid…'; p.style.color='var(--il-warm-clay)'; }
           actTimers.push(setTimeout(function(){ puzzle=wsBuild(); found=[]; selA=null; wsRender(); }, 1800));
           return;
         }
@@ -3670,26 +3713,26 @@ function startAct(name){
     wsRender();
   }
   if (name==='shapes'){
-    st.innerHTML=`<div style="text-align:center;"><div id="sh-prompt" style="font-size:15px;color:#cfe3f2;margin:8px 0 12px;"></div>
-      <div id="sh-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto;"></div></div>`;
-    const SH=['\u25CF','\u25A0','\u25B2','\u2666','\u2605','\u2B22']; const CO=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a'];
+    st.innerHTML=`<div style="text-align:center;"><div id="sh-prompt" class="act-sub" style="font-size:15px;margin:8px 0 12px;"></div>
+      <div id="sh-grid" class="act-field" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto;padding:14px;"></div></div>`;
+    const SH=['\u25CF','\u25A0','\u25B2','\u2666','\u2605','\u2B22']; const CO=['#f4c977','#e89a3c','#c8705a','#5fc9a8'];
     const round=()=>{ const tS=SH[Math.floor(Math.random()*SH.length)], tC=CO[Math.floor(Math.random()*CO.length)];
       st.querySelector('#sh-prompt').innerHTML='Find: <span style="color:'+tC+';font-size:26px;">'+tS+'</span>';
       const cells=[{s:tS,c:tC}]; while(cells.length<8){ const s2=SH[Math.floor(Math.random()*SH.length)], c2=CO[Math.floor(Math.random()*CO.length)];
         if(!(s2===tS&&c2===tC)) cells.push({s:s2,c:c2}); }
       cells.sort(()=>Math.random()-0.5);
-      st.querySelector('#sh-grid').innerHTML=cells.map(x=>`<button onclick="(function(b){ if(b.dataset.hit==='1'){ b.style.background='rgba(125,211,168,0.4)'; bloom(); setTimeout(window._shRound,700);} })(this)" data-hit="${x.s===tS&&x.c===tC?1:0}" style="font-size:30px;padding:14px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:${x.c};cursor:pointer;">${x.s}</button>`).join('');
+      st.querySelector('#sh-grid').innerHTML=cells.map(x=>`<button onclick="(function(b){ if(b.dataset.hit==='1'){ b.style.background='var(--il-warm-accent-soft)'; bloom(); setTimeout(window._shRound,700);} })(this)" data-hit="${x.s===tS&&x.c===tC?1:0}" style="font-size:30px;padding:14px 6px;border-radius:14px;border:1px solid rgba(244,201,119,0.18);background:rgba(244,201,119,0.10);color:${x.c};cursor:pointer;">${x.s}</button>`).join('');
     };
     window._shRound=round; round();
   }
   if (name==='bubbles'){
     // BUBBLE POP — soft lights drift up; tap them to pop. Endless, gentle,
     // and genuinely absorbing. No score to fear, just a quiet tally.
-    st.innerHTML=`<div style="text-align:center;"><div id="bb-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Tap the drifting lights to pop them. No rush, no wrong move.</div>
-      <div id="bb-field" style="position:relative;height:320px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);overflow:hidden;touch-action:manipulation;"></div>
-      <div id="bb-count" style="margin-top:8px;font-size:13px;color:#d3a47d;min-height:18px;"></div></div>`;
+    st.innerHTML=`<div style="text-align:center;"><div id="bb-p" class="act-hint" style="font-size:13px;margin-bottom:8px;">Tap the drifting lights to pop them. No rush, no wrong move.</div>
+      <div id="bb-field" class="act-field" style="position:relative;height:320px;overflow:hidden;touch-action:manipulation;"></div>
+      <div id="bb-count" style="margin-top:8px;font-size:13px;color:var(--il-warm-clay);min-height:18px;"></div></div>`;
     const field=st.querySelector('#bb-field'); let popped=0;
-    const colors=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a','#cfe9ff'];
+    const colors=['#f4c977','#e89a3c','#c8705a','#e7b45a','#5fc9a8'];
     const spawn=()=>{ if(!field.isConnected) return;
       const b=document.createElement('div');
       const size=26+Math.random()*36, col=colors[Math.floor(Math.random()*colors.length)];
@@ -3713,8 +3756,8 @@ function startAct(name){
     actTimers.push(setInterval(spawn,800)); spawn(); spawn();
   }
   if (name==='stars'){
-    st.innerHTML=`<div style="text-align:center;"><div id="st-p" style="font-size:14px;color:#cfe3f2;margin-bottom:10px;">Stars will appear, slowly. Count them, then answer.</div>
-      <div id="st-sky" style="position:relative;height:220px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);"></div>
+    st.innerHTML=`<div style="text-align:center;"><div id="st-p" class="act-sub" style="font-size:14px;margin-bottom:10px;">Stars will appear, slowly. Count them, then answer.</div>
+      <div id="st-sky" class="act-field" style="position:relative;height:220px;"></div>
       <div id="st-ans" style="margin-top:12px;"></div></div>`;
     window._starStreak = window._starStreak||0;
     const maxN = Math.min(25, 6 + window._starStreak*3); // streaks earn bigger skies (boredom-proof)
@@ -3724,7 +3767,7 @@ function startAct(name){
       d.style.left=(8+Math.random()*84)+'%'; d.style.top=(10+Math.random()*75)+'%'; sky.appendChild(d);
       requestAnimationFrame(()=>d.style.opacity='0.95'); }, 900+i*Math.max(500, 1700-n*60))); }
     actTimers.push(setTimeout(()=>{ if(!st.isConnected)return; const ans=st.querySelector('#st-ans');
-      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='rgba(125,211,168,0.5)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; bloom(); window._starStreak=(window._starStreak||0)+1; setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(180,90,90,0.3)'; window._starStreak=0; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#e6f1fa;cursor:pointer;">${v}</button>`).join('');
+      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='var(--il-warm-accent-soft)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; bloom(); window._starStreak=(window._starStreak||0)+1; setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(200,112,90,0.28)'; window._starStreak=0; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:14px;border:1px solid var(--il-warm-line);background:var(--il-warm-card);color:var(--il-warm-ink);font-weight:700;cursor:pointer;">${v}</button>`).join('');
     }, 900+n*Math.max(500,1700-n*60)+800));
   }
   if (name==='release'){
@@ -3742,14 +3785,14 @@ function startAct(name){
     const cheer=["That's tension leaving.","Feel the difference.","Lighter already.","Nicely done.","That was a deep one.","Your whole body just let go."];
     let i=0;
     st.innerHTML=`<div style="text-align:center;padding:6px;">
-      <div id="rl-t" style="font-size:23px;color:#fff;font-weight:700;"></div>
-      <div id="rl-s" style="font-size:14px;color:#b9d0e2;margin:8px 0 14px;line-height:1.5;"></div>
+      <div id="rl-t" class="act-title" style="font-size:23px;"></div>
+      <div id="rl-s" class="act-sub" style="font-size:14px;margin:8px 0 14px;line-height:1.5;"></div>
       <div style="position:relative;width:150px;height:150px;margin:0 auto 14px;">
-        <div id="rl-ring" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#d4a86f,#7a5230);transition:transform 0.9s ease;display:flex;align-items:center;justify-content:center;">
+        <div id="rl-ring" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#f4c977,#a9531f);transition:transform 0.9s ease;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 26px -8px rgba(150,95,45,0.5);">
           <span id="rl-num" style="font-size:42px;color:#fff;font-weight:700;">&nbsp;</span></div>
       </div>
-      <button id="rl-go" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:12px 30px;font-size:15px;font-weight:700;cursor:pointer;">Squeeze &amp; hold</button>
-      <div id="rl-msg" style="margin-top:12px;color:#d3a47d;font-size:14px;min-height:18px;"></div></div>`;
+      <button id="rl-go" class="act-btn" style="padding:12px 30px;">Squeeze &amp; hold</button>
+      <div id="rl-msg" style="margin-top:12px;color:var(--il-warm-clay);font-size:14px;min-height:18px;"></div></div>`;
     const T=st.querySelector('#rl-t'),S=st.querySelector('#rl-s'),ring=st.querySelector('#rl-ring'),
           num=st.querySelector('#rl-num'),go=st.querySelector('#rl-go'),msg=st.querySelector('#rl-msg');
     const show=()=>{ T.textContent=groups[i][0]; S.textContent=groups[i][1]; msg.textContent='';
@@ -3776,10 +3819,10 @@ function startAct(name){
     // order; repeat them back. Absorbing and distracting, grows one step at a
     // time so it never feels like failure.
     st.innerHTML=`<div style="text-align:center;">
-      <div id="sq-p" style="font-size:14px;color:#cfe3f2;margin-bottom:12px;">Watch the lights glow in order, then tap them back the same way.</div>
+      <div id="sq-p" class="act-sub" style="font-size:14px;margin-bottom:12px;">Watch the lights glow in order, then tap them back the same way.</div>
       <div id="sq-grid" style="display:grid;grid-template-columns:repeat(2,112px);gap:12px;justify-content:center;"></div>
-      <div id="sq-msg" style="margin-top:14px;font-size:14px;color:#d3a47d;min-height:20px;"></div></div>`;
-    const cols=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a'];
+      <div id="sq-msg" style="margin-top:14px;font-size:14px;color:var(--il-warm-clay);min-height:20px;"></div></div>`;
+    const cols=['#e89a3c','#e7b45a','#c8705a','#5fc9a8'];
     const grid=st.querySelector('#sq-grid'), msg=st.querySelector('#sq-msg');
     const dim=(c)=>c+'44';
     const pads=cols.map((c,idx)=>{ const p=document.createElement('button');
@@ -3819,7 +3862,7 @@ function buildWordsPanel(){
   wordsPanel = document.createElement('div');
   wordsPanel.id = 'words-panel';
   wordsPanel.style.cssText = 'padding:14px;text-align:center;';
-  wordsPanel.innerHTML = '<div id="words-prompt" style="font-size:14px;color:#cfe3f2;margin-bottom:12px;"></div>'
+  wordsPanel.innerHTML = '<div id="words-prompt" style="font-size:14px;color:var(--il-warm-sub);margin-bottom:12px;"></div>'
     + '<div id="words-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:340px;margin:0 auto;"></div>';
   host.appendChild(wordsPanel);
   wordsRound();
@@ -3828,21 +3871,21 @@ function wordsRound(){
   if (!wordsPanel) return;
   const pool = WORD_BANK.slice().sort(()=>Math.random()-0.5).slice(0,8);
   wordsTarget = pool[Math.floor(Math.random()*pool.length)];
-  document.getElementById('words-prompt').innerHTML = 'Find: <b style="font-size:19px;letter-spacing:2px;color:#fff;">' + wordsTarget + '</b>';
+  document.getElementById('words-prompt').innerHTML = 'Find: <b style="font-size:19px;letter-spacing:2px;color:var(--il-warm-clay);">' + wordsTarget + '</b>';
   const grid = document.getElementById('words-grid');
   grid.innerHTML = pool.slice().sort(()=>Math.random()-0.5).map(w =>
-    '<button onclick="wordsPick(this)" data-w="'+w+'" style="padding:13px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);'
-    + 'background:rgba(255,255,255,0.08);color:#e6f1fa;font-size:15px;letter-spacing:1px;cursor:pointer;transition:all 0.25s ease;">'+w+'</button>'
+    '<button onclick="wordsPick(this)" data-w="'+w+'" style="padding:13px 6px;border-radius:14px;border:1px solid var(--il-warm-line);'
+    + 'background:var(--il-warm-card);color:var(--il-warm-ink);font-weight:600;font-size:15px;letter-spacing:1px;cursor:pointer;transition:all 0.25s ease;">'+w+'</button>'
   ).join('');
 }
 function wordsPick(btn){
   if (btn.dataset.w === wordsTarget){
-    btn.style.background = 'rgba(90,180,130,0.55)'; btn.style.borderColor = '#d3a47d';
+    btn.style.background = 'var(--il-warm-accent-soft)'; btn.style.borderColor = 'var(--il-warm-accent)';
     metric('wordplay'); if (typeof bloom==='function') bloom();
     setTimeout(wordsRound, 900);
   } else {
-    btn.style.background = 'rgba(180,90,90,0.25)';
-    setTimeout(()=>{ btn.style.background = 'rgba(255,255,255,0.08)'; }, 450);
+    btn.style.background = 'rgba(200,112,90,0.22)';
+    setTimeout(()=>{ btn.style.background = 'var(--il-warm-card)'; }, 450);
   }
 }
 
