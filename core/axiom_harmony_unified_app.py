@@ -13685,6 +13685,7 @@ def admin_dashboard():
    box-shadow:0 0 16px rgba(232,163,76,.45), 0 0 3px rgba(255,232,191,.6);
    transition:width 4.5s cubic-bezier(.4,0,.2,1);animation:bandglow 7s ease-in-out infinite;}
  @keyframes bandglow{0%,100%{filter:brightness(.92);}50%{filter:brightness(1.12);}}
+ @keyframes bioPulse{0%,100%{opacity:.35;transform:scale(.85);}50%{opacity:1;transform:scale(1.15);}}
  .log{padding-top:82px;max-width:720px;margin:0 auto;}
  .log-lines{margin-top:40px;}
  .log-line{display:flex;gap:26px;align-items:baseline;padding:15px 4px;border-bottom:1px solid rgba(232,163,76,.09);
@@ -14813,7 +14814,7 @@ def admin_dashboard():
       <svg width="52" height="20" style="flex:0 0 auto;vertical-align:middle;"><polyline points="0,15 13,11 26,12 39,6 52,3" fill="none" stroke="var(--il-bio-accent)" stroke-width="2"/><circle cx="0" cy="15" r="2" fill="var(--il-bio-accent)"/><circle cx="13" cy="11" r="2" fill="var(--il-bio-accent)"/><circle cx="26" cy="12" r="2" fill="var(--il-bio-accent)"/><circle cx="39" cy="6" r="2" fill="var(--il-bio-accent)"/><circle cx="52" cy="3" r="2" fill="var(--il-bio-accent)"/></svg>
       <span>This is the <b style="color:var(--il-bio-accent);">trend line</b> at the right of each person. Each dot is one recent heart-rate reading, oldest on the left, newest on the right. A line drifting <b style="color:var(--il-bio-accent);">downward means the body is settling</b> — the room is doing its work. A line drifting up means the heart is rising.</span>
     </div>
-    <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Waiting for a live session…</i></div>
+    <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Connecting to the live monitor…</i></div>
     </div>
 
     <h2 class="ledger" data-sec="sec-heart">Heart signal coverage — research integrity</h2>
@@ -15405,8 +15406,29 @@ def admin_dashboard():
   function renderBioList(d){
     var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
     var el=document.getElementById('bio-live-list'); if(!el) return;
-    if(!d.active||!d.active.length){ el.innerHTML='<i style="color:rgba(242,231,210,.45);">No live sessions right now. When someone is using InnerLight, they appear here live — with or without a heart reading.</i>'; return; }
-    el.innerHTML=d.active.map(function(p){
+    // A tiny always-present heartbeat line so an EMPTY panel never looks broken
+    // or frozen: it proves the monitor is connected and polling. We show only
+    // REAL facts from the server (its clock, and how long since the last real
+    // ping) — never invented biometrics (Immutable Principle 13).
+    var beat = (d.SIMULATED
+        ? 'simulation running — the numbers below are synthetic'
+        : (d.last_write_ago == null
+            ? 'connected · monitor is live · no ping received yet'
+            : ('connected · monitor is live · last reading ' + d.last_write_ago + 's ago')));
+    var beatBar = '<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(242,231,210,.5);margin-bottom:10px;">'
+        + '<span style="width:8px;height:8px;border-radius:50%;background:var(--il-bio-accent);box-shadow:0 0 8px var(--il-bio-accent);animation:bioPulse 2s ease-in-out infinite;"></span>'
+        + '<span>' + beat + '</span></div>';
+    if(!d.active||!d.active.length){
+      el.innerHTML = beatBar
+        + '<div style="text-align:center;padding:22px 14px;border:1px dashed rgba(95,201,168,.35);border-radius:10px;background:rgba(95,201,168,.05);">'
+        + '<div style="font-size:15px;color:var(--il-bio-accent);font-weight:700;margin-bottom:6px;">No one is in a live session right now.</div>'
+        + '<div style="font-size:12.5px;color:rgba(242,231,210,.6);line-height:1.6;max-width:460px;margin:0 auto;">'
+        + 'The reader is working and watching. The moment someone opens InnerLight they appear here live — updating every few seconds — <b>with or without a heart reading</b> (a camera-off, text-only session still shows up). '
+        + 'To see it move now, open InnerLight in another tab, or turn on <b>Simulation</b> at the top of this page.'
+        + '</div></div>';
+      return;
+    }
+    el.innerHTML = beatBar + d.active.map(function(p){
       var heldTxt = (p.held_min != null) ? ('held ' + Math.max(1, Math.round(p.held_min)) + ' min') : '';
       var left = '<div style="min-width:96px;"><b style="color:#f4c977;">'+p.who+'</b><div style="font-size:11px;color:rgba(242,231,210,.45);">'+p.ago+'s ago'+(heldTxt?' · '+heldTxt:'')+'</div></div>';
       if (p.bpm && p.hasheart){
@@ -15432,16 +15454,29 @@ def admin_dashboard():
   }
 
   /* ============ one poll feeds the field, the counter, and the ledger ============ */
+  function bioNote(msg){
+    var el=document.getElementById('bio-live-list'); if(!el) return;
+    el.innerHTML='<div style="text-align:center;padding:18px 14px;border:1px dashed rgba(232,163,76,.35);border-radius:10px;color:rgba(242,231,210,.7);font-size:13px;line-height:1.6;">'+msg+'</div>';
+  }
   async function pollLive(){
     try{
-      var r = await fetch('/api/admin/bio/live'); if(!r.ok) return;
+      var r = await fetch('/api/admin/bio/live');
+      if(!r.ok){
+        // Do NOT leave a stale "Waiting…" that looks like live data. Say plainly
+        // what happened so the panel is never a silent void (Principle 13).
+        if(r.status===403){ bioNote('Your admin session has expired. <a href="/admin/login" style="color:var(--il-bio-accent);">Sign in again</a> to see the live monitor.'); }
+        else { bioNote('The monitor could not reach the server just now (status '+r.status+'). Retrying every few seconds…'); }
+        return;
+      }
       var d = await r.json();
       liveCount = (d.active && d.active.length) || 0;
       syncEmbers(d.active || []);
       refreshNow(liveCount);
       var kln = document.getElementById('kpi-live-n'); if (kln) kln.textContent = liveCount;
       renderBioList(d);
-    }catch(e){}
+    }catch(e){
+      bioNote('The monitor lost its connection to the server. It will reconnect automatically…');
+    }
   }
   pollLive(); setInterval(pollLive, 3000);
 
