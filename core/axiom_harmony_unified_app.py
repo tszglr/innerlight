@@ -684,34 +684,33 @@ PUBLIC_PAGE = """
       backdrop-filter:blur(6px); border-radius:16px; padding:6px 10px; }
     .scene-btn { background:none; border:0; font-size:18px; cursor:pointer; opacity:0.6; padding:2px 4px; }
     .scene-btn.active { opacity:1; transform:scale(1.15); }
-    /* FACE VIDEO — starts centered and calm. On scroll it gently floats to a
-       small rounded thumbnail on the side; scrolling back to top returns it
-       to the centered spot. Smooth, never growing, never taking over. */
-    .story-video-bar { padding:18px 0 10px; width:100%; text-align:center;
-      transition:all 0.4s ease; }
-    /* Stationary pinned preview: fixed corner, its own compositing layer so
-       scrolling never triggers a page reflow. */
-    .story-video-bar.pinned { position:fixed; top:84px; right:20px; left:auto; width:auto; text-align:right;
-      z-index:40; will-change:transform; transform:translateZ(0); transition:none; padding:0; }
-    .story-video-bar.pinned #visual-preview, .story-video-bar.pinned #preview-hide { position:relative; }
-    .story-video-bar.pinned { display:inline-block; }
-    .story-video-bar.pinned .story-video { width:96px; height:96px; border-radius:50%; border:3px solid #ddd1c8;
-      box-shadow:0 4px 16px rgba(0,0,0,.18); }
-    @media (max-width:640px){ .story-video-bar.pinned { top:70px; right:12px; }
-      .story-video-bar.pinned .story-video { width:72px; height:72px; } }
-    .story-video-bar.floating { position:fixed; top:84px; right:20px; left:auto;
-      width:auto; padding:0; z-index:40; text-align:right; }
+    /* FACE VIDEO — the camera feed powers the face/heart/attention analysis
+       ONLY. There is NO on-screen self-view: a floating preview covered the
+       composer and distracted people, so the element is kept permanently
+       offscreen (1px, invisible, non-interactive) while getUserMedia and
+       frame sampling keep working. The .pinned/.floating variants are
+       neutralized so nothing can ever bring it back on screen. */
+    .story-video-bar,
+    .story-video-bar.pinned,
+    .story-video-bar.floating {
+      position:fixed !important; left:-10000px !important; top:auto !important; right:auto !important;
+      width:1px !important; height:1px !important; padding:0 !important; margin:0 !important;
+      opacity:0 !important; pointer-events:none !important; z-index:-1 !important;
+      overflow:hidden !important; transform:none !important; will-change:auto !important;
+      transition:none !important; display:block !important; }
+    .story-video,
+    #visual-preview,
+    .story-video-bar.pinned .story-video,
+    .story-video-bar.floating .story-video {
+      position:fixed !important; left:-10000px !important; top:auto !important; right:auto !important;
+      width:1px !important; height:1px !important; max-width:1px !important; max-height:1px !important;
+      min-height:0 !important; margin:0 !important; border:0 !important; border-radius:0 !important;
+      opacity:0 !important; pointer-events:none !important; box-shadow:none !important;
+      background:transparent !important; transform:none !important; transition:none !important; }
     .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
       border-radius:18px; padding:4px 16px; scroll-behavior:smooth; }
     #conversation-thread:empty { background:none; padding:0; }
-    .story-video { width:300px; height:300px; max-width:78vw; max-height:78vw; object-fit:cover; border-radius:28px; border:3px solid #ddd1c8;
-      margin:0 auto 8px; display:block; background:#f0ece8; box-shadow:0 8px 30px rgba(0,0,0,0.18);
-      transition:width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, box-shadow 0.4s ease, margin 0.4s ease; }
-    .story-video-bar.floating .story-video { width:110px; height:110px; border-radius:50%;
-      border-width:3px; margin:0; box-shadow:0 6px 22px rgba(0,0,0,0.28); }
-    @media (max-width:640px){ .story-video-bar.floating .story-video { width:78px; height:78px; }
-      .story-video-bar.floating { top:70px; right:12px; } }
     /* Readable over ANY background scene: strong color + a white legibility
        halo so the text is clear on dark moons and bright gardens alike. */
     .story-title { font-size:26px; font-weight:700; margin:0 0 6px; color:#302018;
@@ -826,11 +825,9 @@ PUBLIC_PAGE = """
       /* Give the whole page room so nothing hides behind the fixed help bar,
          the scene strip, or the tip band — everything can scroll fully clear */
       .story-screen { padding-bottom:170px; padding-left:14px; padding-right:14px; }
-      /* The camera preview becomes a small circle so an empty/off camera never
-         shows as a giant grey box (the #1 "beta" look on phones). */
-      .story-video { width:118px !important; height:118px !important; border-radius:50% !important;
-        border-width:2px; box-shadow:0 6px 18px rgba(0,0,0,0.16); }
-      .story-video-bar { padding:12px 0 4px; }
+      /* Camera feed stays permanently offscreen on phones too (analysis only,
+         no self-view) — the base .story-video rule above already holds it at
+         1px offscreen; nothing to restyle here. */
       .story-title { font-size:22px; }
       .story-sub { font-size:13.5px; margin-bottom:16px; }
       .story-input { min-height:110px; padding:14px; }   /* keep 16px font to stop iOS zoom-on-focus */
@@ -2971,7 +2968,7 @@ PUBLIC_PAGE = """
            and the menu lists every language in its OWN native name, so a person
            who chose wrong can find their way home even from a script they
            cannot read. -->
-      <div id="lang-pill-wrap" style="position:fixed;top:calc(10px + env(safe-area-inset-top, 0px));left:12px;z-index:9000;">
+      <div id="lang-pill-wrap" style="position:fixed;top:calc(10px + env(safe-area-inset-top, 0px));left:12px;z-index:90;">
         <button id="lang-pill" onclick="toggleLangMenu()" aria-label="Language"
           style="display:flex;align-items:center;gap:6px;background:rgba(20,14,9,0.55);color:#f5ead8;border:1px solid rgba(245,234,216,0.35);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer;backdrop-filter:blur(6px);">
           &#127760; <span id="lang-pill-name">English</span></button>
@@ -3011,10 +3008,12 @@ PUBLIC_PAGE = """
         <button class="scene-btn" data-scene="pepper" onclick="setScene('pepper')" title="Green pepper" aria-label="Green pepper scene">&#129681;</button>
         <button class="scene-btn" data-scene="redpepper" onclick="setScene('redpepper')" title="Red pepper" aria-label="Red pepper scene">&#127798;</button>
       </div>
-      <div class="story-video-bar">
+      <!-- CAMERA FEED FOR ANALYSIS ONLY — no on-screen self-view. The video
+           element is required by the face/heart/attention readers, so it stays
+           in the DOM but is held permanently offscreen (see .story-video-bar
+           CSS above). There is no visible preview and nothing to hide. -->
+      <div class="story-video-bar" aria-hidden="true">
         <video id="visual-preview" class="story-video" autoplay muted playsinline aria-hidden="true"></video>
-        <button type="button" id="preview-hide" onclick="togglePreview()" title="Hide my preview" aria-label="Hide my camera preview" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(40,25,15,.75);color:#fff;font-size:13px;line-height:1;cursor:pointer;z-index:2;">&times;</button>
-        <span id="preview-seen" style="display:none;align-items:center;gap:6px;background:rgba(30,100,60,.92);color:#fff;font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;" onclick="togglePreview()" title="Show my preview"><span style="width:8px;height:8px;border-radius:50%;background:#7ee8a0;display:inline-block;"></span>We can see you</span>
       </div>
       <div class="story-wrap">
         <h2 class="story-title" data-i18n="story.title" style="font-size:20px;margin-bottom:2px;">Tell me your story.</h2>
@@ -4385,25 +4384,17 @@ function gentlyRedirectFromSubstitution(){
 let _sessionStart = Date.now();
 let _gentleNudges = 0;
 function gentleCompletionCheck(){
-  const mins = (Date.now() - _sessionStart) / 60000;
-  // First warm bridge at ~20 min, a softer second at ~35 — then we stop nudging.
-  if (mins >= 20 && _gentleNudges === 0){ _gentleNudges = 1; showGentleBridge(_ilux('gb.n1')); }
-  else if (mins >= 35 && _gentleNudges === 1){ _gentleNudges = 2; showGentleBridge(_ilux('gb.n2')); }
+  // FOUNDER FIX: the timed gentle-bridge nudges popped up mid-session and
+  // covered what the person was doing. They are removed. The permanent crisis
+  // bar (988/911 + "Talk to someone") keeps the human bridge visible and
+  // reachable at ALL times, so the no-dead-end law (Immutable Principle 1) is
+  // preserved without an interrupting popup. No-op.
 }
 function showGentleBridge(message){
-  // never blocks, never closes anything — a soft, dismissable invitation
-  if (document.getElementById('gentle-bridge')) return;
-  const b = document.createElement('div');
-  b.id = 'gentle-bridge';
-  b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:74;'
-    + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
-    + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;text-align:center;';
-  b.innerHTML = '<div style="font-size:14px;color:#4a362c;line-height:1.5;margin-bottom:12px;">' + message + '</div>'
-    + '<button onclick="bridgeConnect()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">'+_ilux('gb.connect')+'</button>'
-    + '<button onclick="closeGentleBridge()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">'+_ilux('gb.keep')+'</button>';
-  document.body.appendChild(b);
+  // Removed: no floating time-nudge overlay. The permanent crisis bar is the
+  // always-visible human bridge. No-op (kept so any caller stays safe).
 }
-function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} closeGentleBridge(); }
+function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} }
 function closeGentleBridge(){ const b=document.getElementById('gentle-bridge'); if(b) b.remove(); }
 
 // ---- GENTLE PROVIDER GUIDANCE (navigation, not diagnosis) ----
@@ -4710,30 +4701,9 @@ async function doFacilities(){
 let _fbShown = false;
 function closeFb(){ const c=document.getElementById('fb-card'); if(c) c.remove(); }
 function offerFeedback(){
-  if (_fbShown) return;
-  _fbShown = true;
-  const box = document.createElement('div');
-  box.id = 'fb-card';
-  box.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:78;'
-    + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
-    + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;';
-  box.innerHTML =
-     '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;text-align:center;">'+_ilux('fb.ask')+'</div>'
-   + '<div style="text-align:center;margin-bottom:8px;">'
-   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #d3a47d;background:#f8f5f2;color:#6a402c;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.yes')+'</button>'
-   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #ddd1c8;background:#fff;color:#99673e;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.some')+'</button>'
-   +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.no')+'</button>'
-   + '</div>'
-   + '<textarea id="fb-words" aria-label="'+_ilux('fb.ph')+'" placeholder="'+_ilux('fb.ph')+'" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
-   + '<div style="text-align:center;margin-top:8px;">'
-   +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">'+_ilux('fb.share')+'</button>'
-   +   '<button onclick="closeFb()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">'+_ilux('fb.nothanks')+'</button>'
-   + '</div>';
-  document.body.appendChild(box);
-  box.querySelectorAll('.fb-h').forEach(function(b){
-    b.onclick = function(){ box.querySelectorAll('.fb-h').forEach(function(x){x.style.outline='none';});
-      b.style.outline='2px solid #2e6e8e'; window._fbHelped = b.getAttribute('data-v'); };
-  });
+  // FOUNDER FIX: the feedback card popped up over the composer mid-session and
+  // was one of the interrupting check-ins to remove. It no longer appears.
+  // No-op.
 }
 async function submitFeedback(){
   const words = (document.getElementById('fb-words')||{}).value || '';
@@ -5028,12 +4998,12 @@ function ilAnchorRun(ov, A){
   function resize(){ W=c.clientWidth;H=c.clientHeight;c.width=W*DPR;c.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0); }
   resize(); var ro=function(){resize();}; window.addEventListener('resize',ro);
   var cycle=10000, t0=performance.now(), lastIdx=-1, rings=[], flash=0, wi=0, cur='', taps=[];
+  // FOUNDER FIX: a tap ANYWHERE on the Focus overlay wakes the site. It used to
+  // only pulse the light, and dismissal required finding the small OK button.
+  // Now any tap dismisses (the OK button keeps its own handler and is skipped
+  // here so it is not double-handled). Escape still closes via ov._key.
   ov.addEventListener('pointerdown', function(e){ if(e.target && e.target.id==='il-anchor-x') return;
-    var now=performance.now(); taps.push(now); if(taps.length>4) taps.shift();
-    if(taps.length>=2){ var iv=[]; for(var i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]);
-      var avg=iv.reduce(function(a,b){return a+b;},0)/iv.length; var target=Math.max(5000,Math.min(14000,avg*2));
-      cycle=cycle*0.6+target*0.4; }
-    rings.push({born:now,strong:true}); flash=1; });
+    hideAnchor(); });
   var nm=(window._ilName||'').toString().trim();
   function frame(now){ if(ov._stop){ window.removeEventListener('resize',ro); return; }
     var el=now-t0, idx=Math.floor(el/cycle), p=(el%cycle)/cycle, swell=0.5-0.5*Math.cos(2*Math.PI*p);
@@ -5057,7 +5027,7 @@ function ilAnchorRun(ov, A){
 }
 function ilAddAnchorPill(){ if(document.getElementById('il-anchor-pill')) return;
   var b=document.createElement('button'); b.id='il-anchor-pill'; b.textContent='◎ '+_ilan('pill');
-  b.style.cssText='position:fixed;left:22px;bottom:96px;z-index:8000;background:rgba(42,29,18,.62);'
+  b.style.cssText='position:fixed;left:22px;bottom:96px;z-index:80;background:rgba(42,29,18,.62);'
     +'border:1px solid rgba(240,176,112,.3);color:#e8d8c4;border-radius:999px;padding:9px 14px;font-size:12.5px;'
     +'cursor:pointer;backdrop-filter:blur(6px);';
   b.addEventListener('click', function(){ showAnchor(); });
@@ -6117,11 +6087,9 @@ function toggleMore(){
   try { var t = document.querySelector('.rail-talk'); if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false'); } catch(e){}
 }
 function togglePreview(){
-  var v=document.getElementById('visual-preview'), x=document.getElementById('preview-hide'), s=document.getElementById('preview-seen');
-  if(!v||!s) return;
-  var hidden = v.style.display==='none';
-  if(hidden){ v.style.display=''; if(x) x.style.display=''; s.style.display='none'; }
-  else { v.style.display='none'; if(x) x.style.display='none'; s.style.display='inline-flex'; }
+  /* No on-screen self-view exists anymore: the camera feed is analysis-only and
+     held permanently offscreen. Kept as a harmless no-op in case anything still
+     references it. */
 }
 function ilScrollHistory(){
   try { var h=document.querySelector('.il-history'); if(h) h.scrollTop = h.scrollHeight; } catch(e){}
@@ -6804,82 +6772,11 @@ document.addEventListener('DOMContentLoaded', loadVoiceChoices);
 // Record when the person is typing so heavy work (face detection) yields to
 // the keyboard and typing always stays instant.
 document.addEventListener('keydown', function(){ window._lastTypedAt = performance.now(); }, true);
-// FACE VIDEO floats to the side when you scroll down, and returns to its
-// centered spot when you scroll back to the top. Smooth and calm.
-(function(){
-  // FOUNDER FIX: the preview used to reposition on every scroll, which forces
-  // the browser to re-render the whole page each frame — the glitchy stutter
-  // felt while talking or tapping. The preview is now STATIONARY: pinned once
-  // in a fixed corner spot and never moved by scrolling. The person may not
-  // always watch their own face, but the small live preview stays put so they
-  // know we can see them. (They can still hide it with the corner button.)
-  const bar = document.querySelector('.story-video-bar');
-  if (!bar) return;
-  bar.classList.add('pinned');
-
-  // ITEM #5 — the app never moves the preview on its own; but the PERSON may
-  // drag it, and where THEY put it is where it stays for the session. We store
-  // the dragged spot in sessionStorage and re-apply it, so a scroll, a reply,
-  // or a state change can never shove it back over the typing box.
-  function applyStoredPos(){
-    try {
-      var raw = sessionStorage.getItem('il_preview_pos');
-      if (!raw) return;
-      var p = JSON.parse(raw);
-      if (p && typeof p.left === 'number' && typeof p.top === 'number') {
-        bar.style.left = p.left + 'px';
-        bar.style.top = p.top + 'px';
-        bar.style.right = 'auto';
-      }
-    } catch(e){}
-  }
-  applyStoredPos();
-
-  var dragging = false, startX = 0, startY = 0, baseLeft = 0, baseTop = 0, moved = false;
-  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-  function onDown(e){
-    // The little hide (x) button keeps its own job — never start a drag on it.
-    if (e.target && e.target.id === 'preview-hide') return;
-    var pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
-    var r = bar.getBoundingClientRect();
-    dragging = true; moved = false;
-    startX = pt.clientX; startY = pt.clientY;
-    baseLeft = r.left; baseTop = r.top;
-    bar.style.transition = 'none';
-    try { e.preventDefault(); } catch(_){}
-  }
-  function onMove(e){
-    if (!dragging) return;
-    var pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
-    var dx = pt.clientX - startX, dy = pt.clientY - startY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-    var w = bar.offsetWidth, h = bar.offsetHeight;
-    var left = clamp(baseLeft + dx, 4, window.innerWidth - w - 4);
-    var top = clamp(baseTop + dy, 4, window.innerHeight - h - 4);
-    bar.style.left = left + 'px';
-    bar.style.top = top + 'px';
-    bar.style.right = 'auto';
-    try { e.preventDefault(); } catch(_){}
-  }
-  function onUp(){
-    if (!dragging) return;
-    dragging = false;
-    if (moved) {
-      var r = bar.getBoundingClientRect();
-      try { sessionStorage.setItem('il_preview_pos', JSON.stringify({left: Math.round(r.left), top: Math.round(r.top)})); } catch(e){}
-      window._previewPos = {left: Math.round(r.left), top: Math.round(r.top)};
-    }
-  }
-  try {
-    bar.style.cursor = 'grab';
-    bar.addEventListener('mousedown', onDown);
-    bar.addEventListener('touchstart', onDown, {passive:false});
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('touchmove', onMove, {passive:false});
-    document.addEventListener('mouseup', onUp);
-    document.addEventListener('touchend', onUp);
-  } catch(e){}
-})();
+// FOUNDER FIX: there is NO on-screen camera self-view anymore. The floating
+// preview distracted people and covered the composer, so the draggable /
+// pinned / floating self-view has been removed entirely. The camera feed still
+// runs for the face/heart/attention analysis, but the <video> element is held
+// permanently offscreen by CSS and is never shown or moved.
 
 // ===================== SPEECH QUEUE — ONE VOICE AT A TIME =====================
 // Only ONE line is ever spoken at a time. New lines wait in a queue for the
@@ -7120,19 +7017,9 @@ function openSaveNow(){
   document.body.appendChild(bar);
 }
 function maybeOfferSave(){
-  if (_memOffered) return;
-  const story = collectStory();
-  if (story.length < 40) return;  // only once there's something worth saving
-  _memOffered = true;
-  const bar = document.createElement('div');
-  bar.id = 'save-offer';
-  bar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:75;'
-    + 'background:rgba(255,255,255,0.97);border:1px solid #e0d7cf;border-radius:16px;padding:14px 18px;'
-    + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
-  bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.auto')+'</div>'
-    + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">'+_ilux('sv.btn')+'</button>'
-    + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
-  document.body.appendChild(bar);
+  // FOUNDER FIX: the automatic "save your story" nudge popped up on its own and
+  // covered the composer. It is removed. Saving is still fully available on
+  // demand from the Save button on the help rail (openSaveNow). No-op.
 }
 async function doSaveStory(){
   const story = collectStory();
@@ -16592,9 +16479,10 @@ async function runAllLenses(){
 </script>
 <script>
 window.addEventListener('load', function(){
-  try { if (typeof maybeOfferSave==='function') setInterval(maybeOfferSave, 15000); } catch(e){}
-  try { if (typeof offerFeedback==='function') setTimeout(offerFeedback, 6*60*1000); } catch(e){}
-  try { if (typeof gentleCompletionCheck==='function') setInterval(gentleCompletionCheck, 60000); } catch(e){}
+  // FOUNDER FIX: the timed check-in / feedback / save-offer nudges are removed.
+  // They interrupted people mid-action and covered the composer. Saving is still
+  // available on demand (Save button -> openSaveNow); the permanent crisis bar
+  // keeps the human bridge visible at all times, so no timed popup is scheduled.
 }, {once:true});
 </script>
 </body></html>""")
