@@ -8,3 +8,7 @@ __pycache__/
 # .env file being committed by accident. (No such file exists today.)
 .env
 *.env
+
+# Internal agent planning scratch — not part of the site
+.agents/
+.python-version
