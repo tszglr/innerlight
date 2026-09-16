@@ -250,3 +250,87 @@ module is honest that it is classical (not post-quantum) crypto.
 correct remediation — which only the founder/orchestrator can perform, not this
 audit — would be: rotate the secret in the provider dashboard, remove it from code
 and history, and read it from an environment variable going forward.)
+
+---
+
+## Page Translations — Status
+
+_Added for the founder. Plain language, no technical background needed. Every
+short-form term is spelled out the first time it appears._
+
+### The short version (please read this first)
+
+Your pages **do translate today.** When someone opens InnerLight and picks one of
+the eleven languages we offer, the app translates the page for them on the spot.
+Nobody is stuck reading English if they chose another language.
+
+What is **not finished yet** is the *permanent, professionally-reviewed* set of
+translations. Think of it as the difference between a good on-the-spot translation
+and a printed, proofread edition kept on the shelf. The on-the-spot version works
+now. The printed edition still needs one thing to be produced, and it is not
+something you type or run — it is a single decision in your hosting dashboard.
+
+### What works right now
+
+- **All eleven languages are offered and reachable.** The language picker (the little
+  row of language links) shows every language, and every one of them opens a working
+  page. We checked all eleven, plus English, and none of them errors out or gets
+  stuck showing raw English when another language was chosen.
+- **On-the-fly translation (called "runtime self-translation").** The moment a page is
+  opened in a language it has not permanently learned yet, the app shows a version
+  right away and quietly translates itself in the background so the next visitor in
+  that language gets the translated page. This is the safety net that means no visitor
+  is left in the cold.
+- **The safety and crisis information is never left to guesswork.** The emergency
+  numbers and crisis wording are fixed and handled separately; we did not change any
+  of that. They stay exactly as designed, in every language.
+
+### What is not permanent yet
+
+- **The professionally-baked page translations.** There are eleven languages across
+  eleven information pages, which is one hundred twenty-one language-and-page
+  combinations ("121 pairs"). These are the permanent, shelf-ready translations that
+  get saved into the project so they load instantly for the very first visitor and
+  cannot be wiped out by a future update. Today, zero of the 121 are baked in this
+  work copy — the app is running on the on-the-fly safety net described above.
+- **Why they are not baked here.** Producing them requires the translation key — an
+  API key (API stands for Application Programming Interface, which is simply the
+  secure way one program is allowed to use another). That key is the one for
+  Anthropic, the company behind the Claude artificial-intelligence service we use to
+  translate. For safety, that key lives **only** in your Render hosting dashboard
+  (Render is the company that hosts the website). It is deliberately **not** kept
+  inside the project files, so nobody working on the code can see or misuse it.
+- **We did not fake it.** We did **not** invent or paste in any translations, and we
+  did **not** flip the "translations are complete" switch (an internal marker file).
+  Doing either would be dishonest and against InnerLight's own rules, which require a
+  human who speaks the language to review the wording before we ever call it finished
+  — especially for Tongan, where automatic translation is weakest.
+
+### The only thing you need to do
+
+**One decision, in your dashboard — never a command.** Confirm that the translation
+key (the Anthropic API key) is present in your Render dashboard's settings. That is
+the whole of your part. You do not type anything, you do not touch the code, and you
+do not run anything.
+
+### How it gets finished without you lifting a finger
+
+Once the key is confirmed present, the finishing work is handled for you, not by you:
+
+- **The app finishes it by itself while running.** With the key in place, InnerLight
+  already translates each page in the background the first time it is opened and
+  remembers the result, so the site fills in its own translations over normal use.
+- **Or a keyed build run does it in one pass.** Your engineering helper (or an
+  automated build system — "Continuous Integration," often shortened to CI, which is
+  just a computer that runs the project's checks and build steps automatically) can
+  run the existing bake step once, with the key available, to produce all 121
+  translations together. A native speaker then reviews them, and only after that
+  review is the "complete" marker turned on. All of that is the orchestrator's or the
+  engineer's job — you are never asked to run it.
+
+### In one sentence
+
+Translations work for visitors today through the on-the-fly safety net; the permanent,
+proofread set is a background job that finishes on its own (or in one keyed build run)
+as soon as the translation key is confirmed in your Render dashboard — the only step
+that is yours, and it is a dashboard check, not a command.

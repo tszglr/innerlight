@@ -10042,15 +10042,27 @@ def console():
     return render_template_string(PAGE)
 
 
-# Crisis handoff pages, localized (Spanish / Chinese) with English fallback.
+# Crisis handoff pages, localized with English fallback. The loader iterates
+# EVERY advertised language (_PAGE_LANGS) so it stays in lockstep with the
+# language picker and the info-page loader — no advertised language can be
+# left out of the handoff loader (a missing language there would silently
+# serve English even after a native-reviewed handoff file is committed).
+# Files not yet authored simply leave that language's handoff empty and the
+# page falls back to English; the crisis/safety numbers inside the handoff
+# template are deterministic and never machine-translated at runtime.
 _HANDOFF_I18N = {}
 def _load_handoff_i18n():
     import os as _os, json as _json
     base = _os.path.dirname(_os.path.abspath(__file__))
-    for lg in ("es", "zh", "hi", "pa", "bn", "tl", "to"):
+    for lg in _PAGE_LANGS:
+        _HANDOFF_I18N.setdefault(lg, {})
         try:
             with open(_os.path.join(base, "i18n_handoff_%s.json" % lg), encoding="utf-8") as f:
                 _HANDOFF_I18N[lg] = _json.load(f)
+        except FileNotFoundError:
+            # Expected until a native-reviewed handoff file exists for this
+            # language; the page falls back to English. Not an error.
+            pass
         except Exception as e:
             print("[InnerLight] handoff i18n %s not loaded: %s" % (lg, e))
             _HANDOFF_I18N[lg] = {}
