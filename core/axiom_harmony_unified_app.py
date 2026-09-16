@@ -4149,17 +4149,41 @@ function heartReport(){
     +'background:rgba(255,255,255,0.92);border-radius:999px;padding:12px 22px;'
     +'font-family:Arial;font-size:22px;color:#8a4653;box-shadow:0 8px 26px rgba(40,20,30,0.2);';
   chip.innerHTML='<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> '
-    +'<b id="heart-num" style="font-size:26px;">--</b> <span class="hr-label" style="font-size:13px;color:#a98790;">bpm</span>';
+    +'<b id="heart-num" style="font-size:26px;">&nbsp;</b> <span class="hr-label" style="font-size:13px;color:#a98790;"></span>';
   document.addEventListener('DOMContentLoaded', ()=>document.body.appendChild(chip));
   if (document.body) document.body.appendChild(chip);
+  // The chip is shown only once the camera is actually on, so it never appears
+  // as an empty/broken bar on a page with no reading. Once shown it stays as a
+  // calm, honest presence: a live number when we truly have one, and a quiet
+  // resting heart glyph (no number) when the signal is weak, absent, stale, or
+  // implausible. It NEVER freezes on a wrong or stale value, and it never asks
+  // the person to do anything (Principle 11).
   setInterval(()=>{
+    if (!window._camOn){ chip.style.display='none'; return; }
+    const beat = document.getElementById('heart-beat');
+    const num  = document.getElementById('heart-num');
+    const lbl  = chip.querySelector('.hr-label');
     const fresh = window._heartUpdatedAt && (Date.now()-window._heartUpdatedAt < 12000);
-    if (window._heartBPM && window._heartBPM>=40 && window._heartBPM<=170 && fresh){
+    const plausible = window._heartBPM && window._heartBPM>=40 && window._heartBPM<=170;
+    if (plausible && fresh){
+      // A real, trustworthy reading: show the number and pulse with it.
       chip.style.display='block';
-      document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
-      const b=document.getElementById('heart-beat');
-      b.style.transition='transform 0.15s ease'; b.style.transform='scale(1.28)';
-      setTimeout(()=>{ b.style.transform='scale(1)'; }, 150);
+      num.textContent = Math.round(window._heartBPM);
+      num.style.fontSize = '26px';
+      lbl.textContent = 'bpm';
+      beat.style.transition='transform 0.15s ease'; beat.style.transform='scale(1.28)';
+      setTimeout(()=>{ beat.style.transform='scale(1)'; }, 150);
+    } else {
+      // Weak / absent / stale / implausible: degrade to a calm resting state.
+      // Show the heart glyph gently beating, with no misleading number. A lost
+      // signal cleanly zeroes rather than freezing on the last reading.
+      if (!fresh){ heartBPM = 0; window._heartBPM = 0; }
+      chip.style.display='block';
+      num.textContent = '\u00a0';
+      num.style.fontSize = '0px';
+      lbl.textContent = '';
+      beat.style.transition='transform 1.6s ease-in-out'; beat.style.transform='scale(1.12)';
+      setTimeout(()=>{ beat.style.transform='scale(1)'; }, 800);
     }
   }, 1500);
 })();
@@ -13483,6 +13507,10 @@ def admin_dashboard():
    --night:#17100a; --night-2:#211508; --field:#1d1309;
    --ember:#e8a34c; --candle:#f4c977; --core:#ffe8bf;
    --accent:#e8a34c;   /* drifts slowly through warm hues over ~8 min */
+   /* SHARED CALM ACCENT — a non-brown teal/green so the biometric panel and its
+      trend line read clearly against the all-warm theme. Named for reuse: later
+      palette work (FEAT-005) can pull this same value instead of redefining it. */
+   --il-bio-accent:#5fc9a8;
    --cream:#f2e7d2; --cream-dim:rgba(242,231,210,.62); --cream-faint:rgba(242,231,210,.38);
    --hairline:rgba(232,163,76,.16);
    --serif:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
@@ -14671,7 +14699,11 @@ def admin_dashboard():
 
     <h2 class="ledger" id="live" data-sec="sec-live">Live sessions — real-time biometric monitor</h2>
     <div class="panel">
-    <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. The small line at the right is that person&rsquo;s heart over the last minutes &mdash; a line drifting downward means a body settling. <span id="bio-clock" style="float:right;"></span></div>
+    <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. <span id="bio-clock" style="float:right;"></span></div>
+    <div class="bio-legend" style="display:flex;align-items:center;gap:9px;margin:2px 0 12px;padding:8px 12px;border-left:3px solid var(--il-bio-accent);background:rgba(95,201,168,.08);border-radius:0 8px 8px 0;font-size:12.5px;color:var(--cream-dim);line-height:1.5;">
+      <svg width="52" height="20" style="flex:0 0 auto;vertical-align:middle;"><polyline points="0,15 13,11 26,12 39,6 52,3" fill="none" stroke="var(--il-bio-accent)" stroke-width="2"/><circle cx="0" cy="15" r="2" fill="var(--il-bio-accent)"/><circle cx="13" cy="11" r="2" fill="var(--il-bio-accent)"/><circle cx="26" cy="12" r="2" fill="var(--il-bio-accent)"/><circle cx="39" cy="6" r="2" fill="var(--il-bio-accent)"/><circle cx="52" cy="3" r="2" fill="var(--il-bio-accent)"/></svg>
+      <span>This is the <b style="color:var(--il-bio-accent);">trend line</b> at the right of each person. Each dot is one recent heart-rate reading, oldest on the left, newest on the right. A line drifting <b style="color:var(--il-bio-accent);">downward means the body is settling</b> — the room is doing its work. A line drifting up means the heart is rising.</span>
+    </div>
     <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Waiting for a live session…</i></div>
     </div>
 
@@ -15256,7 +15288,8 @@ def admin_dashboard():
     if(!vals||vals.length<2) return '';
     var w=180,h=34,min=Math.min.apply(null,vals),max=Math.max.apply(null,vals),rng=(max-min)||1;
     var pts=vals.map(function(v,i){return (i/(vals.length-1)*w).toFixed(1)+','+(h-(v-min)/rng*h).toFixed(1);}).join(' ');
-    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="#e8a34c" stroke-width="2"/></svg>';
+    var dots=vals.map(function(v,i){return '<circle cx="'+(i/(vals.length-1)*w).toFixed(1)+'" cy="'+(h-(v-min)/rng*h).toFixed(1)+'" r="1.8" fill="var(--il-bio-accent)"/>';}).join('');
+    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="var(--il-bio-accent)" stroke-width="2"/>'+dots+'</svg>';
   }
   function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#f4c977':'rgba(242,231,210,.62)'); }
   function stateWord(st){ return st==='rising'?'rising / activating':(st==='settling'?'settling / calming':'steady'); }
