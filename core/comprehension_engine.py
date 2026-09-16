@@ -26,7 +26,7 @@ import urllib.error
 from typing import Any, Dict, List, Optional
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
-MODEL = os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6")
+MODEL = os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-5")
 
 # --- Fallback reason reporting (non-breaking; respond() still returns dict-or-None).
 # When respond() returns None, it records WHY here so the caller can classify the
