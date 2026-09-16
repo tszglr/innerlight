@@ -12863,7 +12863,7 @@ function setInstrument(id){
   var st=document.getElementById('inst-status'); if(st) st.textContent=INSTNAMES[id]+' ready.';
 }
 function hideGate(){ var g=document.getElementById('startgate'); if(g){ g.style.display='none'; g.style.pointerEvents='none'; } }
-var useNative=false, nativeCtx=null, nativeVoices={}, nativeWave='triangle';
+var useNative=false, nativeCtx=null, nativeVoices={}, nativeWave='triangle', nativeMaster=null;
 async function unlock(){
   hideGate();
   if(ready) return;
@@ -12886,6 +12886,13 @@ async function unlock(){
     var AC=window.AudioContext||window.webkitAudioContext;
     nativeCtx=new AC(); await nativeCtx.resume();
     useNative=true; ready=true;
+    // Master bus: every native note connects here, and this bus feeds BOTH the
+    // speakers AND the recorder tap, so Save captures exactly what you hear.
+    nativeMaster=nativeCtx.createGain(); nativeMaster.gain.value=1;
+    nativeMaster.connect(nativeCtx.destination);
+    // Recording tap for the built-in path (this is what was missing before —
+    // recDest only existed on the Tone.js path, so Save silently did nothing).
+    try{ recDest=nativeCtx.createMediaStreamDestination(); nativeMaster.connect(recDest); }catch(e){ recDest=null; }
     if(st) st.textContent='Piano ready (built-in sound) — press a key.';
   }catch(e){ if(st) st.textContent='Your browser blocked audio. Try a different browser or unblock sound for this site.'; }
 }
@@ -12907,7 +12914,7 @@ function nativeOn(note){
   if(!nativeCtx||nativeVoices[note]) return;
   var v=VOICES[nativeInst]||VOICES.piano, t=nativeCtx.currentTime;
   var vol=(+document.getElementById('k-vol').value/100)*0.34;
-  var out=nativeCtx.createGain(); out.gain.value=1; out.connect(nativeCtx.destination);
+  var out=nativeCtx.createGain(); out.gain.value=1; out.connect(nativeMaster||nativeCtx.destination);
   var base=noteToFreq(note); var oscs=[];
   v.partials.forEach(function(p){
     var o=nativeCtx.createOscillator(), g=nativeCtx.createGain();
@@ -12925,6 +12932,24 @@ function nativeOff(note){
   var vv=nativeVoices[note]; if(!vv) return; delete nativeVoices[note];
   var t=nativeCtx.currentTime;
   try{ vv.oscs.forEach(function(x){ x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(Math.max(0.0002,x.g.gain.value),t); x.g.gain.exponentialRampToValueAtTime(0.0002, t+vv.rel); x.o.stop(t+vv.rel+0.05); }); }catch(e){}
+}
+// Schedule a single note to sound at absolute time `at` for `dur` seconds at
+// `peak` gain — used by the built-in Play arrangement so it records cleanly
+// through nativeMaster -> recDest.
+function nativeSchedule(note, at, dur, peak){
+  if(!nativeCtx) return;
+  var v=VOICES[nativeInst]||VOICES.piano;
+  var base=noteToFreq(note);
+  var out=nativeCtx.createGain(); out.gain.value=1; out.connect(nativeMaster||nativeCtx.destination);
+  v.partials.forEach(function(p){
+    var o=nativeCtx.createOscillator(), g=nativeCtx.createGain();
+    o.type=p[2]; o.frequency.value=base*p[0];
+    var pk=Math.max(0.0002, peak*p[1]);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(pk, at+v.atk);
+    g.gain.exponentialRampToValueAtTime(0.0002, at+Math.max(v.atk+0.05, dur));
+    o.connect(g); g.connect(out); o.start(at); o.stop(at+dur+0.1);
+  });
 }
 // Expose unlock so the gate's INLINE onclick (which works even if this script
 // errored earlier) can call it. If the user already tapped before this script
@@ -13033,7 +13058,7 @@ document.getElementById('octdown').addEventListener('click', function(){ octave=
 document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(5,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octaves '+octave+'-'+(octave+1); });
 
 // ============ knobs ============
-function applyKnobs(){ if(!ready)return; if(reverb)reverb.wet.value=+document.getElementById('k-verb').value/100; Tone.getDestination().volume.value=(+document.getElementById('k-vol').value/100)*24-16; Tone.Transport.bpm.value=+document.getElementById('k-bpm').value; }
+function applyKnobs(){ if(!ready)return; if(useNative||!window.Tone){ if(nativeMaster){ try{ nativeMaster.gain.value=(+document.getElementById('k-vol').value/100); }catch(e){} } return; } try{ if(reverb)reverb.wet.value=+document.getElementById('k-verb').value/100; Tone.getDestination().volume.value=(+document.getElementById('k-vol').value/100)*24-16; Tone.Transport.bpm.value=+document.getElementById('k-bpm').value; }catch(e){} }
 ['k-verb','k-vol','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
 
 // ============ learn a melody ============
@@ -13125,22 +13150,64 @@ document.getElementById('beat-stop').addEventListener('click', function(){ if(be
 var rec={on:false,events:[],start:0}, enriched=null, estyle='gentle', recorder=null, chunks=[];
 document.querySelectorAll('.estyle').forEach(function(b){ b.addEventListener('click',function(){document.querySelectorAll('.estyle').forEach(function(x){x.classList.remove('on');});b.classList.add('on');estyle=b.dataset.style;}); });
 document.getElementById('rec-btn').addEventListener('click', async function(){ await unlock(); var btn=this;
-  if(rec.on){ rec.on=false; btn.textContent='\u25CF Record'; btn.className='rbtn rec-start'; document.getElementById('rec-dot').className='dot'; document.getElementById('rec-status').textContent=rec.events.filter(function(e){return e.type==='on';}).length+' notes recorded'; return; }
-  rec={on:true,events:[],start:Tone.now()}; btn.textContent='\u25A0 Stop'; btn.className='rbtn rec-stop'; document.getElementById('rec-dot').className='dot live'; document.getElementById('rec-status').textContent='recording... play your melody';
+  if(!ready){ document.getElementById('rec-status').textContent='Audio is not on yet — tap the piano once to start sound, then Record.'; return; }
+  if(rec.on){ rec.on=false; btn.textContent='\u25CF Record'; btn.className='rbtn rec-start'; document.getElementById('rec-dot').className='dot'; var n=rec.events.filter(function(e){return e.type==='on';}).length; document.getElementById('rec-status').textContent=(n? (n+' notes recorded — Enrich, then Play.') : 'No notes were played — press Record and play some keys.'); return; }
+  rec={on:true,events:[],start:_now()}; btn.textContent='\u25A0 Stop'; btn.className='rbtn rec-stop'; document.getElementById('rec-dot').className='dot live'; document.getElementById('rec-status').textContent='recording... play your melody';
 });
 document.getElementById('enrich-btn').addEventListener('click', async function(){ await unlock(); var ons=rec.events.filter(function(e){return e.type==='on';}); if(!ons.length){ document.getElementById('enrich-status').textContent='Record a melody first.'; return; } var counts={}; ons.forEach(function(e){var pc=NOTES.indexOf(e.note.replace(/\d/,''))%12; counts[pc]=(counts[pc]||0)+1;}); var key=0,bc=-1; Object.keys(counts).forEach(function(pc){if(counts[pc]>bc){bc=counts[pc];key=+pc;}}); enriched={key:key,style:estyle,melody:ons}; document.getElementById('enrich-status').textContent='Done — press Play to hear your fuller song, then Save.'; });
+// Shared recorder tap. Returns true if capture actually started, false (and
+// tells the founder plainly) if this browser/path cannot record. We NEVER show
+// a Save link unless a real, non-empty file was produced (Principle 13).
+function startRec(){
+  chunks=[];
+  if(!recDest || !recDest.stream){ document.getElementById('enrich-status').textContent='Playing your song (this browser will not let it be saved to a file — the sound still plays).'; return false; }
+  if(typeof MediaRecorder==='undefined'){ document.getElementById('enrich-status').textContent='Playing your song (this browser cannot save audio files — the sound still plays).'; return false; }
+  try{
+    var mime=(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))?'audio/webm':'';
+    recorder=mime?new MediaRecorder(recDest.stream,{mimeType:mime}):new MediaRecorder(recDest.stream);
+    recorder.ondataavailable=function(e){ if(e.data && e.data.size>0) chunks.push(e.data); };
+    recorder.onstop=function(){
+      var sw=document.getElementById('save-wrap'); sw.innerHTML='';
+      var total=chunks.reduce(function(a,c){return a+(c.size||0);},0);
+      if(!total){ document.getElementById('enrich-status').textContent='Nothing was captured to save — try Play again after enriching.'; return; }
+      var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'}));
+      var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='\u2b07 Save your song';
+      sw.appendChild(a);
+      document.getElementById('enrich-status').textContent='Your song is ready — press Save your song.';
+    };
+    recorder.start();
+    return true;
+  }catch(e){ recorder=null; document.getElementById('enrich-status').textContent='Playing your song (saving to a file is not available in this browser — the sound still plays).'; return false; }
+}
+function stopRec(){ try{ if(recorder && recorder.state!=='inactive') recorder.stop(); }catch(e){} }
 document.getElementById('play-btn').addEventListener('click', async function(){ await unlock(); if(!enriched){document.getElementById('enrich-status').textContent='Enrich first.';return;}
-  var key=enriched.key, bpm={gentle:60,fuller:74,cinematic:66,upbeat:96}[enriched.style], beat=60/bpm, now=Tone.now()+0.1;
-  var pad=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); pad.volume.value=-16;
-  var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-8;
-  chunks=[]; try{ recorder=new MediaRecorder(recDest.stream); recorder.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);}; recorder.onstop=function(){ var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'})); var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='\u2b07 Save your song'; var sw=document.getElementById('save-wrap'); sw.innerHTML=''; sw.appendChild(a); }; recorder.start(); }catch(e){}
+  if(!ready){ document.getElementById('enrich-status').textContent='Audio is not on yet — tap the piano once to start sound, then Play.'; return; }
+  var key=enriched.key, bpm={gentle:60,fuller:74,cinematic:66,upbeat:96}[enriched.style], beat=60/bpm;
   var roots=[0,5,7,5]; var sc=[0,2,4,5,7,9,11];
-  roots.forEach(function(deg,i){ var rootMidi=60+key+sc[deg%7]; var chord=[0,2,4].map(function(s){return nm(rootMidi+sc[(deg+s)%7]);}); pad.triggerAttackRelease(chord,beat*3.6,now+i*beat*4); bass.triggerAttackRelease(nm(rootMidi-12),beat*3.6,now+i*beat*4); });
-  enriched.melody.forEach(function(m){ try{synth.triggerAttackRelease(m.note,'2n',now+(m.t||0));}catch(e){} });
-  var eb=(curBeat!=='none')?curBeat:({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]); if(BEATS[eb]){ initDrums(); var pat=BEATS[eb]; for(var s=0;s<roots.length*16;s++){ var st=s%16,tt=now+s*(beat/4); if(pat.k[st])drums.kick.triggerAttackRelease('C1','8n',tt); if(pat.s[st])drums.snare.triggerAttackRelease('8n',tt); if(pat.h[st])drums.hat.triggerAttackRelease('16n',tt);} }
+  var recording=startRec();
+  document.getElementById('enrich-status').textContent=recording?'Playing your song (recording to a file)...':document.getElementById('enrich-status').textContent;
+  if(useNative){
+    // Built-in Web Audio arrangement — mirrors the Tone.js version so the
+    // founder hears (and saves) a fuller song even when the Tone CDN is blocked.
+    var t0=nativeCtx.currentTime+0.1;
+    roots.forEach(function(deg,i){
+      var rootMidi=60+key+sc[deg%7];
+      var chord=[0,2,4].map(function(s){return nm(rootMidi+sc[(deg+s)%7]);});
+      var at=t0+i*beat*4;
+      chord.forEach(function(cn){ nativeSchedule(cn, at, beat*3.6, 0.16); });
+      nativeSchedule(nm(rootMidi-12), at, beat*3.6, 0.30);
+    });
+    enriched.melody.forEach(function(m){ nativeSchedule(m.note, t0+(m.t||0), 0.9, 0.5); });
+  } else {
+    var now=Tone.now()+0.1;
+    var pad=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); pad.volume.value=-16;
+    var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-8;
+    roots.forEach(function(deg,i){ var rootMidi=60+key+sc[deg%7]; var chord=[0,2,4].map(function(s){return nm(rootMidi+sc[(deg+s)%7]);}); pad.triggerAttackRelease(chord,beat*3.6,now+i*beat*4); bass.triggerAttackRelease(nm(rootMidi-12),beat*3.6,now+i*beat*4); });
+    enriched.melody.forEach(function(m){ try{synth.triggerAttackRelease(m.note,'2n',now+(m.t||0));}catch(e){} });
+    var eb=(curBeat!=='none')?curBeat:({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]); if(BEATS[eb]){ initDrums(); var pat=BEATS[eb]; for(var s=0;s<roots.length*16;s++){ var st=s%16,tt=now+s*(beat/4); if(pat.k[st])drums.kick.triggerAttackRelease('C1','8n',tt); if(pat.s[st])drums.snare.triggerAttackRelease('8n',tt); if(pat.h[st])drums.hat.triggerAttackRelease('16n',tt);} }
+  }
   var dur=Math.max(roots.length*beat*4, (enriched.melody.length?Math.max.apply(null,enriched.melody.map(function(m){return m.t||0;})):0)+2);
-  setTimeout(function(){ try{recorder.stop();}catch(e){} }, (dur+1)*1000);
-  document.getElementById('enrich-status').textContent='Playing your song...';
+  if(recording){ setTimeout(stopRec, (dur+1)*1000); }
 });
 
 // ============ init ============
