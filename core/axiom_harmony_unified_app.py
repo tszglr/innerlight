@@ -4734,7 +4734,7 @@ async function submitFeedback(){
       body: JSON.stringify({helped: helped, feeling: feeling, words: words})});
   } catch(e){}
   const card = document.getElementById('fb-card');
-  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#6a402c;padding:6px;">'+_ilux('fb.thanks')+' <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:6px 14px;cursor:pointer;">'+_ilux('fb.close')+'</button></div>';
+  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#3a4a46;padding:6px;">'+_ilux('fb.thanks')+' <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:6px 14px;cursor:pointer;">'+_ilux('fb.close')+'</button></div>';
 }
 
 // ---- LIVE BIOMETRIC PING: anonymous, every 4s, for the founder's live monitor.
@@ -7037,11 +7037,11 @@ function openSaveNow(){
     + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
   if (story.length < 40){
     bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.min')+'</div>'
-      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">'+_ilux('mb.ok')+'</button>';
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">'+_ilux('mb.ok')+'</button>';
   } else {
     bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.q')+'</div>'
       + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">'+_ilux('sv.btn')+'</button>'
-      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
   }
   document.body.appendChild(bar);
 }
@@ -7062,7 +7062,7 @@ async function doSaveStory(){
         + '<div style="font-size:22px;font-weight:800;letter-spacing:1px;color:#1e3a5c;margin:6px 0;">' + d.code + '</div>'
         + '<div style="font-size:12px;color:#736049;margin-bottom:10px;">'+_ilux('sv.code')+'</div>'
         + '<button onclick="copyReturnCode(this)" data-code="' + d.code + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.copy')+'</button>'
-        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.done')+'</button>';
+        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.done')+'</button>';
     } else if (offer){ offer.querySelector('div').textContent = _ilux('sv.empty'); }
   } catch(e){ if (offer) offer.querySelector('div').textContent = _ilux('sv.err'); }
 }
@@ -7076,7 +7076,7 @@ function openResume(){
     + '<input id="resume-code" aria-label="Your return code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd1c8;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
     + '<div id="resume-msg" style="font-size:13px;color:#c0564e;min-height:18px;margin:8px 0;"></div>'
     + '<button onclick="doResume()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;">Continue</button> '
-    + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
+    + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
     + '</div>';
   document.body.appendChild(box);
   setTimeout(()=>{ const el=document.getElementById('resume-code'); if(el) el.focus(); }, 100);
@@ -7295,7 +7295,7 @@ function appendHandoff(thread, handoff, data) {
   const el = document.createElement('div');
   el.className = 'handoff-card';
   const colors = {
-    crisis: {bg:'#f7f3f0', border:'#b27849', accent:'#6b412c'},
+    crisis: {bg:'#eef4f2', border:'#2f9077', accent:'#256f5c'},
     legal: {bg:'#f8f5f2', border:'#dcc0a9', accent:'#d4782d'},
     telehealth: {bg:'#eff6ff', border:'#60a5fa', accent:'#1d4ed8'},
     community: {bg:'#fef9ec', border:'#f0c14b', accent:'#a16207'}
@@ -7310,7 +7310,7 @@ function appendHandoff(thread, handoff, data) {
   const emergencyStyle = 'background:#fff;color:#b91c1c;border:1px solid #fca5a5;border-radius:10px;padding:12px 18px;font-size:14px;cursor:pointer;margin:4px 6px 4px 0;';
   el.innerHTML = `
     <p style="font-size:15px;font-weight:600;color:${c.accent};margin:0 0 6px;">${escapeHtml(_ilho(handoff.label))}</p>
-    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#6b412c;margin:10px 0;cursor:pointer;">
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#3a4a46;margin:10px 0;cursor:pointer;">
       <input type="checkbox" id="consent-${handoff.type}" style="margin-top:3px;">
       <span>${escapeHtml(_ilho(handoff.context_prompt || 'Share my context so I do not have to repeat myself.'))}</span>
     </label>
@@ -7379,14 +7379,14 @@ function showWarmHandoff(thread, warm, resolution, action, value) {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:left;background:linear-gradient(135deg,#b27849,#9e6a40);color:#fff;border-radius:16px;padding:24px;margin:18px 0;';
+  el.style.cssText = 'text-align:left;background:linear-gradient(135deg,var(--il-chrome-primary),var(--il-chrome-primary-h));color:#fff;border-radius:16px;padding:24px;margin:18px 0;';
   // Show the warm handoff parts in sequence, gently
   const partsHtml = (warm.parts || []).map(p =>
     `<p style="font-size:16px;line-height:1.75;margin:0 0 12px;">${escapeHtml(p)}</p>`).join('');
   el.innerHTML = `
     ${partsHtml}
     <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <button id="bridge-go" style="background:#fff;color:#6b412c;border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">${_ilux('wh.connect')}</button>
+      <button id="bridge-go" style="background:#fff;color:var(--il-chrome-primary-h);border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">${_ilux('wh.connect')}</button>
       <span style="font-size:13px;opacity:0.9;">${_ilux('wh.norush')}</span>
     </div>
     <button onclick="restartConversation()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:9px 20px;font-size:13px;cursor:pointer;margin-top:14px;">${_ilux('wh.more')}</button>
@@ -7437,7 +7437,7 @@ function showExit(thread, exitMsg, resolution) {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:center;background:linear-gradient(135deg,#b27849,#9e6a40);color:#fff;border-radius:14px;padding:22px;margin:18px 0;';
+  el.style.cssText = 'text-align:center;background:linear-gradient(135deg,var(--il-chrome-primary),var(--il-chrome-primary-h));color:#fff;border-radius:14px;padding:22px;margin:18px 0;';
   el.innerHTML = `
     <p style="font-size:16px;line-height:1.7;margin:0;">${escapeHtml(exitMsg.message)}</p>
     <button onclick="restartConversation()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:10px 22px;font-size:13px;cursor:pointer;margin-top:16px;">${_ilux('wh.more')}</button>

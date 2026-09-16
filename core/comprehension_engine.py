@@ -26,7 +26,29 @@ import urllib.error
 from typing import Any, Dict, List, Optional
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
+
+# --- KNOWN-GOOD MODEL ID (Principle 15 durability pin) ---------------------
+# Current known-good default: "claude-sonnet-5".
+# This follows Anthropic's current-generation naming convention `claude-<name>-<major>`
+# (confirmed siblings on this environment's model list: claude-opus-5,
+# claude-fable-5-1, claude-mythos-5-1). "Claude Sonnet 5" is the speed+capability
+# model, so its API id is "claude-sonnet-5".
+# WHY THIS COMMENT EXISTS: a wrong id makes every live call 404, which silently
+# falls back to the built-in (more clinical-feeling) lines. That failure is hard
+# to notice in production. If the default ever needs to change, update THIS string
+# AND this comment together, and confirm the new id against Anthropic's current
+# model list first. It is overridable at runtime via the INNERLIGHT_MODEL env var
+# (Principle 15: model names live in configuration, never hardcoded-and-forgotten).
 MODEL = os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-5")
+
+# One-line startup note so the model id actually in use is diagnosable from logs
+# (a 404 from a wrong id otherwise degrades silently to the clinical fallback).
+# Records only the id string and whether it came from the env override — never the key.
+print(
+    "[comprehension] model id in use: "
+    + MODEL
+    + (" (from INNERLIGHT_MODEL)" if os.environ.get("INNERLIGHT_MODEL") else " (built-in default)")
+)
 
 # --- Fallback reason reporting (non-breaking; respond() still returns dict-or-None).
 # When respond() returns None, it records WHY here so the caller can classify the
