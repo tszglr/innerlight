@@ -15737,7 +15737,10 @@ def admin_study_api():
               f"study with its own conclusion. Scenario (hypothetical, for founder education "
               f"only): {scenario}")
     body = json.dumps({
-        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-5"),
+        # Model id resolved by the shared auto-detector (Option B): env
+        # INNERLIGHT_MODEL wins, else the best Sonnet the account actually
+        # offers, else a documented placeholder — never a wrong hardcoded guess.
+        "model": comprehension_engine.resolve_model(),
         "max_tokens": 950,
         "system": system_prompt,
         "messages": [{"role": "user", "content": prompt}],
@@ -16315,7 +16318,10 @@ def admin_policy_study():
     if not pattern:
         return jsonify({"status": "error", "text": "Describe the recurring problem pattern to study."}), 200
     body = json.dumps({
-        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-5"),
+        # Model id resolved by the shared auto-detector (Option B): env
+        # INNERLIGHT_MODEL wins, else the best Sonnet the account actually
+        # offers, else a documented placeholder — never a wrong hardcoded guess.
+        "model": comprehension_engine.resolve_model(),
         "max_tokens": 1400,
         "system": _POLICY_SYSTEM,
         "messages": [{"role": "user", "content": "Recurring problem pattern to study for possible legislation: " + pattern}],
