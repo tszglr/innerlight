@@ -6036,17 +6036,22 @@ function _modeToLane(mode){
   if (/encourage|uplift|motivat|hope-?build/.test(m)) return 'lifting';
   // DISTRESS + soothing responses -> deep calm. 'rage' is word-bounded so it
   // only matches the standalone word, not inside other words.
-  if (/deep|agitat|anger|angry|panic|fear|anxi|\brage\b|overwhelm|crisis|calming|soothing|grounding|ground|reassur|de-?escalat/.test(m)) return 'deepcalm';
+  if (/deep|agitat|anger|angry|panic|fear|anxi|\brage\b|overwhelm|crisis|calming|soothing|grounding|ground|reassur|de-?escalat|despair|worthless|suicid/.test(m)) return 'deepcalm';
   // other low/heavy states -> lifting
-  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely/.test(m)) return 'lifting';
+  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely|empty/.test(m)) return 'lifting';
   // settled / positive / greeting -> calm
-  if (/calm|greet|steady|settl|neutral|hope|content|peace|gratitude|warm|gentle|validation|affirm/.test(m)) return 'calm';
+  if (/calm|greet|steady|settl|neutral|hope|content|peace|gratitude|warm|gentle|validation|affirm|happy|joy|glad|cheer/.test(m)) return 'calm';
   return null;
 }
 function steerLaneFromMode(mode){
   try {
     var want = _modeToLane(mode);
     if (!want || want === adaptiveLaneNow) return;
+    // Same safeguards the facial loop honors: never switch a muted person's
+    // music, and never fight the voice-duck. The words still update
+    // adaptiveLaneNow below so the loop stays in agreement with the mood.
+    if (typeof userMuted !== 'undefined' && userMuted) return;
+    if (typeof _duckActive !== 'undefined' && _duckActive) return;
     var now = Date.now();
     if (now - adaptiveLastSwitch < 10000) return;                 // one shift per 10s
     if (now - (window._lastManualMusic || 0) < 5*60*1000) return; // their hand outranks ours
@@ -6062,6 +6067,11 @@ function steerLaneFromMode(mode){
         switchAmbient(tracks[0].url, tracks[0].name);
         try { metric('lane_switch', 'words:' + String(mode).slice(0,20)); } catch(e){}
         armIsoEase(want);
+        // Proven attention-then-calm window: when the ambient plan hands back a
+        // calmer "then" lane, ease into it after the researched interval.
+        if (d.then && d.then.length && (d.transition_after_seconds || 0) > 0) {
+          try { scheduleSpaTransition(d.then, d.transition_after_seconds * 1000); } catch(e){}
+        }
       }).catch(function(){});
     creatorApplyMode(mode);
   } catch(e){}
@@ -7466,28 +7476,28 @@ function appendExchange(thread, reply, question, safetyHtml) {
   ilScrollHistory();
 }
 async function updateMusicForEmotion(data) {
+  // WORDS ARE THE ALWAYS-AVAILABLE MOOD SIGNAL. Every turn the server reads the
+  // person's own message and returns a coarse routing mode (sound_mode) plus a
+  // zenisys_music.emotion (never a clinical label): just which lane meets them,
+  // deep-calm for activated/panicky words, lifting for flat/down words, calm for
+  // settled words. The face is an ENHANCER, never a gatekeeper: if it disagrees
+  // and is confident, it can override the routing emotion for this turn.
   const textEmotion = (data.zenisys_music || {}).emotion || 'calm';
   const faceEmo = currentFaceEmotion || '';
   const emotionToUse = (faceEmo && faceEmo !== 'neutral' && faceEmo !== textEmotion) ? faceEmo : textEmotion;
-  const risk = (data.risk || '') ;
-  // Crossfade to the lane that MEETS this person: deep-calm to bring an
-  // agitated person down, lifting to bring a flat/depressed person up, then
-  // gently ease toward spa. The person picks the door by how they are.
-  try {
-    const res = await fetch('/api/zenisys/ambient?emotion=' + encodeURIComponent(emotionToUse)
-                            + '&risk=' + encodeURIComponent(risk));
-    const d = await res.json();
-    const tracks = d.tracks || [];
-    if (tracks.length) {
-      ambientTracks = tracks;
-      ambientIndex = 0;
-      switchAmbient(tracks[0].url, tracks[0].name);
-      // After the proven window, ease toward the calmer "then" lane.
-      if (d.then && d.then.length && (d.transition_after_seconds || 0) > 0) {
-        scheduleSpaTransition(d.then, d.transition_after_seconds * 1000);
-      }
-    }
-  } catch (e) {}
+  // Route the mood-derived lane through the SAME path the facial loop uses
+  // (steerLaneFromMode -> adaptiveLaneNow + switchAmbient). This is what makes
+  // the words actually move the music: it updates adaptiveLaneNow so the 2.5s
+  // adaptive loop stays in agreement instead of overriding the word signal on
+  // its next tick, and it inherits every safeguard (one shift per 10s, manual
+  // override, userMuted, voice-duck, iso-ease). data.sound_mode (checkin) is
+  // preferred; the learn route carries the mood in zenisys_music.emotion.
+  // steerLaneFromMode does the lane switch through the ambient plan and, when
+  // that plan carries a proven attention-then-calm window, schedules the ease
+  // into the calmer lane itself, so a single path owns the arrival transition
+  // too. The face emotion, when confident and different, steers this turn.
+  const moodMode = data.sound_mode || emotionToUse;
+  try { steerLaneFromMode(moodMode); } catch (e) {}
 }
 async function continueConversation() {
   const answerBox = document.getElementById('message') || document.getElementById('conv-answer');
