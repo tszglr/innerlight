@@ -449,7 +449,7 @@ PUBLIC_PAGE = """
   <!-- Creator imprint: God's Love for Us LLC, Axiom Harmony Protocol, InnerLight, VEIL, EDEN, and the Zenisys Sound System are created by Toshay S. Zeigler. -->
   <style>
   @keyframes listenpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
-    :root { --page:#faf5ec; --ink:#2a1e14; --muted:#74624d; --panel:#ffffff; --line:#ece0d0; --teal:#b24a2a; --leaf:#c56a2c; --coral:#c85c54; --gold:#b7791f; }
+    :root { --page:#faf5ec; --ink:#2a1e14; --muted:#74624d; --panel:#ffffff; --line:#ece0d0; --teal:#2f9077; --leaf:#2e6e8e; --coral:#d97a5f; --gold:#b7791f; }
     /* ---- COORDINATED WARM PALETTE (FEAT-005) ----------------------------------
        One place for the warm scheme so it is not one flat brown and never a stray
        hex. Used by the calming-activities overlay (and reusable anywhere on the
@@ -472,6 +472,25 @@ PUBLIC_PAGE = """
       --il-warm-accent:#5fc9a8;     /* shared calm accent — SAME value as --il-bio-accent (FEAT-004) */
       --il-warm-accent-soft:rgba(95,201,168,0.42); /* soft calm-accent wash for "correct/found" states */
     }
+    /* ---- COORDINATED CHROME PALETTE (FEAT-003) --------------------------------
+       The founder's live-site read: "still primarily brown." The scene photos are
+       varied; the brown came from the CHROME — the primary buttons/arrows/send/mic
+       were all one brown (#b27849 / hover #9e6a40) and the mic/music text was brown
+       (#99673e). These vars pull the dominant interactive surfaces OFF brown and
+       onto a coordinated, lively set built around the existing calm accent
+       (#5fc9a8): a deep readable teal for primary fills (white text is AA on it),
+       a true cool blue-teal for secondary chrome, and one soft warm coral for
+       variety that is NOT brown. Crisis red (#e8534e / #b5352f) is untouched. */
+    :root {
+      --il-chrome-primary:#2f9077;      /* primary buttons/arrows/send — deep calm teal (AA with #fff) */
+      --il-chrome-primary-h:#256f5c;    /* hover/active — deeper teal */
+      --il-chrome-cool:#2e6e8e;         /* true cool tone (matches the "Talk to someone" blue) */
+      --il-chrome-cool-soft:#eaf3f6;    /* soft cool wash for idle chrome faces */
+      --il-chrome-warm:#e08a5a;         /* soft varied warm accent — coral/apricot, not brown */
+      --il-chrome-warm-ink:#2f7d6a;     /* mic/music LABEL text — calm teal, reads lively on white */
+      --il-chrome-idle:#eef4f2;         /* idle mic/more face — cool cream, replaces brown #f0e6dc */
+      --il-chrome-idle-h:#e0ece8;       /* idle mic/more hover */
+    }
     /* Screen-reader-only text: visually hidden, fully announced */
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
       clip:rect(0 0 0 0); white-space:nowrap; border:0; }
@@ -480,8 +499,8 @@ PUBLIC_PAGE = """
       box-shadow:0 0 0 6px rgba(255,217,160,0.5); border-radius:6px; }
     #welcome-gate :focus-visible, #il-anchor :focus-visible, #activities-overlay :focus-visible {
       outline-color:#ffd9a0; box-shadow:0 0 0 6px rgba(42,30,20,0.6); }
-    .story-input:focus-visible { outline:none; border-color:#b27849;
-      box-shadow:0 0 0 3px rgba(183,121,31,0.5); }
+    .story-input:focus-visible { outline:none; border-color:var(--il-chrome-primary);
+      box-shadow:0 0 0 3px rgba(47,144,119,0.35); }
     * { box-sizing:border-box; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--page); color:var(--ink); line-height:1.5; }
     a { color:var(--teal); text-decoration:none; }
@@ -722,7 +741,7 @@ PUBLIC_PAGE = """
       border:1px solid #ddd1c8; background:#ffffff; color:#4a372d; font-size:16px; line-height:1.6; resize:vertical;
       font-family:inherit; }
     .story-input::placeholder { color:#8a6a48; }
-    .story-input:focus { outline:none; border-color:#b27849; box-shadow:0 0 0 3px rgba(91,160,138,.15); }
+    .story-input:focus { outline:none; border-color:var(--il-chrome-primary); box-shadow:0 0 0 3px rgba(47,144,119,.18); }
     .story-actions { display:flex; gap:12px; justify-content:center; margin:18px 0 10px; }
     /* Enter sends. The Send button stays hidden unless a device has no reliable
        Enter (touch keyboards that insert newlines) or the person taps into the box
@@ -733,9 +752,9 @@ PUBLIC_PAGE = """
        Typists use Enter, everywhere. */
     .story-send { display:none; }
     body.mic-live .story-send { display:inline-block; }
-    .story-arrow { background:#b27849; color:#fff; border:0; border-radius:50%; width:44px; height:44px;
-      font-size:20px; line-height:1; cursor:pointer; box-shadow:0 2px 8px rgba(120,70,30,.3); transition:background .15s; }
-    .story-arrow:hover { background:#9e6a40; }
+    .story-arrow { background:var(--il-chrome-primary); color:#fff; border:0; border-radius:50%; width:44px; height:44px;
+      font-size:20px; line-height:1; cursor:pointer; box-shadow:0 2px 8px rgba(47,144,119,.32); transition:background .15s; }
+    .story-arrow:hover { background:var(--il-chrome-primary-h); }
     .story-arrow:active { transform:translateY(1px); }
     /* ===== CHAT LAYOUT: history above, one composer below (like a modern chat) ===== */
     .il-history { display:flex; flex-direction:column; gap:2px; max-height:52vh; overflow-y:auto;
@@ -746,14 +765,14 @@ PUBLIC_PAGE = """
       line-height:1.4; max-height:140px; min-height:26px; padding:8px 6px; color:#302018; box-shadow:none !important; }
     .il-mic, .il-arrow, .il-more { flex:0 0 auto; border:0; border-radius:50%; width:42px; height:42px; cursor:pointer;
       font-size:18px; line-height:1; transition:background .15s, transform .1s; }
-    .il-mic { background:#f0e6dc; color:#8a5a30; }
-    .il-mic:hover { background:#e6d8ca; }
+    .il-mic { background:var(--il-chrome-idle); color:var(--il-chrome-cool); }
+    .il-mic:hover { background:var(--il-chrome-idle-h); }
     .il-mic.live { background:#e05a5a; color:#fff; animation:listenpulse 1.1s ease-in-out infinite; }
-    .il-arrow { background:#b27849; color:#fff; box-shadow:0 2px 8px rgba(120,70,30,.3); }
-    .il-arrow:hover { background:#9e6a40; }
+    .il-arrow { background:var(--il-chrome-primary); color:#fff; box-shadow:0 2px 8px rgba(47,144,119,.32); }
+    .il-arrow:hover { background:var(--il-chrome-primary-h); }
     .il-arrow:active { transform:translateY(1px); }
-    .il-more { background:#f0e6dc; color:#8a5a30; }
-    .il-more:hover { background:#e6d8ca; }
+    .il-more { background:var(--il-chrome-idle); color:var(--il-chrome-cool); }
+    .il-more:hover { background:var(--il-chrome-idle-h); }
     /* Always-visible crisis fixtures + the single "Talk to someone" opener.
        988 and 911 are permanent (Principle 1) and never collapse. */
     .il-crisis-bar { display:flex; gap:8px; justify-content:center; align-items:center;
@@ -767,9 +786,9 @@ PUBLIC_PAGE = """
     #more-menu { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:8px 0 4px; }
     /* the old separate mic transcript panel is retired in chat layout */
     #live-transcript { display:none !important; }
-    .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
+    .story-send { background:var(--il-chrome-primary); color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
-    .story-send:hover { background:#9e6a40; }
+    .story-send:hover { background:var(--il-chrome-primary-h); }
     .help-rail-placeholder {}
     #help-rail { position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:90;
       display:flex; flex-direction:column; gap:8px; }
@@ -868,17 +887,17 @@ PUBLIC_PAGE = """
        floaters rest so nothing sits on the notice (they return on dismiss). */
     body:has(#readiness-bar) :is(#il-anchor-pill, .story-video-bar.floating, .story-video-bar.pinned) {
       opacity:0 !important; pointer-events:none !important; }
-    .story-mic { background:#fff; color:#99673e; border:1px solid #ddd1c8; border-radius:999px; padding:13px 22px;
+    .story-mic { background:#fff; color:var(--il-chrome-warm-ink); border:1px solid #cfe2dc; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
-    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#736049; font-size:13px; }
-    .music-change { background:#fff; border:1px solid #ddd1c8; color:#99673e; border-radius:999px; padding:6px 16px;
+    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#5a6d66; font-size:13px; }
+    .music-change { background:#fff; border:1px solid #cfe2dc; color:var(--il-chrome-warm-ink); border-radius:999px; padding:6px 16px;
       font-size:12px; cursor:pointer; }
     .emotion-badge { display:inline-block; background:#f3ede9; color:#6c412c; font-size:12px; padding:4px 12px;
       border-radius:999px; margin-top:10px; font-weight:500; }
     .care-result .detail-band { background:#faf7f5; border:1px solid #e6ded8; border-radius:12px; padding:16px; margin:14px 0; }
-    .zen-alts .zen-track, .zen-alts .music-change { background:#fff; border:1px solid #ddd1c8; color:#775031;
+    .zen-alts .zen-track, .zen-alts .music-change { background:#fff; border:1px solid #cfe2dc; color:var(--il-chrome-warm-ink);
       border-radius:999px; padding:7px 16px; font-size:12px; cursor:pointer; }
-    .zen-alts .zen-track:hover { background:#f3ede9; }
+    .zen-alts .zen-track:hover { background:var(--il-chrome-cool-soft); }
     .question-list li { margin-bottom:8px; color:var(--ink); }
     .detail-band { border-top:1px solid var(--line); margin-top:14px; padding-top:12px; }
     .pill { display:inline-block; margin:3px 6px 3px 0; padding:4px 8px; border-radius:4px; border:1px solid var(--line); background:#fcfaf9; color:var(--muted); font-size:12px; }
@@ -4963,14 +4982,14 @@ function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAncho
   var A=_IL_AN[(window._ilLang||'en')]||_IL_AN.en;
   var ov=document.createElement('div'); ov.id='il-anchor';
   ov.style.cssText='position:fixed;inset:0;z-index:9500;opacity:0;transition:opacity 1.2s ease;overflow:hidden;'
-    +'background:radial-gradient(60% 60% at 50% 42%,#2a1d12 0%,#1c140d 55%,#140e09 100%);'
+    +'background:radial-gradient(60% 60% at 50% 42%,#183a38 0%,#102524 55%,#0b1817 100%);'
     +'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
   ov.innerHTML='<canvas id="il-anchor-c" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>'
     +'<div id="il-anchor-w" style="position:absolute;left:0;right:0;top:42%;transform:translateY(-50%);text-align:center;'
     +'font-size:28px;color:#f3e9dc;opacity:0;pointer-events:none;text-shadow:0 2px 20px rgba(0,0,0,.6);"></div>'
-    +'<div id="il-anchor-hint" style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#a8917c;pointer-events:none;">'+A.hint+'</div>'
+    +'<div id="il-anchor-hint" style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#8fb7ae;pointer-events:none;">'+A.hint+'</div>'
     +'<button id="il-anchor-x" style="position:absolute;left:50%;bottom:34px;transform:translateX(-50%);'
-    +'background:rgba(28,20,13,.7);border:1px solid rgba(240,176,112,.3);color:#d7c3ad;border-radius:999px;'
+    +'background:rgba(13,26,25,.7);border:1px solid rgba(120,208,184,.34);color:#cfe7df;border-radius:999px;'
     +'padding:9px 18px;font-size:13px;cursor:pointer;">'+A.close+'</button>';
   document.body.appendChild(ov);
   document.getElementById('il-anchor-x').addEventListener('click', function(ev){ ev.stopPropagation(); hideAnchor(); });
@@ -5012,14 +5031,14 @@ function ilAnchorRun(ov, A){
     var cx=W/2, cy=H*0.42; ctx.clearRect(0,0,W,H);
     for(var i=rings.length-1;i>=0;i--){ var age=(now-rings[i].born)/cycle; if(age>1.1){rings.splice(i,1);continue;}
       var rr=60+age*Math.min(W,H)*0.55, op=Math.max(0,(1-age))*(rings[i].strong?0.5:0.28);
-      ctx.beginPath();ctx.arc(cx,cy,rr,0,2*Math.PI);ctx.strokeStyle='rgba(240,176,112,'+op.toFixed(3)+')';
+      ctx.beginPath();ctx.arc(cx,cy,rr,0,2*Math.PI);ctx.strokeStyle='rgba(120,208,184,'+op.toFixed(3)+')';
       ctx.lineWidth=rings[i].strong?2.5:1.5;ctx.stroke(); }
     var R=64+swell*52+flash*14, g=ctx.createRadialGradient(cx,cy,4,cx,cy,R*1.9);
-    g.addColorStop(0,'rgba(255,236,205,'+Math.min(1,0.85+0.15*swell+flash*0.1).toFixed(3)+')');
-    g.addColorStop(0.35,'rgba(240,176,112,'+(0.75*(0.6+0.4*swell)).toFixed(3)+')');
-    g.addColorStop(1,'rgba(217,138,78,0)');
+    g.addColorStop(0,'rgba(233,248,240,'+Math.min(1,0.85+0.15*swell+flash*0.1).toFixed(3)+')');
+    g.addColorStop(0.35,'rgba(120,208,184,'+(0.75*(0.6+0.4*swell)).toFixed(3)+')');
+    g.addColorStop(1,'rgba(74,158,138,0)');
     ctx.beginPath();ctx.arc(cx,cy,R*1.9,0,2*Math.PI);ctx.fillStyle=g;ctx.fill();
-    ctx.beginPath();ctx.arc(cx,cy,R*0.5,0,2*Math.PI);ctx.fillStyle='rgba(255,240,215,'+(0.5+0.4*swell).toFixed(3)+')';ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,R*0.5,0,2*Math.PI);ctx.fillStyle='rgba(236,250,244,'+(0.5+0.4*swell).toFixed(3)+')';ctx.fill();
     flash*=0.9; if(flash<0.01) flash=0;
     if(cur){ wordEl.textContent=cur; wordEl.style.opacity=(swell*0.95).toFixed(2); }
     requestAnimationFrame(frame); }
@@ -5027,8 +5046,8 @@ function ilAnchorRun(ov, A){
 }
 function ilAddAnchorPill(){ if(document.getElementById('il-anchor-pill')) return;
   var b=document.createElement('button'); b.id='il-anchor-pill'; b.textContent='◎ '+_ilan('pill');
-  b.style.cssText='position:fixed;left:22px;bottom:96px;z-index:80;background:rgba(42,29,18,.62);'
-    +'border:1px solid rgba(240,176,112,.3);color:#e8d8c4;border-radius:999px;padding:9px 14px;font-size:12.5px;'
+  b.style.cssText='position:fixed;left:22px;bottom:96px;z-index:80;background:rgba(16,37,36,.62);'
+    +'border:1px solid rgba(120,208,184,.34);color:#d7ece4;border-radius:999px;padding:9px 14px;font-size:12.5px;'
     +'cursor:pointer;backdrop-filter:blur(6px);';
   b.addEventListener('click', function(){ showAnchor(); });
   document.body.appendChild(b); }
