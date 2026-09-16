@@ -191,19 +191,32 @@ def respond(
     ui_lang: str = "en",
     client_time: str = "",
 ) -> Optional[Dict[str, Any]]:
-    """Return {'response': str, 'question': ''} using real comprehension, or
-    None if the model isn't configured or the call fails (caller falls back).
-    On a None return, last_fallback_reason() reports why (no key / empty / api
-    error / over the line) so the caller can classify the fallback for the Watch."""
+    """Return real-comprehension result as a dict that ALWAYS carries a
+    per-request fallback reason and the number of real live API calls made:
+
+        {'response': <str or None>, 'question': '', 'reason': <str>, 'calls': <int>}
+
+    On success 'response' is the reply text and 'reason' is '' (a successful
+    live call reports no fallback reason). On fallback 'response' is None and
+    'reason' is one of 'no_key' | 'empty' | 'api_error' | 'over_line'. 'calls'
+    is how many real _call() network requests actually happened (0 when no key
+    or empty input; 1 for a normal reply; 2 when an over_the_line rewrite retry
+    fired) — the caller charges the daily budget that many times so the counter
+    reflects REAL API spend, not just one-per-request.
+
+    The reason is returned per-request (not read from a shared global) so it can
+    never attach to the wrong fallback under concurrency. last_fallback_reason()
+    is still updated for backward compatibility, but callers should read the
+    'reason' key of the returned dict for their own request."""
     global _LAST_FALLBACK_REASON
     _LAST_FALLBACK_REASON = ""
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
     if not key:
         _LAST_FALLBACK_REASON = "no_key"
-        return None
+        return {"response": None, "question": "", "reason": "no_key", "calls": 0}
     if not user_text or not user_text.strip():
         _LAST_FALLBACK_REASON = "empty"
-        return None
+        return {"response": None, "question": "", "reason": "empty", "calls": 0}
 
     # Build the message list from recent conversation so follow-ups have context.
     messages: List[Dict[str, str]] = []
@@ -242,7 +255,14 @@ def respond(
             "points exactly as they are: 988, 911, and HOME to 741741."
         )
 
+    # Count real network calls to the model so the caller can charge the daily
+    # budget once per ACTUAL live call (a normal reply is 1; an over_the_line
+    # rewrite retry makes a 2nd real call). This keeps the "charge only on a
+    # real live call" invariant honest even when a retry happens.
+    _calls = {"n": 0}
+
     def _call(msgs):
+        _calls["n"] += 1
         body = json.dumps({
             "model": MODEL,
             "max_tokens": 500,  # non-Latin scripts (Gurmukhi, Bengali, Chinese) use more tokens per sentence; 300 truncated real replies mid-word
@@ -271,7 +291,7 @@ def respond(
         text = _call(messages)
         if not text:
             _LAST_FALLBACK_REASON = "empty"
-            return None
+            return {"response": None, "question": "", "reason": "empty", "calls": _calls["n"]}
         if _over_the_line(text):
             # Never ship diagnostic wording, and never substitute a canned
             # line. Ask the model to say the same care without crossing the
@@ -286,12 +306,12 @@ def respond(
             text = _call(retry)
             if not text or _over_the_line(text):
                 _LAST_FALLBACK_REASON = "over_line"
-                return None
-        return {"response": text, "question": ""}
+                return {"response": None, "question": "", "reason": "over_line", "calls": _calls["n"]}
+        return {"response": text, "question": "", "reason": "", "calls": _calls["n"]}
     except Exception as e:
         _LAST_FALLBACK_REASON = "api_error"
         print(f"[comprehension] falling back (model call failed): {str(e)[:120]}")
-        return None
+        return {"response": None, "question": "", "reason": "api_error", "calls": _calls["n"]}
 
 
 def translate_texts(texts, ui_lang):

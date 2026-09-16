@@ -2,3 +2,9 @@
 # Python build artifacts
 __pycache__/
 *.pyc
+
+# Local secrets — never commit. Real secrets (ADMIN_KEY, ANTHROPIC_API_KEY,
+# etc.) live only in the Render dashboard env vars. This guards against a local
+# .env file being committed by accident. (No such file exists today.)
+.env
+*.env

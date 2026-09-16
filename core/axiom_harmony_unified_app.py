@@ -10994,29 +10994,38 @@ def api_checkin():
     # NOT turn the person away; we fall through to the warm built-in fallback
     # and mark the reason so The Watch can see it.
     smart = None
+    _live_reason = ""
     _live_on = comprehension_engine.available()
     _budget_blocked = False
     if _live_on:
-        if _budget_room("claude"):
-            _budget_ok("claude")  # charge one real live-voice call
+        # ATOMIC check-and-charge: _budget_try both checks room and charges the
+        # one live call under a single lock, so two concurrent requests can no
+        # longer both slip past the cap (closes the old room-then-charge gap).
+        if _budget_try("claude"):
             smart = comprehension_engine.respond(
                 user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
                 client_time=str(data.get("client_time", ""))[:80],
             )
+            # respond() may have made a SECOND real call (over_the_line rewrite
+            # retry). Charge the extra real call(s) so the counter reflects true
+            # API spend; capped at the ceiling, never a dead end for the person.
+            if isinstance(smart, dict) and int(smart.get("calls", 1) or 0) > 1:
+                _budget_charge_extra("claude", int(smart["calls"]) - 1)
         else:
             _budget_blocked = True
-    if smart:
+    _live_reason = smart.get("reason", "") if isinstance(smart, dict) else ""
+    if smart and smart.get("response"):
         _mark_ai_source("live")
         initial_conv = {"response": smart["response"], "question": smart.get("question", "")}
     elif ui_lang != "en":
         # The language promise holds even on failure: an honest in-language
         # line instead of the English-only local engine.
-        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "noneng")
+        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "noneng", _live_reason)
         _mark_ai_source(_bucket, _reason)
         print(f"[checkin] fallback: built-in words (non-English), reason={_reason}")
         initial_conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
-        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "en")
+        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "en", _live_reason)
         _mark_ai_source(_bucket, _reason)
         print(f"[checkin] fallback: built-in words, reason={_reason}")
         initial_conv = get_conversation_engine().respond(
@@ -11321,27 +11330,32 @@ def api_innerlight_learn():
     # call (key present AND budget room). Cap reached -> proceed to the warm
     # built-in fallback, never a dead end.
     smart_l = None
+    _live_reason_l = ""
     _live_on_l = comprehension_engine.available()
     _budget_blocked_l = False
     if _live_on_l:
-        if _budget_room("claude"):
-            _budget_ok("claude")
+        # ATOMIC check-and-charge (same as /api/checkin) — no room-then-charge gap.
+        if _budget_try("claude"):
             smart_l = comprehension_engine.respond(
                 user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
                 client_time=str(data.get("client_time", ""))[:80],
             )
+            # Charge any extra real call an over_the_line rewrite retry made.
+            if isinstance(smart_l, dict) and int(smart_l.get("calls", 1) or 0) > 1:
+                _budget_charge_extra("claude", int(smart_l["calls"]) - 1)
         else:
             _budget_blocked_l = True
-    if smart_l:
+    _live_reason_l = smart_l.get("reason", "") if isinstance(smart_l, dict) else ""
+    if smart_l and smart_l.get("response"):
         _mark_ai_source("live")
         conv = {"response": smart_l["response"], "question": smart_l.get("question", "")}
     elif ui_lang != "en":
-        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "noneng")
+        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "noneng", _live_reason_l)
         _mark_ai_source(_bucket_l, _reason_l)
         print(f"[learn] fallback: built-in words (non-English), reason={_reason_l}")
         conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
-        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "en")
+        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "en", _live_reason_l)
         _mark_ai_source(_bucket_l, _reason_l)
         print(f"[learn] fallback: built-in words, reason={_reason_l}")
         conv = get_conversation_engine().respond(
@@ -11696,7 +11710,19 @@ def _rate_ok(scope, limit, window_sec):
 _BUDGET = {"day": "", "counts": {}}
 _BUDGET_LOCK = threading.Lock()
 _BUDGET_CAPS = {
-    "claude":   int(os.environ.get("CAP_CLAUDE_PER_DAY",   "1500")),
+    # CAP_CLAUDE_PER_DAY = the maximum number of LIVE warm-voice AI replies
+    # (real Anthropic Claude calls) served in a single day. Once this many live
+    # replies have gone out, everyone after that is still answered warmly — the
+    # built-in warm fallback lines take over — but the replies are no longer
+    # freshly written by the live voice until the counter resets at midnight UTC.
+    # It is charged ONLY when a real live call is actually made (see _budget_try);
+    # no key or a reached cap never turns a person away (no dead ends).
+    # This default (6000) was raised from 1500 so far more people get the live
+    # warm voice. It stays ENV-OVERRIDABLE: the founder can set CAP_CLAUDE_PER_DAY
+    # in the Render dashboard at any time to go higher or lower — no code change,
+    # no redeploy of new code needed. Raising the number lets more people reach
+    # the live voice each day (at higher API cost); lowering it protects spend.
+    "claude":   int(os.environ.get("CAP_CLAUDE_PER_DAY",   "6000")),
     "deepgram": int(os.environ.get("CAP_DEEPGRAM_PER_DAY", "300")),
     "voice":    int(os.environ.get("CAP_VOICE_PER_DAY",    "600")),
     "connect":  int(os.environ.get("CAP_CONNECT_PER_DAY",  "60")),
@@ -11732,6 +11758,46 @@ def _budget_room(kind):
             _BUDGET["day"] = day; _BUDGET["counts"] = {}
         c = _BUDGET["counts"].get(kind, 0)
     return c < _BUDGET_CAPS.get(kind, 10**9)
+
+def _budget_try(kind):
+    """Atomic check-and-charge for the daily spend ceiling. Under a SINGLE
+    _BUDGET_LOCK acquisition: roll the day if needed, read the count, and if
+    there is room, charge one and return True; otherwise return False WITHOUT
+    charging. This closes the check-then-charge (TOCTOU) gap that _budget_room()
+    followed by _budget_ok() left open, where two concurrent requests could each
+    see room and each charge past the cap. Use this at the live-call decision
+    point so the room check and the charge are one indivisible step."""
+    day = time.strftime("%Y-%m-%d")
+    with _BUDGET_LOCK:
+        if _BUDGET["day"] != day:
+            _BUDGET["day"] = day; _BUDGET["counts"] = {}
+        c = _BUDGET["counts"].get(kind, 0)
+        if c >= _BUDGET_CAPS.get(kind, 10**9):
+            _abuse_mark()
+            return False
+        _BUDGET["counts"][kind] = c + 1
+    return True
+
+def _budget_charge_extra(kind, n=1):
+    """Record additional real live calls beyond the first that _budget_try()
+    already charged (used for the over_the_line rewrite retry, which makes a
+    SECOND real API call). Charges up to `n` more, but NEVER past the ceiling
+    (recorded count is capped at the cap) so telemetry stays honest without a
+    retry ever turning into a dead end. Returns how many were actually charged."""
+    if n <= 0:
+        return 0
+    day = time.strftime("%Y-%m-%d")
+    charged = 0
+    with _BUDGET_LOCK:
+        if _BUDGET["day"] != day:
+            _BUDGET["day"] = day; _BUDGET["counts"] = {}
+        cap = _BUDGET_CAPS.get(kind, 10**9)
+        c = _BUDGET["counts"].get(kind, 0)
+        room = max(0, cap - c)
+        charged = min(n, room)
+        if charged:
+            _BUDGET["counts"][kind] = c + charged
+    return charged
 
 # ---------------------------------------------------------------------------
 # LIVE VOICE vs. BUILT-IN WORDS — daily telemetry (Principle 15: honest on
@@ -11783,22 +11849,30 @@ _AI_FALLBACK_BUCKET = {
     "": "fallback_other",
 }
 
-def _classify_ai_fallback(live_on, budget_blocked, lane="en"):
+def _classify_ai_fallback(live_on, budget_blocked, lane="en", req_reason=None):
     """Decide which fallback bucket a reply belongs to and a short reason
     string, given the request's live-voice state. Returns (bucket, reason).
     Order matters: no key first (no live call was made and no spend occurred),
     then a reached daily budget, then the language lane, then whatever the
-    live engine reported for a real attempt that failed."""
+    live engine reported for a real attempt that failed.
+
+    `req_reason` is the per-request reason returned by comprehension_engine.
+    respond() for THIS request. Passing it avoids reading the module-global
+    last_fallback_reason(), which under concurrency could belong to a different
+    request. We fall back to the global only if no per-request reason was given."""
     if not live_on:
         # The live voice was never switched on for this deploy (no key set).
         return "fallback_no_key", "no_key"
     if budget_blocked:
         return "fallback_budget", "daily live-voice limit reached"
     # A real live attempt was made and returned None (or non-English lane).
-    try:
-        reason = comprehension_engine.last_fallback_reason()
-    except Exception:
-        reason = ""
+    if req_reason is not None:
+        reason = req_reason
+    else:
+        try:
+            reason = comprehension_engine.last_fallback_reason()
+        except Exception:
+            reason = ""
     if lane == "noneng":
         # Non-English uses the honest in-language backup line regardless of the
         # specific engine reason; still record the underlying reason for detail.
@@ -12378,6 +12452,20 @@ def _metrics_save(m):
 app.secret_key = hashlib.sha256(
     ("innerlight-founder-session::" + os.environ.get("ADMIN_KEY", "unset")).encode()
 ).hexdigest()
+
+# SESSION COOKIE HARDENING (security audit — safe, code-only). InnerLight is
+# served over HTTPS on Render, so mark the session cookie so browsers only send
+# it over HTTPS (Secure), keep JavaScript from reading it (HttpOnly, blunts XSS
+# cookie theft), and send it only on same-site navigations (SameSite=Lax, blunts
+# CSRF). Set on app.config so it applies to EVERY session cookie the app issues.
+# Note: over plain http (as the smoke test's test_client uses) Secure only stops
+# the browser from resending the cookie — it does not block any route, so the
+# smoke test's status-code assertions still pass.
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
 
 
 @app.route("/api/metrics/event", methods=["POST"])
@@ -13383,7 +13471,9 @@ def _sim_metrics():
 
 @app.route("/admin")
 def admin_dashboard():
-    """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
+    """Founder-only operations room. Sign in through the /admin/login page (it
+    POSTs the credentials). There is no ?key= query-string login — never put a
+    secret in a URL (URLs leak into logs, history, and referrer headers)."""
     _sim_banner = ""
     if session.get("team_scope") and not session.get("founder_ok"):
         _sim_banner = ('<div style="position:sticky;top:0;z-index:9999;background:#2a3d52;color:#cfe0f0;'
@@ -14450,6 +14540,16 @@ def admin_dashboard():
             + vtile(fb, 'built-in-word replies', fb>0)
             + vtile(pct + '%', 'from the live voice', false)
             + '</div>';
+          // Plain-language cap + usage in real numbers (not just a percent), so
+          // the founder can see exactly how much of today's live-voice limit is
+          // used and what the limit is. The limit is set by CAP_CLAUDE_PER_DAY.
+          var used = (d.budget_used && d.budget_used.claude) || 0;
+          var capN = (d.budget_caps && d.budget_caps.claude) || 0;
+          if(capN){
+            html += '<div style="color:rgba(242,231,210,.6);font-size:12.5px;margin:2px 0 8px;">'
+              + esc4(used) + ' of ' + esc4(capN) + ' live warm-voice replies used today.'
+              + ' The daily limit can be raised or lowered anytime by changing CAP_CLAUDE_PER_DAY.</div>';
+          }
           if(total===0){
             html += '<div style="color:rgba(242,231,210,.45);font-style:italic;margin-top:6px;">No replies yet today. The tally starts at midnight (UTC).</div>';
           }
