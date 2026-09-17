@@ -3330,21 +3330,8 @@ function openActivities(){
   document.body.appendChild(actOverlay);
   gardenBar();
   const acts=[
-    ['breathe','Breathing circle','Slow the body directly'],
-    ['ground','5-4-3-2-1 senses','Come back to the room'],
     ['words','Word search','Hunt the hidden calm words'],
-    ['shapes','Shape match','Busy the picture-mind'],
     ['bubbles','Bubble pop','Pop the drifting lights'],
-    ['stars','Count the stars','A gentle anchor'],
-    ['release','Body release','Squeeze, hold, let go'],
-    ['sequence','Glow sequence','Follow and repeat the lights'],
-    ['sigh','Physiological sigh','The fastest reset there is'],
-    ['butterfly','Butterfly hug','Slow tapping, side to side'],
-    ['cool','Cool water reset','Slow the heart in seconds'],
-    ['wall','Push the wall','Let the body spend the charge'],
-    ['categories','Categories game','Give a looping mind a job'],
-    ['sevens','Count down by 7s','Busy math for a spinning mind'],
-    ['ritual','The Calm Ritual','A ritual that works because you do it on purpose'],
   ];
   const menu = actOverlay.querySelector('#act-menu');
   menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.75);border:1px solid #ecc9a0;border-radius:14px;padding:13px;cursor:pointer;color:#4a362c;box-shadow:0 2px 10px rgba(180,120,60,0.10);">
@@ -3658,18 +3645,18 @@ function startAct(name){
     let puzzle=wsBuild(), found=[], selA=null;
     function wsRender(){
       st.innerHTML='<div style="text-align:center;">'
-        +'<div id="ws-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Find the hidden calm words. Tap the FIRST letter, then the LAST letter of a word.</div>'
+        +'<div id="ws-p" style="font-size:13px;color:#6a4a30;margin-bottom:8px;">Find the hidden calm words. Tap the FIRST letter, then the LAST letter of a word.</div>'
         +'<div id="ws-words" style="font-size:13px;margin-bottom:10px;"></div>'
         +'<div id="ws-grid" style="display:inline-grid;grid-template-columns:repeat('+N+',1fr);gap:3px;"></div></div>';
       st.querySelector('#ws-words').innerHTML=puzzle.words.map(function(w){
         const done=found.indexOf(w)>=0;
-        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:#d3a47d;text-decoration:line-through;':'color:#e6f1fa;')+'">'+w+'</span>';
+        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:#b0895f;text-decoration:line-through;':'color:#5a3d22;font-weight:600;')+'">'+w+'</span>';
       }).join('');
       let html='';
       for(let r=0;r<N;r++){ for(let c=0;c<N;c++){
         const lit=found.some(function(w){ const p=puzzle.placed.find(function(x){return x.word===w;}); return p&&p.cells.some(function(cell){return cell[0]===r&&cell[1]===c;}); });
-        html+='<button data-r="'+r+'" data-c="'+c+'" style="width:30px;height:30px;font-size:14px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;'
-          +(lit?'background:rgba(125,211,168,0.45);color:#0c1322;font-weight:700;':'background:rgba(255,255,255,0.06);color:#e6f1fa;')+'">'+puzzle.grid[r][c]+'</button>';
+        html+='<button data-r="'+r+'" data-c="'+c+'" style="width:30px;height:30px;font-size:14px;border-radius:6px;border:1px solid #e0cdb4;cursor:pointer;'
+          +(lit?'background:rgba(125,211,168,0.55);color:#0c3a24;font-weight:800;':'background:#ffffff;color:#3a2c22;font-weight:700;')+'">'+puzzle.grid[r][c]+'</button>';
       } }
       const g=st.querySelector('#ws-grid'); g.innerHTML=html;
       g.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ wsClick(+b.dataset.r,+b.dataset.c,b); }); });
