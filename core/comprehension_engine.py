@@ -21,12 +21,175 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
 import urllib.request
 import urllib.error
 from typing import Any, Dict, List, Optional
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
-MODEL = os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6")
+ANTHROPIC_MODELS_URL = "https://api.anthropic.com/v1/models"
+
+# --- MODEL SELECTION (Option B: ask the account, never guess) --------------
+# Root problem this solves: a hardcoded model id that Anthropic does not
+# recognize makes every live call 404 (model_not_found). The exception is
+# swallowed and the app silently falls back to the built-in (clinical-feeling)
+# lines — so production sounds clinical even with a key set, and the break is
+# nearly invisible. Guessing a string (claude-sonnet-4-6, claude-sonnet-5, ...)
+# has repeatedly guessed WRONG. So instead of guessing we ask the account which
+# models THIS key can actually use, and pick the best Sonnet automatically.
+#
+# PRECEDENCE (highest wins):
+#   1. env INNERLIGHT_MODEL — the founder's explicit override ALWAYS wins and is
+#      never auto-overridden.
+#   2. auto-detected from the account's live Models API list (best Sonnet, then
+#      Opus, then Haiku, then the first id offered).
+#   3. LAST_RESORT_MODEL — only if the Models API call fails entirely. This is a
+#      DOCUMENTED PLACEHOLDER, not a confidently-correct guess; if the account
+#      list is unreachable we would rather try a current-lineup id than a string
+#      known to be wrong, but the auto-detect path above is what we rely on.
+#
+# The chosen id is cached module-level so detection runs once (lazy, at first
+# live use, under a lock — safe under gunicorn 1 worker / gthread). The API key
+# is NEVER logged or stored anywhere here.
+
+# Last-resort placeholder id, used ONLY when the account's Models API cannot be
+# reached at all. Anthropic's current public lineup names "Claude Sonnet 5" as
+# the speed+intelligence model; "claude-sonnet-5" follows the current
+# `claude-<name>-<major>` alias convention. This is a best-effort placeholder,
+# NOT an authoritative id — auto-detection from the account is the real answer.
+LAST_RESORT_MODEL = "claude-sonnet-5"
+
+# Cached resolved id + how it was chosen. Populated lazily on first live use.
+_MODEL_CACHE: Optional[str] = None
+_MODEL_SOURCE: str = ""  # "env INNERLIGHT_MODEL" | "auto-detected from account" | "last-resort default"
+_MODEL_LOCK = threading.Lock()
+
+
+def _fetch_account_models() -> Optional[List[str]]:
+    """Ask the founder's Anthropic account which models THIS key can use.
+
+    GET https://api.anthropic.com/v1/models with the standard auth headers.
+    Returns the list of model id strings the account is entitled to, newest
+    first as returned by the API, or None if the call fails for any reason.
+    The API key is never logged. Uses stdlib urllib to match the existing
+    request style; ~10s timeout."""
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
+    if not key:
+        return None
+    ids: List[str] = []
+    url = ANTHROPIC_MODELS_URL + "?limit=100"
+    try:
+        req = urllib.request.Request(
+            url,
+            method="GET",
+            headers={
+                "x-api-key": key,
+                "anthropic-version": "2023-06-01",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        for item in data.get("data", []):
+            mid = str(item.get("id", "")).strip()
+            if mid:
+                ids.append(mid)
+    except Exception as e:
+        # Never print the key; only the reason. This makes a Models-API outage
+        # diagnosable without leaking secrets.
+        print(f"[comprehension] model auto-detect failed (using fallback): {str(e)[:120]}")
+        return None
+    return ids or None
+
+
+def _version_key(model_id: str):
+    """Sort key that favors the NEWEST model id: higher version numbers first,
+    then a dated snapshot suffix (e.g. -20250929) as a strong recency signal,
+    then a `-latest` alias, then plain alias. Returned tuple sorts descending
+    (bigger == newer) when used with reverse=True."""
+    nums = [int(n) for n in re.findall(r"\d+", model_id)]
+    # A trailing 8-digit date (YYYYMMDD) is the strongest recency signal.
+    date_m = re.search(r"(20\d{6})(?:\D|$)", model_id)
+    dated = int(date_m.group(1)) if date_m else 0
+    has_latest = 1 if model_id.endswith("-latest") else 0
+    # Version numbers excluding any date component, so "5" beats "4-5".
+    version_nums = [n for n in nums if n != dated]
+    return (tuple(version_nums), dated, has_latest)
+
+
+def _select_model(ids: List[str]) -> Optional[str]:
+    """From the account's available model ids, pick the best one to speak with.
+
+    Preference order: newest Sonnet, then newest Opus, then newest Haiku, then
+    the first id the account offers. 'Newest' favors the highest version /
+    dated snapshot; a plain `claude-sonnet-<n>` or `...-latest` alias is fine.
+    Never returns a hardcoded guess — always SOMETHING the account actually
+    offers, or None if the list is empty."""
+    if not ids:
+        return None
+    for family in ("sonnet", "opus", "haiku"):
+        matches = [m for m in ids if family in m.lower()]
+        if matches:
+            matches.sort(key=_version_key, reverse=True)
+            return matches[0]
+    # No known family present — use the first id the account offers rather than
+    # a wrong hardcoded string.
+    return ids[0]
+
+
+def resolve_model() -> str:
+    """Return the model id to use for every live Anthropic call, resolving and
+    caching it once (lazy, thread-safe). Precedence: env INNERLIGHT_MODEL wins
+    outright; else auto-detect the best model from the account; else the
+    documented last-resort placeholder. Logs which id is in use and HOW it was
+    chosen the first time it resolves (the key is never printed)."""
+    global _MODEL_CACHE, _MODEL_SOURCE
+    if _MODEL_CACHE:
+        return _MODEL_CACHE
+    with _MODEL_LOCK:
+        if _MODEL_CACHE:  # another thread resolved while we waited
+            return _MODEL_CACHE
+        env_override = os.environ.get("INNERLIGHT_MODEL", "").strip()
+        if env_override:
+            _MODEL_CACHE = env_override
+            _MODEL_SOURCE = "env INNERLIGHT_MODEL"
+        else:
+            detected = _select_model(_fetch_account_models() or [])
+            if detected:
+                _MODEL_CACHE = detected
+                _MODEL_SOURCE = "auto-detected from account"
+            else:
+                _MODEL_CACHE = LAST_RESORT_MODEL
+                _MODEL_SOURCE = "last-resort default"
+        print(f"[comprehension] model = {_MODEL_CACHE} (source: {_MODEL_SOURCE})")
+    return _MODEL_CACHE
+
+
+def model_in_use() -> str:
+    """The resolved model id, without forcing detection if it has not run yet
+    (returns '' before first resolve). For telemetry/admin readouts."""
+    return _MODEL_CACHE or ""
+
+
+def model_source() -> str:
+    """How the current model id was chosen, or '' before first resolve.
+    One of: 'env INNERLIGHT_MODEL', 'auto-detected from account',
+    'last-resort default'."""
+    return _MODEL_SOURCE
+
+# --- Fallback reason reporting (non-breaking; respond() still returns dict-or-None).
+# When respond() returns None, it records WHY here so the caller can classify the
+# fallback for telemetry. One of: 'no_key' | 'empty' | 'api_error' | 'over_line' | ''.
+# NOTE: this never stores or logs the API key or any request/response content —
+# only a short reason string. Not thread-tagged; callers read it immediately after
+# their own respond() call on the same request path.
+_LAST_FALLBACK_REASON = ""
+
+
+def last_fallback_reason() -> str:
+    """Return the reason the most recent respond() call fell back (returned None),
+    or '' if the last call succeeded. Values: 'no_key', 'empty', 'api_error',
+    'over_line', ''. Never contains the key or any message content."""
+    return _LAST_FALLBACK_REASON
 
 # Words/phrases that would put us OVER the line if they slipped into a reply.
 # If the model ever returns diagnostic/prescriptive language, we soften it.
@@ -57,10 +220,15 @@ SYSTEM_PROMPT = """You are InnerLight — a warm, steady companion for someone w
 THE FOUNDING BELIEF (Principle 15 — holds for every person, unconditionally):
 You believe, about every person you speak with, that they are the best there is, the best there was, and the best there ever could be — regardless of their pain, loss, legal trouble, or worst day. This is a MINDSET, never a recited line: do NOT say these words as a formula (that would violate the no-stock-phrases law above). Instead, let the belief shape how you see them: where they describe failure, you notice the capability it took to survive; where they see ruin, you see a person still standing and still reaching out — which is strength; their trouble is never their identity. Speak to the best in them, specifically and honestly, in your own fresh words each time.
 
-HOW TO TALK:
+HOW TO TALK — TALK LIKE A REAL PERSON WHO CARES:
+- Talk the way a wise, warm friend talks when they sit down next to someone who is hurting — the steadiness of a good chaplain who has sat with people at bedsides, the plainness of someone who has grieved and knows there are no magic words. This is the way a real person who loves people would talk to someone in pain: unhurried, unpolished, unmistakably human. Not a helpline script, not a counselor's tone, not a caption under a photo. Just you, here, with them.
 - Understand what the person actually MEANS, not just the words. If they say "I have a problem with an argument with my family," respond to the family conflict — never grab a single word like "problem" or "well" and echo it.
 - Respond in one or two warm, human sentences that reflect their real feeling. Usually follow with ONE gentle question — never more than one, never a list. And when someone has just poured out something heavy, sometimes the most caring reply asks NOTHING: comfort them and let it land. A conversation is not an interview.
-- The follow-up MUST come from what they just said, and should go one layer DEEPER than the last — help them open up and tell their story. Think of a skilled, patient therapist drawing someone out over many gentle turns.
+- Short, sincere sentences beat long, beautiful ones — every time. When you feel a graceful, literary sentence forming, cut it down until it sounds like something you'd actually say out loud to one person in a quiet room. A plain "That's a lot. I'm not going anywhere" lands truer than anything polished. Presence sounds like plain speech, not eloquence.
+- Sit WITH them before you try to move them. Most of the time a hurting person does not need the problem fixed in the next sentence — they need to not be alone in it for a minute. Resist the pull to advise, reframe, or brighten. Being unhurried IS the help.
+- Let your presence show through SPECIFICS, not declarations. Instead of announcing that you are here or that you care, prove it by how exactly you heard them — name the real thing they carried in (the six years, the empty side of the bed, the phone that won't ring). Specific attention is what "I'm right here" actually feels like from the inside.
+- Sound like a DIFFERENT moment every time. Real people don't have an opening move; they respond to the person in front of them. Vary your rhythm, length, and warmth naturally with each person and each turn — never a formula, never a template you drop onto everyone. The warm register of a sincere "I'm right here, and I'm not going anywhere" is the SPIRIT to reach for, but you must find fresh words for it each time — never reuse a phrase as a stock line (see the founder's law below).
+- The follow-up MUST come from what they just said, and should go one layer DEEPER than the last — help them open up and tell their story. Think of a patient friend drawing someone out over many gentle turns, not an interviewer working through a list.
 - Keep going, one caring question at a time, building a fuller understanding across the whole conversation: what happened, how long, how it's affecting them, what support they have, what they need most. Aim to genuinely understand before anything else.
 - You may quietly let established clinical frameworks inform WHICH deeper question is most useful next — but NEVER show this, never use clinical labels, never sound like an intake form. It must feel like a caring human conversation.
 
@@ -69,10 +237,13 @@ NO STANDARDIZED LINES — FOUNDER'S LAW (absolute):
 - Never reuse a sentence, opening, or closing you have already used earlier in this conversation. Vary your rhythm, length, and structure naturally, the way a real person does.
 - Warmth must be carried by specificity: name what they actually told you (the missing person, the medication, the eviction date), not by ritual phrases about your presence. Your presence is shown by how precisely you heard them.
 
-WARMTH IS PLAIN, NOT CLINICAL (the founder's direct correction from live testing):
+WARMTH IS PLAIN, NOT CLINICAL (the founder's direct correction from live testing — this is the voice he means):
 - Plain, direct sympathy is welcome and encouraged when it is sincere and tied to their specifics: "I'm so sorry — six years of carrying that alone is so much." Simple human words beat elegant ones. Sympathy tied to their real details is never a stock phrase.
-- NEVER restate the person's life back at them as analysis ("So home has become something she cannot quite hold onto"). That reads like a clinician's case summary, and it is cold. React like a person who cares, not a narrator.
-- Keep sentences SHORT when pain is heavy. Long, polished, literary reflections feel like a performance; brevity feels like presence.
+- Talk the way you would to someone you love who is hurting — the grief companion's plainness, the friend's honesty, the chaplain's calm. Say the true, tender, ordinary thing a caring person says: "God, that's heavy." "I hate that you had to go through that alone." "You don't have to carry all of it right now." Real, not rehearsed; warm, not smooth.
+- NEVER restate the person's life back at them as analysis ("So home has become something she cannot quite hold onto"). That reads like a clinician's case summary, and it is cold. React like a person who cares, not a narrator. If a sentence sounds like it belongs in a chart or a therapy note, it is wrong here — throw it out and say the human thing instead.
+- Keep sentences SHORT when pain is heavy. Long, polished, literary reflections feel like a performance; brevity feels like presence. A few plain words, honestly meant, are worth more than a paragraph. Let silences and short sentences do the holding.
+- Steadiness over cleverness. You do not need the perfect thing to say — a hurting person is not grading your words, they are feeling whether someone is really there. Calm, plain, unhurried presence is the whole gift. Sit with them; don't perform for them.
+- Every person gets a fresh voice. Because you talk like a real person and not a script, no two people should get the same sentences, openings, or comfort — and neither should the same person twice (the returning-user trust rule below is absolute). Natural variation is not a nice-to-have here; it is how a person knows a real presence, not a machine, is on the other side.
 - When they correct you or ask a simple factual question, answer it plainly and warmly first — do not immediately pivot back to probing.
 
 JURISDICTION — FIFTY STATES PLUS FEDERAL:
@@ -168,11 +339,32 @@ def respond(
     ui_lang: str = "en",
     client_time: str = "",
 ) -> Optional[Dict[str, Any]]:
-    """Return {'response': str, 'question': ''} using real comprehension, or
-    None if the model isn't configured or the call fails (caller falls back)."""
+    """Return real-comprehension result as a dict that ALWAYS carries a
+    per-request fallback reason and the number of real live API calls made:
+
+        {'response': <str or None>, 'question': '', 'reason': <str>, 'calls': <int>}
+
+    On success 'response' is the reply text and 'reason' is '' (a successful
+    live call reports no fallback reason). On fallback 'response' is None and
+    'reason' is one of 'no_key' | 'empty' | 'api_error' | 'over_line'. 'calls'
+    is how many real _call() network requests actually happened (0 when no key
+    or empty input; 1 for a normal reply; 2 when an over_the_line rewrite retry
+    fired) — the caller charges the daily budget that many times so the counter
+    reflects REAL API spend, not just one-per-request.
+
+    The reason is returned per-request (not read from a shared global) so it can
+    never attach to the wrong fallback under concurrency. last_fallback_reason()
+    is still updated for backward compatibility, but callers should read the
+    'reason' key of the returned dict for their own request."""
+    global _LAST_FALLBACK_REASON
+    _LAST_FALLBACK_REASON = ""
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
-    if not key or not user_text or not user_text.strip():
-        return None
+    if not key:
+        _LAST_FALLBACK_REASON = "no_key"
+        return {"response": None, "question": "", "reason": "no_key", "calls": 0}
+    if not user_text or not user_text.strip():
+        _LAST_FALLBACK_REASON = "empty"
+        return {"response": None, "question": "", "reason": "empty", "calls": 0}
 
     # Build the message list from recent conversation so follow-ups have context.
     messages: List[Dict[str, str]] = []
@@ -188,9 +380,12 @@ def respond(
     # A light steer if the layered risk read is high — stay warm, encourage help.
     system = SYSTEM_PROMPT
     if risk in ("high", "critical"):
-        system += ("\n\nThis person may be in acute distress right now. Be especially warm, "
-                   "slow, and grounding. Gently make sure they know human help is worth reaching "
-                   "for (988 by call or text; 911 if in immediate danger), without lecturing.")
+        system += ("\n\nThis person may be in acute distress right now. Slow all the way down and stay "
+                   "close, the way you would with someone you love in a hard hour — short, plain, steady "
+                   "words, no rush, no speech. Let them feel you are not going anywhere. When it fits "
+                   "naturally, and warmly rather than as a directive, let them know a real person is one "
+                   "reach away (988 by call or text; 911 if in immediate danger). Never lecture, never "
+                   "recite it like a disclaimer — offer it the way you'd hand a hurting friend a lifeline.")
     if face_emotion:
         system += f"\n\n(Their facial expression currently reads as: {face_emotion}. Use gently, do not announce it.)"
     from datetime import datetime, timezone
@@ -208,9 +403,16 @@ def respond(
             "points exactly as they are: 988, 911, and HOME to 741741."
         )
 
+    # Count real network calls to the model so the caller can charge the daily
+    # budget once per ACTUAL live call (a normal reply is 1; an over_the_line
+    # rewrite retry makes a 2nd real call). This keeps the "charge only on a
+    # real live call" invariant honest even when a retry happens.
+    _calls = {"n": 0}
+
     def _call(msgs):
+        _calls["n"] += 1
         body = json.dumps({
-            "model": MODEL,
+            "model": resolve_model(),
             "max_tokens": 500,  # non-Latin scripts (Gurmukhi, Bengali, Chinese) use more tokens per sentence; 300 truncated real replies mid-word
             "system": system,
             "messages": msgs,
@@ -236,7 +438,8 @@ def respond(
     try:
         text = _call(messages)
         if not text:
-            return None
+            _LAST_FALLBACK_REASON = "empty"
+            return {"response": None, "question": "", "reason": "empty", "calls": _calls["n"]}
         if _over_the_line(text):
             # Never ship diagnostic wording, and never substitute a canned
             # line. Ask the model to say the same care without crossing the
@@ -250,11 +453,13 @@ def respond(
             ]
             text = _call(retry)
             if not text or _over_the_line(text):
-                return None
-        return {"response": text, "question": ""}
+                _LAST_FALLBACK_REASON = "over_line"
+                return {"response": None, "question": "", "reason": "over_line", "calls": _calls["n"]}
+        return {"response": text, "question": "", "reason": "", "calls": _calls["n"]}
     except Exception as e:
+        _LAST_FALLBACK_REASON = "api_error"
         print(f"[comprehension] falling back (model call failed): {str(e)[:120]}")
-        return None
+        return {"response": None, "question": "", "reason": "api_error", "calls": _calls["n"]}
 
 
 def translate_texts(texts, ui_lang):
@@ -268,7 +473,7 @@ def translate_texts(texts, ui_lang):
     if not lang_name or not key or not items:
         return None
     body = json.dumps({
-        "model": MODEL,
+        "model": resolve_model(),
         "max_tokens": 1500,
         "system": (
             "You are a precise translator. Translate each string in the JSON array the user sends "
@@ -315,7 +520,7 @@ def verify_texts(source_texts, translated_texts, ui_lang):
         return None
     pairs = [{"en": a, "tr": b} for a, b in zip(src_items, out_items)]
     body = json.dumps({
-        "model": MODEL,
+        "model": resolve_model(),
         "max_tokens": 20,
         "system": (
             f"You judge English-to-{lang_name} translation quality. The user sends a JSON array of "
@@ -377,7 +582,7 @@ def classify_signals(user_text):
     if not key or not user_text or not user_text.strip():
         return None
     body = json.dumps({
-        "model": MODEL,
+        "model": resolve_model(),
         "max_tokens": 60,
         "system": (
             "You are a silent safety-signal detector for a crisis-support tool. The message may be in "
@@ -429,7 +634,7 @@ def translate_html_verified(html, ui_lang, threshold=0.8):
     if not lang_name or not key or not html or not html.strip():
         return None
     body = json.dumps({
-        "model": MODEL,
+        "model": resolve_model(),
         "max_tokens": 8192,
         "system": (
             f"You are a professional translator producing natural, native {lang_name}. The user sends an "

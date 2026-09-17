@@ -215,11 +215,12 @@ class CrisisResponseCore:
                 category="immediate_crisis_support",
                 matched_phrases=critical,
                 public_response=(
-                    f"{address}you are loved. You are important. Stay with me for a moment. "
-                    "You do not have to solve your whole life right now; we only need to protect the next few minutes. "
-                    "Why do you feel this way right now? I am going to ask short questions so we can understand what is happening "
-                    "and guide you toward the right kind of help. If you might hurt yourself right now, call or text 988 in the U.S. "
-                    "or call emergency services while you stay here."
+                    f"{address}okay. I'm right here, and I'm not going anywhere. "
+                    "You don't have to hold all of this by yourself anymore — not tonight. "
+                    "Let's just breathe through the next little while together, you and me. "
+                    "Whatever brought you to this, it hasn't taken you, because you're still here talking to me. "
+                    "If it gets to be too much right this second, 988 (call or text) puts a real person with you instantly "
+                    "— and I'll still be here too."
                 ),
                 next_steps=[
                     "Answer the first question below with one word if that is all you can manage.",
@@ -248,8 +249,9 @@ class CrisisResponseCore:
                 category="urgent_support",
                 matched_phrases=high,
                 public_response=(
-                    f"{address}I am glad you told me. I hear that this is heavy, and I am not going to rush past it. "
-                    "Let us slow the moment down, understand what kind of support you need, and choose the safest next step."
+                    f"{address}I'm really glad you said it out loud instead of carrying it alone. "
+                    "That's a lot of weight, and you don't have to pick it all up at once. "
+                    "Let's just slow down here together for a minute — there's no rush, and I've got time for you."
                 ),
                 next_steps=[
                     "Answer one question below before you make any big decision.",
@@ -275,8 +277,8 @@ class CrisisResponseCore:
                 category="supportive_grounding",
                 matched_phrases=moderate,
                 public_response=(
-                    f"{address}thank you for saying that clearly. This moment deserves care, not judgment. "
-                    "Let us understand what is happening and choose the kind of help that actually fits."
+                    f"{address}thank you for trusting me with that. Whatever's sitting on you right now, "
+                    "you don't have to explain it perfectly — just tell me what today has felt like, and we'll take it from there."
                 ),
                 next_steps=[
                     "Answer one question below.",
@@ -303,7 +305,8 @@ class CrisisResponseCore:
             category="steady_checkin",
             matched_phrases=[],
             public_response=(
-                f"{address}thank you for checking in. I am here with you. We can take this one step at a time and learn what kind of support fits."
+                f"{address}hey. I'm glad you're here. No agenda, no forms "
+                "— just tell me what's on your mind, and I'll stay with you."
             ),
             next_steps=[
                 "Answer one question below.",

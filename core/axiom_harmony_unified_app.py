@@ -431,7 +431,7 @@ PUBLIC_PAGE = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="creator" content="Toshay S. Zeigler">
   <meta name="company" content="God's Love for Us LLC">
-  <meta name="theme-color" content="#2a1e14">
+  <meta name="theme-color" content="#1f2a28">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="/scenes/app_icon_192.png">
   <link rel="apple-touch-icon" href="/scenes/app_icon_192.png">
@@ -449,7 +449,48 @@ PUBLIC_PAGE = """
   <!-- Creator imprint: God's Love for Us LLC, Axiom Harmony Protocol, InnerLight, VEIL, EDEN, and the Zenisys Sound System are created by Toshay S. Zeigler. -->
   <style>
   @keyframes listenpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
-    :root { --page:#faf5ec; --ink:#2a1e14; --muted:#74624d; --panel:#ffffff; --line:#ece0d0; --teal:#b24a2a; --leaf:#c56a2c; --coral:#c85c54; --gold:#b7791f; }
+    :root { --page:#eef3f2; --ink:#1f2a28; --muted:#52655e; --panel:#ffffff; --line:#d9e4e0; --teal:#2f9077; --leaf:#2e6e8e; --coral:#d97a5f; --gold:#b7791f; }
+    /* ---- COORDINATED WARM PALETTE (FEAT-005) ----------------------------------
+       One place for the warm scheme so it is not one flat brown and never a stray
+       hex. Used by the calming-activities overlay (and reusable anywhere on the
+       companion page). The cool accent REUSES FEAT-004's shared biometric accent
+       value (--il-bio-accent:#5fc9a8, calm teal) so the whole product stays on one
+       coordinated accent rather than competing greens/teals. No purple/blue/white:
+       the founder rejected that palette for the warm surfaces. */
+    :root {
+      --il-warm-ink:#302018;        /* warm dark ink — legible on the cream overlay (fixes white-on-white) */
+      --il-warm-sub:#6a4a34;        /* warm secondary text, still AA on cream */
+      --il-warm-faint:#8a6a4c;      /* warm hint text */
+      --il-warm-card:#fffaf2;       /* soft warm card face */
+      --il-warm-card-2:rgba(255,255,255,0.72);
+      --il-warm-line:#ecc9a0;       /* warm hairline / card border */
+      --il-warm-amber:#e89a3c;      /* primary warm accent (buttons, active states) */
+      --il-warm-amber-d:#b8783a;    /* deeper amber for button fills */
+      --il-warm-honey:#e7b45a;      /* honey accent — section variety */
+      --il-warm-rose:#c8705a;       /* warm rose accent — variety beyond brown */
+      --il-warm-clay:#a9531f;       /* deep clay accent */
+      --il-warm-accent:#5fc9a8;     /* shared calm accent — SAME value as --il-bio-accent (FEAT-004) */
+      --il-warm-accent-soft:rgba(95,201,168,0.42); /* soft calm-accent wash for "correct/found" states */
+    }
+    /* ---- COORDINATED CHROME PALETTE (FEAT-003) --------------------------------
+       The founder's live-site read: "still primarily brown." The scene photos are
+       varied; the brown came from the CHROME — the primary buttons/arrows/send/mic
+       were all one brown (#b27849 / hover #9e6a40) and the mic/music text was brown
+       (#99673e). These vars pull the dominant interactive surfaces OFF brown and
+       onto a coordinated, lively set built around the existing calm accent
+       (#5fc9a8): a deep readable teal for primary fills (white text is AA on it),
+       a true cool blue-teal for secondary chrome, and one soft warm coral for
+       variety that is NOT brown. Crisis red (#e8534e / #b5352f) is untouched. */
+    :root {
+      --il-chrome-primary:#2f9077;      /* primary buttons/arrows/send — deep calm teal (AA with #fff) */
+      --il-chrome-primary-h:#256f5c;    /* hover/active — deeper teal */
+      --il-chrome-cool:#2e6e8e;         /* true cool tone (matches the "Talk to someone" blue) */
+      --il-chrome-cool-soft:#eaf3f6;    /* soft cool wash for idle chrome faces */
+      --il-chrome-warm:#e08a5a;         /* soft varied warm accent — coral/apricot, not brown */
+      --il-chrome-warm-ink:#2f7d6a;     /* mic/music LABEL text — calm teal, reads lively on white */
+      --il-chrome-idle:#eef4f2;         /* idle mic/more face — cool cream, replaces brown #f0e6dc */
+      --il-chrome-idle-h:#e0ece8;       /* idle mic/more hover */
+    }
     /* Screen-reader-only text: visually hidden, fully announced */
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
       clip:rect(0 0 0 0); white-space:nowrap; border:0; }
@@ -458,12 +499,12 @@ PUBLIC_PAGE = """
       box-shadow:0 0 0 6px rgba(255,217,160,0.5); border-radius:6px; }
     #welcome-gate :focus-visible, #il-anchor :focus-visible, #activities-overlay :focus-visible {
       outline-color:#ffd9a0; box-shadow:0 0 0 6px rgba(42,30,20,0.6); }
-    .story-input:focus-visible { outline:none; border-color:#b27849;
-      box-shadow:0 0 0 3px rgba(183,121,31,0.5); }
+    .story-input:focus-visible { outline:none; border-color:var(--il-chrome-primary);
+      box-shadow:0 0 0 3px rgba(47,144,119,0.35); }
     * { box-sizing:border-box; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--page); color:var(--ink); line-height:1.5; }
     a { color:var(--teal); text-decoration:none; }
-    header { position:sticky; top:0; z-index:5; background:rgba(250,245,236,.96); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
+    header { position:sticky; top:0; z-index:5; background:rgba(238,243,242,.96); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
     .brand { font-weight:700; color:var(--ink); }
     .brand small { display:block; color:var(--muted); font-weight:400; }
     nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; }
@@ -662,34 +703,33 @@ PUBLIC_PAGE = """
       backdrop-filter:blur(6px); border-radius:16px; padding:6px 10px; }
     .scene-btn { background:none; border:0; font-size:18px; cursor:pointer; opacity:0.6; padding:2px 4px; }
     .scene-btn.active { opacity:1; transform:scale(1.15); }
-    /* FACE VIDEO — starts centered and calm. On scroll it gently floats to a
-       small rounded thumbnail on the side; scrolling back to top returns it
-       to the centered spot. Smooth, never growing, never taking over. */
-    .story-video-bar { padding:18px 0 10px; width:100%; text-align:center;
-      transition:all 0.4s ease; }
-    /* Stationary pinned preview: fixed corner, its own compositing layer so
-       scrolling never triggers a page reflow. */
-    .story-video-bar.pinned { position:fixed; top:84px; right:20px; left:auto; width:auto; text-align:right;
-      z-index:40; will-change:transform; transform:translateZ(0); transition:none; padding:0; }
-    .story-video-bar.pinned #visual-preview, .story-video-bar.pinned #preview-hide { position:relative; }
-    .story-video-bar.pinned { display:inline-block; }
-    .story-video-bar.pinned .story-video { width:96px; height:96px; border-radius:50%; border:3px solid #ddd1c8;
-      box-shadow:0 4px 16px rgba(0,0,0,.18); }
-    @media (max-width:640px){ .story-video-bar.pinned { top:70px; right:12px; }
-      .story-video-bar.pinned .story-video { width:72px; height:72px; } }
-    .story-video-bar.floating { position:fixed; top:84px; right:20px; left:auto;
-      width:auto; padding:0; z-index:40; text-align:right; }
+    /* FACE VIDEO — the camera feed powers the face/heart/attention analysis
+       ONLY. There is NO on-screen self-view: a floating preview covered the
+       composer and distracted people, so the element is kept permanently
+       offscreen (1px, invisible, non-interactive) while getUserMedia and
+       frame sampling keep working. The .pinned/.floating variants are
+       neutralized so nothing can ever bring it back on screen. */
+    .story-video-bar,
+    .story-video-bar.pinned,
+    .story-video-bar.floating {
+      position:fixed !important; left:-10000px !important; top:auto !important; right:auto !important;
+      width:1px !important; height:1px !important; padding:0 !important; margin:0 !important;
+      opacity:0 !important; pointer-events:none !important; z-index:-1 !important;
+      overflow:hidden !important; transform:none !important; will-change:auto !important;
+      transition:none !important; display:block !important; }
+    .story-video,
+    #visual-preview,
+    .story-video-bar.pinned .story-video,
+    .story-video-bar.floating .story-video {
+      position:fixed !important; left:-10000px !important; top:auto !important; right:auto !important;
+      width:1px !important; height:1px !important; max-width:1px !important; max-height:1px !important;
+      min-height:0 !important; margin:0 !important; border:0 !important; border-radius:0 !important;
+      opacity:0 !important; pointer-events:none !important; box-shadow:none !important;
+      background:transparent !important; transform:none !important; transition:none !important; }
     .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
       border-radius:18px; padding:4px 16px; scroll-behavior:smooth; }
     #conversation-thread:empty { background:none; padding:0; }
-    .story-video { width:300px; height:300px; max-width:78vw; max-height:78vw; object-fit:cover; border-radius:28px; border:3px solid #ddd1c8;
-      margin:0 auto 8px; display:block; background:#f0ece8; box-shadow:0 8px 30px rgba(0,0,0,0.18);
-      transition:width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, box-shadow 0.4s ease, margin 0.4s ease; }
-    .story-video-bar.floating .story-video { width:110px; height:110px; border-radius:50%;
-      border-width:3px; margin:0; box-shadow:0 6px 22px rgba(0,0,0,0.28); }
-    @media (max-width:640px){ .story-video-bar.floating .story-video { width:78px; height:78px; }
-      .story-video-bar.floating { top:70px; right:12px; } }
     /* Readable over ANY background scene: strong color + a white legibility
        halo so the text is clear on dark moons and bright gardens alike. */
     .story-title { font-size:26px; font-weight:700; margin:0 0 6px; color:#302018;
@@ -701,7 +741,7 @@ PUBLIC_PAGE = """
       border:1px solid #ddd1c8; background:#ffffff; color:#4a372d; font-size:16px; line-height:1.6; resize:vertical;
       font-family:inherit; }
     .story-input::placeholder { color:#8a6a48; }
-    .story-input:focus { outline:none; border-color:#b27849; box-shadow:0 0 0 3px rgba(91,160,138,.15); }
+    .story-input:focus { outline:none; border-color:var(--il-chrome-primary); box-shadow:0 0 0 3px rgba(47,144,119,.18); }
     .story-actions { display:flex; gap:12px; justify-content:center; margin:18px 0 10px; }
     /* Enter sends. The Send button stays hidden unless a device has no reliable
        Enter (touch keyboards that insert newlines) or the person taps into the box
@@ -712,9 +752,9 @@ PUBLIC_PAGE = """
        Typists use Enter, everywhere. */
     .story-send { display:none; }
     body.mic-live .story-send { display:inline-block; }
-    .story-arrow { background:#b27849; color:#fff; border:0; border-radius:50%; width:44px; height:44px;
-      font-size:20px; line-height:1; cursor:pointer; box-shadow:0 2px 8px rgba(120,70,30,.3); transition:background .15s; }
-    .story-arrow:hover { background:#9e6a40; }
+    .story-arrow { background:var(--il-chrome-primary); color:#fff; border:0; border-radius:50%; width:44px; height:44px;
+      font-size:20px; line-height:1; cursor:pointer; box-shadow:0 2px 8px rgba(47,144,119,.32); transition:background .15s; }
+    .story-arrow:hover { background:var(--il-chrome-primary-h); }
     .story-arrow:active { transform:translateY(1px); }
     /* ===== CHAT LAYOUT: history above, one composer below (like a modern chat) ===== */
     .il-history { display:flex; flex-direction:column; gap:2px; max-height:52vh; overflow-y:auto;
@@ -725,20 +765,30 @@ PUBLIC_PAGE = """
       line-height:1.4; max-height:140px; min-height:26px; padding:8px 6px; color:#302018; box-shadow:none !important; }
     .il-mic, .il-arrow, .il-more { flex:0 0 auto; border:0; border-radius:50%; width:42px; height:42px; cursor:pointer;
       font-size:18px; line-height:1; transition:background .15s, transform .1s; }
-    .il-mic { background:#f0e6dc; color:#8a5a30; }
-    .il-mic:hover { background:#e6d8ca; }
+    .il-mic { background:var(--il-chrome-idle); color:var(--il-chrome-cool); }
+    .il-mic:hover { background:var(--il-chrome-idle-h); }
     .il-mic.live { background:#e05a5a; color:#fff; animation:listenpulse 1.1s ease-in-out infinite; }
-    .il-arrow { background:#b27849; color:#fff; box-shadow:0 2px 8px rgba(120,70,30,.3); }
-    .il-arrow:hover { background:#9e6a40; }
+    .il-arrow { background:var(--il-chrome-primary); color:#fff; box-shadow:0 2px 8px rgba(47,144,119,.32); }
+    .il-arrow:hover { background:var(--il-chrome-primary-h); }
     .il-arrow:active { transform:translateY(1px); }
-    .il-more { background:#f0e6dc; color:#8a5a30; }
-    .il-more:hover { background:#e6d8ca; }
-    #more-menu { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 4px; }
+    .il-more { background:var(--il-chrome-idle); color:var(--il-chrome-cool); }
+    .il-more:hover { background:var(--il-chrome-idle-h); }
+    /* Always-visible crisis fixtures + the single "Talk to someone" opener.
+       988 and 911 are permanent (Principle 1) and never collapse. */
+    .il-crisis-bar { display:flex; gap:8px; justify-content:center; align-items:center;
+      flex-wrap:wrap; margin:10px 0 2px; }
+    .il-crisis-bar .rail-988 { background:#e8534e; color:#fff; border:0; }
+    .il-crisis-bar .rail-911 { background:#b5352f; color:#fff; border:0; }
+    .il-crisis-bar .rail-talk { background:#2e6e8e; color:#fff; border:0; }
+    .il-crisis-bar .rail-btn { padding:10px 16px; border-radius:12px; font-size:14px; font-weight:700;
+      cursor:pointer; text-decoration:none; text-align:center; line-height:1; display:inline-flex;
+      align-items:center; justify-content:center; }
+    #more-menu { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:8px 0 4px; }
     /* the old separate mic transcript panel is retired in chat layout */
     #live-transcript { display:none !important; }
-    .story-send { background:#b27849; color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
+    .story-send { background:var(--il-chrome-primary); color:#fff; border:0; border-radius:999px; padding:13px 40px; font-size:15px;
       font-weight:600; cursor:pointer; }
-    .story-send:hover { background:#9e6a40; }
+    .story-send:hover { background:var(--il-chrome-primary-h); }
     .help-rail-placeholder {}
     #help-rail { position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:90;
       display:flex; flex-direction:column; gap:8px; }
@@ -753,48 +803,50 @@ PUBLIC_PAGE = """
       #help-rail .rail-btn { flex:1 1 0; min-width:0; margin:0; padding:0 3px; height:46px; font-size:11px;
         line-height:1.15; white-space:nowrap; display:flex; align-items:center; justify-content:center;
         border-radius:11px; box-shadow:none; }
-      /* PHONE CORNER MAP — every floating piece has its own home, nothing stacks:
-         top-left: focus pill · top-right: camera circle · bottom-left: heart chip
-         bottom-right: scene strip (one swipeable row) · above those: soft word/tips
-         bottom-center prompts sit just above the help bar and gently fade the
-         corner pieces while they are open, so only one thing speaks at a time. */
-      .scene-picker { bottom:70px !important; right:10px !important; z-index:40 !important;
+      /* PHONE CORNER MAP — every floating piece has its own home, nothing stacks.
+         The bottom of the screen belongs to the FIXED composer + the permanent
+         988/911 crisis bar (see ITEM #3/#4 below), which together occupy the
+         lowest ~160px. So every bottom-anchored floater sits ABOVE that band and
+         can never cover the typing box. Top-left: focus pill (clear of the
+         header). Top-right: camera circle. The corner pieces gently fade while a
+         center prompt is open, so only one thing speaks at a time. */
+      .scene-picker { bottom:170px !important; right:10px !important; z-index:40 !important;
         background:rgba(255,255,255,0.85); border-radius:16px; padding:5px 8px;
         max-width:56vw; flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start;
         scrollbar-width:none; }
       .scene-picker::-webkit-scrollbar { display:none; }
-      #heart-chip { bottom:74px !important; left:10px !important;
+      #heart-chip { bottom:174px !important; left:10px !important;
         padding:8px 14px !important; font-size:15px !important; }
       #heart-chip #heart-beat { font-size:16px !important; }
       #heart-chip #heart-num { font-size:18px !important; }
       #heart-chip .hr-label { font-size:11px !important; }
-      /* Focus pill mirrors the camera circle in the opposite top corner */
-      #il-anchor-pill { top:70px !important; bottom:auto !important; left:12px !important;
-        right:auto !important; padding:7px 11px !important; font-size:11.5px !important; }
+      /* ITEM #7 — Focus pill: top-left, pushed clearly BELOW the header row so it
+         can never overlap the "Private & Encrypted" wording, and confined to the
+         left side so it never reaches the top-right camera circle. */
+      #il-anchor-pill { top:112px !important; bottom:auto !important; left:12px !important;
+        right:auto !important; max-width:60vw !important; padding:7px 11px !important;
+        font-size:11.5px !important; }
       /* The soft presence word hugs its own text and floats in a clear band */
-      #il-presence-word { left:50%; right:auto; bottom:158px; width:max-content;
+      #il-presence-word { left:50%; right:auto; bottom:236px; width:max-content;
         max-width:78vw; transform:translateX(-50%); }
       /* Camera tips: small, one per side, in the band above the corner pieces */
-      #hr-distance-tip { bottom:160px !important; right:12px !important; max-width:165px !important; }
-      #il-light-tip { bottom:160px !important; left:12px !important; right:auto !important;
+      #hr-distance-tip { bottom:238px !important; right:12px !important; max-width:165px !important; }
+      #il-light-tip { bottom:238px !important; left:12px !important; right:auto !important;
         transform:none !important; max-width:160px !important; }
-      /* Feeling card + gentle prompts: bottom-center, always ABOVE the help bar */
-      #sam-card { top:auto !important; bottom:78px !important; left:50% !important;
-        right:auto !important; transform:translateX(-50%) !important;
-        max-width:min(320px, calc(100vw - 24px)) !important; }
-      #il-checkin, #gentle-bridge, #fb-card, #save-offer { bottom:78px !important; }
+      /* Gentle prompts (reach-a-person, feedback, save): bottom-center, always
+         ABOVE the fixed composer + crisis bar. The feeling-check popups were
+         removed entirely. */
+      #gentle-bridge, #fb-card, #save-offer { bottom:170px !important; }
       /* While a prompt is open, the corner pieces rest — one voice at a time */
-      body:has(#il-checkin, #sam-card, #gentle-bridge, #fb-card, #save-offer) :is(.scene-picker, #heart-chip, #il-anchor-pill, #il-presence-word, #hr-distance-tip, #il-light-tip) {
+      body:has(#gentle-bridge, #fb-card, #save-offer) :is(.scene-picker, #heart-chip, #il-anchor-pill, #il-presence-word, #hr-distance-tip, #il-light-tip) {
         opacity:0 !important; pointer-events:none !important; transition:opacity .8s ease; }
       body:has(#hr-distance-tip, #il-light-tip) #il-presence-word { opacity:0 !important; }
       /* Give the whole page room so nothing hides behind the fixed help bar,
          the scene strip, or the tip band — everything can scroll fully clear */
       .story-screen { padding-bottom:170px; padding-left:14px; padding-right:14px; }
-      /* The camera preview becomes a small circle so an empty/off camera never
-         shows as a giant grey box (the #1 "beta" look on phones). */
-      .story-video { width:118px !important; height:118px !important; border-radius:50% !important;
-        border-width:2px; box-shadow:0 6px 18px rgba(0,0,0,0.16); }
-      .story-video-bar { padding:12px 0 4px; }
+      /* Camera feed stays permanently offscreen on phones too (analysis only,
+         no self-view) — the base .story-video rule above already holds it at
+         1px offscreen; nothing to restyle here. */
       .story-title { font-size:22px; }
       .story-sub { font-size:13.5px; margin-bottom:16px; }
       .story-input { min-height:110px; padding:14px; }   /* keep 16px font to stop iOS zoom-on-focus */
@@ -803,34 +855,49 @@ PUBLIC_PAGE = """
       #vol-slider { width:68px !important; }
       .music-change { padding:6px 12px; font-size:12px; }
       body { padding-bottom:70px; }
+      /* ITEM #3/#4 — MINIMAL, NON-SCROLLING FIRST SCREEN. On a phone the typing
+         box is FIXED to the bottom and always visible; directly beneath it sit
+         the permanent 988 + 911 fixtures and the single "Talk to someone"
+         opener. Nothing else competes for that first viewport, and the camera
+         preview (pinned top-right) can never come down over the composer. */
+      .il-composer { position:fixed !important; left:10px; right:10px; bottom:60px; z-index:120;
+        margin:0; box-shadow:0 -2px 16px rgba(120,80,40,.16); }
+      .il-input { min-height:26px; }
+      .il-crisis-bar { position:fixed !important; left:0; right:0; bottom:0; z-index:121; margin:0;
+        gap:6px; padding:7px 8px calc(7px + env(safe-area-inset-bottom, 0px));
+        background:#ffffff; box-shadow:0 -3px 14px rgba(20,40,60,0.16); }
+      .il-crisis-bar .rail-btn { flex:1 1 0; min-width:0; padding:11px 4px; font-size:13px; border-radius:11px; }
+      /* The opened help set floats just above the fixed composer, never over it. */
+      #more-menu { position:fixed !important; left:10px; right:10px; bottom:118px; z-index:119;
+        margin:0; background:rgba(255,255,255,0.97); border-radius:16px; padding:10px;
+        box-shadow:0 6px 22px rgba(20,40,60,0.22); }
+      #more-menu .rail-btn { flex:1 1 40%; }
+      /* Give the page room so the fixed composer + crisis bar never hide content. */
+      .story-screen { padding-bottom:210px; }
+      body { padding-bottom:0; }
     }
     /* Only one bottom-center prompt speaks at a time, at every screen size.
-       Priority: reach-a-person invite, then feedback, then save, then check-in,
-       then the feeling faces. Lower ones wait, faded out, and return when the
-       higher one closes. */
-    body:has(#gentle-bridge) :is(#fb-card, #save-offer, #il-checkin, #sam-card) {
+       Priority: reach-a-person invite, then feedback, then save. Lower ones
+       wait, faded out, and return when the higher one closes. */
+    body:has(#gentle-bridge) :is(#fb-card, #save-offer) {
       opacity:0 !important; pointer-events:none !important; }
-    body:has(#fb-card) :is(#save-offer, #il-checkin, #sam-card) {
-      opacity:0 !important; pointer-events:none !important; }
-    body:has(#save-offer) :is(#il-checkin, #sam-card) {
-      opacity:0 !important; pointer-events:none !important; }
-    body:has(#il-checkin) #sam-card {
+    body:has(#fb-card) #save-offer {
       opacity:0 !important; pointer-events:none !important; }
     /* While the one-time readiness notice is open at the top, the top-corner
        floaters rest so nothing sits on the notice (they return on dismiss). */
     body:has(#readiness-bar) :is(#il-anchor-pill, .story-video-bar.floating, .story-video-bar.pinned) {
       opacity:0 !important; pointer-events:none !important; }
-    .story-mic { background:#fff; color:#99673e; border:1px solid #ddd1c8; border-radius:999px; padding:13px 22px;
+    .story-mic { background:#fff; color:var(--il-chrome-warm-ink); border:1px solid #cfe2dc; border-radius:999px; padding:13px 22px;
       font-size:14px; cursor:pointer; }
-    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#736049; font-size:13px; }
-    .music-change { background:#fff; border:1px solid #ddd1c8; color:#99673e; border-radius:999px; padding:6px 16px;
+    .music-bar { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; color:#5a6d66; font-size:13px; }
+    .music-change { background:#fff; border:1px solid #cfe2dc; color:var(--il-chrome-warm-ink); border-radius:999px; padding:6px 16px;
       font-size:12px; cursor:pointer; }
     .emotion-badge { display:inline-block; background:#f3ede9; color:#6c412c; font-size:12px; padding:4px 12px;
       border-radius:999px; margin-top:10px; font-weight:500; }
     .care-result .detail-band { background:#faf7f5; border:1px solid #e6ded8; border-radius:12px; padding:16px; margin:14px 0; }
-    .zen-alts .zen-track, .zen-alts .music-change { background:#fff; border:1px solid #ddd1c8; color:#775031;
+    .zen-alts .zen-track, .zen-alts .music-change { background:#fff; border:1px solid #cfe2dc; color:var(--il-chrome-warm-ink);
       border-radius:999px; padding:7px 16px; font-size:12px; cursor:pointer; }
-    .zen-alts .zen-track:hover { background:#f3ede9; }
+    .zen-alts .zen-track:hover { background:var(--il-chrome-cool-soft); }
     .question-list li { margin-bottom:8px; color:var(--ink); }
     .detail-band { border-top:1px solid var(--line); margin-top:14px; padding-top:12px; }
     .pill { display:inline-block; margin:3px 6px 3px 0; padding:4px 8px; border-radius:4px; border:1px solid var(--line); background:#fcfaf9; color:var(--muted); font-size:12px; }
@@ -954,6 +1021,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Actividades",
         "rail.save": "&#128278; Guardar",
         "rail.testmic": "Probar micr&oacute;fono",
+        "rail.talk": "Hablar con alguien",
         "glink.about": "Acerca de",
         "glink.how": "C&oacute;mo funciona",
         "glink.stories": "C&oacute;mo es una visita",
@@ -991,6 +1059,7 @@ PUBLIC_PAGE = """
         "rail.activities": "活动",
         "rail.save": "&#128278; 保存",
         "rail.testmic": "测试麦克风",
+        "rail.talk": "找人倾诉",
         "glink.about": "关于我们",
         "glink.how": "运作方式",
         "glink.stories": "一次访问是怎样的",
@@ -1028,6 +1097,7 @@ PUBLIC_PAGE = """
         "rail.activities": "गतिविधियाँ",
         "rail.save": "&#128278; सहेजें",
         "rail.testmic": "माइक जाँचें",
+        "rail.talk": "किसी से बात करें",
         "glink.about": "हमारे बारे में",
         "glink.how": "यह कैसे काम करता है",
         "glink.stories": "एक मुलाक़ात कैसी होती है",
@@ -1065,6 +1135,7 @@ PUBLIC_PAGE = """
         "rail.activities": "ਸਰਗਰਮੀਆਂ",
         "rail.save": "&#128278; ਸਾਂਭੋ",
         "rail.testmic": "ਮਾਈਕ ਪਰਖੋ",
+        "rail.talk": "ਕਿਸੇ ਨਾਲ ਗੱਲ ਕਰੋ",
         "glink.about": "ਸਾਡੇ ਬਾਰੇ",
         "glink.how": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ",
         "glink.stories": "ਇੱਕ ਮੁਲਾਕਾਤ ਕਿਹੋ ਜਿਹੀ ਹੁੰਦੀ ਹੈ",
@@ -1102,6 +1173,7 @@ PUBLIC_PAGE = """
         "rail.activities": "কার্যকলাপ",
         "rail.save": "&#128278; সংরক্ষণ",
         "rail.testmic": "মাইক পরীক্ষা",
+        "rail.talk": "কারও সঙ্গে কথা বলুন",
         "glink.about": "আমাদের সম্পর্কে",
         "glink.how": "এটি কীভাবে কাজ করে",
         "glink.stories": "একটি সাক্ষাৎ কেমন হয়",
@@ -1139,6 +1211,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Mga gawain",
         "rail.save": "&#128278; I-save",
         "rail.testmic": "Subukan ang mic",
+        "rail.talk": "Makipag-usap sa isang tao",
         "glink.about": "Tungkol sa amin",
         "glink.how": "Paano ito gumagana",
         "glink.stories": "Paano ang isang pagbisita",
@@ -1176,6 +1249,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Ngaahi ngāue",
         "rail.save": "&#128278; Tauhi",
         "rail.testmic": "ʻAhiʻahiʻi e maikolofoni",
+        "rail.talk": "Talanoa mo ha taha",
         "glink.about": "Ko kimautolu",
         "glink.how": "Founga ʻene ngāue",
         "glink.stories": "Ko e anga ʻo ha ʻaʻahi",
@@ -1213,6 +1287,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Shughuli",
         "rail.save": "&#128278; Hifadhi",
         "rail.testmic": "Jaribu maiki",
+        "rail.talk": "Zungumza na mtu",
         "glink.about": "Kuhusu",
         "glink.how": "Jinsi inavyofanya kazi",
         "glink.stories": "Jinsi ziara inavyokwenda",
@@ -1250,6 +1325,7 @@ PUBLIC_PAGE = """
         "rail.activities": "እንቅስቃሴዎች",
         "rail.save": "&#128278; አስቀምጥ",
         "rail.testmic": "ማይክ ይሞክሩ",
+        "rail.talk": "ከአንድ ሰው ጋር ይነጋገሩ",
         "glink.about": "ስለ እኛ",
         "glink.how": "እንዴት እንደሚሰራ",
         "glink.stories": "ጉብኝት እንዴት እንደሚሄድ",
@@ -1287,6 +1363,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Ayyuka",
         "rail.save": "&#128278; Ajiye",
         "rail.testmic": "Gwada makirufo",
+        "rail.talk": "Yi magana da wani",
         "glink.about": "Game da mu",
         "glink.how": "Yadda yake aiki",
         "glink.stories": "Yadda ziyara take",
@@ -1324,6 +1401,7 @@ PUBLIC_PAGE = """
         "rail.activities": "Занятия",
         "rail.save": "&#128278; Сохранить",
         "rail.testmic": "Проверить микрофон",
+        "rail.talk": "Поговорить с человеком",
         "glink.about": "О нас",
         "glink.how": "Как это работает",
         "glink.stories": "Как проходит визит",
@@ -1394,10 +1472,8 @@ PUBLIC_PAGE = """
         try { if (typeof initVoices === 'function') initVoices(); } catch(e){}
         try { if (typeof populateVoicePicker === 'function') populateVoicePicker(); } catch(e){}
         try { var _sp=document.getElementById('scene-picker'); if (_sp && typeof _ilux==='function') _sp.setAttribute('aria-label', _ilux('scn.aria')); } catch(e){}
-        // A feeling prompt already on screen must follow the person into
-        // their new language, not linger in the old one.
-        try { var _ci=document.getElementById('il-checkin'); if (_ci && _ci.querySelector('button')) { _ci.remove(); if (typeof showCheckin==='function') showCheckin(); } } catch(e){}
-        try { var _sc=document.getElementById('sam-card'); if (_sc) { _sc.remove(); if (typeof showCalmScale==='function') showCalmScale(window._lastSamPhase||''); } } catch(e){}
+        // (The feeling-check popups were removed entirely, so there is nothing
+        // to re-render on a language switch — Principle 11.)
         // The Focus pill and the anchor overlay were created once and kept
         // their birth language — they now follow every switch, live.
         try { var _ap=document.getElementById('il-anchor-pill'); if (_ap && typeof _ilan==='function') _ap.textContent='\u25ce '+_ilan('pill'); } catch(e){}
@@ -1904,12 +1980,6 @@ PUBLIC_PAGE = """
 
     var _IL_UX = {
       en: {
-        "sam.q": "How are you feeling right now? (tap one, or ignore me)",
-        "sam.s1": "Very distressed",
-        "sam.s2": "Uneasy",
-        "sam.s3": "In between",
-        "sam.s4": "Okay",
-        "sam.s5": "Calm",
         "fb.ask": "If you have a moment: did this help? Your answer is anonymous and helps us help others.",
         "fb.yes": "It helped",
         "fb.some": "Somewhat",
@@ -1979,12 +2049,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911"
       },
       es: {
-        "sam.q": "¿Cómo te sientes ahora mismo? (toca una carita, o ignórame)",
-        "sam.s1": "Muy angustiado/a",
-        "sam.s2": "Inquieto/a",
-        "sam.s3": "Entre medio",
-        "sam.s4": "Bien",
-        "sam.s5": "En calma",
         "fb.ask": "Si tienes un momento: ¿te ayudó esto? Tu respuesta es anónima y nos ayuda a ayudar a otros.",
         "fb.yes": "Me ayudó",
         "fb.some": "Algo",
@@ -2054,12 +2118,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911"
       },
       zh: {
-        "sam.q": "你现在感觉怎么样？（点一个，或忽略我）",
-        "sam.s1": "非常难受",
-        "sam.s2": "有些不安",
-        "sam.s3": "中间",
-        "sam.s4": "还好",
-        "sam.s5": "平静",
         "fb.ask": "如果你有片刻时间：这对你有帮助吗？你的回答是匿名的，能帮助我们去帮助更多人。",
         "fb.yes": "有帮助",
         "fb.some": "有一点",
@@ -2129,12 +2187,6 @@ PUBLIC_PAGE = """
         "uh.911n": "拨打 911"
       },
       hi: {
-        "sam.q": "आप इस समय कैसा महसूस कर रहे हैं? (एक चुनें, या मुझे अनदेखा करें)",
-        "sam.s1": "बहुत परेशान",
-        "sam.s2": "बेचैन",
-        "sam.s3": "बीच में",
-        "sam.s4": "ठीक",
-        "sam.s5": "शांत",
         "fb.ask": "यदि आपके पास एक पल है: क्या इससे मदद मिली? आपका जवाब गुमनाम है और इससे हम दूसरों की मदद कर पाते हैं।",
         "fb.yes": "मदद मिली",
         "fb.some": "कुछ हद तक",
@@ -2204,12 +2256,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911 पर कॉल करें"
       },
       pa: {
-        "sam.q": "ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ? (ਇੱਕ ਚੁਣੋ, ਜਾਂ ਮੈਨੂੰ ਅਣਡਿੱਠ ਕਰੋ)",
-        "sam.s1": "ਬਹੁਤ ਪਰੇਸ਼ਾਨ",
-        "sam.s2": "ਬੇਚੈਨ",
-        "sam.s3": "ਵਿਚਕਾਰ",
-        "sam.s4": "ਠੀਕ",
-        "sam.s5": "ਸ਼ਾਂਤ",
         "fb.ask": "ਜੇ ਤੁਹਾਡੇ ਕੋਲ ਇੱਕ ਪਲ ਹੈ: ਕੀ ਇਸ ਨਾਲ ਮਦਦ ਮਿਲੀ? ਤੁਹਾਡਾ ਜਵਾਬ ਗੁਮਨਾਮ ਹੈ ਅਤੇ ਇਸ ਨਾਲ ਅਸੀਂ ਦੂਜਿਆਂ ਦੀ ਮਦਦ ਕਰ ਪਾਉਂਦੇ ਹਾਂ।",
         "fb.yes": "ਮਦਦ ਮਿਲੀ",
         "fb.some": "ਕੁਝ ਹੱਦ ਤੱਕ",
@@ -2279,12 +2325,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911 ਉੱਤੇ ਕਾਲ ਕਰੋ"
       },
       bn: {
-        "sam.q": "আপনি এই মুহূর্তে কেমন বোধ করছেন? (একটি বেছে নিন, বা আমাকে উপেক্ষা করুন)",
-        "sam.s1": "খুব কষ্টে",
-        "sam.s2": "অস্থির",
-        "sam.s3": "মাঝামাঝি",
-        "sam.s4": "ঠিক আছি",
-        "sam.s5": "শান্ত",
         "fb.ask": "যদি এক মুহূর্ত সময় থাকে: এটি কি সাহায্য করেছে? আপনার উত্তর বেনামি, আর তা আমাদের অন্যদের সাহায্য করতে সাহায্য করে।",
         "fb.yes": "সাহায্য করেছে",
         "fb.some": "কিছুটা",
@@ -2354,12 +2394,6 @@ PUBLIC_PAGE = """
         "uh.911n": "911 নম্বরে কল করুন"
       },
       tl: {
-        "sam.q": "Ano ang nararamdaman mo ngayon? (mag-tap ng isa, o balewalain ako)",
-        "sam.s1": "Lubhang naguguluhan",
-        "sam.s2": "Balisa",
-        "sam.s3": "Nasa gitna",
-        "sam.s4": "Ayos lang",
-        "sam.s5": "Panatag",
         "fb.ask": "Kung may sandali ka: nakatulong ba ito? Anonymous ang sagot mo at nakakatulong ito para matulungan namin ang iba.",
         "fb.yes": "Nakatulong",
         "fb.some": "Medyo",
@@ -2429,12 +2463,6 @@ PUBLIC_PAGE = """
         "uh.911n": "Tumawag sa 911"
       },
       to: {
-        "sam.q": "ʻOkú ke ongoʻi fēfē he taimí ni? (lomiʻi ha taha, pe tukunoaʻi au)",
-        "sam.s1": "Faingataʻaʻia lahi",
-        "sam.s2": "Hohaʻa",
-        "sam.s3": "Vahaʻa",
-        "sam.s4": "Sai pē",
-        "sam.s5": "Nonga",
         "fb.ask": "Kapau ʻoku ʻi ai haʻo kiʻi taimi: naʻe tokoni eni? ʻOku taʻehingoa hoʻo talí pea ʻoku tokoni ia ke mau tokoniʻi ʻa e niʻihi kehe.",
         "fb.yes": "Naʻe tokoni",
         "fb.some": "Siʻisiʻi pē",
@@ -2504,12 +2532,6 @@ PUBLIC_PAGE = """
         "uh.911n": "Telefoni ki he 911"
       },
       sw: {
-        "sam.q": "Unajisikiaje sasa hivi? (gusa moja, au unipuuze)",
-        "sam.s1": "Nimezidiwa sana",
-        "sam.s2": "Sina utulivu",
-        "sam.s3": "Katikati",
-        "sam.s4": "Niko sawa",
-        "sam.s5": "Nimetulia",
         "fb.ask": "Ukiwa na dakika: je, hii ilisaidia? Jibu lako halijulikani nani na linatusaidia kuwasaidia wengine.",
         "fb.yes": "Ilisaidia",
         "fb.some": "Kiasi",
@@ -2579,12 +2601,6 @@ PUBLIC_PAGE = """
         "take.ph": "Chukua muda wako... au gusa Sema (bonyeza Enter kutuma)"
       },
       am: {
-        "sam.q": "አሁን ምን ይሰማዎታል? (አንዱን ይንኩ፣ ወይም ችላ ይበሉኝ)",
-        "sam.s1": "በጣም ተጨንቄያለሁ",
-        "sam.s2": "አልረጋጋሁም",
-        "sam.s3": "መካከል",
-        "sam.s4": "ደህና ነኝ",
-        "sam.s5": "ተረጋግቻለሁ",
         "fb.ask": "ደቂቃ ካለዎት: ይህ ረድቷል? መልስዎ ስም-አልባ ነው፤ ሌሎችን እንድንረዳ ይረዳናል።",
         "fb.yes": "ረድቷል",
         "fb.some": "በመጠኑ",
@@ -2654,12 +2670,6 @@ PUBLIC_PAGE = """
         "take.ph": "ጊዜዎን ይውሰዱ... ወይም ይናገሩ ይንኩ (ለመላክ Enter ይጫኑ)"
       },
       ha: {
-        "sam.q": "Yaya kake ji a yanzu? (taɓa ɗaya, ko ka ƙyale ni)",
-        "sam.s1": "Na damu sosai",
-        "sam.s2": "Ban natsu ba",
-        "sam.s3": "Tsakiya",
-        "sam.s4": "Ina lafiya",
-        "sam.s5": "Na natsu",
         "fb.ask": "Idan kana da minti ɗaya: shin wannan ya taimaka? Amsarka ba a san mai bayarwa ba, kuma tana taimaka mana mu taimaki wasu.",
         "fb.yes": "Ya taimaka",
         "fb.some": "Kaɗan",
@@ -2729,12 +2739,6 @@ PUBLIC_PAGE = """
         "take.ph": "Ɗauki lokacinka... ko taɓa Yi magana (danna Enter don aikawa)"
       },
       ru: {
-        "sam.q": "Как вы себя чувствуете прямо сейчас? (коснитесь одного — или просто пропустите)",
-        "sam.s1": "Очень тяжело",
-        "sam.s2": "Тревожно",
-        "sam.s3": "Посередине",
-        "sam.s4": "Нормально",
-        "sam.s5": "Спокойно",
         "fb.ask": "Если есть минутка: это помогло? Ваш ответ анонимен и помогает нам помогать другим.",
         "fb.yes": "Помогло",
         "fb.some": "Отчасти",
@@ -2983,7 +2987,7 @@ PUBLIC_PAGE = """
            and the menu lists every language in its OWN native name, so a person
            who chose wrong can find their way home even from a script they
            cannot read. -->
-      <div id="lang-pill-wrap" style="position:fixed;top:calc(10px + env(safe-area-inset-top, 0px));left:12px;z-index:9000;">
+      <div id="lang-pill-wrap" style="position:fixed;top:calc(10px + env(safe-area-inset-top, 0px));left:12px;z-index:90;">
         <button id="lang-pill" onclick="toggleLangMenu()" aria-label="Language"
           style="display:flex;align-items:center;gap:6px;background:rgba(20,14,9,0.55);color:#f5ead8;border:1px solid rgba(245,234,216,0.35);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer;backdrop-filter:blur(6px);">
           &#127760; <span id="lang-pill-name">English</span></button>
@@ -3023,10 +3027,12 @@ PUBLIC_PAGE = """
         <button class="scene-btn" data-scene="pepper" onclick="setScene('pepper')" title="Green pepper" aria-label="Green pepper scene">&#129681;</button>
         <button class="scene-btn" data-scene="redpepper" onclick="setScene('redpepper')" title="Red pepper" aria-label="Red pepper scene">&#127798;</button>
       </div>
-      <div class="story-video-bar">
+      <!-- CAMERA FEED FOR ANALYSIS ONLY — no on-screen self-view. The video
+           element is required by the face/heart/attention readers, so it stays
+           in the DOM but is held permanently offscreen (see .story-video-bar
+           CSS above). There is no visible preview and nothing to hide. -->
+      <div class="story-video-bar" aria-hidden="true">
         <video id="visual-preview" class="story-video" autoplay muted playsinline aria-hidden="true"></video>
-        <button type="button" id="preview-hide" onclick="togglePreview()" title="Hide my preview" aria-label="Hide my camera preview" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(40,25,15,.75);color:#fff;font-size:13px;line-height:1;cursor:pointer;z-index:2;">&times;</button>
-        <span id="preview-seen" style="display:none;align-items:center;gap:6px;background:rgba(30,100,60,.92);color:#fff;font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;" onclick="togglePreview()" title="Show my preview"><span style="width:8px;height:8px;border-radius:50%;background:#7ee8a0;display:inline-block;"></span>We can see you</span>
       </div>
       <div class="story-wrap">
         <h2 class="story-title" data-i18n="story.title" style="font-size:20px;margin-bottom:2px;">Tell me your story.</h2>
@@ -3039,10 +3045,16 @@ PUBLIC_PAGE = """
           <textarea id="message" class="story-input il-input" data-i18n-ph="story.placeholder" aria-label="Type or tap the mic to talk (press Enter to send)" placeholder="Start wherever you would like\u2026 type or tap the mic" rows="1" onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey&&!event.isComposing){event.preventDefault();ilSend();}"></textarea>
           <button class="il-mic" type="button" onclick="startVoiceCapture()" title="Tap to talk" aria-label="Tap to talk">&#127908;</button>
           <button class="il-arrow" type="button" onclick="ilSend()" title="Send" aria-label="Send">&#8593;</button>
-          <button class="il-more" type="button" onclick="toggleMore()" title="More help options" aria-label="More">&#8943;</button>
+        </div>
+        <!-- ALWAYS-VISIBLE CRISIS FIXTURES (Immutable Principle 1, THE NO-DEAD-END
+             LAW): 988 and 911 are permanent, never collapsed. Beside them, ONE
+             gentle "Talk to someone" button opens every other help option. -->
+        <div class="il-crisis-bar">
+          <a href="tel:988" class="rail-btn rail-988" aria-label="Call or text 988">&#128222; 988</a>
+          <a href="tel:911" class="rail-btn rail-911" aria-label="Call 911">&#128222; 911</a>
+          <button class="rail-btn rail-talk" type="button" onclick="toggleMore()" aria-expanded="false" aria-controls="more-menu" data-i18n="rail.talk">Talk to someone</button>
         </div>
         <div id="more-menu" style="display:none;">
-          <a href="tel:988" class="rail-btn rail-988">&#128222; 988</a>
           <button type="button" class="rail-btn" onclick="openHelp('telehealth')" data-i18n="rail.provider">Provider</button>
           <button type="button" class="rail-btn" onclick="openHelp('attorney')" data-i18n="rail.legal">Legal</button>
           <button type="button" class="rail-btn" onclick="openFacilities()" data-i18n="rail.nearby">Nearby help</button>
@@ -3316,16 +3328,37 @@ function openActivities(){
   actOpenedAt = Date.now(); actReengaged=false;
   actOverlay = document.createElement('div');
   actOverlay.id='activities-overlay';
-  actOverlay.style.cssText='position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,#fff7ea 0%,#ffe9cf 55%,#ffdcb8 100%);overflow-y:auto;padding:22px 16px 90px;';
+  actOverlay.style.cssText='position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,#fff7ea 0%,#ffeeda 55%,#ffe3c4 100%);overflow-y:auto;padding:22px 16px 90px;';
+  // Scoped, modern styling for the activities — soft rounded cards, calm
+  // spacing, and text that is always dark ink on the cream overlay (fixes the
+  // white-on-white readability bug). Colors come from the shared warm palette
+  // variables, so nothing is a stray hex and the scheme stays coordinated.
   actOverlay.innerHTML = `
-   <div style="max-width:640px;margin:0 auto;font-family:Arial;color:#4a362c;">
+   <style>
+   #activities-overlay .act-head-title{margin:0;font-size:20px;color:var(--il-warm-ink);font-weight:700;letter-spacing:.01em;}
+   #activities-overlay .act-intro{font-size:12.5px;color:var(--il-warm-faint);margin-bottom:16px;}
+   #activities-overlay .act-card{text-align:left;background:var(--il-warm-card);border:1px solid var(--il-warm-line);
+     border-radius:18px;padding:15px 16px;cursor:pointer;color:var(--il-warm-ink);
+     box-shadow:0 6px 18px -8px rgba(150,95,45,0.28);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
+   #activities-overlay .act-card:hover{transform:translateY(-2px);box-shadow:0 12px 26px -10px rgba(150,95,45,0.34);border-color:var(--il-warm-amber);}
+   #activities-overlay .act-card b{font-size:15px;color:var(--il-warm-ink);}
+   #activities-overlay .act-card span{display:block;font-size:11.5px;color:var(--il-warm-faint);margin-top:4px;line-height:1.45;}
+   #activities-overlay .act-title{font-size:22px;color:var(--il-warm-ink);font-weight:700;}
+   #activities-overlay .act-sub{font-size:14px;color:var(--il-warm-sub);}
+   #activities-overlay .act-hint{font-size:12.5px;color:var(--il-warm-faint);}
+   #activities-overlay .act-btn{background:var(--il-warm-amber-d);color:#fff;border:0;border-radius:999px;
+     padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px -6px rgba(150,95,45,0.5);}
+   #activities-overlay .act-btn.ghost{background:var(--il-warm-card);color:var(--il-warm-sub);border:1px solid var(--il-warm-line);box-shadow:none;font-weight:600;}
+   #activities-overlay .act-field{border-radius:16px;background:radial-gradient(circle at 50% 38%, #3a2417, #241207);}
+   </style>
+   <div style="max-width:640px;margin:0 auto;font-family:Arial;color:var(--il-warm-ink);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <h2 style="margin:0;font-size:20px;color:#5a3d22;">Calming activities</h2>
-      <button onclick="closeActivities()" style="background:#fff;color:#7a5230;border:1px solid #e0b98a;border-radius:999px;padding:8px 18px;font-size:14px;cursor:pointer;">Back</button>
+      <h2 class="act-head-title">Calming activities</h2>
+      <button onclick="closeActivities()" class="act-btn ghost" style="padding:8px 18px;font-size:14px;">Back</button>
     </div>
-    <div style="font-size:12.5px;color:#8a6a4c;margin-bottom:14px;">Small things that help a racing mind. Your music keeps playing. Pick anything.</div>
-    <div id="act-menu" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;"></div>
-    <div id="act-stage" style="margin-top:16px;"></div>
+    <div class="act-intro">Small things that help a racing mind. Your music keeps playing. Pick anything.</div>
+    <div id="act-menu" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
+    <div id="act-stage" style="margin-top:18px;"></div>
    </div>`;
   document.body.appendChild(actOverlay);
   gardenBar();
@@ -3347,18 +3380,18 @@ function openActivities(){
     ['ritual','The Calm Ritual','A ritual that works because you do it on purpose'],
   ];
   const menu = actOverlay.querySelector('#act-menu');
-  menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" style="text-align:left;background:rgba(255,255,255,0.75);border:1px solid #ecc9a0;border-radius:14px;padding:13px;cursor:pointer;color:#4a362c;box-shadow:0 2px 10px rgba(180,120,60,0.10);">
-     <b style="font-size:14.5px;">${a[1]}</b><span style="display:block;font-size:11.5px;color:#8a6a4c;margin-top:3px;">${a[2]}</span></button>`).join('');
+  menu.innerHTML = acts.map(a=>`<button onclick="startAct('${a[0]}')" class="act-card">
+     <b>${a[1]}</b><span>${a[2]}</span></button>`).join('');
   // gentle re-engagement after 10 minutes of play
   actTimers.push(setInterval(()=>{
     if (!actOverlay || actOverlay.style.display==='none' || actReengaged) return;
     if (Date.now()-actOpenedAt > 10*60*1000){
       actReengaged = true; metric('reengage_prompt');
       const bar = document.createElement('div');
-      bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:#fff1dc;color:#4a362c;border:1px solid #ecc9a0;border-radius:14px;padding:14px 16px;font-size:14px;text-align:center;box-shadow:0 -2px 12px rgba(180,120,60,0.12);';
+      bar.style.cssText='position:sticky;bottom:0;margin-top:18px;background:var(--il-warm-card);color:var(--il-warm-ink);border:1px solid var(--il-warm-line);border-radius:16px;padding:14px 16px;font-size:14px;text-align:center;box-shadow:0 -6px 18px -8px rgba(150,95,45,0.28);';
       bar.innerHTML = (gardenBlooms>0 ? 'Look at what you grew \u2014 '+gardenBlooms+' blooms. ' : '') + `I'm still right here with you. Want to talk for a moment?
-        <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" style="background:#b8783a;color:#fff;border:0;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Let's talk</button>
-        <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" style="background:#fff;color:#7a5230;border:1px solid #d9a86f;border-radius:999px;padding:9px 20px;margin:0 6px;cursor:pointer;">Keep playing</button></div>`;
+        <div style="margin-top:10px;"><button onclick="closeActivities();document.getElementById('message')&&document.getElementById('message').focus({preventScroll:true});" class="act-btn" style="padding:9px 20px;margin:0 6px;">Let's talk</button>
+        <button onclick="this.closest('div').parentNode.remove();actOpenedAt=Date.now();actReengaged=false;" class="act-btn ghost" style="padding:9px 20px;margin:0 6px;">Keep playing</button></div>`;
       actOverlay.firstElementChild.appendChild(bar);
     }
   },20000));
@@ -3371,16 +3404,16 @@ function startAct(name){
   const st = actStage();
   if (name==='breathe'){
     st.innerHTML = `<div style="text-align:center;padding:6px;">
-      <div id="br-word" style="font-size:26px;color:#fff;font-weight:700;min-height:34px;">Breathe in&hellip;</div>
-      <div id="br-count" style="font-size:44px;color:#d3a47d;font-weight:700;min-height:52px;">5</div>
+      <div id="br-word" class="act-title" style="font-size:26px;min-height:34px;">Breathe in&hellip;</div>
+      <div id="br-count" style="font-size:44px;color:var(--il-warm-clay);font-weight:700;min-height:52px;">5</div>
       <div style="position:relative;width:150px;height:150px;margin:6px auto 10px;overflow:visible;">
-        <div id="br-aura" style="position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(207,233,255,0.35);"></div>
-        <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#6fb3d4,#2a5a7a);transition:transform 4.6s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+        <div id="br-aura" style="position:absolute;inset:-12px;border-radius:50%;border:2px solid var(--il-warm-accent-soft);"></div>
+        <div id="br-circle" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#f4c977,#c56a2c);transition:transform 4.6s ease-in-out;display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:0 8px 26px -8px rgba(150,95,45,0.5);">
           <b id="br-bpm" style="font-size:26px;color:#fff;">&nbsp;</b>
-          <span id="br-bpm-lbl" style="font-size:10px;color:#cfe9ff;"></span>
+          <span id="br-bpm-lbl" style="font-size:10px;color:#fff3e0;"></span>
         </div>
       </div>
-      <div id="br-msg" style="font-size:13px;color:#9db8cf;min-height:20px;">In 5 &middot; hold 5 &middot; out 5. The number counts you through.</div></div>`;
+      <div id="br-msg" class="act-hint" style="font-size:13px;min-height:20px;">In 5 &middot; hold 5 &middot; out 5. The number counts you through.</div></div>`;
     const c=st.querySelector('#br-circle'), w=st.querySelector('#br-word'), cd=st.querySelector('#br-count');
     let phase=0, tick=5, cycles=0;
     const PHASES=[['Breathe in\u2026',1.35],['Hold\u2026',null],['Let it out\u2026',1.0]];
@@ -3411,7 +3444,7 @@ function startAct(name){
         const msg = st.querySelector('#br-msg');
         if (msg && brStartBpm - bpm >= 5){
           msg.textContent = brStartBpm + ' \u2192 ' + bpm + ' \u2014 your heart is listening. Keep going.';
-          msg.style.color = '#d3a47d';
+          msg.style.color = 'var(--il-warm-clay)';
         }
       }
     }, 1500));
@@ -3658,24 +3691,24 @@ function startAct(name){
     let puzzle=wsBuild(), found=[], selA=null;
     function wsRender(){
       st.innerHTML='<div style="text-align:center;">'
-        +'<div id="ws-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Find the hidden calm words. Tap the FIRST letter, then the LAST letter of a word.</div>'
+        +'<div id="ws-p" class="act-hint" style="font-size:13px;margin-bottom:8px;">Find the hidden calm words. Tap the FIRST letter, then the LAST letter of a word.</div>'
         +'<div id="ws-words" style="font-size:13px;margin-bottom:10px;"></div>'
-        +'<div id="ws-grid" style="display:inline-grid;grid-template-columns:repeat('+N+',1fr);gap:3px;"></div></div>';
+        +'<div id="ws-grid" style="display:inline-grid;grid-template-columns:repeat('+N+',1fr);gap:4px;padding:12px;border-radius:16px;background:radial-gradient(circle at 50% 30%, #3a2417, #241207);"></div></div>';
       st.querySelector('#ws-words').innerHTML=puzzle.words.map(function(w){
         const done=found.indexOf(w)>=0;
-        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:#d3a47d;text-decoration:line-through;':'color:#e6f1fa;')+'">'+w+'</span>';
+        return '<span style="display:inline-block;margin:2px 7px;letter-spacing:1px;'+(done?'color:var(--il-warm-clay);text-decoration:line-through;':'color:var(--il-warm-sub);font-weight:600;')+'">'+w+'</span>';
       }).join('');
       let html='';
       for(let r=0;r<N;r++){ for(let c=0;c<N;c++){
         const lit=found.some(function(w){ const p=puzzle.placed.find(function(x){return x.word===w;}); return p&&p.cells.some(function(cell){return cell[0]===r&&cell[1]===c;}); });
-        html+='<button data-r="'+r+'" data-c="'+c+'" style="width:30px;height:30px;font-size:14px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;'
-          +(lit?'background:rgba(125,211,168,0.45);color:#0c1322;font-weight:700;':'background:rgba(255,255,255,0.06);color:#e6f1fa;')+'">'+puzzle.grid[r][c]+'</button>';
+        html+='<button data-r="'+r+'" data-c="'+c+'" style="width:30px;height:30px;font-size:14px;border-radius:7px;border:1px solid rgba(244,201,119,0.18);cursor:pointer;'
+          +(lit?'background:var(--il-warm-accent-soft);color:#241207;font-weight:700;':'background:rgba(244,201,119,0.10);color:#fbe6c8;')+'">'+puzzle.grid[r][c]+'</button>';
       } }
       const g=st.querySelector('#ws-grid'); g.innerHTML=html;
       g.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ wsClick(+b.dataset.r,+b.dataset.c,b); }); });
     }
     function wsClick(r,c,b){
-      if(!selA){ selA=[r,c]; b.style.outline='2px solid #cfe9ff'; return; }
+      if(!selA){ selA=[r,c]; b.style.outline='2px solid var(--il-warm-honey)'; return; }
       const r0=selA[0], c0=selA[1]; selA=null;
       st.querySelectorAll('#ws-grid button').forEach(function(x){ x.style.outline=''; });
       const dr=r-r0, dc=c-c0, adr=Math.abs(dr), adc=Math.abs(dc);
@@ -3688,7 +3721,7 @@ function startAct(name){
       if(match){
         found.push(match); metric('wordplay'); if(typeof bloom==='function') bloom();
         if(found.length>=puzzle.words.length){
-          wsRender(); const p=st.querySelector('#ws-p'); if(p){ p.textContent='All found — beautifully done. A fresh grid…'; p.style.color='#d3a47d'; }
+          wsRender(); const p=st.querySelector('#ws-p'); if(p){ p.textContent='All found — beautifully done. A fresh grid…'; p.style.color='var(--il-warm-clay)'; }
           actTimers.push(setTimeout(function(){ puzzle=wsBuild(); found=[]; selA=null; wsRender(); }, 1800));
           return;
         }
@@ -3698,26 +3731,26 @@ function startAct(name){
     wsRender();
   }
   if (name==='shapes'){
-    st.innerHTML=`<div style="text-align:center;"><div id="sh-prompt" style="font-size:15px;color:#cfe3f2;margin:8px 0 12px;"></div>
-      <div id="sh-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto;"></div></div>`;
-    const SH=['\u25CF','\u25A0','\u25B2','\u2666','\u2605','\u2B22']; const CO=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a'];
+    st.innerHTML=`<div style="text-align:center;"><div id="sh-prompt" class="act-sub" style="font-size:15px;margin:8px 0 12px;"></div>
+      <div id="sh-grid" class="act-field" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto;padding:14px;"></div></div>`;
+    const SH=['\u25CF','\u25A0','\u25B2','\u2666','\u2605','\u2B22']; const CO=['#f4c977','#e89a3c','#c8705a','#5fc9a8'];
     const round=()=>{ const tS=SH[Math.floor(Math.random()*SH.length)], tC=CO[Math.floor(Math.random()*CO.length)];
       st.querySelector('#sh-prompt').innerHTML='Find: <span style="color:'+tC+';font-size:26px;">'+tS+'</span>';
       const cells=[{s:tS,c:tC}]; while(cells.length<8){ const s2=SH[Math.floor(Math.random()*SH.length)], c2=CO[Math.floor(Math.random()*CO.length)];
         if(!(s2===tS&&c2===tC)) cells.push({s:s2,c:c2}); }
       cells.sort(()=>Math.random()-0.5);
-      st.querySelector('#sh-grid').innerHTML=cells.map(x=>`<button onclick="(function(b){ if(b.dataset.hit==='1'){ b.style.background='rgba(125,211,168,0.4)'; bloom(); setTimeout(window._shRound,700);} })(this)" data-hit="${x.s===tS&&x.c===tC?1:0}" style="font-size:30px;padding:14px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:${x.c};cursor:pointer;">${x.s}</button>`).join('');
+      st.querySelector('#sh-grid').innerHTML=cells.map(x=>`<button onclick="(function(b){ if(b.dataset.hit==='1'){ b.style.background='var(--il-warm-accent-soft)'; bloom(); setTimeout(window._shRound,700);} })(this)" data-hit="${x.s===tS&&x.c===tC?1:0}" style="font-size:30px;padding:14px 6px;border-radius:14px;border:1px solid rgba(244,201,119,0.18);background:rgba(244,201,119,0.10);color:${x.c};cursor:pointer;">${x.s}</button>`).join('');
     };
     window._shRound=round; round();
   }
   if (name==='bubbles'){
     // BUBBLE POP — soft lights drift up; tap them to pop. Endless, gentle,
     // and genuinely absorbing. No score to fear, just a quiet tally.
-    st.innerHTML=`<div style="text-align:center;"><div id="bb-p" style="font-size:13px;color:#9db8cf;margin-bottom:8px;">Tap the drifting lights to pop them. No rush, no wrong move.</div>
-      <div id="bb-field" style="position:relative;height:320px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);overflow:hidden;touch-action:manipulation;"></div>
-      <div id="bb-count" style="margin-top:8px;font-size:13px;color:#d3a47d;min-height:18px;"></div></div>`;
+    st.innerHTML=`<div style="text-align:center;"><div id="bb-p" class="act-hint" style="font-size:13px;margin-bottom:8px;">Tap the drifting lights to pop them. No rush, no wrong move.</div>
+      <div id="bb-field" class="act-field" style="position:relative;height:320px;overflow:hidden;touch-action:manipulation;"></div>
+      <div id="bb-count" style="margin-top:8px;font-size:13px;color:var(--il-warm-clay);min-height:18px;"></div></div>`;
     const field=st.querySelector('#bb-field'); let popped=0;
-    const colors=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a','#cfe9ff'];
+    const colors=['#f4c977','#e89a3c','#c8705a','#e7b45a','#5fc9a8'];
     const spawn=()=>{ if(!field.isConnected) return;
       const b=document.createElement('div');
       const size=26+Math.random()*36, col=colors[Math.floor(Math.random()*colors.length)];
@@ -3741,8 +3774,8 @@ function startAct(name){
     actTimers.push(setInterval(spawn,800)); spawn(); spawn();
   }
   if (name==='stars'){
-    st.innerHTML=`<div style="text-align:center;"><div id="st-p" style="font-size:14px;color:#cfe3f2;margin-bottom:10px;">Stars will appear, slowly. Count them, then answer.</div>
-      <div id="st-sky" style="position:relative;height:220px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #16314a, #0c1322);"></div>
+    st.innerHTML=`<div style="text-align:center;"><div id="st-p" class="act-sub" style="font-size:14px;margin-bottom:10px;">Stars will appear, slowly. Count them, then answer.</div>
+      <div id="st-sky" class="act-field" style="position:relative;height:220px;"></div>
       <div id="st-ans" style="margin-top:12px;"></div></div>`;
     window._starStreak = window._starStreak||0;
     const maxN = Math.min(25, 6 + window._starStreak*3); // streaks earn bigger skies (boredom-proof)
@@ -3752,7 +3785,7 @@ function startAct(name){
       d.style.left=(8+Math.random()*84)+'%'; d.style.top=(10+Math.random()*75)+'%'; sky.appendChild(d);
       requestAnimationFrame(()=>d.style.opacity='0.95'); }, 900+i*Math.max(500, 1700-n*60))); }
     actTimers.push(setTimeout(()=>{ if(!st.isConnected)return; const ans=st.querySelector('#st-ans');
-      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='rgba(125,211,168,0.5)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; bloom(); window._starStreak=(window._starStreak||0)+1; setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(180,90,90,0.3)'; window._starStreak=0; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#e6f1fa;cursor:pointer;">${v}</button>`).join('');
+      ans.innerHTML=[n-1,n,n+1].sort(()=>Math.random()-0.5).map(v=>`<button onclick="(function(b){ if(+b.dataset.v===${n}){ b.style.background='var(--il-warm-accent-soft)'; document.getElementById('st-p').textContent='Yes — '+${n}+' stars. Nicely counted.'; bloom(); window._starStreak=(window._starStreak||0)+1; setTimeout(()=>startAct('stars'),1600);} else { b.style.background='rgba(200,112,90,0.28)'; window._starStreak=0; } })(this)" data-v="${v}" style="font-size:18px;margin:0 8px;padding:10px 22px;border-radius:14px;border:1px solid var(--il-warm-line);background:var(--il-warm-card);color:var(--il-warm-ink);font-weight:700;cursor:pointer;">${v}</button>`).join('');
     }, 900+n*Math.max(500,1700-n*60)+800));
   }
   if (name==='release'){
@@ -3770,14 +3803,14 @@ function startAct(name){
     const cheer=["That's tension leaving.","Feel the difference.","Lighter already.","Nicely done.","That was a deep one.","Your whole body just let go."];
     let i=0;
     st.innerHTML=`<div style="text-align:center;padding:6px;">
-      <div id="rl-t" style="font-size:23px;color:#fff;font-weight:700;"></div>
-      <div id="rl-s" style="font-size:14px;color:#b9d0e2;margin:8px 0 14px;line-height:1.5;"></div>
+      <div id="rl-t" class="act-title" style="font-size:23px;"></div>
+      <div id="rl-s" class="act-sub" style="font-size:14px;margin:8px 0 14px;line-height:1.5;"></div>
       <div style="position:relative;width:150px;height:150px;margin:0 auto 14px;">
-        <div id="rl-ring" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#d4a86f,#7a5230);transition:transform 0.9s ease;display:flex;align-items:center;justify-content:center;">
+        <div id="rl-ring" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#f4c977,#a9531f);transition:transform 0.9s ease;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 26px -8px rgba(150,95,45,0.5);">
           <span id="rl-num" style="font-size:42px;color:#fff;font-weight:700;">&nbsp;</span></div>
       </div>
-      <button id="rl-go" style="background:#6fb3d4;color:#0c1322;border:0;border-radius:999px;padding:12px 30px;font-size:15px;font-weight:700;cursor:pointer;">Squeeze &amp; hold</button>
-      <div id="rl-msg" style="margin-top:12px;color:#d3a47d;font-size:14px;min-height:18px;"></div></div>`;
+      <button id="rl-go" class="act-btn" style="padding:12px 30px;">Squeeze &amp; hold</button>
+      <div id="rl-msg" style="margin-top:12px;color:var(--il-warm-clay);font-size:14px;min-height:18px;"></div></div>`;
     const T=st.querySelector('#rl-t'),S=st.querySelector('#rl-s'),ring=st.querySelector('#rl-ring'),
           num=st.querySelector('#rl-num'),go=st.querySelector('#rl-go'),msg=st.querySelector('#rl-msg');
     const show=()=>{ T.textContent=groups[i][0]; S.textContent=groups[i][1]; msg.textContent='';
@@ -3804,10 +3837,10 @@ function startAct(name){
     // order; repeat them back. Absorbing and distracting, grows one step at a
     // time so it never feels like failure.
     st.innerHTML=`<div style="text-align:center;">
-      <div id="sq-p" style="font-size:14px;color:#cfe3f2;margin-bottom:12px;">Watch the lights glow in order, then tap them back the same way.</div>
+      <div id="sq-p" class="act-sub" style="font-size:14px;margin-bottom:12px;">Watch the lights glow in order, then tap them back the same way.</div>
       <div id="sq-grid" style="display:grid;grid-template-columns:repeat(2,112px);gap:12px;justify-content:center;"></div>
-      <div id="sq-msg" style="margin-top:14px;font-size:14px;color:#d3a47d;min-height:20px;"></div></div>`;
-    const cols=['#d3a47d','#6fb3d4','#d4a86f','#d4ab8a'];
+      <div id="sq-msg" style="margin-top:14px;font-size:14px;color:var(--il-warm-clay);min-height:20px;"></div></div>`;
+    const cols=['#e89a3c','#e7b45a','#c8705a','#5fc9a8'];
     const grid=st.querySelector('#sq-grid'), msg=st.querySelector('#sq-msg');
     const dim=(c)=>c+'44';
     const pads=cols.map((c,idx)=>{ const p=document.createElement('button');
@@ -3847,7 +3880,7 @@ function buildWordsPanel(){
   wordsPanel = document.createElement('div');
   wordsPanel.id = 'words-panel';
   wordsPanel.style.cssText = 'padding:14px;text-align:center;';
-  wordsPanel.innerHTML = '<div id="words-prompt" style="font-size:14px;color:#cfe3f2;margin-bottom:12px;"></div>'
+  wordsPanel.innerHTML = '<div id="words-prompt" style="font-size:14px;color:var(--il-warm-sub);margin-bottom:12px;"></div>'
     + '<div id="words-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:340px;margin:0 auto;"></div>';
   host.appendChild(wordsPanel);
   wordsRound();
@@ -3856,21 +3889,21 @@ function wordsRound(){
   if (!wordsPanel) return;
   const pool = WORD_BANK.slice().sort(()=>Math.random()-0.5).slice(0,8);
   wordsTarget = pool[Math.floor(Math.random()*pool.length)];
-  document.getElementById('words-prompt').innerHTML = 'Find: <b style="font-size:19px;letter-spacing:2px;color:#fff;">' + wordsTarget + '</b>';
+  document.getElementById('words-prompt').innerHTML = 'Find: <b style="font-size:19px;letter-spacing:2px;color:var(--il-warm-clay);">' + wordsTarget + '</b>';
   const grid = document.getElementById('words-grid');
   grid.innerHTML = pool.slice().sort(()=>Math.random()-0.5).map(w =>
-    '<button onclick="wordsPick(this)" data-w="'+w+'" style="padding:13px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);'
-    + 'background:rgba(255,255,255,0.08);color:#e6f1fa;font-size:15px;letter-spacing:1px;cursor:pointer;transition:all 0.25s ease;">'+w+'</button>'
+    '<button onclick="wordsPick(this)" data-w="'+w+'" style="padding:13px 6px;border-radius:14px;border:1px solid var(--il-warm-line);'
+    + 'background:var(--il-warm-card);color:var(--il-warm-ink);font-weight:600;font-size:15px;letter-spacing:1px;cursor:pointer;transition:all 0.25s ease;">'+w+'</button>'
   ).join('');
 }
 function wordsPick(btn){
   if (btn.dataset.w === wordsTarget){
-    btn.style.background = 'rgba(90,180,130,0.55)'; btn.style.borderColor = '#d3a47d';
+    btn.style.background = 'var(--il-warm-accent-soft)'; btn.style.borderColor = 'var(--il-warm-accent)';
     metric('wordplay'); if (typeof bloom==='function') bloom();
     setTimeout(wordsRound, 900);
   } else {
-    btn.style.background = 'rgba(180,90,90,0.25)';
-    setTimeout(()=>{ btn.style.background = 'rgba(255,255,255,0.08)'; }, 450);
+    btn.style.background = 'rgba(200,112,90,0.22)';
+    setTimeout(()=>{ btn.style.background = 'var(--il-warm-card)'; }, 450);
   }
 }
 
@@ -4177,17 +4210,41 @@ function heartReport(){
     +'background:rgba(255,255,255,0.92);border-radius:999px;padding:12px 22px;'
     +'font-family:Arial;font-size:22px;color:#8a4653;box-shadow:0 8px 26px rgba(40,20,30,0.2);';
   chip.innerHTML='<span id="heart-beat" style="display:inline-block;font-size:24px;">&#10084;&#65039;</span> '
-    +'<b id="heart-num" style="font-size:26px;">--</b> <span class="hr-label" style="font-size:13px;color:#a98790;">bpm</span>';
+    +'<b id="heart-num" style="font-size:26px;">&nbsp;</b> <span class="hr-label" style="font-size:13px;color:#a98790;"></span>';
   document.addEventListener('DOMContentLoaded', ()=>document.body.appendChild(chip));
   if (document.body) document.body.appendChild(chip);
+  // The chip is shown only once the camera is actually on, so it never appears
+  // as an empty/broken bar on a page with no reading. Once shown it stays as a
+  // calm, honest presence: a live number when we truly have one, and a quiet
+  // resting heart glyph (no number) when the signal is weak, absent, stale, or
+  // implausible. It NEVER freezes on a wrong or stale value, and it never asks
+  // the person to do anything (Principle 11).
   setInterval(()=>{
+    if (!window._camOn){ chip.style.display='none'; return; }
+    const beat = document.getElementById('heart-beat');
+    const num  = document.getElementById('heart-num');
+    const lbl  = chip.querySelector('.hr-label');
     const fresh = window._heartUpdatedAt && (Date.now()-window._heartUpdatedAt < 12000);
-    if (window._heartBPM && window._heartBPM>=40 && window._heartBPM<=170 && fresh){
+    const plausible = window._heartBPM && window._heartBPM>=40 && window._heartBPM<=170;
+    if (plausible && fresh){
+      // A real, trustworthy reading: show the number and pulse with it.
       chip.style.display='block';
-      document.getElementById('heart-num').textContent = Math.round(window._heartBPM);
-      const b=document.getElementById('heart-beat');
-      b.style.transition='transform 0.15s ease'; b.style.transform='scale(1.28)';
-      setTimeout(()=>{ b.style.transform='scale(1)'; }, 150);
+      num.textContent = Math.round(window._heartBPM);
+      num.style.fontSize = '26px';
+      lbl.textContent = 'bpm';
+      beat.style.transition='transform 0.15s ease'; beat.style.transform='scale(1.28)';
+      setTimeout(()=>{ beat.style.transform='scale(1)'; }, 150);
+    } else {
+      // Weak / absent / stale / implausible: degrade to a calm resting state.
+      // Show the heart glyph gently beating, with no misleading number. A lost
+      // signal cleanly zeroes rather than freezing on the last reading.
+      if (!fresh){ heartBPM = 0; window._heartBPM = 0; }
+      chip.style.display='block';
+      num.textContent = '\u00a0';
+      num.style.fontSize = '0px';
+      lbl.textContent = '';
+      beat.style.transition='transform 1.6s ease-in-out'; beat.style.transform='scale(1.12)';
+      setTimeout(()=>{ beat.style.transform='scale(1)'; }, 800);
     }
   }, 1500);
 })();
@@ -4346,25 +4403,17 @@ function gentlyRedirectFromSubstitution(){
 let _sessionStart = Date.now();
 let _gentleNudges = 0;
 function gentleCompletionCheck(){
-  const mins = (Date.now() - _sessionStart) / 60000;
-  // First warm bridge at ~20 min, a softer second at ~35 — then we stop nudging.
-  if (mins >= 20 && _gentleNudges === 0){ _gentleNudges = 1; showGentleBridge(_ilux('gb.n1')); }
-  else if (mins >= 35 && _gentleNudges === 1){ _gentleNudges = 2; showGentleBridge(_ilux('gb.n2')); }
+  // FOUNDER FIX: the timed gentle-bridge nudges popped up mid-session and
+  // covered what the person was doing. They are removed. The permanent crisis
+  // bar (988/911 + "Talk to someone") keeps the human bridge visible and
+  // reachable at ALL times, so the no-dead-end law (Immutable Principle 1) is
+  // preserved without an interrupting popup. No-op.
 }
 function showGentleBridge(message){
-  // never blocks, never closes anything — a soft, dismissable invitation
-  if (document.getElementById('gentle-bridge')) return;
-  const b = document.createElement('div');
-  b.id = 'gentle-bridge';
-  b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:74;'
-    + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
-    + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;text-align:center;';
-  b.innerHTML = '<div style="font-size:14px;color:#4a362c;line-height:1.5;margin-bottom:12px;">' + message + '</div>'
-    + '<button onclick="bridgeConnect()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">'+_ilux('gb.connect')+'</button>'
-    + '<button onclick="closeGentleBridge()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">'+_ilux('gb.keep')+'</button>';
-  document.body.appendChild(b);
+  // Removed: no floating time-nudge overlay. The permanent crisis bar is the
+  // always-visible human bridge. No-op (kept so any caller stays safe).
 }
-function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} closeGentleBridge(); }
+function bridgeConnect(){ try{ openHelp('telehealth'); }catch(e){} }
 function closeGentleBridge(){ const b=document.getElementById('gentle-bridge'); if(b) b.remove(); }
 
 // ---- GENTLE PROVIDER GUIDANCE (navigation, not diagnosis) ----
@@ -4427,8 +4476,8 @@ function applyProviderSuggestion(){
       if (thread && !document.getElementById('legal-nudge')){
         const div = document.createElement('div');
         div.id = 'legal-nudge';
-        div.style.cssText = 'background:#f8f5f2;border:1px solid #dcc0a9;border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#754f30;line-height:1.55;';
-        div.innerHTML = s.why + '<br><button onclick="openLegalHelp()" style="margin-top:10px;background:#d4782d;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;">See legal help options</button>';
+        div.style.cssText = 'background:#eef4f2;border:1px solid #cfe2dc;border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#3a4a46;line-height:1.55;';
+        div.innerHTML = s.why + '<br><button onclick="openLegalHelp()" style="margin-top:10px;background:#2f9077;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;">See legal help options</button>';
         thread.appendChild(div);
         try { metric('legal_surfaced', s.category || ''); } catch(e){}
       }
@@ -4485,7 +4534,7 @@ function handleHelpRequestIfAny(text){
       const div = document.createElement('div');
       div.id = 'route-now';
       div.style.cssText = 'background:rgba(46,110,142,0.12);border-radius:12px;padding:13px 15px;margin:10px 0;font-size:14px;color:#234;line-height:1.55;';
-      const legalBtn = '<button onclick="openLegalHelp()" style="background:#d4782d;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me to legal help</button>';
+      const legalBtn = '<button onclick="openLegalHelp()" style="background:#2f9077;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Connect me to legal help</button>';
       const provBtn = '<button onclick="routeProvider()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:3px;">Talk to a counselor</button>';
       const nearBtn = '<button onclick="openFacilities()" style="background:#fff;color:#2e6e8e;border:1px solid #2e6e8e;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer;margin:3px;">Find nearby help</button>';
       let lead, buttons;
@@ -4587,7 +4636,6 @@ var _IL_FAC = {
 };
 function _ilfac(k){ var lg=(window._ilLang||"en"); return (_IL_FAC[lg]||_IL_FAC.en)[k]; }
 function openFacilities(){
-  try { var _ci=document.getElementById('il-checkin'); if (_ci) _ci.remove(); } catch(e){}
   let ov = document.getElementById('facilities-overlay');
   if (ov){ ov.style.display='flex'; return; }
   ov = document.createElement('div');
@@ -4672,30 +4720,9 @@ async function doFacilities(){
 let _fbShown = false;
 function closeFb(){ const c=document.getElementById('fb-card'); if(c) c.remove(); }
 function offerFeedback(){
-  if (_fbShown) return;
-  _fbShown = true;
-  const box = document.createElement('div');
-  box.id = 'fb-card';
-  box.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:78;'
-    + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
-    + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;';
-  box.innerHTML =
-     '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;text-align:center;">'+_ilux('fb.ask')+'</div>'
-   + '<div style="text-align:center;margin-bottom:8px;">'
-   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #d3a47d;background:#f8f5f2;color:#6a402c;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.yes')+'</button>'
-   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #ddd1c8;background:#fff;color:#99673e;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.some')+'</button>'
-   +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.no')+'</button>'
-   + '</div>'
-   + '<textarea id="fb-words" aria-label="'+_ilux('fb.ph')+'" placeholder="'+_ilux('fb.ph')+'" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
-   + '<div style="text-align:center;margin-top:8px;">'
-   +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">'+_ilux('fb.share')+'</button>'
-   +   '<button onclick="closeFb()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">'+_ilux('fb.nothanks')+'</button>'
-   + '</div>';
-  document.body.appendChild(box);
-  box.querySelectorAll('.fb-h').forEach(function(b){
-    b.onclick = function(){ box.querySelectorAll('.fb-h').forEach(function(x){x.style.outline='none';});
-      b.style.outline='2px solid #2e6e8e'; window._fbHelped = b.getAttribute('data-v'); };
-  });
+  // FOUNDER FIX: the feedback card popped up over the composer mid-session and
+  // was one of the interrupting check-ins to remove. It no longer appears.
+  // No-op.
 }
 async function submitFeedback(){
   const words = (document.getElementById('fb-words')||{}).value || '';
@@ -4707,7 +4734,7 @@ async function submitFeedback(){
       body: JSON.stringify({helped: helped, feeling: feeling, words: words})});
   } catch(e){}
   const card = document.getElementById('fb-card');
-  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#6a402c;padding:6px;">'+_ilux('fb.thanks')+' <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:6px 14px;cursor:pointer;">'+_ilux('fb.close')+'</button></div>';
+  if (card) card.innerHTML = '<div style="text-align:center;font-size:14px;color:#3a4a46;padding:6px;">'+_ilux('fb.thanks')+' <button onclick="closeFb()" style="margin-left:8px;background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:6px 14px;cursor:pointer;">'+_ilux('fb.close')+'</button></div>';
 }
 
 // ---- LIVE BIOMETRIC PING: anonymous, every 4s, for the founder's live monitor.
@@ -4907,81 +4934,11 @@ var ATT = (function(){
 })();
 window.ATT = ATT;
 
-// ---- The wordless one-tap CHECK-IN — the person's own truth, and what teaches
-// the personal read which of their signals to trust. Gentle, optional, dismissible.
-var _ilCheckinLast = 0, _ilSessionStart = Date.now();
-var _IL_CT = {
-  en:{q:'How are you feeling right now?', a:'Settled', b:'Overwhelmed', thanks:'Thank you.', skip:'Not now',
-      scale:['Settled','Mostly settled','In between','Mostly overwhelmed','Overwhelmed']},
-  es:{q:'¿Cómo te sientes ahora mismo?', a:'En calma', b:'Abrumado/a', thanks:'Gracias.', skip:'Ahora no',
-      scale:['En calma','Bastante en calma','Entre medio','Bastante abrumado','Abrumado']},
-  zh:{q:'你现在感觉怎么样？', a:'平静', b:'不知所措', thanks:'谢谢你。', skip:'暂不',
-      scale:['平静','比较平静','中间','比较不知所措','不知所措']},
-  hi:{q:'आप इस समय कैसा महसूस कर रहे हैं?', a:'शांत', b:'बहुत बोझिल', thanks:'धन्यवाद।', skip:'अभी नहीं',
-      scale:['शांत','काफ़ी शांत','बीच में','काफ़ी बोझिल','बहुत बोझिल']},
-  pa:{q:'ਤੁਸੀਂ ਇਸ ਵੇਲੇ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ?', a:'ਸ਼ਾਂਤ', b:'ਬਹੁਤ ਬੋਝ ਹੇਠ', thanks:'ਧੰਨਵਾਦ।', skip:'ਹੁਣ ਨਹੀਂ',
-      scale:['ਸ਼ਾਂਤ','ਕਾਫ਼ੀ ਸ਼ਾਂਤ','ਵਿਚਕਾਰ','ਕਾਫ਼ੀ ਬੋਝ ਹੇਠ','ਬਹੁਤ ਬੋਝ ਹੇਠ']},
-  sw:{q:'Unajisikiaje sasa hivi?', a:'Nimetulia', b:'Nimezidiwa', thanks:'Asante.', skip:'Si sasa',
-      scale:['Nimetulia','Nimetulia kiasi','Katikati','Nimezidiwa kiasi','Nimezidiwa']},
-  am:{q:'አሁን ምን ይሰማዎታል?', a:'ተረጋግቻለሁ', b:'ተጨንቄያለሁ', thanks:'አመሰግናለሁ።', skip:'አሁን አይደለም',
-      scale:['ተረጋግቻለሁ','በአብዛኛው ተረጋግቻለሁ','መካከል','በአብዛኛው ተጨንቄያለሁ','ተጨንቄያለሁ']},
-  ha:{q:'Yaya kake ji a yanzu?', a:'Na natsu', b:'Na cika da damuwa', thanks:'Na gode.', skip:'Ba yanzu ba',
-      scale:['Na natsu','Na natsu sosai-sosai','Tsakiya','Damuwa kaɗan-kaɗan','Na cika da damuwa']},
-      ru: {q:'Как вы себя чувствуете прямо сейчас?', a:'Спокойно', b:'Невыносимо', thanks:'Спасибо.', skip:'Не сейчас',
-      scale:['Спокойно','В основном спокойно','Посередине','Почти невыносимо','Невыносимо']},
-  bn:{q:'আপনি এই মুহূর্তে কেমন বোধ করছেন?', a:'শান্ত', b:'ভীষণ চাপে', thanks:'ধন্যবাদ।', skip:'এখন নয়',
-      scale:['শান্ত','মোটামুটি শান্ত','মাঝামাঝি','বেশ চাপে','ভীষণ চাপে']},
-  tl:{q:'Ano ang nararamdaman mo ngayon?', a:'Panatag', b:'Lubhang nalulula', thanks:'Salamat.', skip:'Hindi muna',
-      scale:['Panatag','Medyo panatag','Nasa gitna','Medyo nalulula','Lubhang nalulula']},
-  to:{q:'ʻOkú ke ongoʻi fēfē he taimí ni?', a:'Nonga', b:'Māfasia', thanks:'Mālō.', skip:'ʻIkai he taimí ni',
-      scale:['Nonga','Meimei nonga','Vahaʻa','Meimei māfasia','Māfasia']}
-};
-function _ilct(k){ var lg=(window._ilLang||'en'); return (_IL_CT[lg]||_IL_CT.en)[k]; }
-function showCheckin(){ if(document.getElementById('il-checkin')) return;
-  // Never stamp a feelings prompt over something the person is actively
-  // reading or using: nearby help, activities, the anchor, or any overlay.
-  try {
-    var _busy = ['facilities-overlay','activities-overlay','il-anchor','legal-overlay','provider-overlay'].some(function(id){
-      var el=document.getElementById(id); return el && el.style.display!=='none' && el.offsetParent!==null; });
-    if (_busy) return;
-  } catch(e){}
-  var wrap=document.createElement('div'); wrap.id='il-checkin';
-  wrap.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:92vw;'
-    +'background:#faf5ec;border:1px solid #e7dccc;border-radius:18px;box-shadow:0 12px 40px rgba(42,30,20,0.22);'
-    +'padding:16px 18px 14px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
-  var dots=''; var i; var scale=_ilct('scale')||[];
-  for(i=0;i<5;i++){ var sz=14+i*3; var col=['#5f8bb6','#7f97b0','#b9a58f','#cf8a5e','#c56a2c'][i];
-    dots+='<button aria-label="'+(scale[i]||i)+'" onclick="ilCheckinPick('+(i/4)+')" style="border:0;background:'+col+';'
-      +'width:'+sz+'px;height:'+sz+'px;border-radius:50%;margin:0 9px;cursor:pointer;padding:0;vertical-align:middle;opacity:.92;"></button>'; }
-  wrap.innerHTML='<div style="font-size:15px;color:#2b2620;margin-bottom:12px;">'+_ilct('q')+'</div>'
-    +'<div style="display:flex;align-items:center;justify-content:center;">'
-    +'<span style="font-size:12px;color:#6b5f4e;margin-right:6px;">'+_ilct('a')+'</span>'+dots
-    +'<span style="font-size:12px;color:#6b5f4e;margin-left:6px;">'+_ilct('b')+'</span></div>'
-    +'<div style="margin-top:8px;"><a href="#" onclick="closeCheckin();return false;" style="font-size:12px;color:#6b5f4e;text-decoration:none;">'+_ilct('skip')+'</a></div>';
-  document.body.appendChild(wrap); _ilCheckinLast=Date.now();
-}
-function ilCheckinPick(v){ try{ if(window.ATT) ATT.report(v); }catch(e){}
-  var w=document.getElementById('il-checkin'); if(w){ w.innerHTML='<div style="font-size:15px;color:#2b2620;padding:6px 4px;">'+_ilct('thanks')+'</div>';
-    setTimeout(function(){ try{ w.remove(); }catch(e){} }, 1100); } _ilCheckinLast=Date.now(); }
-function closeCheckin(){ var w=document.getElementById('il-checkin'); if(w){ try{ w.remove(); }catch(e){} } _ilCheckinLast=Date.now(); }
-window.ilCheckinPick=ilCheckinPick; window.closeCheckin=closeCheckin; window.showCheckin=showCheckin;
-function ilMaybeInvite(){ try{
-  var ss=document.getElementById('story-screen'); if(!ss || ss.style.display==='none') return;
-  if(document.getElementById('il-checkin')) return;
-  // PRINCIPLE 14 — NEVER MORE THAN THEY CAN BEAR. An interruption is an ask.
-  // Never interrupt a person who is writing or speaking — their outpouring is
-  // sacred. And ask far less often: the program reads; the person is carried.
-  var typedRecently = (window._lastTypedAt && (performance.now() - window._lastTypedAt) < 45000);
-  var writingNow = (document.activeElement && document.activeElement.id === 'message' && (document.getElementById('message')||{}).value);
-  var speakingNow = (typeof voiceListening !== 'undefined' && voiceListening);
-  if (typedRecently || writingNow || speakingNow) return;
-  var now=Date.now(); var since=now-_ilCheckinLast;
-  var conf=(window.ATT?ATT.confidence():1);
-  var firstDue=(_ilCheckinLast===0 && (now-_ilSessionStart)>240000);
-  var lowConf=(conf<0.45 && since>360000);
-  var periodic=(_ilCheckinLast>0 && since>480000);
-  if(firstDue||lowConf||periodic) showCheckin();
-}catch(e){} }
+// ---- The wordless one-tap CHECK-IN feeling popup was removed entirely
+// (FOUNDER_WORKLIST #6 / Principle 11 NEVER MORE THAN THEY CAN BEAR): a
+// feeling-check prompt is an interruption, and interruptions are asks. The
+// personal read (ATT) keeps working from passive signals; nothing is ever
+// popped up to ask the person how they feel.
 
 // ===========================================================================
 // THE RHYTHM ANCHOR — a steady pulsing light that rises up to HOLD a person who
@@ -5025,14 +4982,14 @@ function showAnchor(){ if(document.getElementById('il-anchor')) return; _ilAncho
   var A=_IL_AN[(window._ilLang||'en')]||_IL_AN.en;
   var ov=document.createElement('div'); ov.id='il-anchor';
   ov.style.cssText='position:fixed;inset:0;z-index:9500;opacity:0;transition:opacity 1.2s ease;overflow:hidden;'
-    +'background:radial-gradient(60% 60% at 50% 42%,#2a1d12 0%,#1c140d 55%,#140e09 100%);'
+    +'background:radial-gradient(60% 60% at 50% 42%,#183a38 0%,#102524 55%,#0b1817 100%);'
     +'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
   ov.innerHTML='<canvas id="il-anchor-c" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>'
     +'<div id="il-anchor-w" style="position:absolute;left:0;right:0;top:42%;transform:translateY(-50%);text-align:center;'
     +'font-size:28px;color:#f3e9dc;opacity:0;pointer-events:none;text-shadow:0 2px 20px rgba(0,0,0,.6);"></div>'
-    +'<div id="il-anchor-hint" style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#a8917c;pointer-events:none;">'+A.hint+'</div>'
+    +'<div id="il-anchor-hint" style="position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:13px;color:#8fb7ae;pointer-events:none;">'+A.hint+'</div>'
     +'<button id="il-anchor-x" style="position:absolute;left:50%;bottom:34px;transform:translateX(-50%);'
-    +'background:rgba(28,20,13,.7);border:1px solid rgba(240,176,112,.3);color:#d7c3ad;border-radius:999px;'
+    +'background:rgba(13,26,25,.7);border:1px solid rgba(120,208,184,.34);color:#cfe7df;border-radius:999px;'
     +'padding:9px 18px;font-size:13px;cursor:pointer;">'+A.close+'</button>';
   document.body.appendChild(ov);
   document.getElementById('il-anchor-x').addEventListener('click', function(ev){ ev.stopPropagation(); hideAnchor(); });
@@ -5060,12 +5017,12 @@ function ilAnchorRun(ov, A){
   function resize(){ W=c.clientWidth;H=c.clientHeight;c.width=W*DPR;c.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0); }
   resize(); var ro=function(){resize();}; window.addEventListener('resize',ro);
   var cycle=10000, t0=performance.now(), lastIdx=-1, rings=[], flash=0, wi=0, cur='', taps=[];
+  // FOUNDER FIX: a tap ANYWHERE on the Focus overlay wakes the site. It used to
+  // only pulse the light, and dismissal required finding the small OK button.
+  // Now any tap dismisses (the OK button keeps its own handler and is skipped
+  // here so it is not double-handled). Escape still closes via ov._key.
   ov.addEventListener('pointerdown', function(e){ if(e.target && e.target.id==='il-anchor-x') return;
-    var now=performance.now(); taps.push(now); if(taps.length>4) taps.shift();
-    if(taps.length>=2){ var iv=[]; for(var i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]);
-      var avg=iv.reduce(function(a,b){return a+b;},0)/iv.length; var target=Math.max(5000,Math.min(14000,avg*2));
-      cycle=cycle*0.6+target*0.4; }
-    rings.push({born:now,strong:true}); flash=1; });
+    hideAnchor(); });
   var nm=(window._ilName||'').toString().trim();
   function frame(now){ if(ov._stop){ window.removeEventListener('resize',ro); return; }
     var el=now-t0, idx=Math.floor(el/cycle), p=(el%cycle)/cycle, swell=0.5-0.5*Math.cos(2*Math.PI*p);
@@ -5074,14 +5031,14 @@ function ilAnchorRun(ov, A){
     var cx=W/2, cy=H*0.42; ctx.clearRect(0,0,W,H);
     for(var i=rings.length-1;i>=0;i--){ var age=(now-rings[i].born)/cycle; if(age>1.1){rings.splice(i,1);continue;}
       var rr=60+age*Math.min(W,H)*0.55, op=Math.max(0,(1-age))*(rings[i].strong?0.5:0.28);
-      ctx.beginPath();ctx.arc(cx,cy,rr,0,2*Math.PI);ctx.strokeStyle='rgba(240,176,112,'+op.toFixed(3)+')';
+      ctx.beginPath();ctx.arc(cx,cy,rr,0,2*Math.PI);ctx.strokeStyle='rgba(120,208,184,'+op.toFixed(3)+')';
       ctx.lineWidth=rings[i].strong?2.5:1.5;ctx.stroke(); }
     var R=64+swell*52+flash*14, g=ctx.createRadialGradient(cx,cy,4,cx,cy,R*1.9);
-    g.addColorStop(0,'rgba(255,236,205,'+Math.min(1,0.85+0.15*swell+flash*0.1).toFixed(3)+')');
-    g.addColorStop(0.35,'rgba(240,176,112,'+(0.75*(0.6+0.4*swell)).toFixed(3)+')');
-    g.addColorStop(1,'rgba(217,138,78,0)');
+    g.addColorStop(0,'rgba(233,248,240,'+Math.min(1,0.85+0.15*swell+flash*0.1).toFixed(3)+')');
+    g.addColorStop(0.35,'rgba(120,208,184,'+(0.75*(0.6+0.4*swell)).toFixed(3)+')');
+    g.addColorStop(1,'rgba(74,158,138,0)');
     ctx.beginPath();ctx.arc(cx,cy,R*1.9,0,2*Math.PI);ctx.fillStyle=g;ctx.fill();
-    ctx.beginPath();ctx.arc(cx,cy,R*0.5,0,2*Math.PI);ctx.fillStyle='rgba(255,240,215,'+(0.5+0.4*swell).toFixed(3)+')';ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,R*0.5,0,2*Math.PI);ctx.fillStyle='rgba(236,250,244,'+(0.5+0.4*swell).toFixed(3)+')';ctx.fill();
     flash*=0.9; if(flash<0.01) flash=0;
     if(cur){ wordEl.textContent=cur; wordEl.style.opacity=(swell*0.95).toFixed(2); }
     requestAnimationFrame(frame); }
@@ -5089,8 +5046,8 @@ function ilAnchorRun(ov, A){
 }
 function ilAddAnchorPill(){ if(document.getElementById('il-anchor-pill')) return;
   var b=document.createElement('button'); b.id='il-anchor-pill'; b.textContent='◎ '+_ilan('pill');
-  b.style.cssText='position:fixed;left:22px;bottom:96px;z-index:8000;background:rgba(42,29,18,.62);'
-    +'border:1px solid rgba(240,176,112,.3);color:#e8d8c4;border-radius:999px;padding:9px 14px;font-size:12.5px;'
+  b.style.cssText='position:fixed;left:22px;bottom:96px;z-index:80;background:rgba(16,37,36,.62);'
+    +'border:1px solid rgba(120,208,184,.34);color:#d7ece4;border-radius:999px;padding:9px 14px;font-size:12.5px;'
     +'cursor:pointer;backdrop-filter:blur(6px);';
   b.addEventListener('click', function(){ showAnchor(); });
   document.body.appendChild(b); }
@@ -5117,7 +5074,7 @@ function readArousalSignal() {
     try { ATT.start(); } catch(e){}
     try { document.addEventListener('keydown', ilNoteInteract, true); document.addEventListener('pointerdown', ilNoteInteract, true); } catch(e){}
     try { ilAddAnchorPill(); } catch(e){}
-    try { setInterval(function(){ ilMaybeInvite(); ilMaybeAnchor(); }, 12000); } catch(e){}
+    try { setInterval(function(){ ilMaybeAnchor(); }, 12000); } catch(e){}
   }
   var a = ATT.update();
   window._adaptiveDown = ATT.state.down;
@@ -5916,30 +5873,9 @@ function politeScrollIntoView(el){
   if (nearBottom(document.body)) politeScrollIntoView(el);
 }
 
-// ---- LENS THREE: wordless calm scale (tap a face, or ignore it) ----
-function showCalmScale(phase){
-  window._lastSamPhase = phase;
-  if (document.getElementById('sam-card')) return;
-  const card = document.createElement('div');
-  card.id = 'sam-card';
-  card.style.cssText = 'position:fixed;top:206px;right:18px;z-index:60;max-width:200px;'
-    + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 16px;'
-    + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
-  var samNames = [_ilux('sam.s1'),_ilux('sam.s2'),_ilux('sam.s3'),_ilux('sam.s4'),_ilux('sam.s5')];
-  card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">'+_ilux('sam.q')+'</div>'
-    + '<div style="font-size:30px;letter-spacing:14px;">'
-    + ['&#128551;','&#128533;','&#128528;','&#128578;','&#128522;'].map(function(f,i){
-        return '<button type="button" data-v="'+(i+1)+'" aria-label="'+samNames[i]+'" style="cursor:pointer;background:none;border:0;padding:0;font-size:inherit;letter-spacing:inherit;">'+f+'</button>';
-      }).join('')
-    + '</div>';
-  card.addEventListener('click', function(ev){
-    const v = ev.target && ev.target.dataset && ev.target.dataset.v;
-    if (v) metric('selfreport', phase + '|' + v);
-    card.style.opacity = '0'; setTimeout(()=>card.remove(), 1000);
-  });
-  document.body.appendChild(card);
-  setTimeout(()=>{ if (card.parentNode){ card.style.opacity='0'; setTimeout(()=>card.remove(),1000);} }, 25000);
-}
+// The wordless calm-scale feeling card was removed entirely
+// (FOUNDER_WORKLIST #6 / Principle 11 NEVER MORE THAN THEY CAN BEAR): a
+// feeling-check prompt is an ask, and asks are removed here.
 
 let TAP_MS = Date.now();
 // PRELOAD: fetch the calm lane and warm up the first track before the tap,
@@ -5973,8 +5909,8 @@ async function startExperience() {
   // Warm the sound engine at the tap so the sound box answers instantly later.
   try { if (typeof ensureZenisysContext === 'function') ensureZenisysContext(); } catch(e){}
   try { const ac = new (window.AudioContext||window.webkitAudioContext)(); if (ac.state==='suspended') ac.resume(); window._warmCtx = ac; } catch(e){}
-  setTimeout(()=>showCalmScale('arrival'), 9000);      // after the music has risen
-  setTimeout(()=>showCalmScale('later'), 4*60*1000);   // the change measurement
+  // (The calm-scale feeling prompts were removed — no feeling-check popup is
+  // ever scheduled; Principle 11.)
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else).
   // The arrival gate dissolves slowly over the story screen instead of blinking
   // away — one continuous place, not two pages.
@@ -6100,17 +6036,22 @@ function _modeToLane(mode){
   if (/encourage|uplift|motivat|hope-?build/.test(m)) return 'lifting';
   // DISTRESS + soothing responses -> deep calm. 'rage' is word-bounded so it
   // only matches the standalone word, not inside other words.
-  if (/deep|agitat|anger|angry|panic|fear|anxi|\brage\b|overwhelm|crisis|calming|soothing|grounding|ground|reassur|de-?escalat/.test(m)) return 'deepcalm';
+  if (/deep|agitat|anger|angry|panic|fear|anxi|\brage\b|overwhelm|crisis|calming|soothing|grounding|ground|reassur|de-?escalat|despair|worthless|suicid/.test(m)) return 'deepcalm';
   // other low/heavy states -> lifting
-  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely/.test(m)) return 'lifting';
+  if (/lift|sad|down|depress|hopeless|flat|grief|numb|lonely|empty/.test(m)) return 'lifting';
   // settled / positive / greeting -> calm
-  if (/calm|greet|steady|settl|neutral|hope|content|peace|gratitude|warm|gentle|validation|affirm/.test(m)) return 'calm';
+  if (/calm|greet|steady|settl|neutral|hope|content|peace|gratitude|warm|gentle|validation|affirm|happy|joy|glad|cheer/.test(m)) return 'calm';
   return null;
 }
 function steerLaneFromMode(mode){
   try {
     var want = _modeToLane(mode);
     if (!want || want === adaptiveLaneNow) return;
+    // Same safeguards the facial loop honors: never switch a muted person's
+    // music, and never fight the voice-duck. The words still update
+    // adaptiveLaneNow below so the loop stays in agreement with the mood.
+    if (typeof userMuted !== 'undefined' && userMuted) return;
+    if (typeof _duckActive !== 'undefined' && _duckActive) return;
     var now = Date.now();
     if (now - adaptiveLastSwitch < 10000) return;                 // one shift per 10s
     if (now - (window._lastManualMusic || 0) < 5*60*1000) return; // their hand outranks ours
@@ -6126,6 +6067,11 @@ function steerLaneFromMode(mode){
         switchAmbient(tracks[0].url, tracks[0].name);
         try { metric('lane_switch', 'words:' + String(mode).slice(0,20)); } catch(e){}
         armIsoEase(want);
+        // Proven attention-then-calm window: when the ambient plan hands back a
+        // calmer "then" lane, ease into it after the researched interval.
+        if (d.then && d.then.length && (d.transition_after_seconds || 0) > 0) {
+          try { scheduleSpaTransition(d.then, d.transition_after_seconds * 1000); } catch(e){}
+        }
       }).catch(function(){});
     creatorApplyMode(mode);
   } catch(e){}
@@ -6164,14 +6110,15 @@ function ilMicSendDone(){
 }
 function toggleMore(){
   var m = document.getElementById('more-menu');
-  if (m) m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
+  if (!m) return;
+  var open = (m.style.display === 'none' || !m.style.display);
+  m.style.display = open ? 'flex' : 'none';
+  try { var t = document.querySelector('.rail-talk'); if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false'); } catch(e){}
 }
 function togglePreview(){
-  var v=document.getElementById('visual-preview'), x=document.getElementById('preview-hide'), s=document.getElementById('preview-seen');
-  if(!v||!s) return;
-  var hidden = v.style.display==='none';
-  if(hidden){ v.style.display=''; if(x) x.style.display=''; s.style.display='none'; }
-  else { v.style.display='none'; if(x) x.style.display='none'; s.style.display='inline-flex'; }
+  /* No on-screen self-view exists anymore: the camera feed is analysis-only and
+     held permanently offscreen. Kept as a harmless no-op in case anything still
+     references it. */
 }
 function ilScrollHistory(){
   try { var h=document.querySelector('.il-history'); if(h) h.scrollTop = h.scrollHeight; } catch(e){}
@@ -6854,18 +6801,11 @@ document.addEventListener('DOMContentLoaded', loadVoiceChoices);
 // Record when the person is typing so heavy work (face detection) yields to
 // the keyboard and typing always stays instant.
 document.addEventListener('keydown', function(){ window._lastTypedAt = performance.now(); }, true);
-// FACE VIDEO floats to the side when you scroll down, and returns to its
-// centered spot when you scroll back to the top. Smooth and calm.
-(function(){
-  // FOUNDER FIX: the preview used to reposition on every scroll, which forces
-  // the browser to re-render the whole page each frame — the glitchy stutter
-  // felt while talking or tapping. The preview is now STATIONARY: pinned once
-  // in a fixed corner spot and never moved by scrolling. The person may not
-  // always watch their own face, but the small live preview stays put so they
-  // know we can see them. (They can still hide it with the corner button.)
-  const bar = document.querySelector('.story-video-bar');
-  if (bar) bar.classList.add('pinned');
-})();
+// FOUNDER FIX: there is NO on-screen camera self-view anymore. The floating
+// preview distracted people and covered the composer, so the draggable /
+// pinned / floating self-view has been removed entirely. The camera feed still
+// runs for the face/heart/attention analysis, but the <video> element is held
+// permanently offscreen by CSS and is never shown or moved.
 
 // ===================== SPEECH QUEUE — ONE VOICE AT A TIME =====================
 // Only ONE line is ever spoken at a time. New lines wait in a queue for the
@@ -7097,28 +7037,18 @@ function openSaveNow(){
     + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
   if (story.length < 40){
     bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.min')+'</div>'
-      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">'+_ilux('mb.ok')+'</button>';
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">'+_ilux('mb.ok')+'</button>';
   } else {
     bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.q')+'</div>'
       + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">'+_ilux('sv.btn')+'</button>'
-      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
+      + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
   }
   document.body.appendChild(bar);
 }
 function maybeOfferSave(){
-  if (_memOffered) return;
-  const story = collectStory();
-  if (story.length < 40) return;  // only once there's something worth saving
-  _memOffered = true;
-  const bar = document.createElement('div');
-  bar.id = 'save-offer';
-  bar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:75;'
-    + 'background:rgba(255,255,255,0.97);border:1px solid #e0d7cf;border-radius:16px;padding:14px 18px;'
-    + 'box-shadow:0 10px 30px rgba(20,40,30,0.2);font-family:Arial;max-width:340px;text-align:center;';
-  bar.innerHTML = '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;">'+_ilux('sv.auto')+'</div>'
-    + '<button onclick="doSaveStory()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin:0 5px;">'+_ilux('sv.btn')+'</button>'
-    + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;margin:0 5px;">'+_ilux('sv.notnow')+'</button>';
-  document.body.appendChild(bar);
+  // FOUNDER FIX: the automatic "save your story" nudge popped up on its own and
+  // covered the composer. It is removed. Saving is still fully available on
+  // demand from the Save button on the help rail (openSaveNow). No-op.
 }
 async function doSaveStory(){
   const story = collectStory();
@@ -7132,7 +7062,7 @@ async function doSaveStory(){
         + '<div style="font-size:22px;font-weight:800;letter-spacing:1px;color:#1e3a5c;margin:6px 0;">' + d.code + '</div>'
         + '<div style="font-size:12px;color:#736049;margin-bottom:10px;">'+_ilux('sv.code')+'</div>'
         + '<button onclick="copyReturnCode(this)" data-code="' + d.code + '" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.copy')+'</button>'
-        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.done')+'</button>';
+        + '<button onclick="dismissSaveOffer()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;margin:0 5px;">'+_ilux('sv.done')+'</button>';
     } else if (offer){ offer.querySelector('div').textContent = _ilux('sv.empty'); }
   } catch(e){ if (offer) offer.querySelector('div').textContent = _ilux('sv.err'); }
 }
@@ -7146,7 +7076,7 @@ function openResume(){
     + '<input id="resume-code" aria-label="Your return code" placeholder="e.g. CALM-4821-MOON" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd1c8;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase;">'
     + '<div id="resume-msg" style="font-size:13px;color:#c0564e;min-height:18px;margin:8px 0;"></div>'
     + '<button onclick="doResume()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer;">Continue</button> '
-    + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
+    + '<button onclick="closeResumeBox()" style="background:none;border:1px solid #cfe2dc;color:#2e6e8e;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer;">Cancel</button>'
     + '</div>';
   document.body.appendChild(box);
   setTimeout(()=>{ const el=document.getElementById('resume-code'); if(el) el.focus(); }, 100);
@@ -7324,30 +7254,30 @@ async function sendCheckin() {
 function appendLegalGuidance(thread, lg) {
   if (!lg || !lg.issue_detected) return;
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:left;background:#f8f5f2;border:1px solid #e6d8cc;border-radius:14px;padding:18px;margin:14px 0;';
+  el.style.cssText = 'text-align:left;background:#eef4f2;border:1px solid #cfe2dc;border-radius:14px;padding:18px;margin:14px 0;';
   const rights = (lg.your_rights || []).slice(0,3).map(r => '<li style="margin:4px 0;">' + escapeHtml(r) + '</li>').join('');
   const askAtty = (lg.questions_for_attorney || []).slice(0,3).map(q => '<li style="margin:4px 0;">' + escapeHtml(q) + '</li>').join('');
   const freeHelp = (lg.free_legal_help || []).slice(0,3).map(h => '<li style="margin:4px 0;">' + escapeHtml(h) + '</li>').join('');
   const steps = (lg.steps_you_can_take_now || []).slice(0,3).map(s => '<li style="margin:4px 0;">' + escapeHtml(s) + '</li>').join('');
   el.innerHTML = `
-    <p style="font-size:15px;color:#6a402c;font-weight:600;margin:0 0 8px;">${_ilux('lg.based').replace('{issue}', escapeHtml(lg.issue_detected))}</p>
+    <p style="font-size:15px;color:#256f5c;font-weight:600;margin:0 0 8px;">${_ilux('lg.based').replace('{issue}', escapeHtml(lg.issue_detected))}</p>
     <details style="margin:8px 0;" open>
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.rights')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${rights}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.rights')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${rights}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.ask')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${askAtty}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.ask')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${askAtty}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.free')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${freeHelp}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.free')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${freeHelp}</ul>
     </details>
     <details style="margin:8px 0;">
-      <summary style="font-size:13px;font-weight:600;color:#815734;cursor:pointer;">${_ilux('lg.steps')}</summary>
-      <ul style="font-size:14px;color:#4a372d;padding-left:20px;margin:6px 0;">${steps}</ul>
+      <summary style="font-size:13px;font-weight:600;color:#2e6e8e;cursor:pointer;">${_ilux('lg.steps')}</summary>
+      <ul style="font-size:14px;color:#3a4a46;padding-left:20px;margin:6px 0;">${steps}</ul>
     </details>
-    <p style="font-size:11px;color:#bb8559;margin:10px 0 0;line-height:1.5;">${escapeHtml(lg.disclaimer || '')}</p>
+    <p style="font-size:11px;color:#4a5b55;margin:10px 0 0;line-height:1.5;">${escapeHtml(lg.disclaimer || '')}</p>
   `;
   thread.appendChild(el);
 }
@@ -7365,8 +7295,8 @@ function appendHandoff(thread, handoff, data) {
   const el = document.createElement('div');
   el.className = 'handoff-card';
   const colors = {
-    crisis: {bg:'#f7f3f0', border:'#b27849', accent:'#6b412c'},
-    legal: {bg:'#f8f5f2', border:'#dcc0a9', accent:'#d4782d'},
+    crisis: {bg:'#eef4f2', border:'#2f9077', accent:'#256f5c'},
+    legal: {bg:'#eef4f2', border:'#2f9077', accent:'#256f5c'},
     telehealth: {bg:'#eff6ff', border:'#60a5fa', accent:'#1d4ed8'},
     community: {bg:'#fef9ec', border:'#f0c14b', accent:'#a16207'}
   };
@@ -7380,7 +7310,7 @@ function appendHandoff(thread, handoff, data) {
   const emergencyStyle = 'background:#fff;color:#b91c1c;border:1px solid #fca5a5;border-radius:10px;padding:12px 18px;font-size:14px;cursor:pointer;margin:4px 6px 4px 0;';
   el.innerHTML = `
     <p style="font-size:15px;font-weight:600;color:${c.accent};margin:0 0 6px;">${escapeHtml(_ilho(handoff.label))}</p>
-    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#6b412c;margin:10px 0;cursor:pointer;">
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#3a4a46;margin:10px 0;cursor:pointer;">
       <input type="checkbox" id="consent-${handoff.type}" style="margin-top:3px;">
       <span>${escapeHtml(_ilho(handoff.context_prompt || 'Share my context so I do not have to repeat myself.'))}</span>
     </label>
@@ -7449,14 +7379,14 @@ function showWarmHandoff(thread, warm, resolution, action, value) {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:left;background:linear-gradient(135deg,#b27849,#9e6a40);color:#fff;border-radius:16px;padding:24px;margin:18px 0;';
+  el.style.cssText = 'text-align:left;background:linear-gradient(135deg,var(--il-chrome-primary),var(--il-chrome-primary-h));color:#fff;border-radius:16px;padding:24px;margin:18px 0;';
   // Show the warm handoff parts in sequence, gently
   const partsHtml = (warm.parts || []).map(p =>
     `<p style="font-size:16px;line-height:1.75;margin:0 0 12px;">${escapeHtml(p)}</p>`).join('');
   el.innerHTML = `
     ${partsHtml}
     <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <button id="bridge-go" style="background:#fff;color:#6b412c;border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">${_ilux('wh.connect')}</button>
+      <button id="bridge-go" style="background:#fff;color:var(--il-chrome-primary-h);border:0;border-radius:999px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">${_ilux('wh.connect')}</button>
       <span style="font-size:13px;opacity:0.9;">${_ilux('wh.norush')}</span>
     </div>
     <button onclick="restartConversation()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:9px 20px;font-size:13px;cursor:pointer;margin-top:14px;">${_ilux('wh.more')}</button>
@@ -7507,7 +7437,7 @@ function showExit(thread, exitMsg, resolution) {
   const oldReply = thread.querySelector('.reply-box');
   if (oldReply) oldReply.remove();
   const el = document.createElement('div');
-  el.style.cssText = 'text-align:center;background:linear-gradient(135deg,#b27849,#9e6a40);color:#fff;border-radius:14px;padding:22px;margin:18px 0;';
+  el.style.cssText = 'text-align:center;background:linear-gradient(135deg,var(--il-chrome-primary),var(--il-chrome-primary-h));color:#fff;border-radius:14px;padding:22px;margin:18px 0;';
   el.innerHTML = `
     <p style="font-size:16px;line-height:1.7;margin:0;">${escapeHtml(exitMsg.message)}</p>
     <button onclick="restartConversation()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:999px;padding:10px 22px;font-size:13px;cursor:pointer;margin-top:16px;">${_ilux('wh.more')}</button>
@@ -7546,28 +7476,28 @@ function appendExchange(thread, reply, question, safetyHtml) {
   ilScrollHistory();
 }
 async function updateMusicForEmotion(data) {
+  // WORDS ARE THE ALWAYS-AVAILABLE MOOD SIGNAL. Every turn the server reads the
+  // person's own message and returns a coarse routing mode (sound_mode) plus a
+  // zenisys_music.emotion (never a clinical label): just which lane meets them,
+  // deep-calm for activated/panicky words, lifting for flat/down words, calm for
+  // settled words. The face is an ENHANCER, never a gatekeeper: if it disagrees
+  // and is confident, it can override the routing emotion for this turn.
   const textEmotion = (data.zenisys_music || {}).emotion || 'calm';
   const faceEmo = currentFaceEmotion || '';
   const emotionToUse = (faceEmo && faceEmo !== 'neutral' && faceEmo !== textEmotion) ? faceEmo : textEmotion;
-  const risk = (data.risk || '') ;
-  // Crossfade to the lane that MEETS this person: deep-calm to bring an
-  // agitated person down, lifting to bring a flat/depressed person up, then
-  // gently ease toward spa. The person picks the door by how they are.
-  try {
-    const res = await fetch('/api/zenisys/ambient?emotion=' + encodeURIComponent(emotionToUse)
-                            + '&risk=' + encodeURIComponent(risk));
-    const d = await res.json();
-    const tracks = d.tracks || [];
-    if (tracks.length) {
-      ambientTracks = tracks;
-      ambientIndex = 0;
-      switchAmbient(tracks[0].url, tracks[0].name);
-      // After the proven window, ease toward the calmer "then" lane.
-      if (d.then && d.then.length && (d.transition_after_seconds || 0) > 0) {
-        scheduleSpaTransition(d.then, d.transition_after_seconds * 1000);
-      }
-    }
-  } catch (e) {}
+  // Route the mood-derived lane through the SAME path the facial loop uses
+  // (steerLaneFromMode -> adaptiveLaneNow + switchAmbient). This is what makes
+  // the words actually move the music: it updates adaptiveLaneNow so the 2.5s
+  // adaptive loop stays in agreement instead of overriding the word signal on
+  // its next tick, and it inherits every safeguard (one shift per 10s, manual
+  // override, userMuted, voice-duck, iso-ease). data.sound_mode (checkin) is
+  // preferred; the learn route carries the mood in zenisys_music.emotion.
+  // steerLaneFromMode does the lane switch through the ambient plan and, when
+  // that plan carries a proven attention-then-calm window, schedules the ease
+  // into the calmer lane itself, so a single path owns the arrival transition
+  // too. The face emotion, when confident and different, steers this turn.
+  const moodMode = data.sound_mode || emotionToUse;
+  try { steerLaneFromMode(moodMode); } catch (e) {}
 }
 async function continueConversation() {
   const answerBox = document.getElementById('message') || document.getElementById('conv-answer');
@@ -8023,17 +7953,17 @@ CLINICAL_HANDOFF_PAGE = r"""
   <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to a Care Professional</title>
   <style>
-    :root { --ink:#2a1e14; --muted:#99673e; --line:#e8dcc8; --soft:#f5eddc; --cream:#faf5ec; --card:#fffdf8;
+    :root { --ink:#1f2a28; --muted:#52655e; --line:#d9e4e0; --soft:#e6efec; --cream:#eef3f2; --card:#fbfdfc;
             --urgent:#b84a44; --amber:#c56a2c; --dusk:#33567c;
             --green:#c56a2c; --blue:#33567c; --legal:#c56a2c; --legal2:#c56a2c; }
     * { box-sizing:border-box; }
-    html { background:#faf5ec; }
+    html { background:#eef3f2; }
     body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:var(--cream); position:relative; }
     /* FOUNDER DESIGN: his photograph as a faint warm glow behind the opening,
        fading to solid cream before the working sections, so reading is easy. */
     .glow { position:absolute; top:0; left:0; right:0; height:min(92vh, 860px); overflow:hidden; z-index:0; pointer-events:none; }
     .glow .ph { position:absolute; top:0; left:0; right:0; bottom:0; background:url('/scenes/photo_2_sunset_trees.jpg') center top / cover no-repeat; opacity:0.25; }
-    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(250,245,236,0) 0%, rgba(250,245,236,0.2) 45%, rgba(250,245,236,0.7) 72%, rgba(250,245,236,1) 94%); }
+    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(238,243,242,0) 0%, rgba(238,243,242,0.2) 45%, rgba(238,243,242,0.7) 72%, rgba(238,243,242,1) 94%); }
     header, main { position:relative; z-index:1; }
     main { padding:10px 6vw 30px; max-width:820px; margin:0 auto; }
     h1, h2, .whisper { font-family:Georgia, 'Times New Roman', serif; font-weight:400; }
@@ -8107,7 +8037,7 @@ CLINICAL_HANDOFF_PAGE = r"""
     <h1 class="promise" id="chooser-title">Reaching a real person for your care</h1>
     <p class="intro-sub" id="chooser-sub">Before anything is shared, here is exactly who you may reach and what is protected. Nothing leaves this page until you read it and choose to send it.</p>
     <div id="pro-choices">
-        <div id="pro-suggestion" style="display:none;background:#f8f5f2;border:1px solid #e6d6c8;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#6a402c;margin-bottom:12px;"></div>
+        <div id="pro-suggestion" style="display:none;background:#eef4f2;border:1px solid #cfe2dc;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#3a4a46;margin-bottom:12px;"></div>
         <button type="button" class="pro-btn" data-role="crisis_counselor" data-pro="Crisis-trained counselor" onclick="pickPro(this)"><b>Crisis-trained counselor</b><span>Immediate emotional support for this moment. Not a prescriber.</span></button>
         <button type="button" class="pro-btn" data-role="therapist" data-pro="Therapist / licensed counselor" onclick="pickPro(this)"><b>Therapist / licensed counselor</b><span>Talk-based support and ongoing coping work.</span></button>
         <button type="button" class="pro-btn" data-role="psychiatrist" data-pro="Psychiatrist" onclick="pickPro(this)"><b>Psychiatrist</b><span>A medical doctor who can evaluate symptoms and, where appropriate, manage medication.</span></button>
@@ -8308,17 +8238,17 @@ LEGAL_HANDOFF_PAGE = r"""
   <link rel="icon" href="data:,">
   <title>InnerLight &mdash; Connecting You to Legal Help</title>
   <style>
-    :root { --ink:#2a1e14; --muted:#99673e; --line:#e8dcc8; --soft:#f5eddc; --cream:#faf5ec; --card:#fffdf8;
+    :root { --ink:#1f2a28; --muted:#52655e; --line:#d9e4e0; --soft:#e6efec; --cream:#eef3f2; --card:#fbfdfc;
             --urgent:#b84a44; --amber:#c56a2c; --dusk:#33567c;
             --green:#c56a2c; --blue:#33567c; --legal:#c56a2c; --legal2:#c56a2c; }
     * { box-sizing:border-box; }
-    html { background:#faf5ec; }
+    html { background:#eef3f2; }
     body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:var(--cream); position:relative; }
     /* FOUNDER DESIGN: his photograph as a faint warm glow behind the opening,
        fading to solid cream before the working sections, so reading is easy. */
     .glow { position:absolute; top:0; left:0; right:0; height:min(92vh, 860px); overflow:hidden; z-index:0; pointer-events:none; }
     .glow .ph { position:absolute; top:0; left:0; right:0; bottom:0; background:url('/scenes/photo_6_golden_horizon.jpg') center top / cover no-repeat; opacity:0.25; }
-    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(250,245,236,0) 0%, rgba(250,245,236,0.2) 45%, rgba(250,245,236,0.7) 72%, rgba(250,245,236,1) 94%); }
+    .glow .fade { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(180deg, rgba(238,243,242,0) 0%, rgba(238,243,242,0.2) 45%, rgba(238,243,242,0.7) 72%, rgba(238,243,242,1) 94%); }
     header, main { position:relative; z-index:1; }
     main { padding:10px 6vw 30px; max-width:820px; margin:0 auto; }
     h1, h2, .whisper { font-family:Georgia, 'Times New Roman', serif; font-weight:400; }
@@ -8478,7 +8408,7 @@ LEGAL_HANDOFF_PAGE = r"""
     .res { display:block; text-decoration:none; border:1px solid #e3d2ba; border-radius:14px; padding:13px 15px;
            background:#fffdf8; color:#33567c; transition:border-color 0.2s ease, box-shadow 0.2s ease; }
     .res:hover { border-color:#c56a2c; box-shadow:0 4px 14px rgba(197,106,44,0.14); }
-    .res span { display:block; font-size:12.5px; color:#99673e; margin-top:4px; }
+    .res span { display:block; font-size:12.5px; color:#52655e; margin-top:4px; }
     @media (prefers-reduced-motion: reduce){ .res { transition:none; } }
   </style>
   <script>
@@ -10071,15 +10001,27 @@ def console():
     return render_template_string(PAGE)
 
 
-# Crisis handoff pages, localized (Spanish / Chinese) with English fallback.
+# Crisis handoff pages, localized with English fallback. The loader iterates
+# EVERY advertised language (_PAGE_LANGS) so it stays in lockstep with the
+# language picker and the info-page loader — no advertised language can be
+# left out of the handoff loader (a missing language there would silently
+# serve English even after a native-reviewed handoff file is committed).
+# Files not yet authored simply leave that language's handoff empty and the
+# page falls back to English; the crisis/safety numbers inside the handoff
+# template are deterministic and never machine-translated at runtime.
 _HANDOFF_I18N = {}
 def _load_handoff_i18n():
     import os as _os, json as _json
     base = _os.path.dirname(_os.path.abspath(__file__))
-    for lg in ("es", "zh", "hi", "pa", "bn", "tl", "to"):
+    for lg in _PAGE_LANGS:
+        _HANDOFF_I18N.setdefault(lg, {})
         try:
             with open(_os.path.join(base, "i18n_handoff_%s.json" % lg), encoding="utf-8") as f:
                 _HANDOFF_I18N[lg] = _json.load(f)
+        except FileNotFoundError:
+            # Expected until a native-reviewed handoff file exists for this
+            # language; the page falls back to English. Not an error.
+            pass
         except Exception as e:
             print("[InnerLight] handoff i18n %s not loaded: %s" % (lg, e))
             _HANDOFF_I18N[lg] = {}
@@ -10866,7 +10808,15 @@ def _localized_legal_guidance(lg, ui_lang):
 
 @app.route("/api/checkin", methods=["POST"])
 def api_checkin():
-    if not _rate_ok("checkin", 40, 3600) or not _budget_ok("claude"):
+    # Per-IP abuse limit stays (cost-collapse defense). But the daily Claude
+    # budget is NO LONGER charged here at the top: doing so charged the counter
+    # on EVERY message (even ones the live voice never handled, and even with no
+    # key), drained the cap far too fast, and — worst of all — returned a "busy"
+    # 429 that turned a person in crisis away (a dead end, forbidden by
+    # Principle 1). The Claude budget is now charged only around the REAL model
+    # call below, and when the cap is reached the request proceeds to the warm
+    # built-in fallback instead of a 429.
+    if not _rate_ok("checkin", 40, 3600):
         return _gentle_429()
     init_db()
     data = request.get_json(force=True) or {}
@@ -10953,17 +10903,47 @@ def api_checkin():
     substitution_signal = bool(_sig and _sig.get("substitution"))
     if _sig and _sig.get("crisis") and risk in ("low", "moderate"):
         risk = "high"
-    smart = comprehension_engine.respond(
-        user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
-        client_time=str(data.get("client_time", ""))[:80],
-    )
-    if smart:
+    # HYBRID: the live voice (AI = the live Anthropic Claude model) is PRIMARY;
+    # the built-in lines are only a fallback. We charge the daily Claude budget
+    # ONLY when we actually make a live call (a key is configured AND there is
+    # budget room). No key -> no spend, no budget charge. Cap reached -> we do
+    # NOT turn the person away; we fall through to the warm built-in fallback
+    # and mark the reason so The Watch can see it.
+    smart = None
+    _live_reason = ""
+    _live_on = comprehension_engine.available()
+    _budget_blocked = False
+    if _live_on:
+        # ATOMIC check-and-charge: _budget_try both checks room and charges the
+        # one live call under a single lock, so two concurrent requests can no
+        # longer both slip past the cap (closes the old room-then-charge gap).
+        if _budget_try("claude"):
+            smart = comprehension_engine.respond(
+                user_text=message, history=history, risk=risk, face_emotion=face_emo, ui_lang=ui_lang,
+                client_time=str(data.get("client_time", ""))[:80],
+            )
+            # respond() may have made a SECOND real call (over_the_line rewrite
+            # retry). Charge the extra real call(s) so the counter reflects true
+            # API spend; capped at the ceiling, never a dead end for the person.
+            if isinstance(smart, dict) and int(smart.get("calls", 1) or 0) > 1:
+                _budget_charge_extra("claude", int(smart["calls"]) - 1)
+        else:
+            _budget_blocked = True
+    _live_reason = smart.get("reason", "") if isinstance(smart, dict) else ""
+    if smart and smart.get("response"):
+        _mark_ai_source("live")
         initial_conv = {"response": smart["response"], "question": smart.get("question", "")}
     elif ui_lang != "en":
         # The language promise holds even on failure: an honest in-language
         # line instead of the English-only local engine.
+        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "noneng", _live_reason)
+        _mark_ai_source(_bucket, _reason)
+        print(f"[checkin] fallback: built-in words (non-English), reason={_reason}")
         initial_conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
+        _bucket, _reason = _classify_ai_fallback(_live_on, _budget_blocked, "en", _live_reason)
+        _mark_ai_source(_bucket, _reason)
+        print(f"[checkin] fallback: built-in words, reason={_reason}")
         initial_conv = get_conversation_engine().respond(
             user_text=message, face_emotion=face_emo, risk=risk,
         )
@@ -11261,15 +11241,39 @@ def api_innerlight_learn():
     if _sig_l and _sig_l.get("crisis") and learn_risk in ("low", "moderate"):
         learn_risk = "high"
         learned["risk"] = "high"
-    smart_l = comprehension_engine.respond(
-        user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
-        client_time=str(data.get("client_time", ""))[:80],
-    )
-    if smart_l:
+    # HYBRID (same as /api/checkin): live voice is PRIMARY, built-in lines are
+    # only the fallback. Charge the daily Claude budget ONLY for a real live
+    # call (key present AND budget room). Cap reached -> proceed to the warm
+    # built-in fallback, never a dead end.
+    smart_l = None
+    _live_reason_l = ""
+    _live_on_l = comprehension_engine.available()
+    _budget_blocked_l = False
+    if _live_on_l:
+        # ATOMIC check-and-charge (same as /api/checkin) — no room-then-charge gap.
+        if _budget_try("claude"):
+            smart_l = comprehension_engine.respond(
+                user_text=answer, history=history_l, risk=learn_risk, face_emotion=face_emotion, ui_lang=ui_lang,
+                client_time=str(data.get("client_time", ""))[:80],
+            )
+            # Charge any extra real call an over_the_line rewrite retry made.
+            if isinstance(smart_l, dict) and int(smart_l.get("calls", 1) or 0) > 1:
+                _budget_charge_extra("claude", int(smart_l["calls"]) - 1)
+        else:
+            _budget_blocked_l = True
+    _live_reason_l = smart_l.get("reason", "") if isinstance(smart_l, dict) else ""
+    if smart_l and smart_l.get("response"):
+        _mark_ai_source("live")
         conv = {"response": smart_l["response"], "question": smart_l.get("question", "")}
     elif ui_lang != "en":
+        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "noneng", _live_reason_l)
+        _mark_ai_source(_bucket_l, _reason_l)
+        print(f"[learn] fallback: built-in words (non-English), reason={_reason_l}")
         conv = {"response": _NOEN_FALLBACK[ui_lang], "question": ""}
     else:
+        _bucket_l, _reason_l = _classify_ai_fallback(_live_on_l, _budget_blocked_l, "en", _live_reason_l)
+        _mark_ai_source(_bucket_l, _reason_l)
+        print(f"[learn] fallback: built-in words, reason={_reason_l}")
         conv = get_conversation_engine().respond(
             user_text=answer,
             face_emotion=face_emotion,
@@ -11622,12 +11626,30 @@ def _rate_ok(scope, limit, window_sec):
 _BUDGET = {"day": "", "counts": {}}
 _BUDGET_LOCK = threading.Lock()
 _BUDGET_CAPS = {
-    "claude":   int(os.environ.get("CAP_CLAUDE_PER_DAY",   "1500")),
+    # CAP_CLAUDE_PER_DAY = the maximum number of LIVE warm-voice AI replies
+    # (real Anthropic Claude calls) served in a single day. Once this many live
+    # replies have gone out, everyone after that is still answered warmly — the
+    # built-in warm fallback lines take over — but the replies are no longer
+    # freshly written by the live voice until the counter resets at midnight UTC.
+    # It is charged ONLY when a real live call is actually made (see _budget_try);
+    # no key or a reached cap never turns a person away (no dead ends).
+    # This default (6000) was raised from 1500 so far more people get the live
+    # warm voice. It stays ENV-OVERRIDABLE: the founder can set CAP_CLAUDE_PER_DAY
+    # in the Render dashboard at any time to go higher or lower — no code change,
+    # no redeploy of new code needed. Raising the number lets more people reach
+    # the live voice each day (at higher API cost); lowering it protects spend.
+    "claude":   int(os.environ.get("CAP_CLAUDE_PER_DAY",   "6000")),
     "deepgram": int(os.environ.get("CAP_DEEPGRAM_PER_DAY", "300")),
     "voice":    int(os.environ.get("CAP_VOICE_PER_DAY",    "600")),
     "connect":  int(os.environ.get("CAP_CONNECT_PER_DAY",  "60")),
     "memory":   int(os.environ.get("CAP_MEMORY_PER_DAY",   "300")),
 }
+# Soft-warn threshold (percent of cap) so The Watch can show "near the daily
+# limit" before the live voice actually runs out. Default 80 percent.
+try:
+    _CAP_CLAUDE_WARN_AT = max(1, min(100, int(os.environ.get("CAP_CLAUDE_WARN_AT", "80"))))
+except Exception:
+    _CAP_CLAUDE_WARN_AT = 80
 
 def _budget_ok(kind):
     """Global daily spend ceiling per costly service."""
@@ -11641,6 +11663,137 @@ def _budget_ok(kind):
             return False
         _BUDGET["counts"][kind] = c + 1
     return True
+
+def _budget_room(kind):
+    """True if there is still daily budget room for `kind` WITHOUT consuming it.
+    Used to decide whether to attempt a real Claude call; the spend itself is
+    charged separately by _budget_ok only when the call is actually made."""
+    day = time.strftime("%Y-%m-%d")
+    with _BUDGET_LOCK:
+        if _BUDGET["day"] != day:
+            _BUDGET["day"] = day; _BUDGET["counts"] = {}
+        c = _BUDGET["counts"].get(kind, 0)
+    return c < _BUDGET_CAPS.get(kind, 10**9)
+
+def _budget_try(kind):
+    """Atomic check-and-charge for the daily spend ceiling. Under a SINGLE
+    _BUDGET_LOCK acquisition: roll the day if needed, read the count, and if
+    there is room, charge one and return True; otherwise return False WITHOUT
+    charging. This closes the check-then-charge (TOCTOU) gap that _budget_room()
+    followed by _budget_ok() left open, where two concurrent requests could each
+    see room and each charge past the cap. Use this at the live-call decision
+    point so the room check and the charge are one indivisible step."""
+    day = time.strftime("%Y-%m-%d")
+    with _BUDGET_LOCK:
+        if _BUDGET["day"] != day:
+            _BUDGET["day"] = day; _BUDGET["counts"] = {}
+        c = _BUDGET["counts"].get(kind, 0)
+        if c >= _BUDGET_CAPS.get(kind, 10**9):
+            _abuse_mark()
+            return False
+        _BUDGET["counts"][kind] = c + 1
+    return True
+
+def _budget_charge_extra(kind, n=1):
+    """Record additional real live calls beyond the first that _budget_try()
+    already charged (used for the over_the_line rewrite retry, which makes a
+    SECOND real API call). Charges up to `n` more, but NEVER past the ceiling
+    (recorded count is capped at the cap) so telemetry stays honest without a
+    retry ever turning into a dead end. Returns how many were actually charged."""
+    if n <= 0:
+        return 0
+    day = time.strftime("%Y-%m-%d")
+    charged = 0
+    with _BUDGET_LOCK:
+        if _BUDGET["day"] != day:
+            _BUDGET["day"] = day; _BUDGET["counts"] = {}
+        cap = _BUDGET_CAPS.get(kind, 10**9)
+        c = _BUDGET["counts"].get(kind, 0)
+        room = max(0, cap - c)
+        charged = min(n, room)
+        if charged:
+            _BUDGET["counts"][kind] = c + charged
+    return charged
+
+# ---------------------------------------------------------------------------
+# LIVE VOICE vs. BUILT-IN WORDS — daily telemetry (Principle 15: honest on
+# failure, observable). Counts ONLY: how many replies came from the live AI
+# ("live") vs. the built-in fallback lines, and a short reason for each
+# fallback. It NEVER stores or logs the API key, a message, or any reply
+# content — counts and a one-word reason string only.
+# ---------------------------------------------------------------------------
+_AI_SOURCE = {
+    "day": "",
+    "counts": {
+        "live": 0,
+        "fallback_no_key": 0,
+        "fallback_api_error": 0,
+        "fallback_over_line": 0,
+        "fallback_budget": 0,
+        "fallback_noneng": 0,
+        "fallback_other": 0,
+    },
+    "last_fallback_reason": "",
+    "last_fallback_at": "",
+}
+_AI_SOURCE_LOCK = threading.Lock()
+
+def _mark_ai_source(kind, reason=""):
+    """Record one reply's source for the day. `kind` is 'live' or one of the
+    fallback_* buckets. `reason` is a short human-readable string for the Watch
+    (never a message, never the key)."""
+    day = time.strftime("%Y-%m-%d")
+    with _AI_SOURCE_LOCK:
+        if _AI_SOURCE["day"] != day:
+            _AI_SOURCE["day"] = day
+            _AI_SOURCE["counts"] = {k: 0 for k in _AI_SOURCE["counts"]}
+            _AI_SOURCE["last_fallback_reason"] = ""
+            _AI_SOURCE["last_fallback_at"] = ""
+        if kind not in _AI_SOURCE["counts"]:
+            kind = "fallback_other"
+        _AI_SOURCE["counts"][kind] += 1
+        if kind != "live":
+            _AI_SOURCE["last_fallback_reason"] = str(reason or kind)[:80]
+            _AI_SOURCE["last_fallback_at"] = time.strftime("%H:%M UTC")
+
+# Map comprehension_engine.last_fallback_reason() -> our fallback bucket.
+_AI_FALLBACK_BUCKET = {
+    "no_key": "fallback_no_key",
+    "api_error": "fallback_api_error",
+    "over_line": "fallback_over_line",
+    "empty": "fallback_api_error",
+    "": "fallback_other",
+}
+
+def _classify_ai_fallback(live_on, budget_blocked, lane="en", req_reason=None):
+    """Decide which fallback bucket a reply belongs to and a short reason
+    string, given the request's live-voice state. Returns (bucket, reason).
+    Order matters: no key first (no live call was made and no spend occurred),
+    then a reached daily budget, then the language lane, then whatever the
+    live engine reported for a real attempt that failed.
+
+    `req_reason` is the per-request reason returned by comprehension_engine.
+    respond() for THIS request. Passing it avoids reading the module-global
+    last_fallback_reason(), which under concurrency could belong to a different
+    request. We fall back to the global only if no per-request reason was given."""
+    if not live_on:
+        # The live voice was never switched on for this deploy (no key set).
+        return "fallback_no_key", "no_key"
+    if budget_blocked:
+        return "fallback_budget", "daily live-voice limit reached"
+    # A real live attempt was made and returned None (or non-English lane).
+    if req_reason is not None:
+        reason = req_reason
+    else:
+        try:
+            reason = comprehension_engine.last_fallback_reason()
+        except Exception:
+            reason = ""
+    if lane == "noneng":
+        # Non-English uses the honest in-language backup line regardless of the
+        # specific engine reason; still record the underlying reason for detail.
+        return "fallback_noneng", (reason or "non-English backup")
+    return _AI_FALLBACK_BUCKET.get(reason, "fallback_other"), (reason or "unknown")
 
 def _abuse_mark():
     day = time.strftime("%Y-%m-%d")
@@ -11656,10 +11809,25 @@ def _gentle_429():
 def admin_abuse():
     if not session.get("founder_ok"):
         return jsonify({"error": "auth"}), 403
+    today = time.strftime("%Y-%m-%d")
     with _BUDGET_LOCK:
         counts = dict(_BUDGET.get("counts", {}))
-    return jsonify({"blocked_today": _ABUSE.get("blocked", 0) if _ABUSE.get("day")==time.strftime("%Y-%m-%d") else 0,
-                    "budget_used": counts, "budget_caps": _BUDGET_CAPS})
+    claude_used = int(counts.get("claude", 0))
+    claude_cap = int(_BUDGET_CAPS.get("claude", 0)) or 1
+    claude_pct = round(100.0 * claude_used / claude_cap, 1)
+    near_cap = claude_pct >= _CAP_CLAUDE_WARN_AT
+    with _AI_SOURCE_LOCK:
+        ai_counts = dict(_AI_SOURCE.get("counts", {})) if _AI_SOURCE.get("day") == today else {k: 0 for k in _AI_SOURCE.get("counts", {})}
+        last_reason = _AI_SOURCE.get("last_fallback_reason", "") if _AI_SOURCE.get("day") == today else ""
+        last_at = _AI_SOURCE.get("last_fallback_at", "") if _AI_SOURCE.get("day") == today else ""
+    return jsonify({"blocked_today": _ABUSE.get("blocked", 0) if _ABUSE.get("day")==today else 0,
+                    "budget_used": counts, "budget_caps": _BUDGET_CAPS,
+                    "ai_source": ai_counts,
+                    "last_fallback_reason": last_reason,
+                    "last_fallback_at": last_at,
+                    "claude_pct_of_cap": claude_pct,
+                    "claude_warn_at": _CAP_CLAUDE_WARN_AT,
+                    "near_cap": near_cap})
 
 
 # ===========================================================================
@@ -12201,6 +12369,20 @@ app.secret_key = hashlib.sha256(
     ("innerlight-founder-session::" + os.environ.get("ADMIN_KEY", "unset")).encode()
 ).hexdigest()
 
+# SESSION COOKIE HARDENING (security audit — safe, code-only). InnerLight is
+# served over HTTPS on Render, so mark the session cookie so browsers only send
+# it over HTTPS (Secure), keep JavaScript from reading it (HttpOnly, blunts XSS
+# cookie theft), and send it only on same-site navigations (SameSite=Lax, blunts
+# CSRF). Set on app.config so it applies to EVERY session cookie the app issues.
+# Note: over plain http (as the smoke test's test_client uses) Secure only stops
+# the browser from resending the cookie — it does not block any route, so the
+# smoke test's status-code assertions still pass.
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+
 
 @app.route("/api/metrics/event", methods=["POST"])
 def metrics_event():
@@ -12710,7 +12892,7 @@ function setInstrument(id){
   var st=document.getElementById('inst-status'); if(st) st.textContent=INSTNAMES[id]+' ready.';
 }
 function hideGate(){ var g=document.getElementById('startgate'); if(g){ g.style.display='none'; g.style.pointerEvents='none'; } }
-var useNative=false, nativeCtx=null, nativeVoices={}, nativeWave='triangle';
+var useNative=false, nativeCtx=null, nativeVoices={}, nativeWave='triangle', nativeMaster=null;
 async function unlock(){
   hideGate();
   if(ready) return;
@@ -12733,6 +12915,13 @@ async function unlock(){
     var AC=window.AudioContext||window.webkitAudioContext;
     nativeCtx=new AC(); await nativeCtx.resume();
     useNative=true; ready=true;
+    // Master bus: every native note connects here, and this bus feeds BOTH the
+    // speakers AND the recorder tap, so Save captures exactly what you hear.
+    nativeMaster=nativeCtx.createGain(); nativeMaster.gain.value=1;
+    nativeMaster.connect(nativeCtx.destination);
+    // Recording tap for the built-in path (this is what was missing before —
+    // recDest only existed on the Tone.js path, so Save silently did nothing).
+    try{ recDest=nativeCtx.createMediaStreamDestination(); nativeMaster.connect(recDest); }catch(e){ recDest=null; }
     if(st) st.textContent='Piano ready (built-in sound) — press a key.';
   }catch(e){ if(st) st.textContent='Your browser blocked audio. Try a different browser or unblock sound for this site.'; }
 }
@@ -12754,7 +12943,7 @@ function nativeOn(note){
   if(!nativeCtx||nativeVoices[note]) return;
   var v=VOICES[nativeInst]||VOICES.piano, t=nativeCtx.currentTime;
   var vol=(+document.getElementById('k-vol').value/100)*0.34;
-  var out=nativeCtx.createGain(); out.gain.value=1; out.connect(nativeCtx.destination);
+  var out=nativeCtx.createGain(); out.gain.value=1; out.connect(nativeMaster||nativeCtx.destination);
   var base=noteToFreq(note); var oscs=[];
   v.partials.forEach(function(p){
     var o=nativeCtx.createOscillator(), g=nativeCtx.createGain();
@@ -12772,6 +12961,24 @@ function nativeOff(note){
   var vv=nativeVoices[note]; if(!vv) return; delete nativeVoices[note];
   var t=nativeCtx.currentTime;
   try{ vv.oscs.forEach(function(x){ x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(Math.max(0.0002,x.g.gain.value),t); x.g.gain.exponentialRampToValueAtTime(0.0002, t+vv.rel); x.o.stop(t+vv.rel+0.05); }); }catch(e){}
+}
+// Schedule a single note to sound at absolute time `at` for `dur` seconds at
+// `peak` gain — used by the built-in Play arrangement so it records cleanly
+// through nativeMaster -> recDest.
+function nativeSchedule(note, at, dur, peak){
+  if(!nativeCtx) return;
+  var v=VOICES[nativeInst]||VOICES.piano;
+  var base=noteToFreq(note);
+  var out=nativeCtx.createGain(); out.gain.value=1; out.connect(nativeMaster||nativeCtx.destination);
+  v.partials.forEach(function(p){
+    var o=nativeCtx.createOscillator(), g=nativeCtx.createGain();
+    o.type=p[2]; o.frequency.value=base*p[0];
+    var pk=Math.max(0.0002, peak*p[1]);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(pk, at+v.atk);
+    g.gain.exponentialRampToValueAtTime(0.0002, at+Math.max(v.atk+0.05, dur));
+    o.connect(g); g.connect(out); o.start(at); o.stop(at+dur+0.1);
+  });
 }
 // Expose unlock so the gate's INLINE onclick (which works even if this script
 // errored earlier) can call it. If the user already tapped before this script
@@ -12880,7 +13087,7 @@ document.getElementById('octdown').addEventListener('click', function(){ octave=
 document.getElementById('octup').addEventListener('click', function(){ octave=Math.min(5,octave+1); buildPiano(); document.getElementById('oct-label').textContent='Octaves '+octave+'-'+(octave+1); });
 
 // ============ knobs ============
-function applyKnobs(){ if(!ready)return; if(reverb)reverb.wet.value=+document.getElementById('k-verb').value/100; Tone.getDestination().volume.value=(+document.getElementById('k-vol').value/100)*24-16; Tone.Transport.bpm.value=+document.getElementById('k-bpm').value; }
+function applyKnobs(){ if(!ready)return; if(useNative||!window.Tone){ if(nativeMaster){ try{ nativeMaster.gain.value=(+document.getElementById('k-vol').value/100); }catch(e){} } return; } try{ if(reverb)reverb.wet.value=+document.getElementById('k-verb').value/100; Tone.getDestination().volume.value=(+document.getElementById('k-vol').value/100)*24-16; Tone.Transport.bpm.value=+document.getElementById('k-bpm').value; }catch(e){} }
 ['k-verb','k-vol','k-bpm'].forEach(function(id){ document.getElementById(id).addEventListener('input', applyKnobs); });
 
 // ============ learn a melody ============
@@ -12972,22 +13179,64 @@ document.getElementById('beat-stop').addEventListener('click', function(){ if(be
 var rec={on:false,events:[],start:0}, enriched=null, estyle='gentle', recorder=null, chunks=[];
 document.querySelectorAll('.estyle').forEach(function(b){ b.addEventListener('click',function(){document.querySelectorAll('.estyle').forEach(function(x){x.classList.remove('on');});b.classList.add('on');estyle=b.dataset.style;}); });
 document.getElementById('rec-btn').addEventListener('click', async function(){ await unlock(); var btn=this;
-  if(rec.on){ rec.on=false; btn.textContent='\u25CF Record'; btn.className='rbtn rec-start'; document.getElementById('rec-dot').className='dot'; document.getElementById('rec-status').textContent=rec.events.filter(function(e){return e.type==='on';}).length+' notes recorded'; return; }
-  rec={on:true,events:[],start:Tone.now()}; btn.textContent='\u25A0 Stop'; btn.className='rbtn rec-stop'; document.getElementById('rec-dot').className='dot live'; document.getElementById('rec-status').textContent='recording... play your melody';
+  if(!ready){ document.getElementById('rec-status').textContent='Audio is not on yet — tap the piano once to start sound, then Record.'; return; }
+  if(rec.on){ rec.on=false; btn.textContent='\u25CF Record'; btn.className='rbtn rec-start'; document.getElementById('rec-dot').className='dot'; var n=rec.events.filter(function(e){return e.type==='on';}).length; document.getElementById('rec-status').textContent=(n? (n+' notes recorded — Enrich, then Play.') : 'No notes were played — press Record and play some keys.'); return; }
+  rec={on:true,events:[],start:_now()}; btn.textContent='\u25A0 Stop'; btn.className='rbtn rec-stop'; document.getElementById('rec-dot').className='dot live'; document.getElementById('rec-status').textContent='recording... play your melody';
 });
 document.getElementById('enrich-btn').addEventListener('click', async function(){ await unlock(); var ons=rec.events.filter(function(e){return e.type==='on';}); if(!ons.length){ document.getElementById('enrich-status').textContent='Record a melody first.'; return; } var counts={}; ons.forEach(function(e){var pc=NOTES.indexOf(e.note.replace(/\d/,''))%12; counts[pc]=(counts[pc]||0)+1;}); var key=0,bc=-1; Object.keys(counts).forEach(function(pc){if(counts[pc]>bc){bc=counts[pc];key=+pc;}}); enriched={key:key,style:estyle,melody:ons}; document.getElementById('enrich-status').textContent='Done — press Play to hear your fuller song, then Save.'; });
+// Shared recorder tap. Returns true if capture actually started, false (and
+// tells the founder plainly) if this browser/path cannot record. We NEVER show
+// a Save link unless a real, non-empty file was produced (Principle 13).
+function startRec(){
+  chunks=[];
+  if(!recDest || !recDest.stream){ document.getElementById('enrich-status').textContent='Playing your song (this browser will not let it be saved to a file — the sound still plays).'; return false; }
+  if(typeof MediaRecorder==='undefined'){ document.getElementById('enrich-status').textContent='Playing your song (this browser cannot save audio files — the sound still plays).'; return false; }
+  try{
+    var mime=(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))?'audio/webm':'';
+    recorder=mime?new MediaRecorder(recDest.stream,{mimeType:mime}):new MediaRecorder(recDest.stream);
+    recorder.ondataavailable=function(e){ if(e.data && e.data.size>0) chunks.push(e.data); };
+    recorder.onstop=function(){
+      var sw=document.getElementById('save-wrap'); sw.innerHTML='';
+      var total=chunks.reduce(function(a,c){return a+(c.size||0);},0);
+      if(!total){ document.getElementById('enrich-status').textContent='Nothing was captured to save — try Play again after enriching.'; return; }
+      var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'}));
+      var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='\u2b07 Save your song';
+      sw.appendChild(a);
+      document.getElementById('enrich-status').textContent='Your song is ready — press Save your song.';
+    };
+    recorder.start();
+    return true;
+  }catch(e){ recorder=null; document.getElementById('enrich-status').textContent='Playing your song (saving to a file is not available in this browser — the sound still plays).'; return false; }
+}
+function stopRec(){ try{ if(recorder && recorder.state!=='inactive') recorder.stop(); }catch(e){} }
 document.getElementById('play-btn').addEventListener('click', async function(){ await unlock(); if(!enriched){document.getElementById('enrich-status').textContent='Enrich first.';return;}
-  var key=enriched.key, bpm={gentle:60,fuller:74,cinematic:66,upbeat:96}[enriched.style], beat=60/bpm, now=Tone.now()+0.1;
-  var pad=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); pad.volume.value=-16;
-  var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-8;
-  chunks=[]; try{ recorder=new MediaRecorder(recDest.stream); recorder.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);}; recorder.onstop=function(){ var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'})); var a=document.createElement('a'); a.href=url; a.download='zenisys-song.webm'; a.className='save'; a.textContent='\u2b07 Save your song'; var sw=document.getElementById('save-wrap'); sw.innerHTML=''; sw.appendChild(a); }; recorder.start(); }catch(e){}
+  if(!ready){ document.getElementById('enrich-status').textContent='Audio is not on yet — tap the piano once to start sound, then Play.'; return; }
+  var key=enriched.key, bpm={gentle:60,fuller:74,cinematic:66,upbeat:96}[enriched.style], beat=60/bpm;
   var roots=[0,5,7,5]; var sc=[0,2,4,5,7,9,11];
-  roots.forEach(function(deg,i){ var rootMidi=60+key+sc[deg%7]; var chord=[0,2,4].map(function(s){return nm(rootMidi+sc[(deg+s)%7]);}); pad.triggerAttackRelease(chord,beat*3.6,now+i*beat*4); bass.triggerAttackRelease(nm(rootMidi-12),beat*3.6,now+i*beat*4); });
-  enriched.melody.forEach(function(m){ try{synth.triggerAttackRelease(m.note,'2n',now+(m.t||0));}catch(e){} });
-  var eb=(curBeat!=='none')?curBeat:({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]); if(BEATS[eb]){ initDrums(); var pat=BEATS[eb]; for(var s=0;s<roots.length*16;s++){ var st=s%16,tt=now+s*(beat/4); if(pat.k[st])drums.kick.triggerAttackRelease('C1','8n',tt); if(pat.s[st])drums.snare.triggerAttackRelease('8n',tt); if(pat.h[st])drums.hat.triggerAttackRelease('16n',tt);} }
+  var recording=startRec();
+  document.getElementById('enrich-status').textContent=recording?'Playing your song (recording to a file)...':document.getElementById('enrich-status').textContent;
+  if(useNative){
+    // Built-in Web Audio arrangement — mirrors the Tone.js version so the
+    // founder hears (and saves) a fuller song even when the Tone CDN is blocked.
+    var t0=nativeCtx.currentTime+0.1;
+    roots.forEach(function(deg,i){
+      var rootMidi=60+key+sc[deg%7];
+      var chord=[0,2,4].map(function(s){return nm(rootMidi+sc[(deg+s)%7]);});
+      var at=t0+i*beat*4;
+      chord.forEach(function(cn){ nativeSchedule(cn, at, beat*3.6, 0.16); });
+      nativeSchedule(nm(rootMidi-12), at, beat*3.6, 0.30);
+    });
+    enriched.melody.forEach(function(m){ nativeSchedule(m.note, t0+(m.t||0), 0.9, 0.5); });
+  } else {
+    var now=Tone.now()+0.1;
+    var pad=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:1,decay:.4,sustain:.9,release:2.5}}).connect(reverb); pad.volume.value=-16;
+    var bass=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.05,decay:.3,sustain:.7,release:.8}}).connect(reverb); bass.volume.value=-8;
+    roots.forEach(function(deg,i){ var rootMidi=60+key+sc[deg%7]; var chord=[0,2,4].map(function(s){return nm(rootMidi+sc[(deg+s)%7]);}); pad.triggerAttackRelease(chord,beat*3.6,now+i*beat*4); bass.triggerAttackRelease(nm(rootMidi-12),beat*3.6,now+i*beat*4); });
+    enriched.melody.forEach(function(m){ try{synth.triggerAttackRelease(m.note,'2n',now+(m.t||0));}catch(e){} });
+    var eb=(curBeat!=='none')?curBeat:({gentle:'soft',fuller:'lofi',cinematic:'soft',upbeat:'hiphop'}[enriched.style]); if(BEATS[eb]){ initDrums(); var pat=BEATS[eb]; for(var s=0;s<roots.length*16;s++){ var st=s%16,tt=now+s*(beat/4); if(pat.k[st])drums.kick.triggerAttackRelease('C1','8n',tt); if(pat.s[st])drums.snare.triggerAttackRelease('8n',tt); if(pat.h[st])drums.hat.triggerAttackRelease('16n',tt);} }
+  }
   var dur=Math.max(roots.length*beat*4, (enriched.melody.length?Math.max.apply(null,enriched.melody.map(function(m){return m.t||0;})):0)+2);
-  setTimeout(function(){ try{recorder.stop();}catch(e){} }, (dur+1)*1000);
-  document.getElementById('enrich-status').textContent='Playing your song...';
+  if(recording){ setTimeout(stopRec, (dur+1)*1000); }
 });
 
 // ============ init ============
@@ -13205,7 +13454,9 @@ def _sim_metrics():
 
 @app.route("/admin")
 def admin_dashboard():
-    """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
+    """Founder-only operations room. Sign in through the /admin/login page (it
+    POSTs the credentials). There is no ?key= query-string login — never put a
+    secret in a URL (URLs leak into logs, history, and referrer headers)."""
     _sim_banner = ""
     if session.get("team_scope") and not session.get("founder_ok"):
         _sim_banner = ('<div style="position:sticky;top:0;z-index:9999;background:#2a3d52;color:#cfe0f0;'
@@ -13384,6 +13635,10 @@ def admin_dashboard():
    --night:#17100a; --night-2:#211508; --field:#1d1309;
    --ember:#e8a34c; --candle:#f4c977; --core:#ffe8bf;
    --accent:#e8a34c;   /* drifts slowly through warm hues over ~8 min */
+   /* SHARED CALM ACCENT — a non-brown teal/green so the biometric panel and its
+      trend line read clearly against the all-warm theme. Named for reuse: later
+      palette work (FEAT-005) can pull this same value instead of redefining it. */
+   --il-bio-accent:#5fc9a8;
    --cream:#f2e7d2; --cream-dim:rgba(242,231,210,.62); --cream-faint:rgba(242,231,210,.38);
    --hairline:rgba(232,163,76,.16);
    --serif:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
@@ -13459,6 +13714,7 @@ def admin_dashboard():
    box-shadow:0 0 16px rgba(232,163,76,.45), 0 0 3px rgba(255,232,191,.6);
    transition:width 4.5s cubic-bezier(.4,0,.2,1);animation:bandglow 7s ease-in-out infinite;}
  @keyframes bandglow{0%,100%{filter:brightness(.92);}50%{filter:brightness(1.12);}}
+ @keyframes bioPulse{0%,100%{opacity:.35;transform:scale(.85);}50%{opacity:1;transform:scale(1.15);}}
  .log{padding-top:82px;max-width:720px;margin:0 auto;}
  .log-lines{margin-top:40px;}
  .log-line{display:flex;gap:26px;align-items:baseline;padding:15px 4px;border-bottom:1px solid rgba(232,163,76,.09);
@@ -14222,6 +14478,85 @@ def admin_dashboard():
     })();
     </script>
 
+    <h2 class="ledger" data-sec="sec-voice">Live voice vs. built-in words &mdash; who is answering today</h2>
+    <div class="panel">
+    <div class="hint">Every reply comes from one of two places: the <b style="color:#f4c977;">live voice</b> (the AI &mdash; the live Anthropic model that writes a fresh reply for each person) or the <b style="color:#f4c977;">built-in words</b> (InnerLight&rsquo;s own written lines, kept only as a backup so a person is never left without an answer). The live voice should be answering almost everyone; the built-in words are the safety net. This shows today&rsquo;s tally, counts only &mdash; never anyone&rsquo;s words. If the built-in words start answering a lot, the reason is named below so you know why.</div>
+    <div id="voice-readout"><i style="color:rgba(242,231,210,.45);">Loading&hellip;</i></div>
+    </div>
+    <script>
+    (function(){
+      function esc4(s){ return String(s == null ? '' : s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function vtile(v, lbl, warm){
+        var col = warm ? '#e8534e' : '#f4c977';
+        return '<div style="flex:1;min-width:120px;background:rgba(232,163,76,.07);border:1px solid rgba(232,163,76,.18);border-radius:12px;padding:14px;text-align:center;">'
+          + '<b style="font-size:24px;color:' + col + ';font-variant-numeric:tabular-nums;">' + v + '</b>'
+          + '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,201,119,.6);margin-top:6px;">' + lbl + '</div></div>';
+      }
+      // Plain-language names for each reason the built-in words had to step in.
+      var REASONS = {
+        fallback_no_key: 'The live voice was not switched on (no key set)',
+        fallback_api_error: 'The live voice could not be reached just then',
+        fallback_over_line: 'The live voice&rsquo;s reply was held back for safety and rewritten',
+        fallback_budget: 'The daily limit for the live voice was reached',
+        fallback_noneng: 'A non-English reply used the honest backup line',
+        fallback_other: 'Backup line used'
+      };
+      async function loadVoice(){
+        try{
+          var r = await fetch('/api/admin/abuse'); if(!r.ok) return;
+          var d = await r.json();
+          var el = document.getElementById('voice-readout'); if(!el) return;
+          var s = d.ai_source || {};
+          var live = s.live || 0;
+          var fb = (s.fallback_no_key||0)+(s.fallback_api_error||0)+(s.fallback_over_line||0)
+                 +(s.fallback_budget||0)+(s.fallback_noneng||0)+(s.fallback_other||0);
+          var total = live + fb;
+          var pct = total ? Math.round(100*live/total) : 0;
+          var html = '';
+          if(d.near_cap){
+            html += '<div style="background:rgba(232,83,78,.12);border:1px solid rgba(232,83,78,.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;color:#f2d7c9;font-size:13.5px;line-height:1.5;">'
+              + '<b style="color:#e8534e;">Near the daily limit.</b> The live voice has used '
+              + esc4(d.claude_pct_of_cap) + '% of what it is allowed today (the warning line is at '
+              + esc4(d.claude_warn_at) + '%). If it reaches 100%, people are still answered &mdash; the built-in words take over &mdash; but the replies stop being freshly written until tomorrow.</div>';
+          }
+          html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;">'
+            + vtile(live, 'live-voice replies', false)
+            + vtile(fb, 'built-in-word replies', fb>0)
+            + vtile(pct + '%', 'from the live voice', false)
+            + '</div>';
+          // Plain-language cap + usage in real numbers (not just a percent), so
+          // the founder can see exactly how much of today's live-voice limit is
+          // used and what the limit is. The limit is set by CAP_CLAUDE_PER_DAY.
+          var used = (d.budget_used && d.budget_used.claude) || 0;
+          var capN = (d.budget_caps && d.budget_caps.claude) || 0;
+          if(capN){
+            html += '<div style="color:rgba(242,231,210,.6);font-size:12.5px;margin:2px 0 8px;">'
+              + esc4(used) + ' of ' + esc4(capN) + ' live warm-voice replies used today.'
+              + ' The daily limit can be raised or lowered anytime by changing CAP_CLAUDE_PER_DAY.</div>';
+          }
+          if(total===0){
+            html += '<div style="color:rgba(242,231,210,.45);font-style:italic;margin-top:6px;">No replies yet today. The tally starts at midnight (UTC).</div>';
+          }
+          if(fb>0){
+            html += '<div style="font-size:12px;color:rgba(244,201,119,.6);letter-spacing:.14em;text-transform:uppercase;margin:14px 0 4px;">Why the built-in words stepped in</div>';
+            var keys = ['fallback_no_key','fallback_api_error','fallback_over_line','fallback_budget','fallback_noneng','fallback_other'];
+            html += keys.filter(function(k){ return (s[k]||0)>0; }).map(function(k){
+              return '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(232,163,76,.12);">'
+                + '<span style="color:rgba(242,231,210,.78);">' + REASONS[k] + '</span>'
+                + '<b style="color:#e8a34c;">' + (s[k]||0) + '</b></div>';
+            }).join('');
+            if(d.last_fallback_reason){
+              html += '<div style="font-size:12px;color:rgba(242,231,210,.5);margin-top:8px;">Most recent backup at '
+                + esc4(d.last_fallback_at || '') + ' &middot; ' + esc4(d.last_fallback_reason) + '</div>';
+            }
+          }
+          el.innerHTML = html;
+        }catch(e){}
+      }
+      loadVoice();
+    })();
+    </script>
+
     <h2 class="ledger" id="security" data-sec="sec-security">Security — the watch on the walls</h2>
     <div class="panel">
     <div class="hint">Lawful active defense only &mdash; <b style="color:#f4c977;">deter, deceive, withstand, deliver-to-justice</b>.
@@ -14503,8 +14838,12 @@ def admin_dashboard():
 
     <h2 class="ledger" id="live" data-sec="sec-live">Live sessions — real-time biometric monitor</h2>
     <div class="panel">
-    <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. The small line at the right is that person&rsquo;s heart over the last minutes &mdash; a line drifting downward means a body settling. <span id="bio-clock" style="float:right;"></span></div>
-    <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Waiting for a live session…</i></div>
+    <div class="hint">Anonymous, live. Each person currently using InnerLight appears here — heart rate, calm state, and a moving trend line, updating every few seconds. No names, no words, just the signal. <span id="bio-clock" style="float:right;"></span></div>
+    <div class="bio-legend" style="display:flex;align-items:center;gap:9px;margin:2px 0 12px;padding:8px 12px;border-left:3px solid var(--il-bio-accent);background:rgba(95,201,168,.08);border-radius:0 8px 8px 0;font-size:12.5px;color:var(--cream-dim);line-height:1.5;">
+      <svg width="52" height="20" style="flex:0 0 auto;vertical-align:middle;"><polyline points="0,15 13,11 26,12 39,6 52,3" fill="none" stroke="var(--il-bio-accent)" stroke-width="2"/><circle cx="0" cy="15" r="2" fill="var(--il-bio-accent)"/><circle cx="13" cy="11" r="2" fill="var(--il-bio-accent)"/><circle cx="26" cy="12" r="2" fill="var(--il-bio-accent)"/><circle cx="39" cy="6" r="2" fill="var(--il-bio-accent)"/><circle cx="52" cy="3" r="2" fill="var(--il-bio-accent)"/></svg>
+      <span>This is the <b style="color:var(--il-bio-accent);">trend line</b> at the right of each person. Each dot is one recent heart-rate reading, oldest on the left, newest on the right. A line drifting <b style="color:var(--il-bio-accent);">downward means the body is settling</b> — the room is doing its work. A line drifting up means the heart is rising.</span>
+    </div>
+    <div id="bio-live-list"><i style="color:rgba(242,231,210,.45);">Connecting to the live monitor…</i></div>
     </div>
 
     <h2 class="ledger" data-sec="sec-heart">Heart signal coverage — research integrity</h2>
@@ -15088,15 +15427,37 @@ def admin_dashboard():
     if(!vals||vals.length<2) return '';
     var w=180,h=34,min=Math.min.apply(null,vals),max=Math.max.apply(null,vals),rng=(max-min)||1;
     var pts=vals.map(function(v,i){return (i/(vals.length-1)*w).toFixed(1)+','+(h-(v-min)/rng*h).toFixed(1);}).join(' ');
-    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="#e8a34c" stroke-width="2"/></svg>';
+    var dots=vals.map(function(v,i){return '<circle cx="'+(i/(vals.length-1)*w).toFixed(1)+'" cy="'+(h-(v-min)/rng*h).toFixed(1)+'" r="1.8" fill="var(--il-bio-accent)"/>';}).join('');
+    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;"><polyline points="'+pts+'" fill="none" stroke="var(--il-bio-accent)" stroke-width="2"/>'+dots+'</svg>';
   }
   function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#f4c977':'rgba(242,231,210,.62)'); }
   function stateWord(st){ return st==='rising'?'rising / activating':(st==='settling'?'settling / calming':'steady'); }
   function renderBioList(d){
     var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
     var el=document.getElementById('bio-live-list'); if(!el) return;
-    if(!d.active||!d.active.length){ el.innerHTML='<i style="color:rgba(242,231,210,.45);">No live sessions right now. When someone is using InnerLight, they appear here live — with or without a heart reading.</i>'; return; }
-    el.innerHTML=d.active.map(function(p){
+    // A tiny always-present heartbeat line so an EMPTY panel never looks broken
+    // or frozen: it proves the monitor is connected and polling. We show only
+    // REAL facts from the server (its clock, and how long since the last real
+    // ping) — never invented biometrics (Immutable Principle 13).
+    var beat = (d.SIMULATED
+        ? 'simulation running — the numbers below are synthetic'
+        : (d.last_write_ago == null
+            ? 'connected · monitor is live · no ping received yet'
+            : ('connected · monitor is live · last reading ' + d.last_write_ago + 's ago')));
+    var beatBar = '<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(242,231,210,.5);margin-bottom:10px;">'
+        + '<span style="width:8px;height:8px;border-radius:50%;background:var(--il-bio-accent);box-shadow:0 0 8px var(--il-bio-accent);animation:bioPulse 2s ease-in-out infinite;"></span>'
+        + '<span>' + beat + '</span></div>';
+    if(!d.active||!d.active.length){
+      el.innerHTML = beatBar
+        + '<div style="text-align:center;padding:22px 14px;border:1px dashed rgba(95,201,168,.35);border-radius:10px;background:rgba(95,201,168,.05);">'
+        + '<div style="font-size:15px;color:var(--il-bio-accent);font-weight:700;margin-bottom:6px;">No one is in a live session right now.</div>'
+        + '<div style="font-size:12.5px;color:rgba(242,231,210,.6);line-height:1.6;max-width:460px;margin:0 auto;">'
+        + 'The reader is working and watching. The moment someone opens InnerLight they appear here live — updating every few seconds — <b>with or without a heart reading</b> (a camera-off, text-only session still shows up). '
+        + 'To see it move now, open InnerLight in another tab, or turn on <b>Simulation</b> at the top of this page.'
+        + '</div></div>';
+      return;
+    }
+    el.innerHTML = beatBar + d.active.map(function(p){
       var heldTxt = (p.held_min != null) ? ('held ' + Math.max(1, Math.round(p.held_min)) + ' min') : '';
       var left = '<div style="min-width:96px;"><b style="color:#f4c977;">'+p.who+'</b><div style="font-size:11px;color:rgba(242,231,210,.45);">'+p.ago+'s ago'+(heldTxt?' · '+heldTxt:'')+'</div></div>';
       if (p.bpm && p.hasheart){
@@ -15122,16 +15483,29 @@ def admin_dashboard():
   }
 
   /* ============ one poll feeds the field, the counter, and the ledger ============ */
+  function bioNote(msg){
+    var el=document.getElementById('bio-live-list'); if(!el) return;
+    el.innerHTML='<div style="text-align:center;padding:18px 14px;border:1px dashed rgba(232,163,76,.35);border-radius:10px;color:rgba(242,231,210,.7);font-size:13px;line-height:1.6;">'+msg+'</div>';
+  }
   async function pollLive(){
     try{
-      var r = await fetch('/api/admin/bio/live'); if(!r.ok) return;
+      var r = await fetch('/api/admin/bio/live');
+      if(!r.ok){
+        // Do NOT leave a stale "Waiting…" that looks like live data. Say plainly
+        // what happened so the panel is never a silent void (Principle 13).
+        if(r.status===403){ bioNote('Your admin session has expired. <a href="/admin/login" style="color:var(--il-bio-accent);">Sign in again</a> to see the live monitor.'); }
+        else { bioNote('The monitor could not reach the server just now (status '+r.status+'). Retrying every few seconds…'); }
+        return;
+      }
       var d = await r.json();
       liveCount = (d.active && d.active.length) || 0;
       syncEmbers(d.active || []);
       refreshNow(liveCount);
       var kln = document.getElementById('kpi-live-n'); if (kln) kln.textContent = liveCount;
       renderBioList(d);
-    }catch(e){}
+    }catch(e){
+      bioNote('The monitor lost its connection to the server. It will reconnect automatically…');
+    }
   }
   pollLive(); setInterval(pollLive, 3000);
 
@@ -15363,7 +15737,10 @@ def admin_study_api():
               f"study with its own conclusion. Scenario (hypothetical, for founder education "
               f"only): {scenario}")
     body = json.dumps({
-        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
+        # Model id resolved by the shared auto-detector (Option B): env
+        # INNERLIGHT_MODEL wins, else the best Sonnet the account actually
+        # offers, else a documented placeholder — never a wrong hardcoded guess.
+        "model": comprehension_engine.resolve_model(),
         "max_tokens": 950,
         "system": system_prompt,
         "messages": [{"role": "user", "content": prompt}],
@@ -15941,7 +16318,10 @@ def admin_policy_study():
     if not pattern:
         return jsonify({"status": "error", "text": "Describe the recurring problem pattern to study."}), 200
     body = json.dumps({
-        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
+        # Model id resolved by the shared auto-detector (Option B): env
+        # INNERLIGHT_MODEL wins, else the best Sonnet the account actually
+        # offers, else a documented placeholder — never a wrong hardcoded guess.
+        "model": comprehension_engine.resolve_model(),
         "max_tokens": 1400,
         "system": _POLICY_SYSTEM,
         "messages": [{"role": "user", "content": "Recurring problem pattern to study for possible legislation: " + pattern}],
@@ -16236,9 +16616,10 @@ async function runAllLenses(){
 </script>
 <script>
 window.addEventListener('load', function(){
-  try { if (typeof maybeOfferSave==='function') setInterval(maybeOfferSave, 15000); } catch(e){}
-  try { if (typeof offerFeedback==='function') setTimeout(offerFeedback, 6*60*1000); } catch(e){}
-  try { if (typeof gentleCompletionCheck==='function') setInterval(gentleCompletionCheck, 60000); } catch(e){}
+  // FOUNDER FIX: the timed check-in / feedback / save-offer nudges are removed.
+  // They interrupted people mid-action and covered the composer. Saving is still
+  // available on demand (Save button -> openSaveNow); the permanent crisis bar
+  // keeps the human bridge visible at all times, so no timed popup is scheduled.
 }, {once:true});
 </script>
 </body></html>""")
@@ -16656,16 +17037,52 @@ def _clinical_on_call():
 
 def _route_handoff(handoff, text):
     """The founder's two fatal laws, enforced at the moment a card is built:
-    1) HOLD THE GRIEVING FIRST — a loved-one crisis suppresses the telehealth
-       card entirely; the AI holds, the static 988/911 rail remains.
-    2) NO DEAD DOORS — a telehealth card may exist only when a clinical
-       provider is actually on call, checked right now, server-side."""
+
+    1) HOLD THE GRIEVING FIRST (worklist #1). When the crisis belongs to
+       someone they love and they are the one holding it — grieving, not in
+       danger — the first exchanges are PURE HOLDING. NO pushed handoff card
+       of ANY type (crisis counselor, telehealth, community, legal) is
+       returned. The AI holds; offers come later only as gentle accompaniment.
+       This suppresses the whole pushed card, NOT the permanent 988/911 rail
+       and NOT the always-present human_help fixture — those are not handoff
+       cards, they are the fixed public doors and they always remain.
+
+    2) NO DEAD DOORS (worklist #2, #35). A provider/human action button may be
+       emitted ONLY when a real person is verified on call right now,
+       server-side, at request time. If nobody is on call:
+         - a telehealth/counselor card is dropped entirely (never shown-then-
+           failing, never "no providers available, call 988");
+         - a crisis card KEEPS its always-free public doors (988 call, 988
+           chat, 911) but has its "alert a live InnerLight monitor" button
+           (a human that could dead-end) stripped out.
+       The always-free public doors are permanent fixtures and are never
+       gated away by availability."""
     try:
-        if handoff.get("type") == "telehealth":
-            if _witness_grief(text):
-                return {"type": "none", "urgency": "none", "witness_grief": True}
+        htype = handoff.get("type")
+
+        # LAW 1 — loved-one holding: suppress EVERY pushed card in the holding
+        # window, regardless of type. Holding first; the static rail remains.
+        if _witness_grief(text):
+            return {"type": "none", "urgency": "none", "witness_grief": True}
+
+        # LAW 2 — telehealth (a clinical human) is a dead door with nobody on
+        # call: drop the whole card. 988/911 still live via the static rail.
+        if htype == "telehealth":
             if not _clinical_on_call():
                 return {"type": "none", "urgency": "none", "no_provider": True}
+
+        # LAW 2 — the crisis card's public doors (988 call / 988 chat / 911)
+        # are permanent and stay untouched, but the "alert a live InnerLight
+        # monitor" button is a human that can dead-end. Only emit it when a
+        # real person is on call; otherwise strip it and keep the free doors.
+        if htype == "crisis" and not _clinical_on_call():
+            bridge = handoff.get("bridge")
+            if isinstance(bridge, dict) and "tertiary" in bridge:
+                trimmed = dict(handoff)
+                trimmed_bridge = {k: v for k, v in bridge.items() if k != "tertiary"}
+                trimmed["bridge"] = trimmed_bridge
+                trimmed["no_monitor"] = True
+                return trimmed
     except Exception:
         pass
     return handoff
