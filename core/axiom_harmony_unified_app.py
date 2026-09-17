@@ -1396,8 +1396,8 @@ PUBLIC_PAGE = """
         try { var _sp=document.getElementById('scene-picker'); if (_sp && typeof _ilux==='function') _sp.setAttribute('aria-label', _ilux('scn.aria')); } catch(e){}
         // A feeling prompt already on screen must follow the person into
         // their new language, not linger in the old one.
-        try { var _ci=document.getElementById('il-checkin'); if (_ci && _ci.querySelector('button')) { _ci.remove(); if (typeof showCheckin==='function') showCheckin(); } } catch(e){}
-        try { var _sc=document.getElementById('sam-card'); if (_sc) { _sc.remove(); if (typeof showCalmScale==='function') showCalmScale(window._lastSamPhase||''); } } catch(e){}
+        try { var _ci=document.getElementById('il-checkin'); if (_ci) _ci.remove(); } catch(e){}
+        try { var _sc=document.getElementById('sam-card'); if (_sc) _sc.remove(); } catch(e){}
         // The Focus pill and the anchor overlay were created once and kept
         // their birth language — they now follow every switch, live.
         try { var _ap=document.getElementById('il-anchor-pill'); if (_ap && typeof _ilan==='function') _ap.textContent='\u25ce '+_ilan('pill'); } catch(e){}
@@ -4658,32 +4658,7 @@ async function doFacilities(){
 // anonymized research that helps prove InnerLight helps real people.
 let _fbShown = false;
 function closeFb(){ const c=document.getElementById('fb-card'); if(c) c.remove(); }
-function offerFeedback(){
-  if (_fbShown) return;
-  _fbShown = true;
-  const box = document.createElement('div');
-  box.id = 'fb-card';
-  box.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:78;'
-    + 'background:rgba(255,255,255,0.98);border:1px solid #e0d7cf;border-radius:16px;padding:16px 18px;'
-    + 'box-shadow:0 12px 34px rgba(20,40,30,0.22);font-family:Arial;max-width:360px;width:92%;';
-  box.innerHTML =
-     '<div style="font-size:14px;color:#4a362c;margin-bottom:10px;text-align:center;">'+_ilux('fb.ask')+'</div>'
-   + '<div style="text-align:center;margin-bottom:8px;">'
-   +   '<button class="fb-h" data-v="yes" style="margin:3px;border:1px solid #d3a47d;background:#f8f5f2;color:#6a402c;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.yes')+'</button>'
-   +   '<button class="fb-h" data-v="somewhat" style="margin:3px;border:1px solid #ddd1c8;background:#fff;color:#99673e;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.some')+'</button>'
-   +   '<button class="fb-h" data-v="no" style="margin:3px;border:1px solid #e0c8c8;background:#fff;color:#9a6a6a;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;">'+_ilux('fb.no')+'</button>'
-   + '</div>'
-   + '<textarea id="fb-words" aria-label="'+_ilux('fb.ph')+'" placeholder="'+_ilux('fb.ph')+'" style="width:100%;box-sizing:border-box;height:56px;border:1px solid #ddd1c8;border-radius:10px;padding:9px;font-size:13px;resize:none;"></textarea>'
-   + '<div style="text-align:center;margin-top:8px;">'
-   +   '<button onclick="submitFeedback()" style="background:#2e6e8e;color:#fff;border:0;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;margin:0 4px;">'+_ilux('fb.share')+'</button>'
-   +   '<button onclick="closeFb()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;margin:0 4px;">'+_ilux('fb.nothanks')+'</button>'
-   + '</div>';
-  document.body.appendChild(box);
-  box.querySelectorAll('.fb-h').forEach(function(b){
-    b.onclick = function(){ box.querySelectorAll('.fb-h').forEach(function(x){x.style.outline='none';});
-      b.style.outline='2px solid #2e6e8e'; window._fbHelped = b.getAttribute('data-v'); };
-  });
-}
+function offerFeedback(){}  /* popup removed entirely per founder */
 async function submitFeedback(){
   const words = (document.getElementById('fb-words')||{}).value || '';
   const helped = window._fbHelped || '';
@@ -4924,29 +4899,7 @@ var _IL_CT = {
       scale:['Nonga','Meimei nonga','Vahaʻa','Meimei māfasia','Māfasia']}
 };
 function _ilct(k){ var lg=(window._ilLang||'en'); return (_IL_CT[lg]||_IL_CT.en)[k]; }
-function showCheckin(){ if(document.getElementById('il-checkin')) return;
-  // Never stamp a feelings prompt over something the person is actively
-  // reading or using: nearby help, activities, the anchor, or any overlay.
-  try {
-    var _busy = ['facilities-overlay','activities-overlay','il-anchor','legal-overlay','provider-overlay'].some(function(id){
-      var el=document.getElementById(id); return el && el.style.display!=='none' && el.offsetParent!==null; });
-    if (_busy) return;
-  } catch(e){}
-  var wrap=document.createElement('div'); wrap.id='il-checkin';
-  wrap.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:92vw;'
-    +'background:#faf5ec;border:1px solid #e7dccc;border-radius:18px;box-shadow:0 12px 40px rgba(42,30,20,0.22);'
-    +'padding:16px 18px 14px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
-  var dots=''; var i; var scale=_ilct('scale')||[];
-  for(i=0;i<5;i++){ var sz=14+i*3; var col=['#5f8bb6','#7f97b0','#b9a58f','#cf8a5e','#c56a2c'][i];
-    dots+='<button aria-label="'+(scale[i]||i)+'" onclick="ilCheckinPick('+(i/4)+')" style="border:0;background:'+col+';'
-      +'width:'+sz+'px;height:'+sz+'px;border-radius:50%;margin:0 9px;cursor:pointer;padding:0;vertical-align:middle;opacity:.92;"></button>'; }
-  wrap.innerHTML='<div style="font-size:15px;color:#2b2620;margin-bottom:12px;">'+_ilct('q')+'</div>'
-    +'<div style="display:flex;align-items:center;justify-content:center;">'
-    +'<span style="font-size:12px;color:#6b5f4e;margin-right:6px;">'+_ilct('a')+'</span>'+dots
-    +'<span style="font-size:12px;color:#6b5f4e;margin-left:6px;">'+_ilct('b')+'</span></div>'
-    +'<div style="margin-top:8px;"><a href="#" onclick="closeCheckin();return false;" style="font-size:12px;color:#6b5f4e;text-decoration:none;">'+_ilct('skip')+'</a></div>';
-  document.body.appendChild(wrap); _ilCheckinLast=Date.now();
-}
+function showCheckin(){}  /* popup removed entirely per founder */
 function ilCheckinPick(v){ try{ if(window.ATT) ATT.report(v); }catch(e){}
   var w=document.getElementById('il-checkin'); if(w){ w.innerHTML='<div style="font-size:15px;color:#2b2620;padding:6px 4px;">'+_ilct('thanks')+'</div>';
     setTimeout(function(){ try{ w.remove(); }catch(e){} }, 1100); } _ilCheckinLast=Date.now(); }
@@ -4967,7 +4920,7 @@ function ilMaybeInvite(){ try{
   var firstDue=(_ilCheckinLast===0 && (now-_ilSessionStart)>240000);
   var lowConf=(conf<0.45 && since>360000);
   var periodic=(_ilCheckinLast>0 && since>480000);
-  if(firstDue||lowConf||periodic) showCheckin();
+  /* auto check-in disabled — popup removed per founder */
 }catch(e){} }
 
 // ===========================================================================
@@ -5904,29 +5857,7 @@ function politeScrollIntoView(el){
 }
 
 // ---- LENS THREE: wordless calm scale (tap a face, or ignore it) ----
-function showCalmScale(phase){
-  window._lastSamPhase = phase;
-  if (document.getElementById('sam-card')) return;
-  const card = document.createElement('div');
-  card.id = 'sam-card';
-  card.style.cssText = 'position:fixed;top:206px;right:18px;z-index:60;max-width:200px;'
-    + 'background:rgba(255,255,255,0.96);border-radius:16px;padding:14px 16px;'
-    + 'box-shadow:0 10px 36px rgba(20,40,80,0.25);text-align:center;transition:opacity 1s ease;';
-  var samNames = [_ilux('sam.s1'),_ilux('sam.s2'),_ilux('sam.s3'),_ilux('sam.s4'),_ilux('sam.s5')];
-  card.innerHTML = '<div style="font-size:13px;color:#41607d;margin-bottom:8px;">'+_ilux('sam.q')+'</div>'
-    + '<div style="font-size:30px;letter-spacing:14px;">'
-    + ['&#128551;','&#128533;','&#128528;','&#128578;','&#128522;'].map(function(f,i){
-        return '<button type="button" data-v="'+(i+1)+'" aria-label="'+samNames[i]+'" style="cursor:pointer;background:none;border:0;padding:0;font-size:inherit;letter-spacing:inherit;">'+f+'</button>';
-      }).join('')
-    + '</div>';
-  card.addEventListener('click', function(ev){
-    const v = ev.target && ev.target.dataset && ev.target.dataset.v;
-    if (v) metric('selfreport', phase + '|' + v);
-    card.style.opacity = '0'; setTimeout(()=>card.remove(), 1000);
-  });
-  document.body.appendChild(card);
-  setTimeout(()=>{ if (card.parentNode){ card.style.opacity='0'; setTimeout(()=>card.remove(),1000);} }, 25000);
-}
+function showCalmScale(){}  /* popup removed entirely per founder */
 
 let TAP_MS = Date.now();
 // PRELOAD: fetch the calm lane and warm up the first track before the tap,
@@ -5960,8 +5891,8 @@ async function startExperience() {
   // Warm the sound engine at the tap so the sound box answers instantly later.
   try { if (typeof ensureZenisysContext === 'function') ensureZenisysContext(); } catch(e){}
   try { const ac = new (window.AudioContext||window.webkitAudioContext)(); if (ac.state==='suspended') ac.resume(); window._warmCtx = ac; } catch(e){}
-  setTimeout(()=>showCalmScale('arrival'), 9000);      // after the music has risen
-  setTimeout(()=>showCalmScale('later'), 4*60*1000);   // the change measurement
+  /* SAM arrival popup disabled — removed per founder */
+  /* SAM later popup disabled — removed per founder */
   // STEP 1: Show the conversation screen IMMEDIATELY (before anything else).
   // The arrival gate dissolves slowly over the story screen instead of blinking
   // away — one continuous place, not two pages.
@@ -16224,7 +16155,7 @@ async function runAllLenses(){
 <script>
 window.addEventListener('load', function(){
   try { if (typeof maybeOfferSave==='function') setInterval(maybeOfferSave, 15000); } catch(e){}
-  try { if (typeof offerFeedback==='function') setTimeout(offerFeedback, 6*60*1000); } catch(e){}
+  /* feedback auto-popup disabled — removed per founder */
   try { if (typeof gentleCompletionCheck==='function') setInterval(gentleCompletionCheck, 60000); } catch(e){}
 }, {once:true});
 </script>
