@@ -3270,7 +3270,28 @@ function bloom(){
   row.appendChild(f);
   requestAnimationFrame(()=>{ f.style.transform='scale(1)'; });
   softChime();
+  ilCalmCue();   // subtle CONSISTENT conditioning tone — same every calm moment
   burstAt(f);
+}
+// The conditioning motif (research: Babel 2019). ONE unchanging, very quiet
+// tone paired with every calm moment, so over a session the sound itself
+// becomes a learned settling cue. Subtle on purpose — the body learns it
+// without it demanding attention. Honest/open-label, measured in metrics.
+var _calmCueCtx=null, _calmCueCount=0;
+function ilCalmCue(){
+  try{
+    if(!_calmCueCtx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; _calmCueCtx=new AC(); }
+    if(_calmCueCtx.state==='suspended'){ try{ _calmCueCtx.resume(); }catch(e){} }
+    var t=_calmCueCtx.currentTime;
+    var o=_calmCueCtx.createOscillator(), g=_calmCueCtx.createGain();
+    o.type='sine'; o.frequency.value=528;         // same tone, every time
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.045,t+0.08);   // very quiet — subtle
+    g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);
+    o.connect(g); g.connect(_calmCueCtx.destination);
+    o.start(t); o.stop(t+1.5);
+    _calmCueCount++; try{ metric('calm_cue'); }catch(e){}
+  }catch(e){}
 }
 // Soft two-note chime, very quiet, warm — success you can hear
 let chimeCtx=null;
@@ -7456,6 +7477,7 @@ function appendExchange(thread, reply, question, safetyHtml) {
     ${questionHtml}
   `;
   thread.appendChild(exchange);
+  try { ilMaybeOfferCalm(thread); } catch(e){}
   speak(question && question.trim() ? (reply + '. ' + question) : reply);
   // Chat layout: the ONE persistent composer stays; clear + refocus + scroll.
   window._ilStarted = true;
@@ -7463,6 +7485,68 @@ function appendExchange(thread, reply, question, safetyHtml) {
   if (ta) { ta.value=''; ta.style.height='auto'; ta.style.display=''; ta.removeAttribute('disabled'); ta.readOnly=false; ta.setAttribute('placeholder','Keep going\u2026 type your reply, or tap the mic'); try{ ta.focus({preventScroll:true}); }catch(e){} }
   ilScrollHistory();
 }
+// The full pool of calming tools, each labeled ONLY by what it does (never by
+// a state or diagnosis). We show a RANDOM three at a time so there is never a
+// fixed grouping or order a person could read as the software sorting them.
+var IL_CALM_POOL=[
+  ['sigh','A slow, steady breath out'],
+  ['cool','Cool water on your face'],
+  ['ground','Notice five things around you'],
+  ['sevens','Count down by sevens'],
+  ['categories','Name things in a category'],
+  ['butterfly','Slow tapping, side to side'],
+  ['breathe','Breathe with a circle'],
+  ['bubbles','Pop drifting lights'],
+  ['words','Find hidden words'],
+  ['stars','Count gentle stars'],
+  ['wall','Press against a wall'],
+  ['release','Squeeze, hold, let go']
+];
+var _ilCalmOffered=0;
+function ilMaybeOfferCalm(thread){
+  // Only offer when there are signs of distress, and never more than once
+  // every few exchanges, so it is a gentle option — never a nag, never after
+  // every message. Distress signal: the current music lane is a calming one.
+  var lane = (typeof adaptiveLaneNow!=='undefined') ? adaptiveLaneNow : '';
+  var distress = (lane==='deepcalm' || lane==='lifting');
+  var now=Date.now();
+  if(!distress) return;
+  if(now - _ilCalmOffered < 3*60*1000) return;   // at most once every ~3 min
+  _ilCalmOffered = now;
+  // pick THREE at random, shuffled
+  var pool=IL_CALM_POOL.slice();
+  for(var i=pool.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=pool[i]; pool[i]=pool[j]; pool[j]=tmp; }
+  var three=pool.slice(0,3);
+  var box=document.createElement('div');
+  box.className='il-calm-offer';
+  box.style.cssText='text-align:left;padding:6px 0 14px;';
+  var head=document.createElement('div');
+  head.style.cssText='font-size:13.5px;color:#8a6a4c;margin:0 0 8px;';
+  head.textContent='Only if you want \u2014 no right choice, and you can keep talking anytime:';
+  box.appendChild(head);
+  var rowd=document.createElement('div');
+  rowd.style.cssText='display:flex;flex-wrap:wrap;gap:8px;';
+  three.forEach(function(a){
+    var b=document.createElement('button');
+    b.style.cssText='background:rgba(255,255,255,0.85);border:1px solid #ecc9a0;border-radius:12px;padding:10px 14px;font-size:13.5px;color:#5a3d22;cursor:pointer;';
+    b.textContent=a[1];
+    b.addEventListener('click', function(){ try{ openActivities(); setTimeout(function(){ try{ startAct(a[0]); }catch(e){} }, 120); }catch(e){} });
+    rowd.appendChild(b);
+  });
+  var more=document.createElement('button');
+  more.style.cssText='background:none;border:1px dashed #d9b98f;border-radius:12px;padding:10px 14px;font-size:12.5px;color:#8a6a4c;cursor:pointer;';
+  more.textContent='show three others';
+  more.addEventListener('click', function(){ box.remove(); ilShowThreeMore(); });
+  rowd.appendChild(more);
+  box.appendChild(rowd);
+  thread.appendChild(box);
+}
+function ilShowThreeMore(){
+  _ilCalmOffered = 0;   // allow an immediate re-offer with a fresh random three
+  var thread=document.getElementById('conversation-thread');
+  if(thread) ilMaybeOfferCalm(thread);
+}
+
 async function updateMusicForEmotion(data) {
   const textEmotion = (data.zenisys_music || {}).emotion || 'calm';
   const faceEmo = currentFaceEmotion || '';
