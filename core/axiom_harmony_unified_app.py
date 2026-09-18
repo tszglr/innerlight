@@ -679,7 +679,7 @@ PUBLIC_PAGE = """
       .story-video-bar.pinned .story-video { width:72px; height:72px; } }
     .story-video-bar.floating { position:fixed; top:84px; right:20px; left:auto;
       width:auto; padding:0; z-index:40; text-align:right; }
-    .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; }
+    .story-wrap { width:100%; max-width:620px; text-align:center; padding-top:10px; margin-left:auto; margin-right:auto; }
     #conversation-thread { background:rgba(255,255,255,0.55); backdrop-filter:blur(3px);
       border-radius:18px; padding:4px 16px; scroll-behavior:smooth; }
     #conversation-thread:empty { background:none; padding:0; }
@@ -5065,7 +5065,7 @@ function ilMaybeAnchor(){ try{
   // Principle 14: never rise up over someone who is speaking aloud.
   if (typeof voiceListening !== 'undefined' && voiceListening) return;
   var now=Date.now();
-  if((now-_ilLastInteract) > 45000 && (now-_ilAnchorLast) > 150000) showAnchor();
+  /* auto Focus-anchor DISABLED per founder — the "screen saver" never rises on its own again. */
 }catch(e){} }
 window.showAnchor=showAnchor; window.hideAnchor=hideAnchor;
 
@@ -5078,7 +5078,7 @@ function readArousalSignal() {
     try { ATT.start(); } catch(e){}
     try { document.addEventListener('keydown', ilNoteInteract, true); document.addEventListener('pointerdown', ilNoteInteract, true); } catch(e){}
     try { ilAddAnchorPill(); } catch(e){}
-    try { setInterval(function(){ ilMaybeInvite(); ilMaybeAnchor(); }, 12000); } catch(e){}
+    /* ilMaybeAnchor auto-trigger removed per founder — no self-appearing anchor */
   }
   var a = ATT.update();
   window._adaptiveDown = ATT.state.down;
