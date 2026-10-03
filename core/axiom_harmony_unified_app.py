@@ -6256,7 +6256,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-02.1 presence-sid-fix'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-02.2 admin-access+undo'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -11656,7 +11656,7 @@ def _gentle_429():
 
 @app.route("/api/admin/abuse")
 def admin_abuse():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     with _BUDGET_LOCK:
         counts = dict(_BUDGET.get("counts", {}))
@@ -12199,6 +12199,23 @@ def _metrics_save(m):
     except Exception:
         pass
 
+# REACHES — every time a person reaches toward a human (taps a handoff / asks for
+# help), we record it, even if they never finish the connect form. This is what
+# the founder most needs to see: the "People who asked for a human" list used to
+# show only COMPLETED requests, so someone who reached and stopped was invisible.
+_REACHES_LOCK = threading.Lock()
+
+def _reach_record(kind, via):
+    try:
+        with _REACHES_LOCK:
+            reaches = _live_get("reaches") or []
+            reaches.append({"ts": time.time(),
+                            "when": time.strftime("%Y-%m-%d %H:%M:%S"),
+                            "kind": str(kind)[:40], "via": str(via)[:20]})
+            _live_set("reaches", reaches[-120:])
+    except Exception:
+        pass
+
 app.secret_key = hashlib.sha256(
     ("innerlight-founder-session::" + os.environ.get("ADMIN_KEY", "unset")).encode()
 ).hexdigest()
@@ -12351,6 +12368,10 @@ def metrics_event():
             dest = str(value)[:24] if value else "unknown"
             d["handoffs"][dest] = d["handoffs"].get(dest, 0) + 1
         _metrics_save(m)
+    # Outside the metrics lock (uses its own lock): log the reach itself so the
+    # founder sees everyone who asked for a human, not only those who finished.
+    if etype in ("handoff_click", "help_requested"):
+        _reach_record(value if (etype == "handoff_click" and value) else "reached for a human", etype)
     return jsonify({"status": "ok"})
 
 
@@ -12431,28 +12452,184 @@ def _grant_check(code):
     except Exception:
         return None
 
+def _grant_label(code):
+    """The human label a grant was created with (for the admin journal)."""
+    if not code:
+        return None
+    try:
+        with _ONCALL_LOCK:
+            conn = _grants_db()
+            try:
+                row = conn.execute("SELECT label FROM access_grants WHERE code_hash=?",
+                                   (_grant_hash(code),)).fetchone()
+            finally:
+                conn.close()
+        return row["label"] if row else None
+    except Exception:
+        return None
+
 def _has_watch_access():
-    """Founder OR a live team grant may view the Watch."""
+    """Founder OR a live team/admin grant may view the Watch."""
     if session.get("founder_ok"):
         return True
-    return session.get("team_scope") in ("watch", "watch+study")
+    return session.get("team_scope") in ("watch", "watch+study", "admin")
 
 def _has_study_access():
     if session.get("founder_ok"):
         return True
-    return session.get("team_scope") == "watch+study"
+    return session.get("team_scope") in ("watch+study", "admin")
+
+def _has_admin_access():
+    """Founder OR a live temporary-admin grant. An admin can fix and adjust the
+    operations room, but NEVER the founder's reserved powers: creating or
+    revoking access links, arming the emergency engine, the monetary dispatch
+    engine, or this rollback. Those always check founder_ok directly."""
+    if session.get("founder_ok"):
+        return True
+    return session.get("team_scope") == "admin"
+
+# --------------------------------------------------------------------------
+# ADMIN CHANGE JOURNAL + MASTER-KEY UNDO
+# Every change a TEMPORARY admin makes is recorded here so the founder can see
+# exactly what was done and, for the adjustable settings, undo it in one click.
+# The founder's own changes are never journaled — the master key is above the log.
+# --------------------------------------------------------------------------
+_ADMIN_JOURNAL_FILE = os.environ.get("ADMIN_JOURNAL_FILE", _DATA_DIR + "/innerlight_admin_journal.json")
+_ADMIN_JOURNAL_LOCK = threading.Lock()
+
+def _journal_load():
+    try:
+        with open(_ADMIN_JOURNAL_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def _journal_save(items):
+    try:
+        with open(_ADMIN_JOURNAL_FILE, "w") as f:
+            json.dump(items[-500:], f)
+    except Exception:
+        pass
+
+def _journal_record(label, undo=None):
+    """Record one operations change by a non-founder admin. `undo`, when given,
+    is a small descriptor the master key can replay to reverse the change:
+      {"kind":"oncall","side":..,"role":..,"value":<old available 0/1>}
+      {"kind":"pool","value":<old mode>}
+      {"kind":"track","file":..,"value":<old enabled bool>}
+    undo=None means the change is logged for visibility but reversed through its
+    own panel (e.g. a new provider is paused in the Providers list)."""
+    if session.get("founder_ok"):
+        return
+    if session.get("team_scope") != "admin":
+        return
+    try:
+        with _ADMIN_JOURNAL_LOCK:
+            items = _journal_load()
+            items.append({
+                "id": secrets.token_urlsafe(6),
+                "when": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "who": session.get("admin_label") or "temporary admin",
+                "what": str(label)[:160],
+                "undo": undo,
+                "undoable": bool(undo),
+                "undone": False,
+            })
+            _journal_save(items)
+    except Exception:
+        pass
+
+def _journal_apply_undo(undo):
+    """Reverse one journaled change. Returns True if it was reversed."""
+    kind = (undo or {}).get("kind")
+    try:
+        if kind == "oncall":
+            available = 1 if undo.get("value") else 0
+            with _ONCALL_LOCK:
+                conn = _oncall_db()
+                try:
+                    conn.execute("UPDATE provider_availability SET available=?, updated_at=? "
+                                 "WHERE side=? AND role=?",
+                                 (available, utc_now(), undo.get("side"), undo.get("role")))
+                    conn.commit()
+                finally:
+                    conn.close()
+            _ONCALL_CACHE["data"] = None
+            return True
+        if kind == "pool":
+            _live_set("pool_mode", undo.get("value") or "both")
+            return True
+        if kind == "track":
+            with _TRACKS_OFF_LOCK:
+                off = _tracks_off_load()
+                if undo.get("value"):
+                    off.discard(undo.get("file"))
+                else:
+                    off.add(undo.get("file"))
+                _tracks_off_save(off)
+            return True
+    except Exception as e:
+        print("[InnerLight] undo failed:", e)
+    return False
+
+# Settings with their own rich, one-click-undoable journal entries (added inside
+# the handlers) — the catch-all hook below skips these so they are not doubled.
+_JOURNAL_SKIP_PATHS = {"/api/admin/oncall", "/api/admin/pool/mode",
+                       "/api/admin/tracks/toggle", "/api/admin/journal/undo"}
+_JOURNAL_PATH_LABELS = {
+    "/api/admin/partners/create": "Added a partner (provider/attorney)",
+    "/api/admin/partners/status": "Changed a partner's status",
+    "/api/admin/partners/suggestions/read": "Marked a partner note read",
+    "/api/admin/vetting/create": "Started vetting a provider",
+    "/api/admin/vetting/decide": "Made a vetting decision",
+    "/api/admin/vetting/promote": "Promoted a provider into the pool",
+    "/api/admin/provider/issue": "Issued provider access",
+    "/api/admin/policy/study": "Changed a study/policy setting",
+    "/api/admin/study": "Changed study settings",
+    "/api/admin/demo": "Toggled demonstration mode",
+    "/api/admin/legal/investigation": "Ran a legal investigation",
+    "/api/sim/mode": "Toggled simulation mode",
+    "/api/sim/config": "Changed simulation settings",
+}
+
+@app.after_request
+def _journal_admin_posts(resp):
+    """Catch-all: any successful operations change a temporary admin makes that
+    isn't already journaled with its own rich entry is logged here for the
+    founder's visibility (log-only — reversed in its own panel)."""
+    try:
+        if (request.method == "POST"
+                and session.get("team_scope") == "admin"
+                and not session.get("founder_ok")):
+            p = request.path
+            if ((p.startswith("/api/admin/") or p.startswith("/api/sim/"))
+                    and p not in _JOURNAL_SKIP_PATHS
+                    and 200 <= resp.status_code < 300):
+                _journal_record(_JOURNAL_PATH_LABELS.get(p, "Changed " + p), undo=None)
+    except Exception:
+        pass
+    return resp
 
 @app.route("/team/<code>")
 def team_access(code):
-    """A grantee redeems their access code. Sets a scoped, read-only session."""
-    scope = _grant_check(str(code)[:80])
+    """A grantee redeems their access code. A view grant ('watch'/'watch+study')
+    is read-only. An 'admin' grant is temporary full operations access — they can
+    fix and adjust, but never the founder's reserved powers, and every change
+    they make is journaled so the founder can undo it."""
+    code = str(code)[:80]
+    scope = _grant_check(code)
     if not scope:
         return ("<div style='font-family:Georgia,serif;max-width:520px;margin:80px auto;"
                 "text-align:center;color:#5a3d22;'><h2>This access link is not valid.</h2>"
                 "<p>It may have expired or been revoked. Please ask the InnerLight team "
                 "for a new one.</p><p><a href='/' style='color:#b8783a;'>Back to InnerLight</a></p></div>"), 403
     session["team_scope"] = scope
-    session["team_readonly"] = 1
+    if scope == "admin":
+        session["team_readonly"] = 0
+        session["admin_label"] = _grant_label(code) or "temporary admin"
+    else:
+        session["team_readonly"] = 1
+        session.pop("admin_label", None)
     session.permanent = False
     return redirect("/admin")
 
@@ -12477,12 +12654,17 @@ def admin_grants():
         # create
         label = _partner_scrub(data.get("label", ""), 80).strip() or "team member"
         scope = data.get("scope", "watch")
-        if scope not in ("watch", "watch+study"):
+        if scope not in ("watch", "watch+study", "admin"):
             scope = "watch"
+        # A temporary-admin grant (scope "admin") can fix and adjust the
+        # operations room, but never the founder's reserved powers. It defaults
+        # to 10 days; view-only grants default to 7. Both are capped at 90 and
+        # are instantly revocable — no grant is ever permanent.
+        _default_days = 10 if scope == "admin" else 7
         try:
-            days = int(data.get("days", 7))
+            days = int(data.get("days", _default_days))
         except Exception:
-            days = 7
+            days = _default_days
         days = max(1, min(90, days))   # founder's rule: no permanent grants yet (90-day cap)
         code = secrets.token_urlsafe(18)
         import datetime as _dt
@@ -12515,6 +12697,50 @@ def admin_grants():
                     "revoked": bool(r["revoked"]),
                     "live": (not r["revoked"] and r["expires_at"] > now)})
     return jsonify({"grants": out})
+
+@app.route("/api/admin/journal")
+def admin_journal():
+    """The founder's master-key view of everything temporary admins have done."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    items = _journal_load()
+    # newest first; count how many reversible changes are still live
+    live_undoable = sum(1 for e in items if e.get("undoable") and not e.get("undone"))
+    return jsonify({"status": "ok", "entries": list(reversed(items))[:200],
+                    "live_undoable": live_undoable})
+
+@app.route("/api/admin/journal/undo", methods=["POST"])
+def admin_journal_undo():
+    """Master key: erase a change that didn't work. Reverse one entry by id, or
+    every reversible change made by one admin ('who'). Founder only."""
+    if not session.get("founder_ok"):
+        return jsonify({"error": "auth"}), 403
+    data = request.get_json(silent=True) or {}
+    target = str(data.get("id", ""))
+    who = str(data.get("who", ""))
+    allflag = bool(data.get("all"))
+    if not target and not who and not allflag:
+        return jsonify({"error": "nothing selected"}), 400
+    done = 0
+    skipped = 0
+    with _ADMIN_JOURNAL_LOCK:
+        items = _journal_load()
+        # apply oldest-first so a run of changes reverses in a sane order
+        for e in items:
+            if e.get("undone"):
+                continue
+            if not allflag:
+                if target and e.get("id") != target:
+                    continue
+                if who and e.get("who") != who:
+                    continue
+            if e.get("undo") and _journal_apply_undo(e["undo"]):
+                e["undone"] = True
+                done += 1
+            elif not e.get("undoable"):
+                skipped += 1
+        _journal_save(items)
+    return jsonify({"status": "ok", "undone": done, "not_auto_reversible": skipped})
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
@@ -13144,14 +13370,14 @@ SIM_ROOM = r"""<!doctype html>
 
 @app.route("/watch/sim")
 def watch_sim_room():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return redirect("/admin")
     return SIM_ROOM
 
 @app.route("/watch/lab")
 def watch_lab_room():
     """The founder's night studio — its own room, its own world."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return redirect("/admin")
     return ZENISYS_LAB_ROOM
 
@@ -13209,10 +13435,19 @@ def _sim_metrics():
 def admin_dashboard():
     """Founder-only operations room. Open /admin?key=YOUR_ADMIN_KEY"""
     _sim_banner = ""
-    if session.get("team_scope") and not session.get("founder_ok"):
+    if session.get("team_scope") == "admin" and not session.get("founder_ok"):
+        _sim_banner = ('<div style="position:sticky;top:0;z-index:9999;background:#5a3d12;color:#ffe8bf;'
+            'text-align:center;font-weight:700;letter-spacing:.06em;padding:8px;font-size:12px;">'
+            'TEMPORARY ADMIN &mdash; you can fix and adjust the room. Every change you make is recorded, '
+            'and the founder can undo it. You cannot create access links, arm the emergency engine, or touch the money engine.</div>')
+    elif session.get("team_scope") and not session.get("founder_ok"):
         _sim_banner = ('<div style="position:sticky;top:0;z-index:9999;background:#2a3d52;color:#cfe0f0;'
             'text-align:center;font-weight:700;letter-spacing:.1em;padding:8px;font-size:12px;">'
             'TEAM VIEW &mdash; read-only access granted by the founder. You can see everything; changes are disabled.</div>')
+    # Founder-only panels (mint access links, the master-key undo log) are hidden
+    # from any granted viewer or admin — the server also blocks their endpoints.
+    if not session.get("founder_ok"):
+        _sim_banner += '<style>[data-founder-only]{display:none!important;}</style>'
     if session.get("sim_mode") and session.get("founder_ok"):
         _sim_banner = (
             '<div style="position:sticky;top:0;z-index:9999;background:repeating-linear-gradient(45deg,#0d3b2a,#0d3b2a 14px,#0a2e21 14px,#0a2e21 28px);'
@@ -13782,6 +14017,22 @@ def admin_dashboard():
       }).join('');
     }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
     </script>
+    <div class="panel" id="reaches" style="font-size:13px;margin-top:10px;">&nbsp;</div>
+    <script>
+    fetch('/api/admin/reaches').then(function(r){return r.json();}).then(function(d){
+      var el=document.getElementById('reaches'); if(!el) return;
+      if(d.status!=='ok'){ el.style.display='none'; return; }
+      var n=d.count_14d||0;
+      var head='<b style="color:#f4c977;">'+n+'</b> '+(n===1?'person':'people')+' reached toward a human in the last 14 days. '
+        +'<span style="color:rgba(242,231,210,.55);">This counts everyone who asked &mdash; including people who did not finish the request form above. That is why this number can be higher than the list of completed requests.</span>';
+      var list='';
+      (d.reaches||[]).forEach(function(r){
+        list += '<div style="border-bottom:1px solid rgba(232,163,76,.1);padding:6px 0;color:rgba(242,231,210,.78);">'
+          + '<b style="color:#e8a34c;">'+String(r.when||'').replace(/</g,'&lt;')+'</b> &mdash; reached for: '+String(r.kind||'').replace(/</g,'&lt;')+'</div>';
+      });
+      el.innerHTML = head + (list?('<div style="margin-top:8px;">'+list+'</div>'):'<div style="margin-top:6px;color:rgba(242,231,210,.45);">No reaches recorded in the last 14 days.</div>');
+    }).catch(function(){ var el=document.getElementById('reaches'); if(el) el.style.display='none'; });
+    </script>
 
     <h2 class="ledger" id="oncall" data-sec="sec-oncall">On call right now</h2>
     <div class="panel">
@@ -14058,11 +14309,11 @@ def admin_dashboard():
 
     <h2 class="ledger" id="teamaccess" data-sec="sec-team">Team access &mdash; add people to the Watch &amp; Study</h2>
     <div class="card" data-founder-only="1">
-      <p style="margin-top:0;font-size:13.5px;color:rgba(242,231,210,.72);">Give a researcher or trusted person time-limited access to see everything here &mdash; including the Study &mdash; without sharing your admin password. They get a private link; you can revoke it any second. No permanent access yet (90-day maximum).</p>
+      <p style="margin-top:0;font-size:13.5px;color:rgba(242,231,210,.72);">Give a researcher or trusted person time-limited access without sharing your password. Two kinds: a <b>view</b> link (they can see everything, change nothing) or a <b>temporary admin</b> link (they can fix and adjust the operations room &mdash; but never create or revoke links, arm the emergency engine, touch the money engine, or undo). Admin links default to 10 days. Every change an admin makes is recorded below in <b>Admin activity</b>, where your master key can undo it. You can revoke any link any second. No permanent access (90-day maximum).</p>
       <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end;margin:12px 0;">
         <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Who is this for?</label><input id="grant-label" placeholder="e.g. Dr. Rivera, McNair reviewer" style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"></div>
-        <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Access to</label><select id="grant-scope" style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"><option value="watch">The Watch only</option><option value="watch+study">The Watch + the Study</option></select></div>
-        <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Days</label><select id="grant-days" style="background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"><option>1</option><option>3</option><option selected>7</option><option>14</option><option>30</option><option>90</option></select></div>
+        <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Access to</label><select id="grant-scope" style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"><option value="watch">The Watch only (view)</option><option value="watch+study">The Watch + the Study (view)</option><option value="admin">Temporary admin &mdash; can fix &amp; adjust</option></select></div>
+        <div><label style="font-size:11px;color:rgba(244,201,119,.7);">Days</label><select id="grant-days" style="background:rgba(0,0,0,.3);border:1px solid rgba(232,163,76,.3);border-radius:8px;padding:9px;color:#f2e7d2;"><option>1</option><option>3</option><option selected>7</option><option>10</option><option>14</option><option>30</option><option>90</option></select></div>
         <button id="grant-create" style="background:#1c7a3d;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer;">Create link</button>
       </div>
       <div id="grant-new" style="display:none;background:rgba(28,122,61,.12);border:1px solid rgba(90,200,140,.35);border-radius:10px;padding:12px;margin-bottom:12px;"></div>
@@ -14073,7 +14324,9 @@ def admin_dashboard():
         var lbl=document.getElementById('grant-label'), sc=document.getElementById('grant-scope'), dy=document.getElementById('grant-days');
         var cb=document.getElementById('grant-create'), nw=document.getElementById('grant-new'), ls=document.getElementById('grant-list');
         if(!cb) return;
+        sc.addEventListener('change', function(){ if(sc.value==='admin'){ dy.value='10'; } });
         function esc(s){ return String(s||'').replace(/</g,'&lt;'); }
+        function scopeName(s){ return s==='admin'?'Admin (temporary)':(s==='watch+study'?'Watch + Study':'Watch'); }
         function load(){
           fetch('/api/admin/grants').then(function(r){return r.json();}).then(function(d){
             var g=d.grants||[];
@@ -14081,7 +14334,7 @@ def admin_dashboard():
             ls.innerHTML=g.map(function(x){
               var status = x.revoked?'<span style="color:#e8534e;">revoked</span>':(x.live?'<span style="color:#7ee8a0;">live</span>':'<span style="color:rgba(242,231,210,.4);">expired</span>');
               return '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(232,163,76,.12);padding:8px 0;">'
-                +'<span><b>'+esc(x.label)+'</b> &middot; '+esc(x.scope==='watch+study'?'Watch + Study':'Watch')+' &middot; '+status+'<br><span style="font-size:11px;color:rgba(242,231,210,.45);">expires '+esc(x.expires_at.slice(0,10))+'</span></span>'
+                +'<span><b>'+esc(x.label)+'</b> &middot; '+esc(scopeName(x.scope))+' &middot; '+status+'<br><span style="font-size:11px;color:rgba(242,231,210,.45);">expires '+esc(x.expires_at.slice(0,10))+'</span></span>'
                 +(x.live?'<button data-revoke="'+x.id+'" style="background:transparent;border:1px solid rgba(232,83,78,.5);color:#e8988e;border-radius:8px;padding:6px 12px;cursor:pointer;">Revoke</button>':'')
                 +'</div>';
             }).join('');
@@ -14106,6 +14359,49 @@ def admin_dashboard():
             }).catch(function(){ cb.disabled=false; cb.textContent='Create link'; });
         });
         load();
+      })();
+    </script>
+
+    <h2 class="ledger" id="adminactivity" data-sec="sec-adminlog">Admin activity &amp; undo &mdash; your master key</h2>
+    <div class="card" data-founder-only="1">
+      <p style="margin-top:0;font-size:13.5px;color:rgba(242,231,210,.72);">Every change a temporary admin makes shows here. Settings changes &mdash; the on-call board, how people reach the pool, songs on/off &mdash; can be erased in one click. Other changes are listed so you can see them and reverse them in their own panel. Your own changes are never listed; the master key is above the log.</p>
+      <div style="margin:10px 0;"><button id="undo-all-btn" style="background:transparent;border:1px solid rgba(232,83,78,.55);color:#e8988e;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:700;">Erase ALL settings changes still in effect</button></div>
+      <div id="admin-log" style="font-size:13px;">Loading&hellip;</div>
+    </div>
+    <script>
+      (function(){
+        var box=document.getElementById('admin-log'); if(!box) return;
+        var allBtn=document.getElementById('undo-all-btn');
+        function esc(s){ return String(s||'').replace(/</g,'&lt;'); }
+        function load(){
+          fetch('/api/admin/journal').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){
+            var e=d.entries||[];
+            if(allBtn) allBtn.style.display = (d.live_undoable>0)?'inline-block':'none';
+            if(!e.length){ box.innerHTML='<i style="color:rgba(242,231,210,.45);">No temporary-admin changes yet.</i>'; return; }
+            box.innerHTML=e.map(function(x){
+              var right = x.undone
+                ? '<span style="color:rgba(242,231,210,.4);font-size:12px;">undone</span>'
+                : (x.undoable
+                    ? '<button data-undo="'+esc(x.id)+'" style="background:transparent;border:1px solid rgba(232,83,78,.5);color:#e8988e;border-radius:8px;padding:6px 12px;cursor:pointer;">Undo</button>'
+                    : '<span style="color:rgba(242,231,210,.4);font-size:11px;">reverse in its panel</span>');
+              return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid rgba(232,163,76,.12);padding:9px 0;'+(x.undone?'opacity:.55;':'')+'">'
+                +'<span><b style="color:#f4c977;">'+esc(x.what)+'</b><br><span style="font-size:11px;color:rgba(242,231,210,.5);">'+esc(x.when)+' &middot; by '+esc(x.who)+'</span></span>'
+                +right+'</div>';
+            }).join('');
+            box.querySelectorAll('[data-undo]').forEach(function(b){
+              b.addEventListener('click', function(){
+                b.disabled=true; b.textContent='Undoing…';
+                fetch('/api/admin/journal/undo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:b.getAttribute('data-undo')})}).then(function(r){return r.json();}).then(function(){ load(); });
+              });
+            });
+          }).catch(function(){ box.innerHTML='<i style="color:rgba(242,231,210,.45);">(Master-key view &mdash; founder only.)</i>'; if(allBtn) allBtn.style.display='none'; });
+        }
+        if(allBtn){ allBtn.addEventListener('click', function(){
+          if(!confirm('Erase every settings change temporary admins have made that is still in effect? This puts the on-call board, pool mode and songs back to how they were before those changes.')) return;
+          allBtn.disabled=true; allBtn.textContent='Erasing…';
+          fetch('/api/admin/journal/undo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({all:true})}).then(function(r){return r.json();}).then(function(){ allBtn.disabled=false; allBtn.textContent='Erase ALL settings changes still in effect'; load(); });
+        }); }
+        load(); setInterval(load, 15000);
       })();
     </script>
 
@@ -15346,7 +15642,7 @@ _STUDY_LENSES = {
 
 @app.route("/api/admin/study", methods=["POST"])
 def admin_study_api():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"status": "locked"}), 403
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
     if not key:
@@ -15434,7 +15730,7 @@ def record_crisis_referral():
 
 @app.route("/api/admin/crisisreferrals")
 def admin_crisis_referrals():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     try:
         with _CRISIS_REFERRALS_LOCK:
@@ -15482,7 +15778,7 @@ def track_play():
 
 @app.route("/api/admin/plays")
 def admin_plays():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     with _PLAYS_LOCK:
         plays = _plays_load()
@@ -15526,7 +15822,7 @@ def _tracks_off_save(off):
 
 @app.route("/api/admin/tracks")
 def admin_tracks():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     audio_dir = Path(__file__).resolve().parent.parent / "audio"
     off = _tracks_off_load()
@@ -15548,7 +15844,7 @@ def admin_tracks():
 
 @app.route("/api/admin/tracks/toggle", methods=["POST"])
 def admin_tracks_toggle():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     file = str(data.get("file", ""))[:80]
@@ -15556,8 +15852,10 @@ def admin_tracks_toggle():
     audio_dir = Path(__file__).resolve().parent.parent / "audio"
     if not file or "/" in file or ".." in file or not (audio_dir / file).exists():
         return jsonify({"error": "unknown file"}), 400
+    _old_enabled = None
     with _TRACKS_OFF_LOCK:
         off = _tracks_off_load()
+        _old_enabled = file not in off
         if enabled:
             off.discard(file)
         else:
@@ -15573,6 +15871,9 @@ def admin_tracks_toggle():
                                           "Turning it off would leave that lane silent. "
                                           "Turn another song on first."}), 200
         _tracks_off_save(off)
+    if _old_enabled is not None and _old_enabled != enabled:
+        _journal_record("Song '%s' turned %s" % (file, "on" if enabled else "off"),
+                        undo={"kind": "track", "file": file, "value": _old_enabled})
     return jsonify({"status": "ok", "file": file, "enabled": file not in off})
 
 
@@ -15781,13 +16082,17 @@ def pool_connect():
 @app.route("/api/admin/pool/mode", methods=["POST"])
 def admin_pool_mode():
     """Founder sets which rail(s) are active: auto, choose, or both."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     mode = data.get("mode", "both")
     if mode not in ("auto", "choose", "both"):
         mode = "both"
+    _old_mode = _live_get("pool_mode") or "both"
     _live_set("pool_mode", mode)
+    if mode != _old_mode:
+        _journal_record("How people reach the pool set to '%s' (was '%s')" % (mode, _old_mode),
+                        undo={"kind": "pool", "value": _old_mode})
     return jsonify({"ok": True, "mode": mode})
 
 @app.route("/api/admin/oncall")
@@ -15820,7 +16125,7 @@ def admin_oncall_list():
 
 @app.route("/api/admin/oncall", methods=["POST"])
 def admin_oncall_set():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     side = str(data.get("side", ""))[:12]
@@ -15831,9 +16136,14 @@ def admin_oncall_set():
         return jsonify({"error": "unknown role"}), 400
     if tier and tier not in ACCESS_TIERS:
         return jsonify({"error": "unknown access tier"}), 400
+    _old_avail = None
     with _ONCALL_LOCK:
         conn = _oncall_db()
         try:
+            _oldrow = conn.execute(
+                "SELECT available FROM provider_availability WHERE side = ? AND role = ?",
+                (side, role)).fetchone()
+            _old_avail = int(_oldrow["available"]) if _oldrow else 0
             if tier:
                 conn.execute(
                     "UPDATE provider_availability SET available = ?, updated_at = ?, access_tier = ?"
@@ -15848,6 +16158,10 @@ def admin_oncall_set():
         finally:
             conn.close()
     _ONCALL_CACHE["data"] = None  # the public picture updates immediately
+    if _old_avail is not None and _old_avail != available:
+        _rlabel = {(s, r): lb for s, r, lb in _PROVIDER_ROLES}.get((side, role), role)
+        _journal_record("On-call board: %s set to %s" % (_rlabel, "ON" if available else "OFF"),
+                        undo={"kind": "oncall", "side": side, "role": role, "value": _old_avail})
     return jsonify({"status": "ok", "side": side, "role": role,
                     "available": bool(available), "updated_at": utc_now()})
 
@@ -15856,7 +16170,7 @@ def admin_oncall_set():
 def admin_policy_patterns():
     """Summarize recurring need-patterns across recorded cases + metrics, so the
     founder can see WHERE the law/systems fail people most across all sessions."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"status": "locked"}), 403
     # Tally legal categories surfaced + provider suggestions + track of themes
     try:
@@ -15933,7 +16247,7 @@ _POLICY_SYSTEM = (
 
 @app.route("/api/admin/policy/study", methods=["POST"])
 def admin_policy_study():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"status": "locked"}), 403
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip().strip(chr(34)).strip(chr(39))
     if not key:
@@ -15964,7 +16278,7 @@ def admin_policy_study():
 
 @app.route("/api/admin/study/history")
 def admin_study_history():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"status": "locked"}), 403
     log = _study_load()
     return jsonify({"status": "ok", "studies": list(reversed(log))})
@@ -16294,7 +16608,7 @@ def feedback_submit():
 
 @app.route("/api/admin/feedback")
 def admin_feedback():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     if session.get("sim_mode"):
         import random as _rd
@@ -16386,7 +16700,7 @@ def case_record():
 
 @app.route("/api/admin/cases")
 def admin_cases():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"status": "locked"}), 403
     try:
         with open(_CASES_FILE) as f:
@@ -16523,7 +16837,7 @@ def connect_request():
 
 @app.route("/responder/<rid>")
 def responder_brief(rid):
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return render_template_string(LOGIN_PAGE), 200
     try:
         with open(_CONNECT_FILE) as f:
@@ -16672,7 +16986,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-02.1 presence-sid-fix"
+APP_BUILD = "2026-10-02.2 admin-access+undo"
 
 @app.after_request
 def _no_stale_clients(resp):
@@ -16922,7 +17236,7 @@ def _sim_advance(st):
 @app.route("/api/sim/mode", methods=["POST"])
 def api_sim_mode():
     """Simulation Mode: the REAL Watch, lit by synthetic data. Reads only."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     data = request.get_json(silent=True) or {}
     on = bool(data.get("on"))
@@ -16995,7 +17309,7 @@ def _sim_mirror_security():
 
 @app.route("/api/sim/config", methods=["POST"])
 def api_sim_config():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     data = request.get_json(silent=True) or {}
     st = _sim_advance(_sim_get())
@@ -17020,7 +17334,7 @@ def api_sim_config():
 
 @app.route("/api/sim/state")
 def api_sim_state():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     st = _sim_advance(_sim_get())
     _sim_put(st)
@@ -17046,7 +17360,7 @@ def api_sim_state():
 @app.route("/api/sim/pulse")
 def api_sim_pulse():
     """One heartbeat for the lit dashboard: every number that must MOVE."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     st = _sim_advance(_sim_get()); _sim_put(st)
     import random as _rd
@@ -17169,7 +17483,7 @@ def api_sim_report():
     reviewer would expect: abstract, methods, results with distributions and
     effect size, interpretation with an honest significance read, subgroup
     analyses, limitations, ethics, and references."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     import math
     st = _sim_advance(_sim_get()); _sim_put(st)
@@ -17386,7 +17700,7 @@ def api_sim_report():
 
 @app.route("/api/sim/export.csv")
 def api_sim_export():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     st = _sim_get()
     rows = ["sid,cohort,crisis,initial_distress,settled,seconds"]
@@ -17398,7 +17712,7 @@ def api_sim_export():
 
 @app.route("/api/admin/legal/investigation", methods=["POST"])
 def api_admin_legal_investigation():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     data = request.get_json(silent=True) or {}
     action = str(data.get("action", ""))
@@ -17463,7 +17777,7 @@ def _legal_ledger():
 
 @app.route("/api/admin/legal/ledger")
 def api_admin_legal_ledger():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     return jsonify(_legal_ledger())
 
@@ -17479,7 +17793,7 @@ def _ip_internal(ip):
 def watch_legal_package():
     """The attorney package as an actual document: printable, court-styled,
     exhibits and letters pre-filled. The founder reads a document, not JSON."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return redirect("/admin")
     with app.test_request_context():
         pass
@@ -17675,7 +17989,7 @@ actionable exhibits and included here only for completeness of the record.</p>
 
 @app.route("/api/admin/legal/evidence")
 def api_admin_legal_evidence():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     try:
         with _SECURITY_LOG_LOCK:
@@ -17750,7 +18064,7 @@ def api_admin_legal_evidence():
 
 @app.route("/api/admin/zenisys/dna")
 def api_admin_zenisys_dna():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "unauthorized"}), 401
     try:
         with open(Path(__file__).resolve().parent / "track_fingerprints.json") as f:
@@ -17784,7 +18098,7 @@ def api_admin_dispatch():
 
 @app.route("/api/admin/connects")
 def admin_connects():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"status": "locked"}), 403
     if session.get("sim_mode"):
         import random as _rd
@@ -17804,6 +18118,24 @@ def admin_connects():
     except Exception:
         log = []
     return jsonify({"status": "ok", "connects": list(reversed(log))})
+
+@app.route("/api/admin/reaches")
+def admin_reaches():
+    """Everyone who REACHED toward a human in the last 14 days — including those
+    who did not finish the connect form. This is why the handoff count can be
+    higher than the completed-request list: the reaches are counted here."""
+    if not _has_admin_access():
+        return jsonify({"status": "locked"}), 403
+    if session.get("sim_mode"):
+        return jsonify({"status": "ok", "reaches": [], "count_14d": 0, "SIMULATED": True})
+    try:
+        reaches = _live_get("reaches") or []
+    except Exception:
+        reaches = []
+    cutoff = time.time() - 14 * 86400
+    recent = [r for r in reaches if r.get("ts", 0) >= cutoff]
+    return jsonify({"status": "ok", "count_14d": len(recent),
+                    "reaches": list(reversed(recent))[:60]})
 
 
 # ===========================================================================
@@ -18314,7 +18646,7 @@ def partner_suggest():
 # ---- FOUNDER-ONLY partner management (The Watch). All check founder_ok. ----
 @app.route("/api/admin/partners")
 def admin_partners_list():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     with _PARTNER_LOCK:
         conn = _partner_db()
@@ -18342,7 +18674,7 @@ def admin_partners_list():
 
 @app.route("/api/admin/partners/create", methods=["POST"])
 def admin_partners_create():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     org = _partner_scrub(data.get("org", ""), 120).strip()
@@ -18373,7 +18705,7 @@ def admin_partners_create():
 
 @app.route("/api/admin/partners/status", methods=["POST"])
 def admin_partners_status():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     try:
@@ -18392,7 +18724,7 @@ def admin_partners_status():
 
 @app.route("/api/admin/partners/suggestions")
 def admin_partner_suggestions():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     with _PARTNER_LOCK:
         conn = _partner_db()
@@ -18411,7 +18743,7 @@ def admin_partner_suggestions():
 
 @app.route("/api/admin/partners/suggestions/read", methods=["POST"])
 def admin_partner_suggestions_read():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     try:
@@ -18512,7 +18844,7 @@ def _vetting_sample_roles():
 
 @app.route("/api/admin/vetting/list")
 def admin_vetting_list():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     with _VETTING_LOCK:
         conn = _vetting_db()
@@ -18660,7 +18992,7 @@ def _provider_score(pid, conn):
 def admin_provider_issue():
     """Founder issues a portal access code to a VETTED provider so they can log
     in to their own room."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     pid = int(data.get("provider_id", 0))
@@ -18962,7 +19294,7 @@ def api_public_join():
 
 @app.route("/api/admin/vetting/create", methods=["POST"])
 def admin_vetting_create():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     org = _partner_scrub(data.get("org", ""), 120).strip()
@@ -19002,7 +19334,7 @@ def admin_vetting_create():
 
 @app.route("/api/admin/vetting/decide", methods=["POST"])
 def admin_vetting_decide():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     try:
@@ -19027,7 +19359,7 @@ def admin_vetting_promote():
     system: 'partner' issues a one-time access code (reuses the partner-create
     flow); 'oncall' lights their role on the On-Call board. SAMPLE providers can
     never be promoted — a fictitious provider must never reach a real user."""
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     try:
@@ -19089,7 +19421,7 @@ def admin_vetting_promote():
 # ===========================================================================
 @app.route("/api/admin/demo", methods=["GET"])
 def admin_demo_state():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     sides = sorted(_demo_sides())
     return jsonify({"status": "ok", "on": bool(sides), "sides": sides,
@@ -19097,7 +19429,7 @@ def admin_demo_state():
 
 @app.route("/api/admin/demo", methods=["POST"])
 def admin_demo_set():
-    if not session.get("founder_ok"):
+    if not _has_admin_access():
         return jsonify({"error": "auth"}), 403
     data = request.get_json(silent=True) or {}
     if not data.get("on"):
