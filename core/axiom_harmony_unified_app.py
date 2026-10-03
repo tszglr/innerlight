@@ -3057,6 +3057,62 @@ PUBLIC_PAGE = """
           <button class="music-change" type="button" id="voice-toggle" onclick="toggleVoiceCombined()" data-i18n="music.voiceoff">&#128263; Spoken voice: Off</button>
           <select id="voice-picker" onchange="selectVoice(this.value)" aria-label="Spoken voice" style="display:none;"><option value="">Voice: default</option></select>
         </div>
+        <!-- CLEAR, ALWAYS-VISIBLE FEEDBACK DOOR (opens only on tap; never a popup) -->
+        <div style="text-align:center;margin:10px 0 2px;">
+          <button type="button" onclick="openFeedback()" aria-label="Share feedback" style="background:none;border:0;color:#a56a3a;font-size:13.5px;cursor:pointer;text-decoration:underline;">&#128172; Share feedback</button>
+        </div>
+        <div id="feedback-card" style="display:none;margin:12px auto 4px;max-width:560px;background:#fff;border:1.5px solid #e0d3c6;border-radius:18px;padding:18px;box-shadow:0 6px 24px rgba(120,80,40,.12);text-align:left;">
+          <div style="font-size:16px;color:#4a362c;font-weight:700;margin-bottom:3px;">Share feedback</div>
+          <div style="font-size:13px;color:#8a6a4c;margin-bottom:12px;">Anonymous &mdash; no name, no account. Your words help make InnerLight better for the next person.</div>
+          <div id="fb-form">
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+              <button type="button" class="fb-help" data-help="yes" style="flex:1 1 0;min-width:90px;background:#f7f3ef;border:1.5px solid #e0d3c6;color:#4a372d;border-radius:999px;padding:9px 10px;font-size:13px;cursor:pointer;">This helped</button>
+              <button type="button" class="fb-help" data-help="somewhat" style="flex:1 1 0;min-width:90px;background:#f7f3ef;border:1.5px solid #e0d3c6;color:#4a372d;border-radius:999px;padding:9px 10px;font-size:13px;cursor:pointer;">Somewhat</button>
+              <button type="button" class="fb-help" data-help="no" style="flex:1 1 0;min-width:90px;background:#f7f3ef;border:1.5px solid #e0d3c6;color:#4a372d;border-radius:999px;padding:9px 10px;font-size:13px;cursor:pointer;">Not really</button>
+            </div>
+            <textarea id="fb-words" rows="3" placeholder="Anything you want us to know &mdash; what helped, what was missing&hellip;" style="width:100%;border:1.5px solid #e0d3c6;border-radius:12px;padding:10px;font-size:15px;color:#4a372d;resize:vertical;box-sizing:border-box;"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+              <button type="button" onclick="closeFeedback()" style="background:none;border:1px solid #ddd1c8;color:#99673e;border-radius:999px;padding:9px 18px;font-size:14px;cursor:pointer;">Close</button>
+              <button type="button" onclick="sendFeedbackNow()" style="background:#c56a2c;border:0;color:#fff;border-radius:999px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;">Send</button>
+            </div>
+          </div>
+          <div id="fb-thanks" style="display:none;text-align:center;font-size:15px;color:#6a402c;padding:10px 4px;"></div>
+        </div>
+        <script>
+        (function(){
+          window._fbHelp = '';
+          function wireChips(){
+            document.querySelectorAll('#feedback-card .fb-help').forEach(function(b){
+              b.addEventListener('click', function(){
+                window._fbHelp = b.getAttribute('data-help');
+                document.querySelectorAll('#feedback-card .fb-help').forEach(function(x){ x.style.background='#f7f3ef'; x.style.color='#4a372d'; x.style.borderColor='#e0d3c6'; });
+                b.style.background='#c56a2c'; b.style.color='#fff'; b.style.borderColor='#c56a2c';
+              });
+            });
+          }
+          wireChips();
+          window.openFeedback = function(){
+            var c=document.getElementById('feedback-card'); if(!c) return;
+            try{ var mm=document.getElementById('more-menu'); if(mm) mm.style.display='none'; }catch(e){}
+            var f=document.getElementById('fb-form'), t=document.getElementById('fb-thanks');
+            if(f) f.style.display='block'; if(t) t.style.display='none';
+            c.style.display='block';
+            try{ c.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+          };
+          window.closeFeedback = function(){ var c=document.getElementById('feedback-card'); if(c) c.style.display='none'; };
+          window.sendFeedbackNow = async function(){
+            var words=(document.getElementById('fb-words')||{}).value||'';
+            var helped=window._fbHelp||'';
+            if(!helped && !words.trim()){ window.closeFeedback(); return; }
+            var feeling = helped==='yes'?'calmer':(helped==='no'?'worse':(helped==='somewhat'?'same':''));
+            try{ await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({helped:helped,feeling:feeling,words:words})}); }catch(e){}
+            var f=document.getElementById('fb-form'), t=document.getElementById('fb-thanks');
+            if(f) f.style.display='none';
+            if(t){ t.style.display='block'; t.innerHTML='Thank you. Your words are in &mdash; and they matter.'; }
+            window._fbHelp=''; var w=document.getElementById('fb-words'); if(w) w.value='';
+          };
+        })();
+        </script>
         <div id="calm-player" style="display:none; margin:18px auto 6px; max-width:560px; background:rgba(20,30,48,0.92); border-radius:20px; padding:14px 14px 12px; box-shadow:0 8px 30px rgba(0,0,0,0.22); transition:max-width 0.5s ease;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span style="color:#cfe3f2;font-size:14px;font-weight:600;">&#10024; Calm space &mdash; touch and move to make light and sound</span>
@@ -6256,7 +6312,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-03.2 study-model-fix'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.3 feedback-door'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -16988,7 +17044,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-03.2 study-model-fix"
+APP_BUILD = "2026-10-03.3 feedback-door"
 
 @app.after_request
 def _no_stale_clients(resp):
