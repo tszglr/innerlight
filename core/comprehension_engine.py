@@ -26,7 +26,7 @@ import urllib.error
 from typing import Any, Dict, List, Optional
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
-MODEL = os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6")
+MODEL = os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-5-5")
 
 # Words/phrases that would put us OVER the line if they slipped into a reply.
 # If the model ever returns diagnostic/prescriptive language, we soften it.

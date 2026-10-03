@@ -123,8 +123,8 @@ EVENT_PATTERNS = [
 
 ACTION_PATTERNS = [
     (r"\b(drinking|drunk|alcohol|liquor|beer|wine)\b", "drinking"),
-    (r"\b(smoking|weed|marijuana|pot|high)\b", "marijuana"),
-    (r"\b(using|drugs|pills|meth|heroin|fentanyl|crack|cocaine|opioid)\b", "drugs"),
+    (r"\b(weed|marijuana|smoking weed|getting high)\b", "marijuana"),
+    (r"\b(drugs|pills|meth|heroin|fentanyl|crack|cocaine|opioid|using drugs|using again)\b", "drugs"),
     (r"\b(cutting|cut myself|self.?harm|hurting myself)\b", "self_harm"),
     (r"\b(starving|not eating|binging|purging|throwing up)\b", "eating"),
     (r"\b(can't sleep|insomnia|nightmares|night terrors|up all night)\b", "sleep"),
@@ -389,8 +389,8 @@ def generate_response(
     if "action" in topics and any(a in ("drinking", "drugs", "marijuana") for a in topics["action"]):
         substance = topics["action"][0].replace("_", " ")
         return (
-            "I appreciate you being honest about that. It takes courage.",
-            f"Is the {substance} something that started recently, or has it been going on for a while?"
+            "Thank you for telling me that — it isn't easy to say out loud.",
+            "What's it been like for you? I'm here, however you want to talk about it."
         )
 
     # ---- SELF HARM (not suicidal but harming) ----
@@ -540,32 +540,26 @@ def _anchored_response(user_text, topics, words):
         if low in {"...", "?", ""}:
             return ("I'm here. No rush at all.",
                     "Take a breath — when you're ready, tell me whatever's on your mind.")
-        if content:
-            return ("I hear you.",
-                    f'You said "{content[0]}" — can you tell me what that\'s about for you?')
-        return ("I'm here with you.",
-                "When you're ready, tell me what brought you here.")
+        return ("I hear you.",
+                "Can you tell me a little more about what's going on for you?")
 
-    # Longer input — reflect their actual content words back, ask them to expand.
-    if content:
-        focus = content[0]
-        if len(content) == 2:
-            phrase = f"{content[0]} and {content[1]}"
-        elif len(content) >= 3:
-            phrase = f"{content[0]}, {content[1]}, and {content[2]}"
-        else:
-            phrase = content[0]
-        return (
-            f"I'm hearing you talk about {focus}.",
-            f"You mentioned {phrase} — can you tell me more about what that's been like for you?"
-        )
-
-    # No content words at all (rare) — reflect the literal phrase, still not generic
-    short = clean if len(clean) <= 60 else clean[:60].rsplit(" ", 1)[0] + "..."
-    return (
-        "I hear what you're saying.",
-        f'When you say "{short}" — what\'s underneath that for you?'
-    )
+    # Longer input. Without real comprehension available, we must NOT parrot the
+    # user's extracted words back ("you mentioned X, Y and Z") or guess a topic:
+    # that reads as broken mimicry, and a wrong guess breaks the founder's rule
+    # against assuming or leading. So we answer warmly and openly and let the
+    # person lead, in their own words. (When the comprehension model is on, this
+    # whole fallback is never reached.)
+    _OPEN = [
+        ("I'm really glad you're telling me this.",
+         "What part of it is weighing on you most right now?"),
+        ("Thank you for trusting me with that.",
+         "Can you tell me more about what's been hardest about it?"),
+        ("I'm here, and I'm listening.",
+         "What would feel most helpful to talk through first?"),
+        ("That matters, and I'm taking it in.",
+         "What's been going through your mind about it?"),
+    ]
+    return _OPEN[len(clean) % len(_OPEN)]
 
 
 def _next_crisis_question(asked: List[str]) -> str:
