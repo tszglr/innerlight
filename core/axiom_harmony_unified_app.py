@@ -6256,7 +6256,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-02.2 admin-access+undo'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.1 message-count'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -7155,6 +7155,7 @@ async function sendCheckin() {
   voiceFinalTranscript = '';
   try { stopAllSpeech(); } catch(e){}   // new turn: silence any lingering lines
   logTurn('user', msgVal);
+  try { metric('message_sent'); } catch(e){}   // count every message the founder's board shows
   ilMicSendDone();
   // INSTANT ACKNOWLEDGEMENT: the person must never wonder whether their words
   // went through. Their message appears in the thread and a soft listening
@@ -7582,6 +7583,7 @@ async function continueConversation() {
   answerBox.value = '';
   const tpanel = document.getElementById('transcript-text'); if (tpanel) tpanel.innerHTML = '&nbsp;';
   logTurn('user', userAnswer);
+  try { metric('message_sent'); } catch(e){}   // count every reply too, so the board reflects real chat
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   // Show what the user said in the thread
   const thread = document.getElementById('conversation-thread');
@@ -16986,7 +16988,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-02.2 admin-access+undo"
+APP_BUILD = "2026-10-03.1 message-count"
 
 @app.after_request
 def _no_stale_clients(resp):
