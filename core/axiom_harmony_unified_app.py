@@ -6312,7 +6312,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-03.4 comprehension-fix'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.5 fallback-wholeword'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -17044,7 +17044,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-03.4 comprehension-fix"
+APP_BUILD = "2026-10-03.5 fallback-wholeword"
 
 @app.after_request
 def _no_stale_clients(resp):

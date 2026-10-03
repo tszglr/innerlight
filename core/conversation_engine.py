@@ -184,9 +184,10 @@ def extract_topics(text: str) -> Dict[str, List[str]]:
     for m in re.finditer(person_pat, lower):
         result.setdefault("person", []).append(m.group(1).strip())
 
-    # Feelings
+    # Feelings — match WHOLE WORDS only. A plain substring check read "used" out
+    # of "acc(used)" and "lost" out of "c(lost)", producing wrong-feeling replies.
     for phrase, label in FEELING_WORDS.items():
-        if phrase in lower:
+        if re.search(r"\b" + re.escape(phrase) + r"\b", lower):
             result.setdefault("feeling", [])
             if label not in result["feeling"]:
                 result["feeling"].append(label)
