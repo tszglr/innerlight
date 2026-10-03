@@ -5,6 +5,16 @@ services:
     plan: starter
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1 --worker-class gthread --threads 8
+    # Permanent storage for the Watch. Without a disk at /var/data the app falls
+    # back to /tmp, which Render erases on EVERY deploy — so the daily ledger,
+    # the "people who asked for a human" list, crisis-referral counts and
+    # feedback all reset to empty each time the site is deployed. This 1 GB disk
+    # keeps that history across deploys. (Live presence/biometrics do not need
+    # it; they are real-time only.)
+    disk:
+      name: innerlight-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
