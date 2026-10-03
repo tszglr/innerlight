@@ -3941,18 +3941,31 @@ function wordsPick(btn){
 // ================= MEDIAPIPE 52-MOVEMENT READER (with iris/gaze) =================
 let mpLandmarker = null, mpActive = false, mpGazeAwayRun = 0;
 (async function loadMediaPipe(){
-  try {
-    const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');
-    const files = await vision.FilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+  // Self-hosted FIRST (served by this app, so a blocked CDN can never silence the
+  // face read), CDN only as a last resort.
+  const LOCAL = { mod:'/vendor/mediapipe/vision_bundle.mjs',
+                  wasm:'/vendor/mediapipe/wasm',
+                  model:'/vendor/mediapipe/face_landmarker.task' };
+  const CDN = { mod:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14',
+                wasm:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm',
+                model:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task' };
+  async function tryLoad(src, label){
+    const vision = await import(src.mod);
+    const files = await vision.FilesetResolver.forVisionTasks(src.wasm);
     mpLandmarker = await vision.FaceLandmarker.createFromOptions(files, {
-      baseOptions: { modelAssetPath:
-        'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task' },
+      baseOptions: { modelAssetPath: src.model },
       outputFaceBlendshapes: true, runningMode: 'VIDEO', numFaces: 1 });
     mpActive = true;
-    console.log('[Face] MediaPipe 52-movement reader active');
+    window._faceReaderSource = label;
+    console.log('[Face] MediaPipe 52-movement reader active (' + label + ')');
     setInterval(mpTick, 500);
-  } catch (e) { console.log('[Face] MediaPipe unavailable, staying on fallback reader:', e); }
+  }
+  try { await tryLoad(LOCAL, 'self-hosted'); }
+  catch (e1) {
+    console.log('[Face] self-hosted MediaPipe failed, trying CDN:', e1);
+    try { await tryLoad(CDN, 'cdn'); }
+    catch (e2) { console.log('[Face] MediaPipe unavailable, staying on fallback reader:', e2); }
+  }
 })();
 
 function mpTick(){
@@ -4762,6 +4775,17 @@ function _bioPingPayload(extra){
   const p = {sid: SESSION_ID, bpm: bpm, tier: (window._heartTier||''), base: base,
              state: state, face: (window.currentFaceEmotion || ''),
              cam: window._camOn ? 1 : 0, hasheart: bpm ? 1 : 0};
+  // The live READ that steers the music, so the founder can see on the Watch
+  // whether the camera/voice/text are actually feeding it (50 = the person's own
+  // calm; higher = more activated). fsrc shows if the face reader loaded.
+  try {
+    const fp = window._fusionParts || {};
+    p.arousal = Math.round(((typeof adaptiveArousal==='number') ? adaptiveArousal : 0.5) * 100);
+    p.conf = Math.round((window._attConfidence || 0) * 100);
+    p.lane = (typeof adaptiveLaneNow !== 'undefined') ? adaptiveLaneNow : '';
+    p.fsrc = window._faceReaderSource || 'off';
+    p.chF = fp.face ? 1 : 0; p.chV = fp.voice ? 1 : 0; p.chT = fp.text ? 1 : 0;
+  } catch(e){}
   if (extra) Object.assign(p, extra);
   return p;
 }
@@ -5144,7 +5168,10 @@ function readArousalSignal() {
 }
 
 function adaptiveTick() {
-  if (!ambientTracks.length) return;
+  // NEVER early-return on an empty track queue: the lane switch below is exactly
+  // what re-fills the queue, so bailing here froze ALL adaptation once the first
+  // songs played out — which is why the music "never changed." The volume nudge
+  // is already guarded by a live deck, so running on is safe.
   const inst = readArousalSignal();
   // Smooth so the sound never lurches — gentle, like quiet authority — but
   // alive enough that a held expression is answered within ~15 seconds.
@@ -6312,7 +6339,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-03.5 fallback-wholeword'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.6 adaptive-music'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -10835,6 +10862,37 @@ def serve_audio(filename):
     return ("audio not found", 404)
 
 
+# ---- SELF-HOSTED FACE READER (MediaPipe) -------------------------------------
+# The facial-expression reader (MediaPipe Face Landmarker) used to load its code,
+# its WebAssembly, and its model file from outside CDNs. On a network that blocks
+# those (as happened with Tone.js), the camera would be on but NOTHING was read,
+# so the music had nothing to respond to. We now serve all of it from the app
+# itself, so the read works on every network. The page still falls back to the
+# CDN if a local file is ever missing.
+_MP_MIMES = {
+    ".mjs": "text/javascript", ".js": "text/javascript",
+    ".wasm": "application/wasm", ".task": "application/octet-stream",
+    ".map": "application/json",
+}
+
+@app.route("/vendor/mediapipe/<path:filename>")
+def serve_mediapipe(filename):
+    base = (Path(__file__).resolve().parent.parent / "vendor" / "mediapipe").resolve()
+    file_path = (base / filename).resolve()
+    try:
+        file_path.relative_to(base)   # never serve outside the vendor folder
+    except ValueError:
+        return ("not found", 404)
+    if file_path.exists() and file_path.is_file():
+        from flask import send_file
+        mime = _MP_MIMES.get(file_path.suffix.lower(), "application/octet-stream")
+        resp = send_file(str(file_path), mimetype=mime, conditional=True)
+        # These assets are versioned and immutable — let the browser cache hard.
+        resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return resp
+    return ("not found", 404)
+
+
 
 
 # Clarifying LEGAL questions — asked when the conversation is clearly legal and
@@ -11596,11 +11654,24 @@ def bio_ping():
             cam = 1 if int(data.get("cam", 0)) else 0
         except Exception:
             cam = 0
+        def _ci(v, lo, hi, d=0):
+            try:
+                return max(lo, min(hi, int(v)))
+            except Exception:
+                return d
         rec.update({"bpm": bpm, "hasheart": 1 if bpm else 0, "cam": cam,
                     "tier": str(data.get("tier",""))[:14],
                     "base": int(data.get("base", bpm) or bpm), "state": str(data.get("state",""))[:12],
                     "face": str(data.get("face",""))[:16], "last": now,
-                    "away": 1 if data.get("away") else 0})
+                    "away": 1 if data.get("away") else 0,
+                    # live READ (what steers the music) — for the founder's monitor
+                    "arousal": _ci(data.get("arousal", 50), 0, 100, 50),
+                    "conf": _ci(data.get("conf", 0), 0, 100, 0),
+                    "lane": str(data.get("lane", ""))[:10],
+                    "fsrc": str(data.get("fsrc", ""))[:12],
+                    "chF": 1 if data.get("chF") else 0,
+                    "chV": 1 if data.get("chV") else 0,
+                    "chT": 1 if data.get("chT") else 0})
         if bpm:
             rec["history"].append({"t": time.strftime("%H:%M:%S"), "bpm": bpm})
             rec["history"] = rec["history"][-40:]   # last ~40 readings
@@ -11633,7 +11704,11 @@ def admin_bio_live():
                 "cam": v.get("cam", 0), "hasheart": v.get("hasheart", 0),
                 "away": v.get("away", 0),
                 "ago": int(now - v.get("last",0)),
-                "spark": [h["bpm"] for h in v.get("history", [])][-24:]
+                "spark": [h["bpm"] for h in v.get("history", [])][-24:],
+                # live READ that steers the music
+                "arousal": v.get("arousal", 50), "conf": v.get("conf", 0),
+                "lane": v.get("lane", ""), "fsrc": v.get("fsrc", ""),
+                "chF": v.get("chF", 0), "chV": v.get("chV", 0), "chT": v.get("chT", 0)
             })
     last_write = max([v.get("last", 0) for v in live.values()], default=0)
     return jsonify({"active": active, "count": len(active), "server_time": time.strftime("%H:%M:%S"),
@@ -15448,6 +15523,22 @@ def admin_dashboard():
   }
   function stateColor(st){ return st==='rising'?'#f0a868':(st==='settling'?'#f4c977':'rgba(242,231,210,.62)'); }
   function stateWord(st){ return st==='rising'?'rising / activating':(st==='settling'?'settling / calming':'steady'); }
+  /* THE LIVE READ that steers the music — so "is the camera feeding it?" is a
+     number you can see, not a guess. 50 = the person's own calm. */
+  function readMeter(p){
+    if (p.arousal==null) return '';
+    var a=p.arousal, tone=a>58?'#e8956a':(a<42?'#7fc6a6':'#cdb98a');
+    var ch=[]; if(p.chF)ch.push('Face'); if(p.chV)ch.push('Voice'); if(p.chT)ch.push('Text');
+    var chStr=ch.length?ch.join(' · '):'no signal yet';
+    var on=(p.fsrc==='self-hosted'||p.fsrc==='cdn');
+    var fsrc=on?('face reader on'+(p.fsrc==='cdn'?' (cdn)':'')):(p.cam?'face reader OFF — did not load':'camera off');
+    var fcolor=on?'#7fc6a6':(p.cam?'#e8534e':'rgba(242,231,210,.4)');
+    return '<div style="font-size:10.5px;color:rgba(242,231,210,.55);margin-top:4px;">'
+      +'read <b style="color:'+tone+';">'+a+'</b>/100 <span style="color:rgba(242,231,210,.4);">(50=calm)</span>'
+      +' · music lane: <b style="color:'+tone+';">'+(p.lane||'—')+'</b>'
+      +' · from: '+chStr+' · conf '+(p.conf||0)+'%'
+      +' · <span style="color:'+fcolor+';">'+fsrc+'</span></div>';
+  }
   function renderBioList(d){
     var clk=document.getElementById('bio-clock'); if(clk) clk.textContent='server '+(d.server_time||'');
     var el=document.getElementById('bio-live-list'); if(!el) return;
@@ -15456,24 +15547,26 @@ def admin_dashboard():
       var heldTxt = (p.held_min != null) ? ('held ' + Math.max(1, Math.round(p.held_min)) + ' min') : '';
       var left = '<div style="min-width:96px;"><b style="color:#f4c977;">'+p.who+'</b><div style="font-size:11px;color:rgba(242,231,210,.45);">'+p.ago+'s ago'+(heldTxt?' · '+heldTxt:'')+'</div></div>';
       if (p.bpm && p.hasheart){
-        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(232,163,76,.1);">'
+        return '<div style="padding:10px 0;border-bottom:1px solid rgba(232,163,76,.1);">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">'
           + left
           +'<div style="text-align:center;"><span style="font-size:26px;font-family:Georgia,serif;">'+p.bpm+'</span> <span style="font-size:12px;color:rgba(242,231,210,.55);">bpm</span>'
           +'<div style="font-size:11px;color:rgba(242,231,210,.45);">baseline '+(p.base||p.bpm)+'</div></div>'
           +'<div style="text-align:center;color:'+stateColor(p.state)+';font-size:13px;font-weight:700;min-width:120px;">'+stateWord(p.state)
           +'<div style="font-size:10.5px;color:rgba(242,231,210,.45);font-weight:400;">'+(p.tier||'')+(p.face?' · '+p.face:'')+'</div></div>'
           +'<div>'+spark(p.spark)+'</div>'
-          +'</div>';
+          +'</div>' + readMeter(p) + '</div>';
       }
       var status = p.cam ? 'camera on — acquiring heart signal…' : 'text-only session (camera off)';
       var scolor = p.cam ? '#f0a868' : 'rgba(242,231,210,.62)';
-      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(232,163,76,.1);">'
+      return '<div style="padding:10px 0;border-bottom:1px solid rgba(232,163,76,.1);">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">'
         + left
         +'<div style="text-align:center;flex:1;color:'+scolor+';font-size:13px;font-weight:700;">'+status
         + (p.face?'<div style="font-size:10.5px;color:rgba(242,231,210,.45);font-weight:400;">expression: '+p.face+'</div>':'')
         +'</div>'
         +'<div style="min-width:60px;text-align:right;color:rgba(242,231,210,.45);font-size:12px;">live</div>'
-        +'</div>';
+        +'</div>' + readMeter(p) + '</div>';
     }).join('');
   }
 
@@ -17044,7 +17137,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-03.5 fallback-wholeword"
+APP_BUILD = "2026-10-03.6 adaptive-music"
 
 @app.after_request
 def _no_stale_clients(resp):
