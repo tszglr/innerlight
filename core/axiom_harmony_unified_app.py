@@ -6256,7 +6256,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-03.1 message-count'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.2 study-model-fix'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -15663,7 +15663,7 @@ def admin_study_api():
               f"study with its own conclusion. Scenario (hypothetical, for founder education "
               f"only): {scenario}")
     body = json.dumps({
-        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
+        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-5-5"),
         "max_tokens": 950,
         "system": system_prompt,
         "messages": [{"role": "user", "content": prompt}],
@@ -16259,7 +16259,7 @@ def admin_policy_study():
     if not pattern:
         return jsonify({"status": "error", "text": "Describe the recurring problem pattern to study."}), 200
     body = json.dumps({
-        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-4-6"),
+        "model": os.environ.get("INNERLIGHT_MODEL", "claude-sonnet-5-5"),
         "max_tokens": 1400,
         "system": _POLICY_SYSTEM,
         "messages": [{"role": "user", "content": "Recurring problem pattern to study for possible legislation: " + pattern}],
@@ -16988,7 +16988,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-03.1 message-count"
+APP_BUILD = "2026-10-03.2 study-model-fix"
 
 @app.after_request
 def _no_stale_clients(resp):
