@@ -4703,7 +4703,7 @@ function _bioPingPayload(extra){
   const base = window._heartBaseline ? Math.round(window._heartBaseline) : (bpm || 0);
   let state = 'steady';
   if (bpm) { if (bpm >= base + 8) state = 'rising'; else if (bpm <= base - 6) state = 'settling'; }
-  const p = {sid: sessionId, bpm: bpm, tier: (window._heartTier||''), base: base,
+  const p = {sid: SESSION_ID, bpm: bpm, tier: (window._heartTier||''), base: base,
              state: state, face: (window.currentFaceEmotion || ''),
              cam: window._camOn ? 1 : 0, hasheart: bpm ? 1 : 0};
   if (extra) Object.assign(p, extra);
@@ -6256,7 +6256,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-08-24.1 realtime-presence'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-02.1 presence-sid-fix'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -16672,7 +16672,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-08-24.1 realtime-presence"
+APP_BUILD = "2026-10-02.1 presence-sid-fix"
 
 @app.after_request
 def _no_stale_clients(resp):
