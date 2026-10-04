@@ -6339,7 +6339,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-03.6 adaptive-music'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.7 humanreq-recent'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -14136,35 +14136,46 @@ def admin_dashboard():
     </div>
 
     <h2 class="ledger" data-sec="sec-humanreq">People who asked for a human</h2>
-    <div class="panel" id="connects" style="font-size:13.5px;">Loading&hellip;</div>
+    <div class="panel" id="humanreq" style="font-size:13.5px;">Loading&hellip;</div>
     <script>
-    fetch('/api/admin/connects').then(r=>r.json()).then(function(d){
-      const el = document.getElementById('connects');
-      if(!d.connects || !d.connects.length){ el.textContent = 'No connection requests yet.'; return; }
-      el.innerHTML = d.connects.map(function(c){
-        return '<div style="border-bottom:1px solid rgba(232,163,76,.14);padding:9px 0;">'
-          + '<b style="color:#f4c977;">' + c.when + '</b> — ' + c.kind.toUpperCase() + ' — wants: <b style="color:#e8a34c;">' + c.pro + '</b> '
-          + '— <a href="' + c.room + '" target="_blank" style="color:#e8a34c;font-weight:700;">Join room</a>'
-          + (c.summary ? '<div style="color:rgba(242,231,210,.72);margin-top:4px;white-space:pre-wrap;">' + c.summary.replace(/</g,'&lt;') + '</div>' : '')
-          + '</div>';
-      }).join('');
-    }).catch(function(){ document.getElementById('connects').textContent = 'Could not load.'; });
-    </script>
-    <div class="panel" id="reaches" style="font-size:13px;margin-top:10px;">&nbsp;</div>
-    <script>
-    fetch('/api/admin/reaches').then(function(r){return r.json();}).then(function(d){
-      var el=document.getElementById('reaches'); if(!el) return;
-      if(d.status!=='ok'){ el.style.display='none'; return; }
-      var n=d.count_14d||0;
-      var head='<b style="color:#f4c977;">'+n+'</b> '+(n===1?'person':'people')+' reached toward a human in the last 14 days. '
-        +'<span style="color:rgba(242,231,210,.55);">This counts everyone who asked &mdash; including people who did not finish the request form above. That is why this number can be higher than the list of completed requests.</span>';
-      var list='';
-      (d.reaches||[]).forEach(function(r){
-        list += '<div style="border-bottom:1px solid rgba(232,163,76,.1);padding:6px 0;color:rgba(242,231,210,.78);">'
-          + '<b style="color:#e8a34c;">'+String(r.when||'').replace(/</g,'&lt;')+'</b> &mdash; reached for: '+String(r.kind||'').replace(/</g,'&lt;')+'</div>';
-      });
-      el.innerHTML = head + (list?('<div style="margin-top:8px;">'+list+'</div>'):'<div style="margin-top:6px;color:rgba(242,231,210,.45);">No reaches recorded in the last 14 days.</div>');
-    }).catch(function(){ var el=document.getElementById('reaches'); if(el) el.style.display='none'; });
+    (function(){
+      function esc(s){ return String(s||'').replace(/</g,'&lt;'); }
+      Promise.all([
+        fetch('/api/admin/connects').then(function(r){return r.json();}).catch(function(){return {};}),
+        fetch('/api/admin/reaches').then(function(r){return r.json();}).catch(function(){return {};})
+      ]).then(function(res){
+        var el=document.getElementById('humanreq'); if(!el) return;
+        var connects=(res[0]&&res[0].connects)||[];
+        var reaches=(res[1]&&res[1].reaches)||[];
+        var items=[];
+        connects.forEach(function(c){ items.push({when:c.when||'', t:'connect', kind:c.kind||'', pro:c.pro||'', summary:c.summary||'', room:c.room||''}); });
+        reaches.forEach(function(r){ items.push({when:r.when||'', t:'reach', kind:r.kind||''}); });
+        if(!items.length){ el.textContent='No one has asked for a human yet.'; return; }
+        // newest first (timestamps are YYYY-MM-DD HH:MM:SS, so string sort works)
+        items.sort(function(a,b){ return (a.when<b.when)?1:((a.when>b.when)?-1:0); });
+        function card(x){
+          if(x.t==='connect'){
+            return '<div style="border-bottom:1px solid rgba(232,163,76,.14);padding:9px 0;">'
+              +'<b style="color:#f4c977;">'+esc(x.when)+'</b> &mdash; <span style="color:#7ee8a0;font-weight:700;">completed request</span> &mdash; '+esc((x.kind||'').toUpperCase())+' &mdash; wants: <b style="color:#e8a34c;">'+esc(x.pro)+'</b>'
+              +(x.room?' &mdash; <a href="'+esc(x.room)+'" target="_blank" style="color:#e8a34c;font-weight:700;">Join room</a>':'')
+              +(x.summary?'<div style="color:rgba(242,231,210,.72);margin-top:4px;white-space:pre-wrap;">'+esc(x.summary)+'</div>':'')
+              +'</div>';
+          }
+          return '<div style="border-bottom:1px solid rgba(232,163,76,.1);padding:8px 0;color:rgba(242,231,210,.82);">'
+            +'<b style="color:#e8a34c;">'+esc(x.when)+'</b> &mdash; reached for: '+esc(x.kind)
+            +' <span style="color:rgba(242,231,210,.45);">(did not finish the request form)</span></div>';
+        }
+        var RECENT=6;
+        var recent=items.slice(0,RECENT), older=items.slice(RECENT);
+        var html='<div style="font-size:12px;color:rgba(242,231,210,.55);margin-bottom:8px;">Newest first. The most recent are shown in full; everything older is folded into the index below, so the latest is always what you see.</div>';
+        html+=recent.map(card).join('');
+        if(older.length){
+          html+='<details style="margin-top:12px;"><summary style="cursor:pointer;color:#f4c977;font-weight:700;padding:6px 0;">Earlier requests ('+older.length+') &mdash; tap to open</summary>'
+            +'<div style="margin-top:8px;">'+older.map(card).join('')+'</div></details>';
+        }
+        el.innerHTML=html;
+      }).catch(function(){ var el=document.getElementById('humanreq'); if(el) el.textContent='Could not load.'; });
+    })();
     </script>
 
     <h2 class="ledger" id="oncall" data-sec="sec-oncall">On call right now</h2>
@@ -17137,7 +17148,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-03.6 adaptive-music"
+APP_BUILD = "2026-10-03.7 humanreq-recent"
 
 @app.after_request
 def _no_stale_clients(resp):
