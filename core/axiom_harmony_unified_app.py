@@ -4513,7 +4513,40 @@ function applyProviderSuggestion(){
   } catch(e){}
 }
 
-
+// ---- INSTANT CRISIS SAFETY (fatal-flaw fix) ----------------------------------
+// The 988 safety line used to wait for the server/model to answer — several
+// seconds. For someone saying they want to die, that is far too long. The moment
+// crisis words appear in what they typed, we show 988 IMMEDIATELY, client-side,
+// before any network call. And once crisis is active we NEVER navigate them out
+// of the holding room (the Holding Law): help comes to them, the room stays.
+function ilCrisisText(t){
+  if(!t) return false;
+  var s = ' ' + String(t).toLowerCase() + ' ';
+  var W = ['kill myself','killing myself','want to die','wanna die','end my life',
+           'end it all','take my life','better off dead','hurt myself','harm myself',
+           'suicid','overdose','don’t want to live','dont want to live',
+           'do not want to live','can’t go on','cant go on','not want to be here'];
+  for(var i=0;i<W.length;i++){ if(s.indexOf(W[i])>=0) return true; }
+  return false;
+}
+function ilShowInstant988(){
+  try{
+    window._crisisActive = true;
+    var thread = document.getElementById('conversation-thread'); if(!thread) return;
+    if(document.getElementById('instant-988')) return;   // already showing — don't stack
+    var d = document.createElement('div');
+    d.id = 'instant-988';
+    d.style.cssText = 'background:#fff4ef;border:1px solid #e3b7a3;border-radius:14px;padding:15px;color:#4a372d;font-size:15px;margin:12px 0;line-height:1.55;';
+    d.innerHTML = '<b>You matter, and help is here right now.</b><br>'
+      + (_ilux('s988') || 'If you need immediate support, you can reach the 988 Suicide and Crisis Lifeline anytime by calling or texting 988. I am staying right here with you.')
+      + '<div style="margin-top:11px;">'
+      + '<a href="tel:988" style="display:inline-block;background:#c56a2c;color:#fff;border-radius:999px;padding:11px 22px;font-weight:700;text-decoration:none;margin:3px 6px 3px 0;">Call 988 now</a>'
+      + '<a href="sms:988" style="display:inline-block;background:#fff;color:#c56a2c;border:1px solid #e3b7a3;border-radius:999px;padding:11px 22px;font-weight:700;text-decoration:none;margin:3px;">Text 988</a>'
+      + '</div>';
+    thread.appendChild(d);
+    try { if (nearBottom(document.body)) window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'}); } catch(e){}
+  }catch(e){}
+}
 
 // ---- IMMEDIATE HELP-REQUEST DETECTION (stops questioning, routes now) ----
 // The moment a person asks for help or a provider, we route immediately — no
@@ -6339,7 +6372,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-03.8 humanreq-onecol'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.9 crisis-instant-hold'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -7055,6 +7088,20 @@ function openLegalHelp(){ try{ openHelp('legal'); }catch(e){} }
 function routeProvider(){ try{ openHelp('telehealth'); }catch(e){} }
 function openHelp(kind){
   if (window._minorLock){ showMinorBridge(); return; }
+  // HOLDING LAW (fatal-flaw fix): a person in crisis is NEVER navigated out of
+  // the holding room. We keep them here, make sure 988 is right in front of them,
+  // and open any provider page in a SEPARATE tab so the holding conversation
+  // stays alive behind it. Losing the room for a suicidal person is the one thing
+  // we never allow — a changed on-call setting must not yank them away.
+  if (window._crisisActive){
+    metric('handoff_click', kind);
+    ilShowInstant988();
+    try { sessionStorage.setItem('innerlight_convo', JSON.stringify(conversationLog)); } catch(e){}
+    var cdest = (kind === 'attorney' || kind === 'legal') ? '/handoff/legal' : '/handoff/clinical';
+    var clg = (window._ilLang || 'en'); if (clg !== 'en') cdest += '?lang=' + clg;
+    try { window.open(cdest, '_blank'); } catch(e){}   // new tab only — never replace the room
+    return;
+  }
   return _openHelpReal(kind);
 }
 function _openHelpReal(kind){
@@ -7239,6 +7286,7 @@ async function sendCheckin() {
   try { stopAllSpeech(); } catch(e){}   // new turn: silence any lingering lines
   logTurn('user', msgVal);
   try { metric('message_sent'); } catch(e){}   // count every message the founder's board shows
+  if (ilCrisisText(msgVal)) { try { metric('help_requested'); } catch(e){} ilShowInstant988(); }  // 988 INSTANT, before any network call
   ilMicSendDone();
   // INSTANT ACKNOWLEDGEMENT: the person must never wonder whether their words
   // went through. Their message appears in the thread and a soft listening
@@ -7326,6 +7374,7 @@ async function sendCheckin() {
   // missing entirely, say honestly what happened instead of faking warmth.
   const firstQ = allQ.length ? allQ[0] : '';
   const warmReply = data.response || _ilux('interrupted');
+  if (data && data.needs_immediate_support) { window._crisisActive = true; try { ilShowInstant988(); } catch(e){} }
   const safetyBlock = data.needs_immediate_support
     ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">'+_ilux('s988')+'</p>'
     : '';
@@ -7667,6 +7716,7 @@ async function continueConversation() {
   const tpanel = document.getElementById('transcript-text'); if (tpanel) tpanel.innerHTML = '&nbsp;';
   logTurn('user', userAnswer);
   try { metric('message_sent'); } catch(e){}   // count every reply too, so the board reflects real chat
+  if (ilCrisisText(userAnswer)) { try { metric('help_requested'); } catch(e){} ilShowInstant988(); }  // 988 INSTANT, before any network call
   if (!latestVisualFrame) latestVisualFrame = captureVisualFrame();
   // Show what the user said in the thread
   const thread = document.getElementById('conversation-thread');
@@ -7703,6 +7753,7 @@ async function continueConversation() {
   // No canned gratitude line — if the reply is missing, be honest about it.
   const reply = data.response || _ilux('interrupted');
   logTurn('innerlight', reply);
+  if (data && data.needs_immediate_support) { window._crisisActive = true; try { ilShowInstant988(); } catch(e){} }
   const safety = data.needs_immediate_support
     ? '<p style="background:#f7f3f0;border:1px solid #ddd1c8;border-radius:12px;padding:14px;color:#4a372d;font-size:15px;margin:14px 0;">'+_ilux('s988')+'</p>'
     : '';
@@ -17154,7 +17205,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-03.8 humanreq-onecol"
+APP_BUILD = "2026-10-03.9 crisis-instant-hold"
 
 @app.after_request
 def _no_stale_clients(resp):
