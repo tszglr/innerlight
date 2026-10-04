@@ -6339,7 +6339,7 @@ let innerLightContext = {};
 // Capture the REAL conversation so the handoff is built from what was actually
 // said — never from a form the person has to fill out.
 let conversationLog = [];
-try { console.log('[InnerLight build] ' + '2026-10-03.7 humanreq-recent'); } catch(e){}
+try { console.log('[InnerLight build] ' + '2026-10-03.8 humanreq-onecol'); } catch(e){}
 window._exigentReady = false;
 try { fetch('/api/exigent/status').then(function(r){ return r.json(); }).then(function(d){ window._exigentReady = !!(d && d.available); }).catch(function(){}); } catch(e){}
 function caseRecord(role, text){
@@ -14140,6 +14140,15 @@ def admin_dashboard():
     <script>
     (function(){
       function esc(s){ return String(s||'').replace(/</g,'&lt;'); }
+      // Say what was accomplished in plain words. Reaching the point of wanting a
+      // human IS the accomplishment; a live handoff is the fullest step, not the
+      // only success. Nothing here is ever called "incomplete."
+      function kindLabel(k){
+        k=String(k||'').toLowerCase();
+        if(k.indexOf('legal')>=0||k.indexOf('attorney')>=0||k.indexOf('housing')>=0||k.indexOf('family')>=0||k.indexOf('criminal')>=0||k.indexOf('civil')>=0||k.indexOf('aid')>=0) return 'legal help';
+        if(k.indexOf('care')>=0||k.indexOf('tele')>=0||k.indexOf('counsel')>=0||k.indexOf('therap')>=0||k.indexOf('psych')>=0||k.indexOf('nurse')>=0) return 'a care provider';
+        return 'a human';
+      }
       Promise.all([
         fetch('/api/admin/connects').then(function(r){return r.json();}).catch(function(){return {};}),
         fetch('/api/admin/reaches').then(function(r){return r.json();}).catch(function(){return {};})
@@ -14153,27 +14162,24 @@ def admin_dashboard():
         if(!items.length){ el.textContent='No one has asked for a human yet.'; return; }
         // newest first (timestamps are YYYY-MM-DD HH:MM:SS, so string sort works)
         items.sort(function(a,b){ return (a.when<b.when)?1:((a.when>b.when)?-1:0); });
-        function card(x){
+        var rows = items.map(function(x){
+          var accomplished, room='';
           if(x.t==='connect'){
-            return '<div style="border-bottom:1px solid rgba(232,163,76,.14);padding:9px 0;">'
-              +'<b style="color:#f4c977;">'+esc(x.when)+'</b> &mdash; <span style="color:#7ee8a0;font-weight:700;">completed request</span> &mdash; '+esc((x.kind||'').toUpperCase())+' &mdash; wants: <b style="color:#e8a34c;">'+esc(x.pro)+'</b>'
-              +(x.room?' &mdash; <a href="'+esc(x.room)+'" target="_blank" style="color:#e8a34c;font-weight:700;">Join room</a>':'')
-              +(x.summary?'<div style="color:rgba(242,231,210,.72);margin-top:4px;white-space:pre-wrap;">'+esc(x.summary)+'</div>':'')
-              +'</div>';
+            accomplished = 'Reached '+esc(x.pro||kindLabel(x.kind))+' — live handoff opened';
+            if(x.room) room = ' <a href="'+esc(x.room)+'" target="_blank" style="color:#e8a34c;font-weight:700;">Join room</a>';
+          } else {
+            accomplished = 'Reached the point of asking for '+kindLabel(x.kind);
           }
-          return '<div style="border-bottom:1px solid rgba(232,163,76,.1);padding:8px 0;color:rgba(242,231,210,.82);">'
-            +'<b style="color:#e8a34c;">'+esc(x.when)+'</b> &mdash; reached for: '+esc(x.kind)
-            +' <span style="color:rgba(242,231,210,.45);">(did not finish the request form)</span></div>';
-        }
-        var RECENT=6;
-        var recent=items.slice(0,RECENT), older=items.slice(RECENT);
-        var html='<div style="font-size:12px;color:rgba(242,231,210,.55);margin-bottom:8px;">Newest first. The most recent are shown in full; everything older is folded into the index below, so the latest is always what you see.</div>';
-        html+=recent.map(card).join('');
-        if(older.length){
-          html+='<details style="margin-top:12px;"><summary style="cursor:pointer;color:#f4c977;font-weight:700;padding:6px 0;">Earlier requests ('+older.length+') &mdash; tap to open</summary>'
-            +'<div style="margin-top:8px;">'+older.map(card).join('')+'</div></details>';
-        }
-        el.innerHTML=html;
+          return '<div style="border-bottom:1px solid rgba(232,163,76,.12);padding:10px 0;">'
+            +'<div><b style="color:#f4c977;">'+esc(x.when)+'</b> &mdash; <span style="color:#7ee8a0;">completed</span>'+room+'</div>'
+            +'<div style="color:rgba(242,231,210,.82);margin-top:2px;">'+accomplished+'</div>'
+            +(x.summary?'<div style="color:rgba(242,231,210,.66);margin-top:4px;white-space:pre-wrap;">'+esc(x.summary)+'</div>':'')
+            +'</div>';
+        });
+        el.innerHTML = '<div style="font-size:12px;color:rgba(242,231,210,.55);margin-bottom:8px;">'
+          + 'Newest first. Every conversation that reached the point of wanting a human is logged as completed, with what was accomplished. '
+          + 'A live handoff is the fullest step &mdash; not the only success.</div>'
+          + rows.join('');
       }).catch(function(){ var el=document.getElementById('humanreq'); if(el) el.textContent='Could not load.'; });
     })();
     </script>
@@ -17148,7 +17154,7 @@ def _route_handoff(handoff, text):
         pass
     return handoff
 
-APP_BUILD = "2026-10-03.7 humanreq-recent"
+APP_BUILD = "2026-10-03.8 humanreq-onecol"
 
 @app.after_request
 def _no_stale_clients(resp):
